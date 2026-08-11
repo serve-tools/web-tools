@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>@serve-tools/client-messaging demos</title>
+		<link rel="stylesheet" href="./src/style.css" />
+	</head>
+	<body>
+		<main>
+			<p class="eyebrow">@serve-tools/client-messaging</p>
+			<h1>One worker, typed both ways</h1>
+			<p class="intro">
+				Four focused examples using promises, subscriptions, cancellation, and transferable data.
+			</p>
+			<nav class="cards" aria-label="Demos">
+				<a href="./requests.html">
+					<strong>Requests</strong>
+					<span>Invoke typed operations and receive values or remote errors.</span>
+				</a>
+				<a href="./shared-state.html">
+					<strong>Shared state</strong>
+					<span>Observe one counter from every tab connected to the SharedWorker.</span>
+				</a>
+				<a href="./cancellation.html">
+					<strong>Cancellation</strong>
+					<span>Abort a pending request and propagate the signal into its handler.</span>
+				</a>
+				<a href="./transfers.html">
+					<strong>Transfers</strong>
+					<span>Move an ArrayBuffer into the worker and back without copying it.</span>
+				</a>
+			</nav>
+		</main>
+	</body>
+</html>

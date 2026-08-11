@@ -1,0 +1,42 @@
+{
+	"name": "@serve-tools/ponyfill-resource-management",
+	"version": "0.1.0",
+	"description": "ECMAScript Explicit Resource Management without global mutation",
+	"keywords": [
+		"async-disposable-stack",
+		"disposable",
+		"disposable-stack",
+		"explicit-resource-management",
+		"ponyfill",
+		"resource-management",
+		"suppressed-error",
+		"symbol-dispose"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfill/resource-management#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "ponyfill/resource-management"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/ponyfill-resource-management.js",
+		"./lib/*": "./dist/lib/*.js"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.build.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "vitest run",
+		"typecheck": "tsc --project tsconfig.json --noEmit"
+	}
+}

@@ -1,0 +1,18 @@
+{
+	"extends": "../../tsconfig.json",
+	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "test/**/.*.ts"],
+	"references": [
+		{
+			"path": "../../polyfill/request-idle-callback/tsconfig.json"
+		},
+		{
+			"path": "../../polyfill/resource-management/tsconfig.json"
+		},
+		{
+			"path": "../../ponyfill/request-idle-callback/tsconfig.build.json"
+		},
+		{
+			"path": "../../ponyfill/resource-management/tsconfig.build.json"
+		}
+	]
+}

@@ -1,0 +1,46 @@
+{
+	"name": "@serve-tools/polyfill-resource-management",
+	"version": "0.1.0",
+	"description": "Installs ECMAScript Explicit Resource Management globals",
+	"keywords": [
+		"async-disposable-stack",
+		"disposable",
+		"disposable-stack",
+		"explicit-resource-management",
+		"polyfill",
+		"resource-management",
+		"suppressed-error",
+		"symbol-dispose"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/polyfill/resource-management#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "polyfill/resource-management"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": true,
+	"type": "module",
+	"exports": {
+		".": "./dist/polyfill-resource-management.js",
+		"./*": "./dist/exports/*.js",
+		"./apply/*": "./dist/lib/*.js"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build --workspace @serve-tools/ponyfill-resource-management && vitest run",
+		"typecheck": "npm run build --workspace @serve-tools/ponyfill-resource-management && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/ponyfill-resource-management": "^0.1"
+	}
+}

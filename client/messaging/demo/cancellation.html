@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Cancellation · @serve-tools/client-messaging</title>
+		<link rel="stylesheet" href="./src/style.css" />
+	</head>
+	<body data-demo="cancellation">
+		<main>
+			<nav><a href="./index.html">← All demos</a></nav>
+			<p class="eyebrow">AbortSignal</p>
+			<h1>Cancel remote work</h1>
+			<p>
+				Start a ten-second request, then abort it. The worker receives cancellation through its handler signal.
+			</p>
+			<div class="actions">
+				<button id="start">Start request</button>
+				<button id="cancel" class="secondary" disabled>Abort request</button>
+			</div>
+			<output aria-live="polite">Ready.</output>
+		</main>
+		<script type="module" src="./src/main.ts"></script>
+	</body>
+</html>

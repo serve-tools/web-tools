@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Requests · @serve-tools/client-messaging</title>
+		<link rel="stylesheet" href="./src/style.css" />
+	</head>
+	<body data-demo="requests">
+		<main>
+			<nav><a href="./index.html">← All demos</a></nav>
+			<p class="eyebrow">Request and response</p>
+			<h1>Call a named operation</h1>
+			<p>The page sends typed input to the SharedWorker and awaits one correlated response.</p>
+			<form>
+				<label for="name">Name</label>
+				<input id="name" name="name" value="Ada" autocomplete="name" required />
+				<button>Send greeting</button>
+			</form>
+			<div class="actions">
+				<button id="fail" class="secondary">Request a remote error</button>
+			</div>
+			<output aria-live="polite">Connected to the worker.</output>
+		</main>
+		<script type="module" src="./src/main.ts"></script>
+	</body>
+</html>

@@ -1,0 +1,16 @@
+export type {
+	MessageEndpoint,
+	WorkerClient,
+	WorkerHandlers,
+	WorkerOperation,
+	WorkerProtocol,
+	WorkerRequestContext,
+	WorkerRequestOptions,
+	WorkerServer,
+	WorkerSubscribeOptions,
+	WorkerSubscription,
+	WorkerSubscriptionContext,
+	WorkerTransferResult,
+} from "../lib/.types.js";
+export * from "../lib/SharedWorker.js";
+export * from "../lib/transfer.js";

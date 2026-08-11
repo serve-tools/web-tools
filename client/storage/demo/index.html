@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>@serve-tools/client-storage demo</title>
+		<link rel="stylesheet" href="./src/style.css" />
+	</head>
+	<body>
+		<main>
+			<p class="eyebrow">@serve-tools/client-storage</p>
+			<h1>Typed browser storage you can observe</h1>
+			<p class="intro">
+				Change a persistent local value and a tab-scoped session value. Mutations appear below as precise change
+				records.
+			</p>
+
+			<div class="grid">
+				<section>
+					<p class="eyebrow">localStorage</p>
+					<h2>Color theme</h2>
+					<p>Persists for this origin after the browser closes.</p>
+					<form id="theme-form">
+						<label for="theme">Theme</label>
+						<select id="theme" name="theme">
+							<option value="light">Light</option>
+							<option value="dark">Dark</option>
+						</select>
+						<div class="actions">
+							<button>Save theme</button>
+							<button id="delete-theme" type="button" class="secondary">Delete theme</button>
+						</div>
+					</form>
+				</section>
+
+				<section>
+					<p class="eyebrow">sessionStorage</p>
+					<h2>Session note</h2>
+					<p>Survives reloads in this tab but not a new browser session.</p>
+					<form id="note-form">
+						<label for="note">Note</label>
+						<input id="note" name="note" placeholder="Remember this for the tab" required />
+						<div class="actions">
+							<button>Save note</button>
+							<button id="clear-session" type="button" class="secondary">Clear session storage</button>
+						</div>
+					</form>
+				</section>
+			</div>
+
+			<section>
+				<p class="eyebrow">Subscription events</p>
+				<h2>Change log</h2>
+				<output aria-live="polite">No changes in this page yet.</output>
+			</section>
+		</main>
+		<script type="module" src="./src/main.ts"></script>
+	</body>
+</html>

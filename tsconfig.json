@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"composite": true,
+		"declaration": true,
+		"exactOptionalPropertyTypes": true,
+		"forceConsistentCasingInFileNames": true,
+		"lib": ["ES2025"],
+		"inlineSources": true,
+		"module": "es2022",
+		"moduleResolution": "bundler",
+		"preserveConstEnums": false,
+		"skipLibCheck": true,
+		"sourceMap": true,
+		"strict": true,
+		"target": "es2025",
+		"types": []
+	},
+	"include": ["**/*.ts", "**/.*.ts"]
+}

@@ -1,0 +1,14 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"composite": false,
+		"noEmit": true,
+		"types": ["vitest"]
+	},
+	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "test/**/.*.ts"],
+	"references": [
+		{
+			"path": "../../ponyfill/resource-management/tsconfig.build.json"
+		}
+	]
+}

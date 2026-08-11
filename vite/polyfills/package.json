@@ -1,0 +1,54 @@
+{
+	"name": "@serve-tools/vite-polyfills",
+	"version": "0.1.0",
+	"description": "Detects and injects polyfills for unsupported JavaScript features in Vite",
+	"keywords": [
+		"browser-compatibility",
+		"cancel-idle-callback",
+		"explicit-resource-management",
+		"feature-detection",
+		"map-upsert",
+		"polyfill",
+		"request-idle-callback",
+		"urlpattern",
+		"vite",
+		"vite-plugin"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/vite/polyfills#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "vite/polyfills"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/vite-polyfills.js",
+		"./types": "./dist/types/index.d.ts",
+		"./types/map-upsert": "./dist/types/map-upsert.d.ts"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.build.json && node -e \"require('node:fs').cpSync('src/types', 'dist/types', { recursive: true })\"",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build --workspace @serve-tools/polyfill-resource-management --workspace @serve-tools/polyfill-request-idle-callback && vitest run",
+		"typecheck": "tsc --project tsconfig.json --noEmit"
+	},
+	"dependencies": {
+		"@jsxtools/rolldown-transform": "^0.1.0"
+	},
+	"peerDependencies": {
+		"@serve-tools/polyfill-request-idle-callback": "^0.1",
+		"@serve-tools/polyfill-resource-management": "^0.1",
+		"urlpattern-polyfill": "^10.1",
+		"vite": "^8.2"
+	}
+}
