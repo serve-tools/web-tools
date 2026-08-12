@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Vite Polyfills"
+  short_description: "Configure syntax-detected Vite polyfills"
+  default_prompt: "Use $serve-tools-vite-polyfills to configure this Vite polyfill correctly."

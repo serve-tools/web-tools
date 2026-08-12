@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Transactions · @serve-tools/client-db</title>
+		<link rel="stylesheet" href="./src/style.css" />
+	</head>
+	<body data-demo="transactions">
+		<main>
+			<nav><a href="./index.html">← All demos</a></nav>
+			<p class="eyebrow">Transaction</p>
+			<h1>Commit related writes together</h1>
+			<p>
+				One readwrite transaction increments Ada's visit count and appends an activity record. Both writes
+				commit or abort together.
+			</p>
+			<div class="actions">
+				<button id="visit">Record Ada's visit</button>
+				<button id="reset" class="secondary">Reset demo data</button>
+			</div>
+			<output aria-live="polite">Opening the database…</output>
+		</main>
+		<script type="module" src="./src/main.ts"></script>
+	</body>
+</html>

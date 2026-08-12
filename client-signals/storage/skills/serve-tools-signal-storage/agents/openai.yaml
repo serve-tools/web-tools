@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal Storage"
+  short_description: "Observe Web Storage with Signals"
+  default_prompt: "Use $serve-tools-signal-storage to implement this reactive storage flow correctly."

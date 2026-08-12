@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maintain Serve Tools"
+  short_description: "Maintain web-tools package contracts"
+  default_prompt: "Use $maintain-serve-tools to make this repository change safely."

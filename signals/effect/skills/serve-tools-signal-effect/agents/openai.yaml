@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal Effect"
+  short_description: "Schedule and dispose batched signal effects"
+  default_prompt: "Use $serve-tools-signal-effect to implement this reactive effect correctly."

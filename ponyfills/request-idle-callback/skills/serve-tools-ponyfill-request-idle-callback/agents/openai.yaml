@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools requestIdleCallback Ponyfill"
+  short_description: "Schedule idle work without global mutation"
+  default_prompt: "Use $serve-tools-ponyfill-request-idle-callback to schedule idle work without global mutation."

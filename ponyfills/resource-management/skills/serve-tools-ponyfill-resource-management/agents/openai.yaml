@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Resource Management Ponyfill"
+  short_description: "Use module-scoped disposable resources"
+  default_prompt: "Use $serve-tools-ponyfill-resource-management to manage resources without global mutation."

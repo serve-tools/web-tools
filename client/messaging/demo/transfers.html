@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Transfers · @serve-tools/client-messaging</title>
+		<link rel="stylesheet" href="./src/style.css" />
+	</head>
+	<body data-demo="transfers">
+		<main>
+			<nav><a href="./index.html">← All demos</a></nav>
+			<p class="eyebrow">Transfer list</p>
+			<h1>Move bytes, do not copy them</h1>
+			<p>The page transfers an ArrayBuffer to the worker. The worker reverses its bytes and transfers it back.</p>
+			<form>
+				<label for="size">Buffer size in KiB</label>
+				<input id="size" name="size" type="number" value="1024" min="1" max="16384" required />
+				<button>Transfer and reverse</button>
+			</form>
+			<output aria-live="polite">Ready.</output>
+		</main>
+		<script type="module" src="./src/main.ts"></script>
+	</body>
+</html>

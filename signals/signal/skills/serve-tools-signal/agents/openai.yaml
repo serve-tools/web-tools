@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal"
+  short_description: "Use TC39-compatible reactive signals"
+  default_prompt: "Use $serve-tools-signal to implement this reactive state correctly."

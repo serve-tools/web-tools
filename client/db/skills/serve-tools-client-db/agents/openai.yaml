@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client DB"
+  short_description: "Use the typed IndexedDB client correctly"
+  default_prompt: "Use $serve-tools-client-db to implement typed IndexedDB operations correctly."

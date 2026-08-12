@@ -1,0 +1,9 @@
+import { defineConfig } from "vite";
+
+export default defineConfig({
+	build: {
+		rollupOptions: {
+			input: ["index.html", "operations.html", "transactions.html", "scans.html", "cancellation.html"],
+		},
+	},
+});

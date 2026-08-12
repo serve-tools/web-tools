@@ -1,0 +1,106 @@
+{
+	"name": "web-tools-workspace",
+	"version": "0.0.0",
+	"private": true,
+	"description": "Client libraries, polyfills, ponyfills, and Vite plugins",
+	"homepage": "https://github.com/serve-tools/web-tools#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/serve-tools/web-tools.git"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal",
+	"type": "module",
+	"workspaces": [
+		"client/db",
+		"client/db/demo",
+		"client/messaging",
+		"client/messaging/demo",
+		"client/shared-db",
+		"client/storage",
+		"client/storage/demo",
+		"client-signals/dom",
+		"client-signals/messaging",
+		"client-signals/shared-db",
+		"client-signals/storage",
+		"lit/signals",
+		"polyfills/request-idle-callback",
+		"polyfills/resource-management",
+		"ponyfills/request-idle-callback",
+		"ponyfills/resource-management",
+		"signals/collections",
+		"signals/effect",
+		"signals/signal",
+		"vite/polyfills"
+	],
+	"scripts": {
+		"build": "npm run build --workspaces --if-present",
+		"check:packages": "npm run check:package --workspaces --if-present",
+		"check:skills": "node scripts/check-skills.mjs",
+		"format": "dprint fmt",
+		"format:check": "dprint check",
+		"lint": "biome check",
+		"lint:fix": "biome check --write",
+		"test": "npm run test --workspaces --if-present",
+		"typecheck": "npm run typecheck --workspaces --if-present",
+		"verify": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run check:skills && npm run build && npm run check:packages"
+	},
+	"devDependencies": {
+		"@arethetypeswrong/cli": "0.18.5",
+		"@biomejs/biome": "2.5.8",
+		"@playwright/test": "1.62.1",
+		"@types/node": "26.2.0",
+		"@vitest/browser-playwright": "4.1.10",
+		"@vitest/coverage-istanbul": "4.1.10",
+		"dprint": "0.55.2",
+		"playwright": "1.62.1",
+		"publint": "0.3.23",
+		"typescript": "7.0.2",
+		"vite": "8.2.1",
+		"vitest": "4.1.10"
+	},
+	"packageManager": "npm@12.0.2",
+	"engines": {
+		"node": ">=22"
+	},
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": ">=22.14.0",
+			"onFail": "error"
+		},
+		"packageManager": {
+			"name": "npm",
+			"version": ">=11.5.1",
+			"onFail": "error"
+		}
+	},
+	"knip": {
+		"ignore": [
+			"**/dist/**",
+			"**/test/**"
+		],
+		"workspaces": {
+			"ponyfills/request-idle-callback": {
+				"entry": [
+					"src/ponyfill-request-idle-callback.ts"
+				]
+			},
+			"ponyfills/resource-management": {
+				"entry": [
+					"src/ponyfill-resource-management.ts"
+				]
+			},
+			"vite/polyfills": {
+				"ignoreDependencies": [
+					"@serve-tools/polyfill-request-idle-callback",
+					"@serve-tools/polyfill-resource-management",
+					"urlpattern-polyfill"
+				]
+			}
+		}
+	}
+}

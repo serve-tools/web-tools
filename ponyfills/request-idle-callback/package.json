@@ -1,0 +1,46 @@
+{
+	"name": "@serve-tools/ponyfill-request-idle-callback",
+	"version": "0.1.0",
+	"description": "Implements requestIdleCallback and cancelIdleCallback without global mutation",
+	"keywords": [
+		"request-idle-callback",
+		"cancel-idle-callback",
+		"idle-deadline",
+		"background-tasks",
+		"cooperative-scheduling",
+		"idle-callback",
+		"idle-period",
+		"low-priority",
+		"main-thread",
+		"event-loop",
+		"ponyfill"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/request-idle-callback#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "ponyfills/request-idle-callback"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/ponyfill-request-idle-callback.js",
+		"./lib/*": "./dist/lib/*.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.build.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "vitest run --config vitest.browser.config.ts",
+		"typecheck": "tsc --project tsconfig.json --noEmit"
+	}
+}

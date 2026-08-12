@@ -1,0 +1,47 @@
+{
+	"name": "@serve-tools/signal-dom",
+	"version": "0.1.0",
+	"description": "Functional DOM, SVG, and MathML templating with TC39 Signals",
+	"keywords": [
+		"dom",
+		"functional",
+		"signals",
+		"svg",
+		"templating"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/dom#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "client-signals/dom"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/signal-dom.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.build.json",
+		"build:dependencies": "npm run build --workspace @serve-tools/signal --workspace @serve-tools/signal-effect",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build:dependencies && npm run build && npm run test:node && npm run test:browser",
+		"test:browser": "playwright test --config test/playwright.config.ts",
+		"test:node": "node --test --experimental-test-coverage --test-coverage-exclude=\"**/*.test.js\" test/*.test.js",
+		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@michijs/htmltype": "0.4.12",
+		"@serve-tools/signal": "^0.1",
+		"@serve-tools/signal-effect": "^0.1"
+	}
+}

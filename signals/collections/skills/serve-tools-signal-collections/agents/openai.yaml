@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal Collections"
+  short_description: "Use fine-grained reactive collections"
+  default_prompt: "Use $serve-tools-signal-collections to choose and update this reactive collection correctly."

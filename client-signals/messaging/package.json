@@ -1,0 +1,48 @@
+{
+	"name": "@serve-tools/signal-messaging",
+	"version": "0.1.0",
+	"description": "Typed messaging subscriptions observed as explicit Signal state",
+	"keywords": [
+		"messageport",
+		"messaging",
+		"reactive",
+		"sharedworker",
+		"signal",
+		"subscription",
+		"webworker"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/messaging#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "client-signals/messaging"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/signal-messaging.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build:dependencies": "npm run build --workspace @serve-tools/client-messaging --workspace @serve-tools/signal",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build:dependencies && npm run test:node && npm run test:browser",
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"test:node": "vitest run --config vitest.config.ts",
+		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/client-messaging": "^0.1",
+		"@serve-tools/signal": "^0.1"
+	}
+}

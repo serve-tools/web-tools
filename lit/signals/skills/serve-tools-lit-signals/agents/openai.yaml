@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Lit Signals"
+  short_description: "Use fine-grained signals and decorators with Lit"
+  default_prompt: "Use $serve-tools-lit-signals to implement fine-grained Lit reactivity."

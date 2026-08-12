@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Shared state · @serve-tools/client-messaging</title>
+		<link rel="stylesheet" href="./src/style.css" />
+	</head>
+	<body data-demo="shared-state">
+		<main>
+			<nav><a href="./index.html">← All demos</a></nav>
+			<p class="eyebrow">Subscription</p>
+			<h1>Observe one shared counter</h1>
+			<p>Open this page in another tab. Both clients subscribe to the same state held by one SharedWorker.</p>
+			<div class="counter" aria-live="polite">
+				<span>Current total</span>
+				<strong id="total">…</strong>
+			</div>
+			<div class="actions">
+				<button data-amount="1">Add 1</button>
+				<button data-amount="5">Add 5</button>
+				<button data-amount="-1" class="secondary">Subtract 1</button>
+			</div>
+			<output aria-live="polite">Subscribing…</output>
+		</main>
+		<script type="module" src="./src/main.ts"></script>
+	</body>
+</html>

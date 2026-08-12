@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools requestIdleCallback Polyfill"
+  short_description: "Install requestIdleCallback globals safely"
+  default_prompt: "Use $serve-tools-polyfill-request-idle-callback to add idle callback support safely."

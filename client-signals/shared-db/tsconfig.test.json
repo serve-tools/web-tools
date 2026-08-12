@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"composite": false,
+		"lib": ["ES2025", "DOM"],
+		"noEmit": true,
+		"types": ["vitest"]
+	},
+	"include": ["src/**/*.ts", "test/**/*.ts", "vitest*.config.ts"]
+}

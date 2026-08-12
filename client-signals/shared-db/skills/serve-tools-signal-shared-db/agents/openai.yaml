@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal Shared DB"
+  short_description: "Build reactive SharedWorker database queries"
+  default_prompt: "Use $serve-tools-signal-shared-db to implement this reactive database query correctly."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client Storage"
+  short_description: "Observe typed Web Storage changes"
+  default_prompt: "Use $serve-tools-client-storage to implement observable Web Storage access correctly."

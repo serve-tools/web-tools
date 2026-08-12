@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Resource Management Polyfill"
+  short_description: "Install resource management globals safely"
+  default_prompt: "Use $serve-tools-polyfill-resource-management to add resource management globals safely."

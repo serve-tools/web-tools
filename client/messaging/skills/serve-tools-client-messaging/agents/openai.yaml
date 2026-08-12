@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client Messaging"
+  short_description: "Build typed worker messaging protocols"
+  default_prompt: "Use $serve-tools-client-messaging to design this worker protocol correctly."

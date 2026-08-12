@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Async scans · @serve-tools/client-db</title>
+		<link rel="stylesheet" href="./src/style.css" />
+	</head>
+	<body data-demo="scans">
+		<main>
+			<nav><a href="./index.html">← All demos</a></nav>
+			<p class="eyebrow">Async scan</p>
+			<h1>Read in committed pages</h1>
+			<p>Seed a catalog, then consume a typed async iterable without holding one transaction open.</p>
+			<form>
+				<label for="direction">Direction</label>
+				<select id="direction" name="direction">
+					<option value="next">Forward</option>
+					<option value="prev">Reverse</option>
+				</select>
+				<label for="limit">Maximum records</label>
+				<input id="limit" name="limit" type="number" value="12" min="1" max="60" required />
+				<button>Run scan</button>
+			</form>
+			<button id="seed" class="secondary">Seed 60 contacts</button>
+			<output aria-live="polite">Opening the database…</output>
+		</main>
+		<script type="module" src="./src/main.ts"></script>
+	</body>
+</html>

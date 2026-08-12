@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client Shared DB"
+  short_description: "Coordinate IndexedDB through SharedWorker"
+  default_prompt: "Use $serve-tools-client-shared-db to coordinate this browser database correctly."

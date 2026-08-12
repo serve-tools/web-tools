@@ -1,0 +1,16 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"outDir": "dist",
+		"rootDir": "src"
+	},
+	"include": ["src/**/*.ts", "src/**/.*.ts"],
+	"references": [
+		{
+			"path": "../../polyfills/request-idle-callback/tsconfig.json"
+		},
+		{
+			"path": "../../polyfills/resource-management/tsconfig.json"
+		}
+	]
+}

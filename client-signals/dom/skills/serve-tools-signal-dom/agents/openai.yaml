@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal DOM"
+  short_description: "Build and dispose signal-aware DOM trees"
+  default_prompt: "Use $serve-tools-signal-dom to build this reactive DOM tree correctly."

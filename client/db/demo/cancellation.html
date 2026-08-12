@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Scan cancellation · @serve-tools/client-db</title>
+		<link rel="stylesheet" href="./src/style.css" />
+	</head>
+	<body data-demo="cancellation">
+		<main>
+			<nav><a href="./index.html">← All demos</a></nav>
+			<p class="eyebrow">Cancellation</p>
+			<h1>Abort an in-flight scan</h1>
+			<p>
+				The scan reads one committed page at a time. Abort its signal to stop before the next page begins.
+			</p>
+			<div class="actions">
+				<button id="start">Start slow scan</button>
+				<button id="cancel" class="secondary" disabled>Abort</button>
+			</div>
+			<output aria-live="polite">Opening the database…</output>
+		</main>
+		<script type="module" src="./src/main.ts"></script>
+	</body>
+</html>

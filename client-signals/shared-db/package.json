@@ -1,0 +1,48 @@
+{
+	"name": "@serve-tools/signal-shared-db",
+	"version": "0.1.0",
+	"description": "Typed, promise-based IndexedDB access with signal-backed reactive queries",
+	"keywords": [
+		"database",
+		"indexeddb",
+		"reactive",
+		"reactivity",
+		"signal",
+		"storage",
+		"tc39"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/shared-db#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "client-signals/shared-db"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/db.js",
+		"./shared-worker": "./dist/shared-worker.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build:dependencies": "npm run build:dependencies --workspace @serve-tools/client-shared-db && npm run build --workspace @serve-tools/client-shared-db --workspace @serve-tools/signal --workspace @serve-tools/signal-effect",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build:dependencies && vitest run --config vitest.browser.config.ts",
+		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/client-shared-db": "^0.1",
+		"@serve-tools/signal": "^0.1",
+		"@serve-tools/signal-effect": "^0.1"
+	}
+}

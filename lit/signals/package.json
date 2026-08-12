@@ -1,0 +1,55 @@
+{
+	"name": "@serve-tools/lit-signals",
+	"version": "0.1.0",
+	"description": "Fine-grained TC39 Signal bindings and decorators for Lit",
+	"keywords": [
+		"computed",
+		"decorator",
+		"directive",
+		"lit",
+		"property",
+		"reactive",
+		"signal",
+		"tc39",
+		"template",
+		"web-components"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/lit/signals#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "lit/signals"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/lit-signals.js",
+		"./decorators": "./dist/lit-signals.decorators.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build:dependencies": "npm run build --workspace @serve-tools/signal",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build:dependencies && vitest run --config vitest.browser.config.ts",
+		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/signal": "^0.1"
+	},
+	"devDependencies": {
+		"lit": "3.3.3"
+	},
+	"peerDependencies": {
+		"lit": "^3"
+	}
+}

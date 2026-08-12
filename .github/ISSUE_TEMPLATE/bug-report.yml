@@ -1,0 +1,39 @@
+name: Bug report
+description: Report reproducible package behavior
+title: "Bug: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Do not report vulnerabilities here. Follow SECURITY.md instead.
+  - type: input
+    id: package
+    attributes:
+      label: Package and version
+      placeholder: "@serve-tools/example@1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Runtime or browser version, operating system, and relevant tooling
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include commands, code, actual behavior, and expected behavior.
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I removed credentials and sensitive data from this report.
+          required: true
+
+        - label: This report does not describe a security vulnerability.
+          required: true
