@@ -27,8 +27,8 @@ export const benchmark = async (
 ): Promise<BenchmarkResult> => {
 	const { iterations, samples = 15, warmup = 5 } = options;
 
-	for (let sample = 0; sample < warmup; sample++) {
-		for (let iteration = 0; iteration < iterations; iteration++) {
+	for (let sample = 0; sample < warmup; ++sample) {
+		for (let iteration = 0; iteration < iterations; ++iteration) {
 			const result = operation();
 
 			if (result instanceof Promise) await result;
@@ -37,10 +37,10 @@ export const benchmark = async (
 
 	const durations: number[] = [];
 
-	for (let sample = 0; sample < samples; sample++) {
+	for (let sample = 0; sample < samples; ++sample) {
 		const start = performance.now();
 
-		for (let iteration = 0; iteration < iterations; iteration++) {
+		for (let iteration = 0; iteration < iterations; ++iteration) {
 			const result = operation();
 
 			if (result instanceof Promise) await result;

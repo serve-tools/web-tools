@@ -107,6 +107,15 @@ For each module Vite asks the plugin to transform, it:
 
 Each virtual module is served from memory by the plugin's `load` hook and contains a self-guarding runtime snippet that no-ops when the feature already exists in the target environment.
 
+## Public API
+
+- `vitePolyfills(options?)` creates the Vite plugin.
+- `builtinPolyfills` contains the definitions enabled by default.
+- `definePolyfill(definition)` validates and preserves a custom definition's literal type.
+- `Polyfill` describes a stable ID, self-guarding runtime source, and OXC detection visitor.
+- `VitePolyfillsOptions` selects and orders the polyfill definitions to detect.
+- `@serve-tools/vite-polyfills/types` exposes all shipped ambient declarations, while focused `./types/*` subpaths expose one declaration group.
+
 ## Compatibility
 
 The plugin requires Vite 8.2 and runs in Vite's Node.js process.

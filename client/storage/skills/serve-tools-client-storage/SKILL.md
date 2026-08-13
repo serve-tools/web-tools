@@ -32,4 +32,4 @@ Allow native security, quota, privacy, and persistence exceptions to remain obse
 
 ## Validate changes
 
-Update behavior, public types, README recipes, browser tests, and type fixtures together.
+Update behavior, public types, README examples, browser tests, and type fixtures together.

@@ -29,7 +29,7 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/lit-signals.js",
-		"./decorators": "./dist/lit-signals.decorators.js"
+		"./decorators": "./dist/decorators.js"
 	},
 	"files": [
 		"dist",
@@ -38,7 +38,7 @@
 	"scripts": {
 		"benchmark": "vitest run --config vitest.benchmark.config.ts",
 		"build": "npm run clean && tsc --build --force tsconfig.json",
-		"build:dependencies": "npm run build --workspace @serve-tools/signal",
+		"build:dependencies": "npm run build --workspace @serve-tools/signal --workspace @serve-tools/signal-collections",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build:dependencies && vitest run --config vitest.browser.config.ts",
@@ -48,6 +48,7 @@
 		"@serve-tools/signal": "^0.1"
 	},
 	"devDependencies": {
+		"@serve-tools/signal-collections": "^0.1",
 		"lit": "3.3.3"
 	},
 	"peerDependencies": {

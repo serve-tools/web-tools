@@ -21,7 +21,7 @@ npm install @serve-tools/signal @serve-tools/signal-dom
 
 At its core is a simple primitive:
 
-```typescript
+```ts
 import { attrs, svg } from "@serve-tools/signal-dom";
 
 // () => <svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" /></svg>
@@ -43,22 +43,20 @@ const $svg = svg("svg",
 
 Calling the returned function mounts live DOM directly:
 
-```typescript
+```ts
 $svg(document.body)
 ```
 
-## Enter Signals
+## Reactive bindings
 
 Signal DOM uses `@serve-tools/signal` directly:
 
-```typescript
+```ts
 import { Signal } from "@serve-tools/signal";
 import { attrs, dispose, svg } from "@serve-tools/signal-dom";
 ```
 
 Static values work normally, while `Signal.State` and `Signal.Computed` values update their bindings automatically.
-
-Migrating from the configurable API: remove `use({ Signal })` and replace `use.Signal` with the imported `Signal`.
 
 Removing DOM nodes does not automatically clean up their reactive bindings.
 When a reactive subtree is permanently retired, call `dispose(root)` before or after detaching it.
@@ -68,7 +66,7 @@ Attributes, properties, and nested fragments all react to signals.
 
 If an attribute is a signal, the DOM updates automatically when it changes:
 
-```typescript
+```ts
 const viewBox = new Signal.State("0 0 16 16");
 
 const $svg = svg("svg", attrs({ viewBox }), svg("circle", attrs({ cx: 8, cy: 8, r: 6 })))
@@ -85,37 +83,12 @@ Dispose the placeholder, any visible top-level region node, or an ancestor only 
 
 Reactive scheduling is provided by `@serve-tools/signal-effect`; both packages share a compatible `@serve-tools/signal` installation.
 
-### Migrating to `@serve-tools/signal-dom`
-
-Replace `@signal-utils/dom` with `@serve-tools/signal-dom`.
-The `/pure`, `/hms`, and `/types` subpaths were removed; import runtime functions and the `DOM` type from the main entry.
-Static values still avoid creating effects.
-
-```typescript
-const showCheck = new Signal.State(true);
-
-svg("svg",
-	attrs({ viewBox: "0 0 16 16", }),
-	// always show this circle
-	svg("circle", attrs({ cx: 8, cy: 8, r: 6 })),
-
-	// only show these circles when showCheck is true
-	group(showCheck,
-		svg("circle", attrs({ cx: 8, cy: 8, r: 4, fill: "blue" })),
-		svg("circle", attrs({ cx: 8, cy: 8, r: 2, fill: "lightblue" })),
-	),
-
-	// always show this circle
-	svg("circle", attrs({ cx: 8, cy: 8, r: 1 }))
-)
-```
-
 ## Shadow DOM, styles, and internals
 
 `css` creates a `CSSStyleSheet`; signal interpolations update that same sheet.
 `adoptedCSS()` adopts the sheet into a document or shadow root, and `shadowRoot()` attaches a shadow root and applies templates to it.
 
-```typescript
+```ts
 import { adoptedCSS, css, html, shadowRoot } from "@serve-tools/signal-dom";
 
 const display = new Signal.State("block");
@@ -134,7 +107,7 @@ Stylesheets remain plain platform objects.
 `elementInternals()` calls `attachInternals()` once and assigns writable `ElementInternals` properties.
 Its values may also be signals.
 
-```typescript
+```ts
 customElements.define("x-control", class extends HTMLElement {});
 
 const role = new Signal.State<string | null>("button");
@@ -150,7 +123,7 @@ APIs such as `attachInternals()` and constructed stylesheets still require suppo
 
 Signal DOM templates work directly inside standard custom elements; no package-specific base class is required.
 
-```typescript
+```ts
 class GreetingElement extends HTMLElement {
 	constructor() {
 		super()
@@ -165,7 +138,7 @@ customElements.define("greeting-element", GreetingElement)
 `disconnectedCallback()` can represent a temporary move followed by reconnection.
 Call `dispose(this)` there only when the component lifecycle guarantees that instance will never reconnect; disposal is terminal for its existing bindings.
 
-## Fully Typed
+## TypeScript
 
 **Signal DOM** is fully typed for HTML, SVG, and MathML elements, attributes, and properties.
 
@@ -182,9 +155,9 @@ Call `dispose(this)` there only when the component lifecycle guarantees that ins
   - SVG attributes are typed from `DOM.SVG.AttributeMap`.
   - SVG properties are typed from `DOM.SVG.PropertyMap`.
 
-Attributes allow unknown names for ecosystem compatibility, while properties use strictly typed for safety.
+Attributes allow unknown names for ecosystem compatibility, while properties are strictly typed for safety.
 
-```typescript
+```ts
 const badButton = html(
 	"button",
 	attrs({
@@ -199,7 +172,44 @@ const badButton = html(
 )
 ```
 
+## Public API
+
+- `html()`, `svg()`, and `mathml()` create typed element templates.
+- `text()` creates a static or signal-backed text-node template.
+- `attrs()` and `props()` assign static or signal-backed attributes and properties.
+- `group()` creates a persistent conditional region.
+- `shadowRoot()` attaches and populates a shadow root.
+- `elementInternals()` attaches internals and assigns writable ARIA properties.
+- `css` creates a constructed stylesheet, and `adoptedCSS()` adopts it into a document or shadow root.
+- `dispose()` stops bindings owned by a node subtree or constructed stylesheet without removing DOM.
+- `CSSValue` describes `css` interpolation values, and the `DOM` namespace exposes element, attribute, and property maps.
+
+## Compatibility
+
+The package is an ES module for browser documents with the standard DOM APIs used by each selected helper.
+Constructed stylesheets, `attachInternals()`, shadow DOM, SVG, and MathML still require corresponding browser support.
+The package creates real nodes eagerly and does not provide server-side rendering or hydration.
+
 ## Agent Skill
 
 This package includes `skills/serve-tools-signal-dom/SKILL.md` with version-aligned usage guidance for compatible coding agents.
 Activation is explicit; installing the package does not automatically trust or enable it.
+
+## Development
+
+The default test command runs Node.js DOM tests and Playwright tests in Chromium, Firefox, and WebKit.
+
+```shell
+npx playwright install chromium firefox webkit
+npm test --workspace @serve-tools/signal-dom
+```
+
+Run the opt-in Chromium benchmarks with:
+
+```shell
+npm run benchmark --workspace @serve-tools/signal-dom
+```
+
+## License
+
+[MIT-0](./LICENSE.md)

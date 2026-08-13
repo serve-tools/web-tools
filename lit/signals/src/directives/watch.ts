@@ -16,22 +16,22 @@ class WatchDirective<T = unknown> extends AsyncDirective {
 	#source: WatchSource<T> | undefined;
 	#signal: Signal.Any<T> | undefined;
 
-	readonly #commit = (): void => {
+	readonly #watcher = new Signal.subtle.Watcher(() => {
+		if (!this.#isPending) {
+			this.#isPending = true;
+
+			enqueueMicrotask(this);
+		}
+	});
+
+	run(): void {
 		this.#isPending = false;
 		this.#watcher.watch();
 
 		if (this.isConnected && this.#signal !== undefined) {
 			this.setValue(this.#signal.get());
 		}
-	};
-
-	readonly #watcher = new Signal.subtle.Watcher(() => {
-		if (!this.#isPending) {
-			this.#isPending = true;
-
-			enqueueMicrotask(this.#commit);
-		}
-	});
+	}
 
 	render(source: WatchSource<T> | undefined): unknown {
 		if (source === undefined) {

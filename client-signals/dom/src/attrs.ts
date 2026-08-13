@@ -1,4 +1,4 @@
-import { handler, type Watchable } from "./_internal.js";
+import { handler, type Watchable } from "./.internals.js";
 
 /** Sets attributes on an element. */
 export const attrs =
@@ -20,9 +20,12 @@ export const attrs =
 		return element;
 	};
 
+/** Types used by {@link attrs}. */
 export namespace attrs {
+	/** A template that assigns attributes and returns the same element. */
 	export type Template<T extends DOM.Element = DOM.Element> = (element: T) => T;
 
+	/** Static or signal-backed attributes accepted for an element. */
 	export type AttributeSet<T extends DOM.Element = DOM.Element> = {
 		[K in keyof DOM.AttributeSet<T>]: Watchable<DOM.AttributeSet<T>[K]>;
 	};

@@ -1,3 +1,4 @@
+import { Signal } from "@serve-tools/signal";
 import type { PropertyDeclaration } from "lit";
 
 export type { PropertyDeclaration } from "lit";
@@ -14,6 +15,49 @@ export const initializeDecorator = <Value>(
 	}
 
 	properties.set(name, options);
+};
+
+const alwaysChanged = () => true;
+
+export const signalAccessor = <This extends ReactiveElement, Value>(
+	target: ClassAccessorDecoratorTarget<This, Value>,
+	{ name, metadata }: ClassAccessorDecoratorContext<This, Value>,
+	options: PropertyDeclaration<Value, unknown>,
+	normalize: (value: Value) => Value,
+): ClassAccessorDecoratorResult<This, Value> => {
+	initializeDecorator(metadata, name, options);
+
+	const stateOf = (instance: This) => target.get.call(instance) as unknown as Signal.State<Value>;
+
+	return {
+		init(value) {
+			const normalizedValue = normalize(value);
+			const state = new Signal.State(normalizedValue);
+
+			if (normalizedValue !== undefined && (options as SignalPropertyOptions).update === "lifecycle") {
+				this.requestUpdate(name, undefined, { ...options, hasChanged: alwaysChanged }, true, normalizedValue);
+			}
+
+			return state as unknown as Value;
+		},
+		get() {
+			return stateOf(this).get();
+		},
+		set(value) {
+			const state = stateOf(this);
+			const normalizedValue = normalize(value);
+
+			if ((options as SignalPropertyOptions).update === "lifecycle") {
+				const oldValue = Signal.subtle.untrack(() => state.get());
+
+				state.set(normalizedValue);
+
+				this.requestUpdate(name, oldValue, options, true, normalizedValue);
+			} else {
+				state.set(normalizedValue);
+			}
+		},
+	};
 };
 
 /** Metadata for signal element properties. */
@@ -36,4 +80,8 @@ export type ReactiveElement = {
 		/** Represents the new value of the property. This is only used if `useNewValue` is true. */
 		newValue?: unknown,
 	): void;
+};
+
+type SignalPropertyOptions = {
+	update?: "atomic" | "lifecycle";
 };

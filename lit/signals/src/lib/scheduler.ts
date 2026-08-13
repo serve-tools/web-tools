@@ -1,28 +1,30 @@
-type Callback = () => void;
+interface Task {
+	run(): void;
+}
 
-let pendingCallbacks: Callback[] = [];
-let flushingCallbacks: Callback[] = [];
+let pendingTasks: Task[] = [];
+let flushingTasks: Task[] = [];
 let isScheduled = false;
 
 const flush = (): void => {
 	isScheduled = false;
 
-	const callbacks = pendingCallbacks;
+	const tasks = pendingTasks;
 
-	pendingCallbacks = flushingCallbacks;
-	flushingCallbacks = callbacks;
+	pendingTasks = flushingTasks;
+	flushingTasks = tasks;
 
 	let errors: unknown[] | undefined;
 
-	for (let index = 0; index < flushingCallbacks.length; ++index) {
+	for (let index = 0; index < flushingTasks.length; ++index) {
 		try {
-			flushingCallbacks[index]!();
+			flushingTasks[index]!.run();
 		} catch (error) {
 			(errors ??= []).push(error);
 		}
 	}
 
-	flushingCallbacks.length = 0;
+	flushingTasks.length = 0;
 
 	if (errors?.length === 1) {
 		throw errors[0];
@@ -33,9 +35,9 @@ const flush = (): void => {
 	}
 };
 
-/** Adds a callback to the package-wide microtask flush. */
-export const enqueueMicrotask = (callback: Callback): void => {
-	pendingCallbacks.push(callback);
+/** Adds a task to the package-wide microtask flush. */
+export const enqueueMicrotask = (task: Task): void => {
+	pendingTasks.push(task);
 
 	if (!isScheduled) {
 		isScheduled = true;

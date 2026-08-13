@@ -14,8 +14,10 @@ export type {
 	SharedDBSubscription,
 } from "../lib/.types.js";
 
+/** Connects a typed database client to a port owned by a shared database worker. */
 export const connect = connectPort;
 
+/** Schema declarations available through {@link connect}. */
 export namespace connect {
 	/** Extracts the schema retained by a shared database server. */
 	export type SchemaType<Value> = T.SchemaType<Value>;

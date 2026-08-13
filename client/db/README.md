@@ -25,7 +25,7 @@ console.log(await db.get("notes", "welcome")); // "Hello"
 npm install @serve-tools/client-db
 ```
 
-## Recipes
+## Usage
 
 ### Define and open a database
 
@@ -140,15 +140,6 @@ await DB.delete("app", { blocked(event) {} });
 
 Connections implement `Disposable`; transactions expose their completion through `done`.
 
-## Compatibility
-
-The package is an ES module for browser windows and workers that provide IndexedDB.
-It relies on the platform's `indexedDB`, `IDBKeyRange`, structured-clone, and `AbortSignal`; it does not install an IndexedDB implementation in Node.js.
-Using `await using` for connection cleanup additionally requires `Symbol.dispose` support or a compatible polyfill.
-Upgrade callbacks have the same synchronous lifetime constraints as native `upgradeneeded` handlers.
-
-The recipes above are covered by the package's TypeScript fixtures in addition to its runtime tests.
-
 ## Public API
 
 The package exports the `DB` connection class and these supporting declarations:
@@ -158,6 +149,15 @@ The package exports the `DB` connection class and these supporting declarations:
 - `DBUpgradeContext`, `DBUpgradeDatabase`, `DBUpgradeObjectStore`, and `DBUpgradeTransaction` describe the synchronous versionchange surface.
 - `DBTransactionCallback`, `StoreName`, `StoreKey`, and `StoreValue` support reusable application declarations.
 - `DB.Store` and `DB.Schema` define database schemas.
+
+## Compatibility
+
+The package is an ES module for browser windows and workers that provide IndexedDB.
+It relies on the platform's `indexedDB`, `IDBKeyRange`, structured-clone, and `AbortSignal`; it does not install an IndexedDB implementation in Node.js.
+Using `await using` for connection cleanup additionally requires `Symbol.dispose` support or a compatible polyfill.
+Upgrade callbacks have the same synchronous lifetime constraints as native `upgradeneeded` handlers.
+
+The examples above are covered by the package's TypeScript fixtures in addition to its runtime tests.
 
 ## Demo
 

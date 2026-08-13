@@ -12,24 +12,39 @@ import { Signal } from "@serve-tools/signal";
 
 const pending = { status: "pending" } as const;
 const complete = { status: "complete" } as const;
+const noop = (): void => {};
 
-type Start<Value> = (
-	onValue: (value: Value) => void,
-	onComplete: () => void,
-	onError: (error: Error) => void,
-) => WorkerSubscription;
+type Subscribe<Value> = {
+	call(
+		client: WorkerClient<WorkerProtocol>,
+		name: string,
+		onValue: (value: Value) => void,
+		options: WorkerSubscribeOptions,
+	): WorkerSubscription;
+	call(
+		client: WorkerClient<WorkerProtocol>,
+		name: string,
+		input: unknown,
+		onValue: (value: Value) => void,
+		options: WorkerSubscribeOptions,
+	): WorkerSubscription;
+};
 
 class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>> implements Disposable {
-	#off = () => {};
+	#off = noop;
 	#subscription: WorkerSubscription | undefined;
 
-	constructor(start: Start<Value>, signal?: AbortSignal) {
+	constructor(
+		client: WorkerClient<WorkerProtocol>,
+		name: string,
+		options: (ObserveOptions & { readonly input?: unknown }) | undefined,
+	) {
 		const state = new Signal.State<ObservationState<Value>>(pending);
 
 		super(() => state.get());
 
 		let settled = false;
-		const off = (): void => signal?.removeEventListener("abort", abort);
+		let off = noop;
 		const settle = (next: ObservationState<Value>): void => {
 			if (settled) return;
 
@@ -37,26 +52,38 @@ class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>
 			off();
 			state.set(next);
 		};
-		const abort = (): void => settle({ status: "error", error: signal?.reason });
+		const signal = options?.signal;
 
-		this.#off = off;
+		if (signal !== undefined) {
+			const abort = (): void => settle({ status: "error", error: signal.reason });
 
-		if (signal?.aborted) {
-			abort();
+			off = (): void => signal.removeEventListener("abort", abort);
+			this.#off = off;
 
-			return;
+			if (signal.aborted) {
+				abort();
+
+				return;
+			}
+
+			signal.addEventListener("abort", abort, { once: true });
 		}
 
-		signal?.addEventListener("abort", abort, { once: true });
-
 		try {
-			const subscription = start(
-				(value) => {
-					if (!settled) state.set({ status: "ready", value });
-				},
-				() => settle(complete),
-				(error) => settle({ status: "error", error }),
-			);
+			const subscribe = client.subscribe as unknown as Subscribe<Value>;
+			const onValue = (value: Value) => {
+				if (!settled) state.set({ status: "ready", value });
+			};
+			const subscriptionOptions = {
+				...(signal === undefined ? {} : { signal }),
+				...(options?.transfer === undefined ? {} : { transfer: options.transfer }),
+				onComplete: () => settle(complete),
+				onError: (error: Error) => settle({ status: "error", error }),
+			};
+			const subscription =
+				options && "input" in options
+					? subscribe.call(client, name, options.input, onValue, subscriptionOptions)
+					: subscribe.call(client, name, onValue, subscriptionOptions);
 
 			this.#subscription = subscription;
 
@@ -99,39 +126,36 @@ export const observe = <const P extends WorkerProtocol, const Name extends Subsc
 	...arguments_: ObserveArguments<P["subscriptions"][Name]>
 ): Observation<OutputOf<P["subscriptions"][Name]>> => {
 	type Value = OutputOf<P["subscriptions"][Name]>;
-	type Subscribe = {
-		(name: string, onValue: (value: Value) => void, options: WorkerSubscribeOptions): WorkerSubscription;
-		(
-			name: string,
-			input: unknown,
-			onValue: (value: Value) => void,
-			options: WorkerSubscribeOptions,
-		): WorkerSubscription;
-	};
 
 	const options = arguments_[0] as (ObserveOptions & { readonly input?: unknown }) | undefined;
-	const subscribe = client.subscribe.bind(client) as unknown as Subscribe;
 
-	return new ReactiveObservation<Value>((onValue, onComplete, onError) => {
-		const subscriptionOptions = {
-			...(options?.signal === undefined ? {} : { signal: options.signal }),
-			...(options?.transfer === undefined ? {} : { transfer: options.transfer }),
-			onComplete,
-			onError,
-		};
-
-		return options && "input" in options
-			? subscribe(name, options.input, onValue, subscriptionOptions)
-			: subscribe(name, onValue, subscriptionOptions);
-	}, options?.signal);
+	return new ReactiveObservation<Value>(client, name, options);
 };
 
 /** The current state of a messaging subscription observed as a Signal. */
 export type ObservationState<Value> =
-	| { readonly status: "pending" }
-	| { readonly status: "ready"; readonly value: Value }
-	| { readonly status: "complete" }
-	| { readonly status: "error"; readonly error: unknown };
+	| {
+			/** Identifies an observation waiting for its first value or terminal outcome. */
+			readonly status: "pending";
+	  }
+	| {
+			/** Identifies an observation containing its latest emitted value. */
+			readonly status: "ready";
+
+			/** The latest value emitted by the subscription. */
+			readonly value: Value;
+	  }
+	| {
+			/** Identifies a subscription that completed normally. */
+			readonly status: "complete";
+	  }
+	| {
+			/** Identifies a subscription that failed or was cancelled. */
+			readonly status: "error";
+
+			/** The remote, setup, or cancellation failure. */
+			readonly error: unknown;
+	  };
 
 /** A read-only messaging subscription Signal with an explicit observation lifecycle. */
 export type Observation<Value> = InstanceType<typeof Signal.Computed<ObservationState<Value>>> &

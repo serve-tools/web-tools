@@ -13,15 +13,50 @@ export interface Effect {
 }
 
 const activeEffects = new WeakSet<object>();
+const schedulerCapacity = 512;
 
-const watcher = new Signal.subtle.Watcher(() => queueMicrotask(flush));
+let availableScheduler: Scheduler | undefined;
+let flushScheduled = false;
+let flushingSchedulers: Scheduler[] = [];
+let pendingSchedulers: Scheduler[] = [];
+
+const schedule = (scheduler: Scheduler): void => {
+	if (scheduler.queued) return;
+
+	scheduler.queued = true;
+	pendingSchedulers.push(scheduler);
+
+	if (!flushScheduled) {
+		flushScheduled = true;
+
+		queueMicrotask(flush);
+	}
+};
 
 const flush = (): void => {
-	const pending = watcher.getPending();
-	const errors: unknown[] = [];
+	const schedulers = pendingSchedulers;
 
-	// Rearm first so cascading invalidations schedule another flush.
-	watcher.watch();
+	let errors: unknown[] | undefined;
+
+	flushScheduled = false;
+	pendingSchedulers = flushingSchedulers;
+	flushingSchedulers = schedulers;
+	pendingSchedulers.length = 0;
+
+	// Snapshot and rearm every dirty scheduler before effects run so cascading invalidations enter a later batch.
+	const firstScheduler = schedulers[0];
+	const pending = firstScheduler.watcher.getPending();
+
+	firstScheduler.queued = false;
+	firstScheduler.watcher.watch();
+
+	for (let index = 1; index < schedulers.length; ++index) {
+		const scheduler = schedulers[index];
+
+		scheduler.queued = false;
+		pending.push(...scheduler.watcher.getPending());
+		scheduler.watcher.watch();
+	}
 
 	for (const effect of pending) {
 		if (!activeEffects.has(effect)) {
@@ -31,49 +66,110 @@ const flush = (): void => {
 		try {
 			effect.get();
 		} catch (error) {
-			errors.push(error);
+			(errors ??= []).push(error);
 		}
 	}
 
-	if (errors.length === 1) {
+	flushingSchedulers.length = 0;
+
+	if (errors?.length === 1) {
 		throw errors[0];
 	}
 
-	if (errors.length > 1) {
+	if (errors && errors.length > 1) {
 		throw new AggregateError(errors, "Multiple effects failed");
 	}
+};
+
+const acquireScheduler = (): Scheduler => {
+	const scheduler = availableScheduler ?? createScheduler();
+
+	++scheduler.size;
+
+	if (scheduler.size === schedulerCapacity) {
+		availableScheduler = scheduler.next;
+
+		scheduler.next = undefined;
+	} else {
+		availableScheduler = scheduler;
+	}
+
+	return scheduler;
+};
+
+const createScheduler = (): Scheduler => {
+	const scheduler = { next: undefined, queued: false, size: 0 } as Scheduler;
+
+	scheduler.watcher = new Signal.subtle.Watcher(() => schedule(scheduler));
+
+	return scheduler;
+};
+
+const releaseScheduler = (scheduler: Scheduler): void => {
+	if (scheduler.size-- === schedulerCapacity) {
+		scheduler.next = availableScheduler;
+
+		availableScheduler = scheduler;
+	}
+};
+
+const startEffect = (computed: InstanceType<typeof Signal.Computed>, scheduler: Scheduler): void => {
+	activeEffects.add(computed);
+	scheduler.watcher.watch(computed);
+
+	try {
+		computed.get();
+	} catch (error) {
+		stopEffect(computed, scheduler);
+
+		throw error;
+	}
+};
+
+const stopEffect = (computed: InstanceType<typeof Signal.Computed>, scheduler: Scheduler): boolean => {
+	if (activeEffects.delete(computed)) {
+		scheduler.watcher.unwatch(computed);
+
+		return true;
+	}
+
+	return false;
 };
 
 /** Creates a dormant effect controller. */
 export const createEffect = (run: () => void): Effect => {
 	const computed = new Signal.Computed(run);
 
-	let state: EffectState = "dormant";
+	let startable = true;
+	let scheduler: Scheduler | undefined;
 
 	const dispose = (): void => {
-		if (state === "disposed") {
-			return;
-		}
+		startable = false;
 
-		state = "disposed";
+		if (scheduler && stopEffect(computed, scheduler)) {
+			releaseScheduler(scheduler);
 
-		if (activeEffects.delete(computed)) {
-			watcher.unwatch(computed);
+			scheduler = undefined;
 		}
 	};
 
 	const start = (): void => {
-		if (state !== "dormant") return;
+		if (!startable) return;
 
-		state = "active";
+		startable = false;
 
-		activeEffects.add(computed);
-		watcher.watch(computed);
+		const acquiredScheduler = acquireScheduler();
+
+		scheduler = acquiredScheduler;
 
 		try {
-			computed.get();
+			startEffect(computed, acquiredScheduler);
 		} catch (error) {
-			dispose();
+			if (scheduler === acquiredScheduler) {
+				releaseScheduler(acquiredScheduler);
+
+				scheduler = undefined;
+			}
 
 			throw error;
 		}
@@ -84,17 +180,33 @@ export const createEffect = (run: () => void): Effect => {
 
 /** Runs an effect immediately and returns its disposer. */
 export const effect = (run: () => void): Dispose => {
-	const controller = createEffect(run);
+	const computed = new Signal.Computed(run);
+	const scheduler = acquireScheduler();
 
-	controller.start();
+	try {
+		startEffect(computed, scheduler);
+	} catch (error) {
+		releaseScheduler(scheduler);
 
-	return controller.dispose;
+		throw error;
+	}
+
+	return () => {
+		if (stopEffect(computed, scheduler)) {
+			releaseScheduler(scheduler);
+		}
+	};
 };
 
 // #region Types
 
 declare const queueMicrotask: (callback: () => void) => void;
 
-type EffectState = "dormant" | "active" | "disposed";
+interface Scheduler {
+	next: Scheduler | undefined;
+	queued: boolean;
+	size: number;
+	watcher: InstanceType<typeof Signal.subtle.Watcher>;
+}
 
 // #endregion Types

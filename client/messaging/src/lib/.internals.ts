@@ -1,7 +1,7 @@
 import type { ErrorRecord, MessageEndpoint, WireMessage, WorkerSubscription, WorkerTransferResult } from "./.types.js";
 import { WorkerRemoteError } from "./WorkerRemoteError.js";
 
-export const protocol = "@serve-tools/client-messaging/1";
+export const protocol = "@serve-tools/client-messaging/2";
 
 export const transferBrand: unique symbol = Symbol("Transferred value");
 
@@ -14,38 +14,26 @@ export const inactiveSubscription: WorkerSubscription = Object.freeze({
 });
 
 export const isWireMessage = (value: unknown): value is WireMessage => {
-	if (!value || typeof value !== "object") {
+	if (!Array.isArray(value) || value[0] !== protocol) {
 		return false;
 	}
 
-	const message = value as {
-		protocol?: unknown;
-		type?: unknown;
-		id?: unknown;
-		kind?: unknown;
-		name?: unknown;
-		ok?: unknown;
-		error?: unknown;
-	};
+	if (value[1] === "close") {
+		return isErrorRecord(value[2]);
+	}
 
-	if (message.protocol !== protocol || typeof message.type !== "string") {
+	if (!Number.isSafeInteger(value[2]) || (value[2] as number) < 0) {
 		return false;
 	}
 
-	if (message.type === "close") {
-		return isErrorRecord(message.error);
-	}
-
-	if (!Number.isSafeInteger(message.id) || (message.id as number) < 0) {
-		return false;
-	}
-
-	switch (message.type) {
-		case "open":
-			return (message.kind === "request" || message.kind === "subscription") && typeof message.name === "string";
-		case "settle":
-			return message.ok === true || (message.ok === false && isErrorRecord(message.error));
+	switch (value[1]) {
+		case "request":
+		case "subscription":
+			return typeof value[3] === "string";
+		case "reject":
+			return isErrorRecord(value[3]);
 		case "next":
+		case "resolve":
 		case "cancel":
 			return true;
 		default:
@@ -70,7 +58,7 @@ export const post = (endpoint: MessageEndpoint, message: WireMessage, transfer?:
 export const unwrapTransfer = (value: unknown): { value: unknown; transfer?: readonly Transferable[] } =>
 	isTransferResult(value) ? value : { value };
 
-const isTransferResult = (value: unknown): value is WorkerTransferResult<unknown> =>
+export const isTransferResult = (value: unknown): value is WorkerTransferResult<unknown> =>
 	!!value && typeof value === "object" && (value as Record<PropertyKey, unknown>)[transferBrand] === true;
 
 export const errorRecord = (reason: unknown): ErrorRecord => {

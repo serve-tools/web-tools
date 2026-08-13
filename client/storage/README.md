@@ -24,7 +24,7 @@ storage.delete("token"); // true if deleted, false if not present
 npm install @serve-tools/client-storage
 ```
 
-## Recipes
+## Usage
 
 ### Define storage
 
@@ -104,14 +104,6 @@ If a subscriber throws, all other active subscribers still run.
 One error is rethrown by identity; multiple errors are combined in delivery order in an `AggregateError`.
 The storage mutation has already committed when the error is thrown.
 
-## Compatibility
-
-The package is an ES module for browser windows with the Web Storage API.
-It requires a `Window` because subscriptions combine wrapper-local changes with that window's cross-document `storage` events; workers do not expose this API.
-Storage availability, persistence, quota, and privacy behavior remain controlled by the browser and may vary in private browsing or restricted third-party contexts.
-
-The recipes above are covered by the package's TypeScript fixtures in addition to its browser integration tests.
-
 ## Public API
 
 - `Storage` provides `size`, `get`, `has`, `set`, `delete`, `clear`, and `subscribe`.
@@ -119,6 +111,14 @@ The recipes above are covered by the package's TypeScript fixtures in addition t
 - `StorageSubscriber` and `StorageSubscribeOptions` describe subscription callbacks and cancellation.
 - `StorageKey` and `StorageValue` project keys and values from an application schema.
 - `Storage.Schema` is the unrestricted string-keyed schema.
+
+## Compatibility
+
+The package is an ES module for browser windows with the Web Storage API.
+It requires a `Window` because subscriptions combine wrapper-local changes with that window's cross-document `storage` events; workers do not expose this API.
+Storage availability, persistence, quota, and privacy behavior remain controlled by the browser and may vary in private browsing or restricted third-party contexts.
+
+The examples above are covered by the package's TypeScript fixtures in addition to its browser integration tests.
 
 ## Demo
 

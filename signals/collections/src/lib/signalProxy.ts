@@ -1,6 +1,6 @@
 import { Signal } from "@serve-tools/signal";
 
-import { type VersionSignal, versionSignal } from "./.internals.js";
+import { consumeKey, type VersionSignal, versionSignal } from "./.internals.js";
 
 /** Creates a shallow signal-backed proxy around a plain record. */
 export function signalProxy(target: object): object {
@@ -8,17 +8,23 @@ export function signalProxy(target: object): object {
 }
 
 class SignalHandler implements ProxyHandler<PropertyBag> {
-	readonly #presence = new Map<Key, VersionSignal>();
-	readonly #values = new Map<Key, VersionSignal>();
+	#presence: Map<Key, VersionSignal> | undefined;
+	#values: Map<Key, VersionSignal> | undefined;
 	#structure: VersionSignal | undefined;
 
 	get(target: PropertyBag, key: Key): unknown {
-		this.#read(this.#values, key);
+		if (Signal.subtle.currentComputed() !== undefined) {
+			consumeKey((this.#values ??= new Map()), key);
+		}
+
 		return target[key];
 	}
 
 	has(target: PropertyBag, key: Key): boolean {
-		this.#read(this.#presence, key);
+		if (Signal.subtle.currentComputed() !== undefined) {
+			consumeKey((this.#presence ??= new Map()), key);
+		}
+
 		return Reflect.has(target, key);
 	}
 
@@ -41,10 +47,10 @@ class SignalHandler implements ProxyHandler<PropertyBag> {
 			return false;
 		}
 
-		this.#dirty(this.#values, key);
+		this.#values?.get(key)?.set(undefined);
 
 		if (!had) {
-			this.#dirty(this.#presence, key);
+			this.#presence?.get(key)?.set(undefined);
 			this.#structure?.set(undefined);
 		}
 
@@ -56,33 +62,14 @@ class SignalHandler implements ProxyHandler<PropertyBag> {
 		const result = Reflect.deleteProperty(target, key);
 
 		if (result && had) {
-			this.#dirty(this.#presence, key);
-			this.#dirty(this.#values, key);
-			this.#presence.delete(key);
-			this.#values.delete(key);
+			this.#presence?.get(key)?.set(undefined);
+			this.#values?.get(key)?.set(undefined);
+			this.#presence?.delete(key);
+			this.#values?.delete(key);
 			this.#structure?.set(undefined);
 		}
 
 		return result;
-	}
-
-	#read(signals: Map<Key, VersionSignal>, key: Key): void {
-		if (Signal.subtle.currentComputed() === undefined) {
-			return;
-		}
-
-		let signal = signals.get(key);
-
-		if (signal === undefined) {
-			signal = versionSignal();
-			signals.set(key, signal);
-		}
-
-		signal.get();
-	}
-
-	#dirty(signals: Map<Key, VersionSignal>, key: Key): void {
-		signals.get(key)?.set(undefined);
 	}
 }
 

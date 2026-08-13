@@ -20,8 +20,11 @@ export const shadowRoot =
 		return element;
 	};
 
+/** Types used by {@link shadowRoot}. */
 export namespace shadowRoot {
+	/** A template that attaches and configures a shadow root on an HTML element. */
 	export type Template<T extends DOM.HTML.Element = DOM.HTML.Element> = (host: T) => T;
 
+	/** A template applied inside an attached shadow root. */
 	export type Item = (shadowRoot: ShadowRoot) => any;
 }

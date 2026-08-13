@@ -1,11 +1,6 @@
 /// <reference lib="esnext.disposable" preserve="true" />
 
-import {
-	Storage as ClientStorage,
-	type StorageKey,
-	type StorageSubscriber,
-	type StorageValue,
-} from "@serve-tools/client-storage";
+import { Storage as ClientStorage, type StorageKey, type StorageValue } from "@serve-tools/client-storage";
 import { Signal } from "@serve-tools/signal";
 
 export type {
@@ -16,20 +11,25 @@ export type {
 	StorageValue,
 } from "@serve-tools/client-storage";
 
-class ReactiveStorageValue<Value extends string> extends Signal.Computed<Value | null> implements Disposable {
+class ReactiveStorageValue<Schema extends SchemaDefinition<Schema>, Key extends StorageKey<Schema>>
+	extends Signal.Computed<StorageValue<Schema, Key> | null>
+	implements Disposable
+{
 	readonly #refreshValue: () => void;
 
 	#unsubscribe: (() => void) | undefined;
 
-	constructor(read: () => Value | null, subscribe: (subscriber: StorageSubscriber<string, Value>) => () => void) {
-		const state = new Signal.State(read());
+	constructor(storage: ClientStorage<Schema>, key: Key) {
+		const state = new Signal.State<StorageValue<Schema, Key> | null>(storage.get(key));
 
 		super(() => state.get());
 
-		this.#refreshValue = () => state.set(read());
+		this.#refreshValue = () => state.set(storage.get(key));
 
-		this.#unsubscribe = subscribe((change) =>
-			state.set(change.kind === "invalidated" ? read() : change.kind === "removed" ? null : change.value),
+		this.#unsubscribe = storage.subscribe(key, (change) =>
+			state.set(
+				change.kind === "invalidated" ? storage.get(key) : change.kind === "removed" ? null : change.value,
+			),
 		);
 	}
 
@@ -56,6 +56,7 @@ class ReactiveStorageValue<Value extends string> extends Signal.Computed<Value |
 	}
 }
 
+/** Typed, observable Web Storage with read-only signal-backed key watches. */
 export class SignalStorage<
 	Schema extends SchemaDefinition<Schema> = SignalStorage.Schema,
 > extends ClientStorage<Schema> {
@@ -65,14 +66,13 @@ export class SignalStorage<
 	 * may coalesce changes. Disposal is idempotent, freezes the last value, and makes later refreshes no-ops.
 	 */
 	watch<Key extends StorageKey<Schema>>(key: Key): StorageSignal<StorageValue<Schema, Key>> {
-		return new ReactiveStorageValue(
-			() => this.get(key),
-			(subscriber) => this.subscribe(key, subscriber),
-		);
+		return new ReactiveStorageValue(this, key);
 	}
 }
 
+/** Schema declarations used by {@link SignalStorage}. */
 export namespace SignalStorage {
+	/** An unrestricted schema of string keys and values. */
 	export type Schema = ClientStorage.Schema;
 }
 

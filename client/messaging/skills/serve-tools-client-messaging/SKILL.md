@@ -45,6 +45,16 @@ Expect unknown operations, handler failures, and serialization failures to rejec
 Handle subscription termination with `onError` and `onComplete`.
 Preserve `WorkerRemoteError` as the representation of a thrown remote error.
 
+## Migrate from the Channel experiment
+
+- Replace `new Channel(port)` with `connect<Protocol>(port)` on the caller and `serve(port, handlers)` on the worker.
+- Replace `remote()` and `expose()` with named requests.
+- Replace repeated callback capabilities or raw message iteration with named subscriptions.
+- Pass cancellation through operation options instead of placing `AbortSignal` in argument graphs.
+- Use `transfer(value, transferList)` for worker-to-client transfers.
+- Remove `ChannelTarget`, `Target`, `Remote`, `Moved`, `readable`, and `writable` concepts.
+  This package does not implement distributed objects or a general stream transport.
+
 ## Validate changes
 
-Update protocol declarations, runtime behavior, README recipes, Node tests, browser SharedWorker tests, and type fixtures together.
+Update protocol declarations, runtime behavior, README examples, Node tests, browser SharedWorker tests, and type fixtures together.

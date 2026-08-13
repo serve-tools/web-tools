@@ -16,7 +16,7 @@ stack.dispose();
 npm install @serve-tools/polyfill-resource-management
 ```
 
-## Recipes
+## Usage
 
 ### Install every global
 
@@ -56,6 +56,12 @@ import { dispose } from "@serve-tools/polyfill-resource-management/Symbol/dispos
 These subpaths are useful when an application wants native identity where available but cannot mutate the global environment.
 
 The global, selective, and mutation-free import patterns above are covered by the package's TypeScript fixtures and runtime tests.
+
+## Public API
+
+- The package root installs every missing Explicit Resource Management global.
+- `./apply/Symbol/dispose`, `./apply/Symbol/asyncDispose`, `./apply/DisposableStack`, `./apply/AsyncDisposableStack`, and `./apply/SuppressedError` install one selected global and its required symbol dependencies.
+- The matching top-level subpaths export native values when available and module-scoped fallbacks otherwise without changing globals.
 
 ## Relationship to the ponyfill
 

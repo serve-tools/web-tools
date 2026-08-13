@@ -30,4 +30,4 @@ description: Use @serve-tools/vite-polyfills when configuring, extending, review
 
 ## Validate changes
 
-Test positive detection, comments and strings, computed versus non-computed members, shadowing-safe runtime behavior, custom overrides, empty selections, virtual module loading, ambient types, README recipes, build output, and package shape together.
+Test positive detection, comments and strings, computed versus non-computed members, shadowing-safe runtime behavior, custom overrides, empty selections, virtual module loading, ambient types, README examples, build output, and package shape together.

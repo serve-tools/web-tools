@@ -53,6 +53,18 @@ test("group independently preserves and toggles multiple-node regions", async ({
 
 		snapshots.push(ids());
 
+		first.set(false);
+
+		await new Promise(queueMicrotask);
+
+		snapshots.push(ids());
+
+		first.set(true);
+
+		await new Promise(queueMicrotask);
+
+		snapshots.push(ids());
+
 		return {
 			preserved: original.every((node) => root.querySelector(`#${node.id}`) === node),
 			snapshots,
@@ -66,6 +78,8 @@ test("group independently preserves and toggles multiple-node regions", async ({
 			["before", "between", "b1", "b2", "after"],
 			["before", "between", "after"],
 			["before", "a1", "a2", "between", "after"],
+			["before", "a1", "a2", "between", "b1", "b2", "after"],
+			["before", "between", "b1", "b2", "after"],
 			["before", "a1", "a2", "between", "b1", "b2", "after"],
 		],
 	});

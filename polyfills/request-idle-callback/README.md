@@ -16,7 +16,7 @@ cancelIdleCallback(handle);
 npm install @serve-tools/polyfill-request-idle-callback
 ```
 
-## Recipes
+## Usage
 
 ### Install both globals
 
@@ -46,6 +46,12 @@ import { cancelIdleCallback } from "@serve-tools/polyfill-request-idle-callback/
 ```
 
 The global, selective, and mutation-free import patterns above are covered by the package's TypeScript fixture and runtime tests.
+
+## Public API
+
+- The package root installs `requestIdleCallback` and `cancelIdleCallback` when either global is missing.
+- `./apply/requestIdleCallback` and `./apply/cancelIdleCallback` install one missing global.
+- `./requestIdleCallback` and `./cancelIdleCallback` export a bound native function when available and the fallback otherwise without changing globals.
 
 ## Relationship to the ponyfill
 

@@ -20,6 +20,7 @@ export const builtinPolyfills: readonly Polyfill[] = await Promise.all([
 	import("../polyfills/cancel-idle-callback-polyfill.js"),
 ]).then((modules) => modules.map((module) => module.default));
 
+/** Options for configuring {@link vitePolyfills}. */
 export interface VitePolyfillsOptions {
 	/**
 	 * The polyfills to detect and inject. Defaults to {@link builtinPolyfills}.

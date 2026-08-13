@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
-import type { SignalDB } from "../src/db.js";
 import { listen } from "../src/shared-worker.js";
+import type { SignalDB } from "../src/signal-shared-db.js";
 
 export interface User {
 	id: string;

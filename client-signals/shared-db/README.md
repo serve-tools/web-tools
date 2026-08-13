@@ -86,6 +86,7 @@ type QueryState<T> =
 ```
 
 Each query registers its remote change subscription before its initial read.
+Active queries for the same store share one remote change subscription.
 Committed writes made through any client of the same shared worker refresh queries for the affected stores.
 
 Call `query.refresh()` to explicitly read again.
@@ -151,7 +152,44 @@ The remote client intentionally exposes point operations rather than native tran
 
 `SignalDB` and `Query` also implement `Symbol.dispose` for optional explicit-resource-management interoperability.
 
+## Public API
+
+- `SignalDB` wraps a `SharedDBClient`, exposes finite point operations, and owns `watch()`, `watchAll()`, `invalidate()`, and query disposal.
+- `SignalDB.connect(port)` creates a reactive database from a shared-worker port.
+- `Query<T>` is a read-only computed signal with `refresh()` and `dispose()`.
+- `QueryState<T>` describes `pending`, `ready`, and `error` states.
+- `Watchable<T>` accepts a static value, `Signal.State`, or `Signal.Computed`.
+- `OperationOptions`, `MutationOptions`, `WriteOptions`, `GetAllOptions`, `CountOptions`, and `WatchAllOptions` describe point operations and reactive query inputs.
+- `SignalDB.Store`, `SignalDB.Schema`, `StoreName`, `StoreKey`, and `StoreValue` define and project database schemas.
+- The root also re-exports the lower-level shared database change and subscription types used by `source`.
+- `@serve-tools/signal-shared-db/shared-worker` exports `listen()` and the corresponding shared database server types.
+
+## Compatibility
+
+The package is an ES module for browser windows and shared workers that provide IndexedDB, `SharedWorker`, `MessagePort`, structured clone, and `AbortSignal`.
+It does not install browser APIs in Node.js.
+Explicit resource management requires `Symbol.dispose` support or a compatible polyfill; `close()` and `dispose()` are always available.
+
 ## Agent Skill
 
 This package includes `skills/serve-tools-signal-shared-db/SKILL.md` with version-aligned usage guidance for compatible coding agents.
-Listening is explicit; installing the package does not automatically trust or enable it.
+Activation is explicit; installing the package does not automatically trust or enable it.
+
+## Development
+
+The default test command runs native SharedWorker integration tests in Chromium, Firefox, and WebKit.
+
+```shell
+npx playwright install chromium firefox webkit
+npm test --workspace @serve-tools/signal-shared-db
+```
+
+Run the opt-in Chromium benchmarks for query lifecycle, change fanout, and targeted invalidation with:
+
+```shell
+npm run benchmark --workspace @serve-tools/signal-shared-db
+```
+
+## License
+
+[MIT-0](./LICENSE.md)

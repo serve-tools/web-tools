@@ -16,7 +16,7 @@ const element = () => ({
 	},
 });
 
-describe("fundomental", () => {
+describe("signal-dom", () => {
 	it("supports static bindings", () => {
 		const target = element();
 
@@ -213,10 +213,12 @@ describe("fundomental", () => {
 		const role = new Signal.State("button");
 		const values = { role };
 		const target = {};
+
 		let attachments = 0;
+
 		const element = {
 			attachInternals() {
-				attachments++;
+				++attachments;
 				return target;
 			},
 		};
@@ -227,18 +229,22 @@ describe("fundomental", () => {
 		assert.equal(values.role, role);
 
 		role.set("link");
+
 		await microtask();
+
 		assert.equal(target.role, "link");
 	});
 
 	it("creates and adopts a stylesheet that updates in place", async () => {
 		const cssText = new Signal.State(":host { color: red; }");
 		const root = { adoptedStyleSheets: [] };
+
 		globalThis.CSSStyleSheet = class {
 			replaceSync(value) {
 				this.cssText = value;
 			}
 		};
+
 		const sheet = css`${cssText}`;
 
 		assert.ok(sheet instanceof CSSStyleSheet);
@@ -248,7 +254,9 @@ describe("fundomental", () => {
 		assert.equal(root.adoptedStyleSheets[0], sheet);
 
 		cssText.set(":host { color: blue; }");
+
 		await microtask();
+
 		assert.equal(root.adoptedStyleSheets.length, 1);
 		assert.equal(sheet.cssText, ":host { color: blue; }");
 
@@ -258,6 +266,7 @@ describe("fundomental", () => {
 	it("updates CSS template signal interpolations", async () => {
 		const color = new Signal.State("red");
 		const root = { adoptedStyleSheets: [], childNodes: [] };
+
 		globalThis.CSSStyleSheet = class {
 			replaceSync(value) {
 				this.cssText = value;
@@ -269,12 +278,15 @@ describe("fundomental", () => {
 		assert.equal(root.adoptedStyleSheets[0].cssText, ":host { color: red; }");
 
 		color.set("blue");
+
 		await microtask();
 
 		assert.equal(root.adoptedStyleSheets[0].cssText, ":host { color: blue; }");
 
 		dispose(root);
+
 		color.set("green");
+
 		await microtask();
 
 		assert.equal(root.adoptedStyleSheets[0].cssText, ":host { color: blue; }");

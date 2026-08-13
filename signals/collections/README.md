@@ -20,15 +20,7 @@ console.log(total.get()); // 6
 npm install @serve-tools/signal @serve-tools/signal-collections
 ```
 
-To use `signal-polyfill` as the signal implementation, install it under the dependency name using an npm alias:
-
-```shell
-npm install @serve-tools/signal@npm:signal-polyfill @serve-tools/signal-collections
-```
-
-Continue importing `Signal` from `@serve-tools/signal`; npm resolves that specifier to `signal-polyfill`.
-
-## Exports
+## Public API
 
 - `SignalArray` tracks direct index and length reads independently from whole-collection reads.
 - `SignalMap` tracks key presence, key values, structure, and content iteration separately.
@@ -39,11 +31,30 @@ All constructors preserve native Array, Map, Set, or Object behavior.
 Unchanged writes do not invalidate tracked computations.
 The package shares the application's compatible `@serve-tools/signal` installation.
 
+## Compatibility
+
+The package is an ES module for JavaScript runtimes with `Proxy`, Array, Map, Set, Object, and a compatible `@serve-tools/signal` installation.
+It does not modify native prototypes or global constructors.
+
 ## Agent Skill
 
 This package includes `skills/serve-tools-signal-collections/SKILL.md` with version-aligned usage guidance for compatible coding agents.
 Activation is explicit; installing the package does not automatically trust or enable it.
 
+## Development
+
+The default test command runs native collection-compatibility tests in Node.js, Chromium, Firefox, and WebKit.
+
+```shell
+npm test --workspace @serve-tools/signal-collections
+```
+
+Run the opt-in collection read, write, and invalidation benchmarks with:
+
+```shell
+npm run benchmark --workspace @serve-tools/signal-collections
+```
+
 ## License
 
-[MIT-0](LICENSE.md) — No attribution required.
+[MIT-0](./LICENSE.md)

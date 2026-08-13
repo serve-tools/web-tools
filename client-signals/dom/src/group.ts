@@ -1,4 +1,4 @@
-import { handler, type Watchable } from "./_internal.js";
+import { handler, type Watchable } from "./.internals.js";
 import { type Disposer, disown, dispose, own } from "./dispose.js";
 
 /** Conditionally presents a persistent group of nodes. */
@@ -15,6 +15,7 @@ export const group =
 		let disposed = false;
 		let hasRendered = false;
 		let conditionCleanup: Disposer | undefined;
+		let range: Range | undefined;
 
 		const cleanup: Disposer = () => {
 			if (disposed) {
@@ -31,7 +32,7 @@ export const group =
 				disown(node, cleanup);
 			}
 
-			for (const node of new Set(nodes)) {
+			for (const node of nodes) {
 				dispose(node);
 			}
 		};
@@ -39,7 +40,9 @@ export const group =
 		own(placeholder, cleanup);
 
 		for (const node of nodes) {
-			own(node, cleanup);
+			if (node !== placeholder) {
+				own(node, cleanup);
+			}
 		}
 
 		conditionCleanup = handler(condition, (shouldRender) => {
@@ -57,7 +60,7 @@ export const group =
 				}
 			} else {
 				if (hasRendered) {
-					const range = new Range();
+					range ??= new Range();
 
 					range.setStartBefore(nodes[0]);
 					range.setEndAfter(nodes[nodes.length - 1]);
@@ -79,8 +82,11 @@ export const group =
 		return placeholder;
 	};
 
+/** Types used by {@link group}. */
 export namespace group {
+	/** A template that creates one node or a persistent region of nodes. */
 	export type Item = (parent?: ParentNode) => Node | Node[];
 
+	/** A conditional-region template whose returned text node identifies the region. */
 	export type Template = (parent?: ParentNode) => Text;
 }

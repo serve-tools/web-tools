@@ -26,22 +26,45 @@ export type SharedDBChange<
 > = {
 	[Name in Names]:
 		| {
+				/** Identifies a newly added record. */
 				readonly kind: "added";
+
+				/** The object store containing the record. */
 				readonly store: Name;
+
+				/** The added record's primary key. */
 				readonly key: StoreKey<Schema[Name]>;
+
+				/** The value added to the object store. */
 				readonly value: StoreValue<Schema[Name]>;
+
+				/** The worker-lifetime revision assigned after commit. */
 				readonly revision: number;
 		  }
 		| {
+				/** Identifies a removed record. */
 				readonly kind: "removed";
+
+				/** The object store that contained the record. */
 				readonly store: Name;
+
+				/** The removed record's primary key. */
 				readonly key: StoreKey<Schema[Name]>;
+
+				/** The worker-lifetime revision assigned after commit. */
 				readonly revision: number;
 		  }
 		| {
+				/** Identifies a store or key whose current value must be queried again. */
 				readonly kind: "invalidated";
+
+				/** The invalidated object store. */
 				readonly store: Name;
+
+				/** The affected primary key, or `undefined` when the complete store was invalidated. */
 				readonly key?: StoreKey<Schema[Name]>;
+
+				/** The worker-lifetime revision assigned after commit. */
 				readonly revision: number;
 		  };
 }[Names];

@@ -195,6 +195,7 @@ export class Storage<Schema extends SchemaDefinition<Schema> = Storage.Schema> {
 
 type StorageTarget = Window;
 
+/** Schema declarations used by {@link Storage}. */
 export namespace Storage {
 	/** An unrestricted schema of string keys and values. */
 	export type Schema = Record<string, string>;

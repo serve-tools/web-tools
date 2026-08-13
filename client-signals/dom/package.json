@@ -36,7 +36,7 @@
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build:dependencies && npm run build && npm run test:node && npm run test:browser",
-		"test:browser": "playwright test --config test/playwright.config.ts",
+		"test:browser": "playwright test --config playwright.config.ts",
 		"test:node": "node --test --experimental-test-coverage --test-coverage-exclude=\"**/*.test.js\" test/*.test.js",
 		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json && tsc --project tsconfig.benchmark.json"
 	},

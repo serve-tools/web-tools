@@ -16,7 +16,6 @@ import type {
 	MessageEndpoint,
 	MessageEventLike,
 	OperationKind,
-	Outcome,
 	WorkerClient,
 	WorkerProtocol,
 	WorkerRequestOptions,
@@ -42,28 +41,33 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 			return;
 		}
 
-		if (data.type === "close") {
-			finish(remoteError(data.error), true);
+		if (data[1] === "close") {
+			finish(remoteError(data[2]), true);
 
 			return;
 		}
 
-		if (data.type !== "next" && data.type !== "settle") {
+		if (data[1] !== "next" && data[1] !== "resolve" && data[1] !== "reject") {
 			return;
 		}
 
-		const operation = operations.get(data.id);
+		const id = data[2];
+		const operation = operations.get(id);
 
 		if (!operation) {
 			return;
 		}
 
-		if (data.type === "next") {
-			callSafely(operation.next, data.data);
+		if (data[1] === "next") {
+			try {
+				operation.next(data[3]);
+			} catch (error) {
+				report(error);
+			}
 		} else {
-			operations.delete(data.id);
+			operations.delete(id);
 			operation.off();
-			operation.settle(data.ok ? { ok: true, value: data.data } : { ok: false, error: remoteError(data.error) });
+			operation.settle(data[1] === "resolve", data[1] === "resolve" ? data[3] : remoteError(data[3]));
 		}
 	};
 
@@ -78,7 +82,7 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 		operation.off();
 
 		try {
-			post(endpoint, { protocol, type: "cancel", id });
+			post(endpoint, [protocol, "cancel", id]);
 		} catch {}
 
 		return true;
@@ -90,7 +94,7 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 		input: unknown,
 		options: WorkerRequestOptions,
 		next: (value: unknown) => void,
-		settle: (outcome: Outcome) => void,
+		settle: (ok: boolean, value: unknown) => void,
 		onAbort: (reason: unknown) => void,
 	): number => {
 		const id = ++nextId;
@@ -108,7 +112,7 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 		operations.set(id, { kind, next, settle, cancel: onAbort, off });
 
 		try {
-			post(endpoint, { protocol, type: "open", id, kind, name, data: input }, options.transfer);
+			post(endpoint, [protocol, kind, id, name, input], options.transfer);
 		} catch (error) {
 			operations.delete(id);
 			off();
@@ -132,7 +136,7 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 			operation.off();
 
 			if (operation.kind === "request" || remote) {
-				operation.settle({ ok: false, error });
+				operation.settle(false, error);
 			} else {
 				operation.cancel(error);
 			}
@@ -149,7 +153,7 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 		const error = connectionClosedError(reason);
 
 		try {
-			post(endpoint, { protocol, type: "close", error: errorRecord(error) });
+			post(endpoint, [protocol, "close", errorRecord(error)]);
 		} catch {}
 
 		finish(error, false);
@@ -175,7 +179,7 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 					input,
 					options,
 					noop,
-					(outcome) => (outcome.ok ? resolve(outcome.value) : reject(outcome.error)),
+					(ok, value) => (ok ? resolve(value) : reject(value)),
 					reject,
 				);
 			});
@@ -208,18 +212,15 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 				input,
 				Object(options),
 				listener,
-				(outcome) => {
+				(ok, value) => {
 					active = false;
 
-					if (outcome.ok) {
+					if (ok) {
 						callSafely(() => options?.onComplete?.(), undefined);
 					} else if (options?.onError) {
-						callSafely(
-							options.onError,
-							outcome.error instanceof Error ? outcome.error : remoteError(errorRecord(outcome.error)),
-						);
+						callSafely(options.onError, value instanceof Error ? value : remoteError(errorRecord(value)));
 					} else {
-						report(outcome.error);
+						report(value);
 					}
 				},
 				() => {

@@ -1,6 +1,7 @@
 import {
 	connectionClosedError,
 	errorRecord,
+	isTransferResult,
 	isWireMessage,
 	post,
 	protocol,
@@ -13,7 +14,6 @@ import type {
 	MessageEventLike,
 	OpenMessage,
 	SendResult,
-	ServerOperation,
 	Settlement,
 	WireMessage,
 	WorkerHandlers,
@@ -22,6 +22,31 @@ import type {
 	WorkerServer,
 	WorkerSubscriptionContext,
 } from "./.types.js";
+
+class ServerOperation implements WorkerRequestContext {
+	#controller?: AbortController;
+	#aborted = false;
+	declare cleanup?: () => void;
+
+	get signal(): AbortSignal {
+		const controller = (this.#controller ??= new AbortController());
+
+		if (this.#aborted) {
+			controller.abort();
+		}
+
+		return controller.signal;
+	}
+
+	abort(): void {
+		if (this.#aborted) {
+			return;
+		}
+
+		this.#aborted = true;
+		this.#controller?.abort();
+	}
+}
 
 /**
  * Serves a typed collection of request and subscription handlers on an endpoint.
@@ -72,17 +97,14 @@ export function serve<const P extends WorkerProtocol>(
 		operation.abort();
 
 		if (outcome) {
-			const result = send({ protocol, type: "settle", id, ...outcome }, transfer);
+			const result = send(
+				outcome.ok ? [protocol, "resolve", id, outcome.data] : [protocol, "reject", id, outcome.error],
+				transfer,
+			);
 
 			if (!result.ok) {
 				if (outcome.ok) {
-					const fallback = send({
-						protocol,
-						type: "settle",
-						id,
-						ok: false,
-						error: errorRecord(result.error),
-					});
+					const fallback = send([protocol, "reject", id, errorRecord(result.error)]);
 
 					if (!fallback.ok) {
 						report(fallback.error);
@@ -96,23 +118,22 @@ export function serve<const P extends WorkerProtocol>(
 		runCleanup(operation);
 	};
 
-	const open = ({ id, kind, name, data }: OpenMessage): void => {
+	const open = (message: OpenMessage): void => {
+		const [, kind, id, name, data] = message;
 		const table = kind === "request" ? handlers.requests : handlers.subscriptions;
 		const handler = Object.hasOwn(table, name)
 			? (table as unknown as Record<string, AnyHandler | undefined>)[name]
 			: undefined;
 
 		if (typeof handler !== "function" || operations.has(id)) {
-			const result = send({
+			const result = send([
 				protocol,
-				type: "settle",
+				"reject",
 				id,
-				ok: false,
-				error:
-					typeof handler === "function"
-						? { name: "ProtocolError", message: "Duplicate operation ID" }
-						: { name: "UnknownOperationError", message: name },
-			});
+				typeof handler === "function"
+					? { name: "ProtocolError", message: "Duplicate operation ID" }
+					: { name: "UnknownOperationError", message: name },
+			]);
 
 			if (!result.ok) {
 				report(result.error);
@@ -121,7 +142,7 @@ export function serve<const P extends WorkerProtocol>(
 			return;
 		}
 
-		const operation: ServerOperation = new AbortController();
+		const operation = new ServerOperation();
 
 		operations.set(id, operation);
 
@@ -129,15 +150,17 @@ export function serve<const P extends WorkerProtocol>(
 			kind === "request"
 				? operation
 				: {
-						signal: operation.signal,
+						get signal() {
+							return operation.signal;
+						},
 						emit: (value) => {
 							if (operations.get(id) !== operation) {
 								return;
 							}
 
-							const result = unwrapTransfer(value);
-
-							const delivery = send({ protocol, type: "next", id, data: result.value }, result.transfer);
+							const delivery = isTransferResult(value)
+								? send([protocol, "next", id, value.value], value.transfer)
+								: send([protocol, "next", id, value]);
 
 							if (!delivery.ok) {
 								settle(id, operation, { ok: false, error: errorRecord(delivery.error) });
@@ -187,15 +210,16 @@ export function serve<const P extends WorkerProtocol>(
 			return;
 		}
 
-		if (data.type === "open") {
+		if (data[1] === "request" || data[1] === "subscription") {
 			open(data);
-		} else if (data.type === "cancel") {
-			const operation = operations.get(data.id);
+		} else if (data[1] === "cancel") {
+			const id = data[2];
+			const operation = operations.get(id);
 
 			if (operation) {
-				settle(data.id, operation);
+				settle(id, operation);
 			}
-		} else if (data.type === "close") {
+		} else if (data[1] === "close") {
 			finish();
 		}
 	};
@@ -205,7 +229,7 @@ export function serve<const P extends WorkerProtocol>(
 			return;
 		}
 
-		const result = send({ protocol, type: "close", error: errorRecord(connectionClosedError(reason)) });
+		const result = send([protocol, "close", errorRecord(connectionClosedError(reason))]);
 
 		if (!result.ok) {
 			report(result.error);

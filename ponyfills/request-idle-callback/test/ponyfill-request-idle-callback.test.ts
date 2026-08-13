@@ -2,12 +2,18 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { cancelIdleCallback } from "../src/lib/cancelIdleCallback.js";
-import { requestIdleCallback } from "../src/lib/requestIdleCallback.js";
+import { cancelIdleCallback as cancelIdleCallbackSubpath } from "../src/lib/cancelIdleCallback.js";
+import { requestIdleCallback as requestIdleCallbackSubpath } from "../src/lib/requestIdleCallback.js";
+import { cancelIdleCallback, requestIdleCallback } from "../src/ponyfill-request-idle-callback.js";
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe("requestIdleCallback", () => {
+	it("shares one scheduler across root and subpath imports", () => {
+		expect(requestIdleCallback).toBe(requestIdleCallbackSubpath);
+		expect(cancelIdleCallback).toBe(cancelIdleCallbackSubpath);
+	});
+
 	it("does not install global functions", () => {
 		expect(globalThis.requestIdleCallback).not.toBe(requestIdleCallback);
 		expect(globalThis.cancelIdleCallback).not.toBe(cancelIdleCallback);

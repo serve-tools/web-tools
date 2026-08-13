@@ -1,8 +1,5 @@
-import { Signal } from "@serve-tools/signal";
 import type { PropertyDeclaration, ReactiveElement } from "./.internals.js";
-import { initializeDecorator } from "./.internals.js";
-
-const alwaysChanged = () => true;
+import { signalAccessor } from "./.internals.js";
 
 /** Creates a signal-backed Lit reactive property. */
 export const property =
@@ -13,39 +10,13 @@ export const property =
 	): ClassAccessorDecoratorResult<This, Value> => {
 		options ??= {};
 
-		initializeDecorator(metadata, name, options);
-
-		const stateOf = (instance: This) => target.get.call(instance) as unknown as Signal.State<Value>;
-
-		return {
-			init(value) {
-				const state = new Signal.State(value);
-
-				if (value !== undefined && options.update === "lifecycle") {
-					this.requestUpdate(name, undefined, { ...options, hasChanged: alwaysChanged }, true, value);
-				}
-
-				return state as unknown as Value;
-			},
-			get() {
-				return stateOf(this).get();
-			},
-			set(value) {
-				const state = stateOf(this);
-
-				if (options.update === "lifecycle") {
-					const oldValue = Signal.subtle.untrack(() => state.get());
-
-					state.set(value);
-
-					this.requestUpdate(name, oldValue, options, true, value);
-				} else {
-					state.set(value);
-				}
-			},
-		};
+		return signalAccessor(target, { name, metadata } as ClassAccessorDecoratorContext<This, Value>, options, identity);
 	};
 
+const identity = <Value>(value: Value): Value => value;
+
+/** Lit property options extended with the Signal update strategy. */
 export interface SignalPropertyDeclaration<Value> extends PropertyDeclaration<Value> {
+	/** Chooses atomic signal invalidation or Lit's complete reactive update lifecycle. @default "atomic" */
 	update?: "atomic" | "lifecycle";
 }

@@ -81,7 +81,7 @@ export const connect = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 			client.request("clear", { storeName, options: mutationOptions(options) }, requestOptions(options)),
 
 		subscribe(storeNames, subscriber, options): SharedDBSubscription {
-			const names = typeof storeNames === "string" ? [storeNames] : [...storeNames];
+			const names = typeof storeNames === "string" ? [storeNames] : storeNames;
 			const workerOptions = {
 				...(options?.signal === undefined ? {} : { signal: options.signal }),
 				...(options?.onError === undefined ? {} : { onError: options.onError }),

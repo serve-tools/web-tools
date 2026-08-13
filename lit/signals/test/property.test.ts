@@ -1,6 +1,6 @@
 import { html, LitElement, render } from "lit";
 import { describe, expect, it } from "vitest";
-import { computed, defaultAttributeConverter, property } from "../src/lit-signals.decorators.js";
+import { computed, defaultAttributeConverter, property } from "../src/decorators.js";
 import { SignalWatcher, watch } from "../src/lit-signals.js";
 
 const values = new WeakMap<object, number>();

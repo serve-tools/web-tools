@@ -17,7 +17,7 @@ import {
 	type StoreName,
 	type StoreValue,
 	type WriteOptions,
-} from "../src/db.js";
+} from "../src/signal-shared-db.js";
 
 interface User {
 	id: string;
@@ -151,10 +151,13 @@ class FakeSharedDBClient {
 			...(options?.onReady === undefined ? {} : { onReady: options.onReady }),
 		};
 		const unsubscribe = () => {
-			if (!record.active) return;
+			if (!record.active) {
+				return;
+			}
 
 			record.active = false;
-			this.unsubscribeCalls++;
+
+			++this.unsubscribeCalls;
 		};
 
 		this.subscriptions.push(record);
@@ -170,7 +173,9 @@ class FakeSharedDBClient {
 
 	close(reason?: unknown): void {
 		this.calls.push(["close", reason]);
-		this.closeCalls++;
+
+		++this.closeCalls;
+
 		this.#resolveClosed();
 	}
 
@@ -180,7 +185,9 @@ class FakeSharedDBClient {
 
 	ready(revision = 0): void {
 		for (const subscription of this.subscriptions) {
-			if (subscription.active) subscription.onReady?.(revision);
+			if (subscription.active) {
+				subscription.onReady?.(revision);
+			}
 		}
 	}
 
@@ -194,7 +201,9 @@ class FakeSharedDBClient {
 
 	fail(error: Error): void {
 		for (const subscription of this.subscriptions) {
-			if (subscription.active) subscription.onError?.(error);
+			if (subscription.active) {
+				subscription.onError?.(error);
+			}
 		}
 	}
 
@@ -206,7 +215,7 @@ class FakeSharedDBClient {
 const waitFor = async (assertion: () => void): Promise<void> => {
 	let failure: unknown;
 
-	for (let attempt = 0; attempt < 100; attempt++) {
+	for (let attempt = 0; attempt < 100; ++attempt) {
 		try {
 			assertion();
 
@@ -247,6 +256,7 @@ describe("SignalDB", () => {
 		expect(await database.count("users", { query: one.id })).toBe(2);
 		expect(await database.add("users", one)).toBe(one.id);
 		expect(await database.put("logs", "created", { durability: "strict", key: 1 })).toBe(1);
+
 		await database.delete("users", one.id, { durability: "relaxed" });
 		await database.clear("logs", { signal });
 
@@ -287,20 +297,50 @@ describe("SignalDB", () => {
 		expect(source.calls).toHaveLength(0);
 
 		source.ready(4);
+
 		await waitFor(() => expect(query.get()).toEqual({ status: "ready", value: one }));
+
 		expect(source.calls).toEqual([["get", "users", one.id, undefined]]);
+	});
+
+	it("shares one remote subscription across active queries for each store", async () => {
+		const first = database.watch("users", one.id);
+		const second = database.watch("users", two.id);
+		const logs = database.watchAll("logs");
+
+		expect(source.subscriptions).toHaveLength(2);
+		expect(source.subscriptions.map(({ storeNames }) => storeNames)).toEqual([["users"], ["logs"]]);
+
+		source.ready();
+
+		await waitFor(() => {
+			expect(first.get()).toEqual({ status: "ready", value: one });
+			expect(second.get()).toEqual({ status: "ready", value: two });
+			expect(logs.get()).toEqual({ status: "ready", value: [] });
+		});
+
+		first.dispose();
+		expect(source.unsubscribeCalls).toBe(0);
+
+		second.dispose();
+		expect(source.unsubscribeCalls).toBe(1);
+
+		logs.dispose();
+		expect(source.unsubscribeCalls).toBe(2);
 	});
 
 	it("refreshes after subscribed committed changes", async () => {
 		const query = database.watch("users", one.id);
 
 		source.ready();
+
 		await waitFor(() => expect(query.get()).toEqual({ status: "ready", value: one }));
 
 		const updated = { ...one, name: "Updated" };
 
 		source.users.set(one.id, updated);
 		source.emit({ kind: "added", key: one.id, revision: 1, store: "users", value: updated });
+
 		await waitFor(() => expect(query.get()).toEqual({ status: "ready", value: updated }));
 	});
 
@@ -309,8 +349,11 @@ describe("SignalDB", () => {
 		const query = database.watch("users", key);
 
 		key.set(two.id);
+
 		await Promise.resolve();
+
 		source.ready();
+
 		await waitFor(() => expect(query.get()).toEqual({ status: "ready", value: two }));
 
 		expect(source.calls.map(([, , calledKey]) => calledKey)).toEqual([one.id, two.id]);
@@ -321,6 +364,7 @@ describe("SignalDB", () => {
 		const query = database.watchAll("users");
 
 		source.fail(failure);
+
 		await waitFor(() => expect(query.get()).toEqual({ status: "error", error: failure }));
 	});
 
@@ -328,16 +372,21 @@ describe("SignalDB", () => {
 		const query = database.watch("users", one.id);
 
 		source.ready();
+
 		await waitFor(() => expect(query.get()).toEqual({ status: "ready", value: one }));
 
 		const refreshed = { ...one, name: "Explicit" };
 
 		source.users.set(one.id, refreshed);
+
 		await query.refresh();
+
 		expect(query.get()).toEqual({ status: "ready", value: refreshed });
 
 		source.users.set(one.id, one);
+
 		database.invalidate("users");
+
 		await waitFor(() => expect(query.get()).toEqual({ status: "ready", value: one }));
 	});
 
@@ -346,15 +395,20 @@ describe("SignalDB", () => {
 		const query = database.watch("users", key);
 
 		expect(Signal.subtle.hasSinks(key)).toBe(true);
+
 		query.dispose();
 		query.dispose();
+
 		expect(source.unsubscribeCalls).toBe(1);
 		expect(Signal.subtle.hasSinks(key)).toBe(false);
+
 		await expect(query.refresh()).rejects.toMatchObject({ name: "InvalidStateError" });
 
 		const otherKey = new Signal.State(one.id);
+
 		database.watch("users", otherKey);
 		database.close("done");
+
 		expect(source.closeCalls).toBe(1);
 		expect(source.unsubscribeCalls).toBe(2);
 		expect(Signal.subtle.hasSinks(otherKey)).toBe(false);
@@ -365,8 +419,23 @@ describe("SignalDB", () => {
 
 		disconnectedDB.watch("users", disconnectedKey);
 		disconnected.disconnect();
+
 		await Promise.resolve();
+
 		expect(disconnected.unsubscribeCalls).toBe(1);
 		expect(Signal.subtle.hasSinks(disconnectedKey)).toBe(false);
+	});
+
+	it("settles an in-flight refresh when disposed before its store subscription is ready", async () => {
+		const query = database.watch("users", one.id);
+		const refresh = query.refresh();
+
+		query.dispose();
+
+		await expect(refresh).resolves.toBeUndefined();
+		expect(query.get()).toMatchObject({
+			status: "error",
+			error: { name: "InvalidStateError" },
+		});
 	});
 });

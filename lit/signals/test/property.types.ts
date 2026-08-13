@@ -5,8 +5,8 @@ import type {
 	PropertyDeclaration,
 	SignalPropertyDeclaration,
 	TypeHint,
-} from "../src/lit-signals.decorators.js";
-import { computed, property } from "../src/lit-signals.decorators.js";
+} from "../src/decorators.js";
+import { computed, property } from "../src/decorators.js";
 import { SignalWatcher, watch } from "../src/lit-signals.js";
 
 class PropertyTypeTestElement extends SignalWatcher(LitElement) {

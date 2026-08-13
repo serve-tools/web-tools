@@ -117,18 +117,39 @@ Direct same-document writes through `source` do not emit a `storage` event in th
 Call `dispose()` or `Symbol.dispose` to stop following storage changes.
 Disposal is idempotent; a disposed signal retains its last observed value, and later refreshes are no-ops.
 
-## Migration and API notes
+## Public API
 
-- `StorageSignal` now includes `refresh(): void` for synchronous rereads.
-- Same-document writes made directly through `storage.source` require `refresh()` to update an active watch.
-- Subscriber failures no longer stop occurrence delivery.
-  Later active subscribers run before the original error or an ordered `AggregateError` is thrown.
+- `SignalStorage` extends `@serve-tools/client-storage` with `watch()` while preserving `size`, `get`, `has`, `set`, `delete`, `clear`, `subscribe`, `source`, and `target`.
+- `StorageSignal<Value>` is a read-only computed signal with synchronous `refresh()` and terminal `dispose()` methods.
+- `SignalStorage.Schema` is the unrestricted string-keyed schema.
+- `StorageChange`, `StorageSubscriber`, `StorageSubscribeOptions`, `StorageKey`, and `StorageValue` are re-exported from `@serve-tools/client-storage`.
+
+## Compatibility
+
+The package is an ES module for browser windows with Web Storage and a compatible `@serve-tools/signal` installation.
+Storage availability, persistence, quota, and privacy behavior remain controlled by the browser.
+Explicit resource management requires `Symbol.dispose` support or a compatible polyfill; `dispose()` is always available.
 
 ## Agent Skill
 
 This package includes `skills/serve-tools-signal-storage/SKILL.md` with version-aligned usage guidance for compatible coding agents.
 Activation is explicit; installing the package does not automatically trust or enable it.
 
+## Development
+
+The default test command runs native Web Storage tests in Chromium, Firefox, and WebKit.
+
+```shell
+npx playwright install chromium firefox webkit
+npm test --workspace @serve-tools/signal-storage
+```
+
+Run the opt-in Chromium benchmarks for watch lifecycle, change fanout, sparse updates, and refresh with:
+
+```shell
+npm run benchmark --workspace @serve-tools/signal-storage
+```
+
 ## License
 
-[MIT-0](LICENSE.md) — No attribution required.
+[MIT-0](./LICENSE.md)

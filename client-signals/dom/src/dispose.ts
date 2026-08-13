@@ -1,30 +1,44 @@
 /** Stops one reactive binding. */
 export type Disposer = () => void;
 
-const ownership = new WeakMap<object, Set<Disposer>>();
+const ownership = new WeakMap<object, Disposer | Disposer[]>();
 
 /** @internal Registers a cleanup with its DOM owner. */
 export const own = (owner: object, cleanup: Disposer): void => {
 	const cleanups = ownership.get(owner);
 
-	cleanups ? cleanups.add(cleanup) : ownership.set(owner, new Set([cleanup]));
+	if (cleanups === undefined) {
+		ownership.set(owner, cleanup);
+	} else if (typeof cleanups === "function") {
+		ownership.set(owner, [cleanups, cleanup]);
+	} else {
+		cleanups.push(cleanup);
+	}
 };
 
 /** @internal Unregisters a cleanup from its DOM owner. */
 export const disown = (owner: object, cleanup: Disposer): void => {
 	const cleanups = ownership.get(owner);
 
-	cleanups?.delete(cleanup);
-
-	if (!cleanups?.size) {
+	if (cleanups === cleanup) {
 		ownership.delete(owner);
+	} else if (typeof cleanups === "object") {
+		const index = cleanups.indexOf(cleanup);
+
+		if (index !== -1) {
+			cleanups.splice(index, 1);
+		}
+
+		if (!cleanups.length) {
+			ownership.delete(owner);
+		}
 	}
 };
 
 /** Stops reactive updates owned by a node, its current DOM subtree, or a stylesheet. */
 export const dispose = (root: Node | CSSStyleSheet): void => {
 	if ("childNodes" in root) {
-		for (const child of [...root.childNodes]) {
+		for (const child of root.childNodes) {
 			dispose(child);
 		}
 
@@ -43,7 +57,11 @@ export const dispose = (root: Node | CSSStyleSheet): void => {
 
 	ownership.delete(root);
 
-	for (const cleanup of [...cleanups]) {
-		cleanup();
+	if (typeof cleanups === "function") {
+		cleanups();
+	} else {
+		for (const cleanup of cleanups) {
+			cleanup();
+		}
 	}
 };

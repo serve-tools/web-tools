@@ -1,5 +1,6 @@
 import type { ComplexAttributeConverter } from "lit";
 
+/** Lit-compatible default conversion between attribute strings and property values. */
 export const defaultAttributeConverter: ComplexAttributeConverter<unknown, TypeHint> = {
 	fromAttribute(value, type): unknown {
 		switch (type) {
@@ -38,7 +39,7 @@ export type AttributeConverter<Type = unknown, TypeHint = unknown> =
 	| ComplexAttributeConverter<Type, TypeHint>
 	| ((value: string | null, type?: TypeHint) => Type);
 
-/** Type hint for default converter. */
+/** A constructor used as a conversion hint by {@link defaultAttributeConverter}. */
 export type TypeHint = typeof String | typeof Number | typeof Boolean | typeof Object | typeof Array;
 
 // #endregion Types

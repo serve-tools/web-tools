@@ -16,7 +16,7 @@ import type {
 } from "./.types.js";
 
 export const encodeQuery = (query: IDBValidKey | IDBKeyRange | null | undefined): EncodedQuery => {
-	if (!(query instanceof IDBKeyRange)) {
+	if (typeof query !== "object" || query === null || !(query instanceof IDBKeyRange)) {
 		return query;
 	}
 

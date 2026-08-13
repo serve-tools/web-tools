@@ -12,7 +12,7 @@ Client libraries, Lit integrations, polyfills, ponyfills, Signal libraries, and 
 - [`signals/`](./signals/) contains a Signals implementation and signal-aware libraries.
 - [`vite/`](./vite/) contains Vite plugins.
 
-Each publishable project lives in its own immediate subdirectory and owns its package metadata, source, tests, and documentation.
+Each package directory owns its package metadata, source, tests, and documentation.
 
 ## Packages
 
@@ -20,23 +20,23 @@ Each publishable project lives in its own immediate subdirectory and owns its pa
 - [`@serve-tools/client-messaging`](./client/messaging/) provides requests and subscriptions across workers and message ports.
 - [`@serve-tools/client-shared-db`](./client/shared-db/) coordinates IndexedDB operations and change subscriptions through a SharedWorker.
 - [`@serve-tools/client-storage`](./client/storage/) provides observable access to local and session storage.
+- [`@serve-tools/signal-dom`](./client-signals/dom/) provides functional signal-aware DOM, SVG, and MathML templating.
+- [`@serve-tools/signal-messaging`](./client-signals/messaging/) observes typed messaging subscriptions as explicit Signal state.
+- [`@serve-tools/signal-shared-db`](./client-signals/shared-db/) adds reactive queries to the shared IndexedDB client.
+- [`@serve-tools/signal-storage`](./client-signals/storage/) adds reactive watches to the Web Storage client.
 - [`@serve-tools/lit-signals`](./lit/signals/) provides fine-grained Signal directives and signal-backed reactive decorators for Lit elements.
 - [`@serve-tools/polyfill-request-idle-callback`](./polyfills/request-idle-callback/) installs the `requestIdleCallback` and `cancelIdleCallback` globals.
 - [`@serve-tools/polyfill-resource-management`](./polyfills/resource-management/) installs ECMAScript Explicit Resource Management globals.
 - [`@serve-tools/ponyfill-request-idle-callback`](./ponyfills/request-idle-callback/) provides `requestIdleCallback` and `cancelIdleCallback` without global mutation.
 - [`@serve-tools/ponyfill-resource-management`](./ponyfills/resource-management/) provides a side-effect-free implementation of ECMAScript Explicit Resource Management.
-- [`@serve-tools/signal`](./signals/signal/) implements the TC39 Signals proposal.
-- [`@serve-tools/signal-effect`](./signals/effect/) provides microtask-batched effects.
 - [`@serve-tools/signal-collections`](./signals/collections/) provides signal-aware native collections.
-- [`@serve-tools/signal-messaging`](./client-signals/messaging/) observes typed messaging subscriptions as explicit Signal state.
-- [`@serve-tools/signal-shared-db`](./client-signals/shared-db/) adds reactive queries to the shared IndexedDB client.
-- [`@serve-tools/signal-storage`](./client-signals/storage/) adds reactive watches to the Web Storage client.
-- [`@serve-tools/signal-dom`](./client-signals/dom/) provides functional signal-aware DOM templating.
+- [`@serve-tools/signal-effect`](./signals/effect/) provides microtask-batched effects.
+- [`@serve-tools/signal`](./signals/signal/) implements the TC39 Signals proposal.
 - [`@serve-tools/vite-polyfills`](./vite/polyfills/) detects and injects polyfills for unsupported JavaScript features in Vite projects.
 
 ## Agent Skills
 
-Every published package includes one version-aligned Agent Skill under `skills/serve-tools-<package>/SKILL.md`.
+Every published package includes one version-aligned Agent Skill under `skills/serve-tools-<unscoped-package-name>/SKILL.md`.
 The Skills teach compatible coding agents how to choose APIs, preserve lifecycle and platform semantics, avoid sibling-package confusion, and validate package-specific changes.
 
 Installing an npm package does not automatically trust or activate its Skill.

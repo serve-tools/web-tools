@@ -19,8 +19,10 @@ export class SharedWorker<P extends T.WorkerProtocol = T.WorkerProtocol> extends
 	readonly client: T.WorkerClient<P> = connectPort<P>(this.port);
 }
 
+/** Connects a typed protocol client to a worker or message port. */
 export const connect = connectPort;
 
+/** Protocol declarations available through {@link connect}. */
 export namespace connect {
 	/** An endpoint compatible with workers and message ports. */
 	export type MessageEndpoint = T.MessageEndpoint;

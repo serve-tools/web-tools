@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { enqueueMicrotask } from "../src/lib/scheduler.js";
 
+const task = (run: () => void) => ({ run });
+
 describe("scheduler", () => {
 	it("flushes every callback before reporting errors", () => {
 		const error = new Error("expected");
@@ -11,12 +13,14 @@ describe("scheduler", () => {
 		globalThis.queueMicrotask = (callback) => queuedMicrotasks.push(callback);
 
 		try {
-			enqueueMicrotask(() => {
-				calls.push(1);
+			enqueueMicrotask(
+				task(() => {
+					calls.push(1);
 
-				throw error;
-			});
-			enqueueMicrotask(() => calls.push(2));
+					throw error;
+				}),
+			);
+			enqueueMicrotask(task(() => calls.push(2)));
 		} finally {
 			globalThis.queueMicrotask = queueMicrotask;
 		}
@@ -34,10 +38,12 @@ describe("scheduler", () => {
 		globalThis.queueMicrotask = (callback) => queuedMicrotasks.push(callback);
 
 		try {
-			enqueueMicrotask(() => {
-				calls.push(1);
-				enqueueMicrotask(() => calls.push(2));
-			});
+			enqueueMicrotask(
+				task(() => {
+					calls.push(1);
+					enqueueMicrotask(task(() => calls.push(2)));
+				}),
+			);
 
 			queuedMicrotasks[0]!();
 

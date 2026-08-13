@@ -1,4 +1,4 @@
-import { render } from "./_internal.js";
+import { render } from "./.internals.js";
 import type { svg } from "./svg.js";
 import type { DOM } from "./types.js";
 
@@ -8,11 +8,14 @@ export const html =
 	(target) =>
 		render(document.createElement(name), items as never, target);
 
+/** Types used by {@link html}. */
 export namespace html {
+	/** A template that creates an HTML element and optionally appends it to a parent. */
 	export type Template<T extends DOM.HTML.Element = DOM.HTML.Element, P extends ParentNode = ParentNode> = (
 		parent?: P,
 	) => T;
 
+	/** A child template or element modifier accepted by an HTML template. */
 	export type Item<K extends DOM.HTML.Element.Name = DOM.HTML.Element.Name> =
 		| Template<DOM.HTML.ElementMap[K]>
 		| ((element: DOM.HTML.ElementMap[K]) => any)

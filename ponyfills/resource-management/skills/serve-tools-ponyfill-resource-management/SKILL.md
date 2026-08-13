@@ -24,4 +24,4 @@ description: Use @serve-tools/ponyfill-resource-management when implementing, re
 
 ## Validate changes
 
-Test reverse ordering, adoption, deferred cleanup, moves, disposed-state errors, async fallback, multiple failures, type fixtures, README recipes, declarations, and package shape together.
+Test reverse ordering, adoption, deferred cleanup, moves, disposed-state errors, async fallback, multiple failures, type fixtures, README examples, declarations, and package shape together.

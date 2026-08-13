@@ -6,7 +6,7 @@ export const SignalWatcher = <Base extends LitElementConstructor>(BaseElement: B
 	class SignalWatcherElement extends BaseElement {
 		#isConnected = false;
 		#isInvalidatingRender = false;
-		readonly #render: () => unknown;
+		readonly #originalRender: () => unknown;
 		readonly #renderComputed: Signal.Computed<unknown>;
 		readonly #renderVersionSignal = new Signal.State(false);
 
@@ -16,19 +16,23 @@ export const SignalWatcher = <Base extends LitElementConstructor>(BaseElement: B
 			}
 		});
 
+		static #readRender(this: SignalWatcherElement): unknown {
+			return this.#renderComputed.get();
+		}
+
 		constructor(...args: any[]) {
 			super(...args);
 
-			this.#render = this.render.bind(this);
+			this.#originalRender = this.render;
 			this.#renderComputed = new Signal.Computed(() => {
 				this.#renderVersionSignal.get();
 
-				return this.#render();
+				return this.#originalRender.call(this);
 			});
 
 			Object.defineProperty(this, "render", {
 				configurable: true,
-				value: () => this.#renderComputed.get(),
+				value: SignalWatcherElement.#readRender,
 			});
 		}
 

@@ -8,7 +8,7 @@ description: Use @serve-tools/ponyfill-request-idle-callback when implementing, 
 ## Use the local scheduler deliberately
 
 1. Import `requestIdleCallback` and `cancelIdleCallback` from the package root.
-2. Keep each returned numeric handle paired with this module's `cancelIdleCallback`.
+2. Keep each returned numeric handle paired with this package's `cancelIdleCallback`; root and `lib/*` imports share one cancellation domain.
 3. Break long work into small units and consult `deadline.timeRemaining()` or `didTimeout`.
 
 ## Preserve the ponyfill boundary
@@ -24,4 +24,4 @@ Use `@serve-tools/polyfill-request-idle-callback` instead when native identity o
 
 ## Validate changes
 
-Test scheduling, timeout, cancellation, hidden-document behavior, type fixtures, README recipes, declarations, and package shape together.
+Test scheduling, timeout, cancellation, hidden-document behavior, type fixtures, README examples, declarations, and package shape together.

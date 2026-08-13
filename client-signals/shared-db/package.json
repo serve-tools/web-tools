@@ -25,7 +25,7 @@
 	"sideEffects": false,
 	"type": "module",
 	"exports": {
-		".": "./dist/db.js",
+		".": "./dist/signal-shared-db.js",
 		"./shared-worker": "./dist/shared-worker.js"
 	},
 	"files": [

@@ -41,7 +41,8 @@ const connections = listen<{
 				signal.addEventListener(
 					"abort",
 					() => {
-						cancellationCount++;
+						++cancellationCount;
+
 						reject(signal.reason);
 					},
 					{ once: true },

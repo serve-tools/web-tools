@@ -185,38 +185,29 @@ export type Awaitable<Value> = Value | PromiseLike<Value>;
 export type SubscriptionHandlerResult = ReturnType<() => void> | (() => void);
 export type EventListener = (value: unknown) => void;
 export type OperationKind = "request" | "subscription";
-export type Outcome = { readonly ok: true; readonly value: unknown } | { readonly ok: false; readonly error: unknown };
 export type SendResult = { readonly ok: true } | { readonly ok: false; readonly error: unknown };
 export type Settlement =
 	| { readonly ok: true; readonly data: unknown }
 	| { readonly ok: false; readonly error: ErrorRecord };
 
-export interface OpenMessage {
-	readonly protocol: string;
-	readonly type: "open";
-	readonly id: number;
-	readonly kind: OperationKind;
-	readonly name: string;
-	readonly data: unknown;
-}
+export type OpenMessage =
+	| readonly [protocol: string, type: "request", id: number, name: string, data: unknown]
+	| readonly [protocol: string, type: "subscription", id: number, name: string, data: unknown];
 
 export type WireMessage =
 	| OpenMessage
-	| { readonly protocol: string; readonly type: "next"; readonly id: number; readonly data: unknown }
-	| ({ readonly protocol: string; readonly type: "settle"; readonly id: number } & Settlement)
-	| { readonly protocol: string; readonly type: "cancel"; readonly id: number }
-	| { readonly protocol: string; readonly type: "close"; readonly error: ErrorRecord };
+	| readonly [protocol: string, type: "next", id: number, data: unknown]
+	| readonly [protocol: string, type: "resolve", id: number, data: unknown]
+	| readonly [protocol: string, type: "reject", id: number, error: ErrorRecord]
+	| readonly [protocol: string, type: "cancel", id: number]
+	| readonly [protocol: string, type: "close", error: ErrorRecord];
 
 export interface ClientOperation {
 	readonly kind: OperationKind;
 	readonly next: EventListener;
-	readonly settle: (outcome: Outcome) => void;
+	readonly settle: (ok: boolean, value: unknown) => void;
 	readonly cancel: (reason: unknown) => void;
 	readonly off: () => void;
-}
-
-export interface ServerOperation extends AbortController {
-	cleanup?: () => void;
 }
 
 export type AnyHandler = (

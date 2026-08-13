@@ -6,7 +6,10 @@ import { arrayIndexOf, type VersionSignal, versionSignal } from "./.internals.js
 export const SignalArray = function SignalArray<Value = unknown>(values: readonly Value[] = []): SignalArray<Value> {
 	return new Proxy(values.slice(), new SignalArrayHandler());
 } as unknown as {
+	/** Creates a signal-backed shallow copy of an array-like sequence. */
 	new <Value = unknown>(values?: readonly Value[]): SignalArray<Value>;
+
+	/** The prototype shared by SignalArray instances. */
 	readonly prototype: SignalArray;
 };
 
@@ -17,16 +20,18 @@ class SignalArrayHandler<Value> implements ProxyHandler<ArrayTarget<Value>> {
 	#methods: Map<Key, ArrayMethod> | undefined;
 
 	get(target: ArrayTarget<Value>, key: Key, receiver: SignalArray<Value>): unknown {
+		if (key === "length") {
+			this.#consume(key);
+
+			return target.length;
+		}
+
 		const index = arrayIndexOf(key);
 
 		if (index !== undefined) {
 			this.#consume(index);
-			return target[index];
-		}
 
-		if (key === "length") {
-			this.#consume(key);
-			return target.length;
+			return target[index];
 		}
 
 		if (collectionMethods.has(key)) {
@@ -37,17 +42,18 @@ class SignalArrayHandler<Value> implements ProxyHandler<ArrayTarget<Value>> {
 	}
 
 	set(target: ArrayTarget<Value>, key: Key, value: Value): boolean {
+		if (key === "length") {
+			return this.#setLength(target, value);
+		}
+
 		const index = arrayIndexOf(key);
 
 		if (index !== undefined) {
 			return this.#setIndex(target, key, index, value);
 		}
 
-		if (key === "length") {
-			return this.#setLength(target, value);
-		}
-
 		target[key] = value;
+
 		return true;
 	}
 
@@ -73,6 +79,7 @@ class SignalArrayHandler<Value> implements ProxyHandler<ArrayTarget<Value>> {
 
 		if (signal !== undefined) {
 			signal.get();
+
 			return;
 		}
 
@@ -81,8 +88,11 @@ class SignalArrayHandler<Value> implements ProxyHandler<ArrayTarget<Value>> {
 		}
 
 		const signals = (this.#signals ??= new Map());
+
 		signal = versionSignal();
+
 		signals.set(key, signal);
+
 		signal.get();
 	}
 
@@ -92,24 +102,37 @@ class SignalArrayHandler<Value> implements ProxyHandler<ArrayTarget<Value>> {
 
 	#collectionMethod(target: ArrayTarget<Value>, key: Key, receiver: SignalArray<Value>): ArrayMethod {
 		const methods = (this.#methods ??= new Map());
+
 		let method = methods.get(key);
 
 		if (method === undefined) {
+			const ownerIndex = callbackOwnerIndexes.get(key);
 			const source = target[key] as ArrayMethod;
+
 			method = (...args: unknown[]): unknown => {
 				this.#consume(collectionKey);
-				const ownerIndex = callbackOwnerIndexes.get(key);
 
-				if (ownerIndex !== undefined && typeof args[0] === "function") {
+				if (ownerIndex === 2 && typeof args[0] === "function") {
 					const callback = args[0] as ArrayMethod;
-					args[0] = function (this: unknown, ...callbackArgs: unknown[]): unknown {
-						callbackArgs[ownerIndex] = receiver;
-						return Reflect.apply(callback, this, callbackArgs);
+
+					if (args[1] === undefined) {
+						args[0] = (value: unknown, index: unknown): unknown => callback(value, index, receiver);
+					} else {
+						args[0] = function (this: unknown, value: unknown, index: unknown): unknown {
+							return callback.call(this, value, index, receiver);
+						};
+					}
+				} else if (ownerIndex === 3 && typeof args[0] === "function") {
+					const callback = args[0] as ArrayMethod;
+
+					args[0] = (previous: unknown, value: unknown, index: unknown): unknown => {
+						return callback(previous, value, index, receiver);
 					};
 				}
 
 				return Reflect.apply(source, target, args);
 			};
+
 			methods.set(key, method);
 		}
 
@@ -122,7 +145,9 @@ class SignalArrayHandler<Value> implements ProxyHandler<ArrayTarget<Value>> {
 		}
 
 		const extendsArray = index >= target.length && index < 4_294_967_295;
+
 		target[index] = value as Value;
+
 		this.#dirty(index);
 		this.#dirty(collectionKey);
 
@@ -135,7 +160,9 @@ class SignalArrayHandler<Value> implements ProxyHandler<ArrayTarget<Value>> {
 
 	#setLength(target: ArrayTarget<Value>, value: unknown): boolean {
 		const oldLength = target.length;
+
 		target.length = value as number;
+
 		const length = target.length;
 
 		if (length !== oldLength) {
@@ -171,6 +198,8 @@ const collectionMethods = new Set<Key>([
 	"filter",
 	"find",
 	"findIndex",
+	"findLast",
+	"findLastIndex",
 	"flat",
 	"flatMap",
 	"forEach",
@@ -184,13 +213,19 @@ const collectionMethods = new Set<Key>([
 	"reduceRight",
 	"slice",
 	"some",
+	"toReversed",
+	"toSorted",
+	"toSpliced",
 	"values",
+	"with",
 ]);
 const callbackOwnerIndexes = new Map<Key, number>([
 	["every", 2],
 	["filter", 2],
 	["find", 2],
 	["findIndex", 2],
+	["findLast", 2],
+	["findLastIndex", 2],
 	["flatMap", 2],
 	["forEach", 2],
 	["map", 2],
@@ -204,4 +239,5 @@ type ArrayMethod = (...args: unknown[]) => unknown;
 type Key = number | string | symbol;
 type ArrayTarget<Value> = Value[] & Record<Key, unknown>;
 
+/** The native Array interface implemented by {@link SignalArray}. */
 export interface SignalArray<Value = unknown> extends Array<Value> {}

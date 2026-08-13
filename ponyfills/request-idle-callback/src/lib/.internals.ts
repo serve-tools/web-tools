@@ -1,4 +1,5 @@
 import type { IdleRequestCallback } from "./IdleRequestCallback.js";
+import type { IdleRequestOptions } from "./IdleRequestOptions.js";
 
 export interface ScheduledCallback {
 	callback: IdleRequestCallback;
@@ -48,7 +49,7 @@ function runCallbacks(): void {
 			if (performance.now() >= end) break;
 			if (!callbacks.delete(handle)) continue;
 
-			if (scheduled.timeoutHandle !== undefined) clearCallbackTimeout(scheduled.timeoutHandle);
+			if (scheduled.timeoutHandle !== undefined) clearTimeout(scheduled.timeoutHandle);
 
 			scheduled.callback({
 				didTimeout: false,
@@ -72,6 +73,39 @@ export function schedule(): void {
 
 		hiddenDelay ? setTimeout(postMessage, hiddenDelay) : postMessage();
 	});
+}
+
+/** Schedules work for an idle period and returns its cancellation handle. */
+export function requestIdleCallback(callback: IdleRequestCallback, options?: IdleRequestOptions): number {
+	getChannel();
+
+	const handle = ++nextHandle;
+	const scheduled: ScheduledCallback = { callback };
+
+	if (options?.timeout !== undefined && options.timeout > 0) {
+		scheduled.timeoutHandle = setTimeout(() => {
+			if (!callbacks.delete(handle)) return;
+
+			if (!callbacks.size) isScheduled = false;
+
+			callback({ didTimeout: true, timeRemaining: () => 0 });
+		}, options.timeout);
+	}
+
+	callbacks.set(handle, scheduled);
+
+	schedule();
+
+	return handle;
+}
+
+/** Cancels a callback previously scheduled by this module. */
+export function cancelIdleCallback(handle: number): void {
+	const scheduled = callbacks.get(handle);
+
+	if (scheduled?.timeoutHandle !== undefined) clearTimeout(scheduled.timeoutHandle);
+
+	if (callbacks.delete(handle) && !callbacks.size) isScheduled = false;
 }
 
 declare var MessageChannel: typeof globalThis extends { onmessage: any; MessageChannel: infer T }

@@ -88,8 +88,14 @@ describe("SignalArray", () => {
 	it("returns stable collection method wrappers", () => {
 		const values = new SignalArray([1]);
 
+		expect(values.findLast).toBe(values.findLast);
+		expect(values.findLastIndex).toBe(values.findLastIndex);
 		expect(values.map).toBe(values.map);
+		expect(values.toReversed).toBe(values.toReversed);
+		expect(values.toSorted).toBe(values.toSorted);
+		expect(values.toSpliced).toBe(values.toSpliced);
 		expect(values.values).toBe(values.values);
+		expect(values.with).toBe(values.with);
 	});
 
 	it("passes itself to collection callbacks", () => {
@@ -101,5 +107,69 @@ describe("SignalArray", () => {
 		});
 
 		expect(owner).toBe(values);
+	});
+
+	it("passes itself to reverse-search callbacks", () => {
+		const values = new SignalArray([1]);
+		let findOwner: number[] | undefined;
+		let indexOwner: number[] | undefined;
+
+		values.findLast((_value, _index, collection) => {
+			findOwner = collection;
+			return true;
+		});
+		values.findLastIndex((_value, _index, collection) => {
+			indexOwner = collection;
+			return true;
+		});
+
+		expect(findOwner).toBe(values);
+		expect(indexOwner).toBe(values);
+	});
+
+	it("preserves callback receivers and reducer owners", () => {
+		const values = new SignalArray([1]);
+		const thisArg = {};
+		let callbackThis: unknown;
+		let defaultThis: unknown = thisArg;
+		let reducerOwner: number[] | undefined;
+
+		values.find(function (this: unknown) {
+			callbackThis = this;
+			return false;
+		}, thisArg);
+		values.find(function (this: unknown) {
+			defaultThis = this;
+			return false;
+		});
+		values.reduce((total, value, _index, collection) => {
+			reducerOwner = collection;
+
+			return total + value;
+		}, 0);
+
+		expect(callbackThis).toBe(thisArg);
+		expect(defaultThis).toBeUndefined();
+		expect(reducerOwner).toBe(values);
+	});
+
+	it("uses one collection dependency for reverse-search and copying methods", () => {
+		const reads: Array<(values: SignalArray<number>) => unknown> = [
+			(values) => values.findLast(() => false),
+			(values) => values.findLastIndex(() => false),
+			(values) => values.toReversed(),
+			(values) => values.toSorted(),
+			(values) => values.toSpliced(1, 1, 4),
+			(values) => values.with(1, 4),
+		];
+
+		for (const read of reads) {
+			const values = new SignalArray([1, 2, 3]);
+			const computed = new Signal.Computed(() => read(values));
+
+			computed.get();
+
+			expect(Signal.subtle.introspectSources(computed)).toHaveLength(1);
+		}
 	});
 });

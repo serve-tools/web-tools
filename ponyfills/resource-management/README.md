@@ -17,7 +17,7 @@ stack.dispose();
 npm install @serve-tools/ponyfill-resource-management
 ```
 
-## Recipes
+## Usage
 
 ### Dispose a resource stack
 
@@ -53,7 +53,7 @@ Both stack classes dispose resources in reverse registration order and combine m
 
 These synchronous and asynchronous stack patterns are covered by the package's TypeScript fixtures and runtime tests.
 
-## Exports
+## Public API
 
 - `dispose` and `asyncDispose`: stable symbols scoped to this module.
 - `Disposable` and `AsyncDisposable`: TypeScript resource interfaces.

@@ -19,13 +19,7 @@ export const handler = <T>(
 		const signal = value as ReadableSignal<unknown>;
 		const effect = createEffect(() => setter(signal.get() as never));
 
-		let disposed = false;
-
 		const cleanup = () => {
-			if (disposed) return;
-
-			disposed = true;
-
 			effect.dispose();
 
 			if (owner) {
@@ -40,7 +34,10 @@ export const handler = <T>(
 		try {
 			effect.start();
 		} catch (error) {
-			cleanup();
+			if (owner) {
+				disown(owner, cleanup);
+			}
+
 			throw error;
 		}
 

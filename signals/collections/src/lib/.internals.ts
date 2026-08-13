@@ -10,12 +10,8 @@ export interface VersionSignal {
 /** Creates a version signal whose writes always notify watchers. */
 export const versionSignal = (): VersionSignal => new Signal.State(undefined, versionOptions);
 
-/** Reads the keyed version signal inside a computed, creating it on demand. */
+/** Reads a keyed version signal, creating it on demand for an active computation. */
 export function consumeKey<Key>(signals: Map<Key, VersionSignal>, key: Key): void {
-	if (Signal.subtle.currentComputed() === undefined) {
-		return;
-	}
-
 	let signal = signals.get(key);
 
 	if (signal === undefined) {

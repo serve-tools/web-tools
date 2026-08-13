@@ -64,6 +64,7 @@ export const listen = <const P extends T.WorkerProtocol>(handlers: T.WorkerHandl
 	}) as unknown as T.WorkerListener<P>;
 };
 
+/** Protocol declarations available through {@link listen}. */
 export namespace listen {
 	/** An endpoint compatible with workers and message ports. */
 	export type MessageEndpoint = T.MessageEndpoint;

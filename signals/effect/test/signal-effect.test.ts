@@ -15,9 +15,11 @@ describe("effect", () => {
 
 		value.set(1);
 		value.set(2);
+
 		expect(values).toEqual([0]);
 
 		await flush();
+
 		expect(values).toEqual([0, 2]);
 
 		dispose();
@@ -31,12 +33,19 @@ describe("effect", () => {
 		const dispose = effect(() => values.push((useLeft.get() ? left : right).get()));
 
 		left.set("left-2");
+
 		await flush();
+
 		useLeft.set(false);
+
 		await flush();
+
 		left.set("left-3");
+
 		await flush();
+
 		right.set("right-2");
+
 		await flush();
 
 		expect(values).toEqual(["left", "left-2", "right", "right-2"]);
@@ -56,11 +65,56 @@ describe("effect", () => {
 		const disposeDownstream = effect(() => values.push(downstream.get()));
 
 		trigger.set(1);
+
 		await flush();
+
 		expect(values).toEqual([0, 1]);
 
 		disposeTrigger();
 		disposeDownstream();
+	});
+
+	it("preserves later-batch cascading invalidations across scheduler shards", () => {
+		const tasks: Array<() => void> = [];
+
+		vi.stubGlobal("queueMicrotask", (task: () => void) => tasks.push(task));
+
+		const sources = Array.from({ length: 1_030 }, () => new Signal.State(0));
+		const lastValues: number[] = [];
+
+		let shouldCascade = false;
+
+		const disposers = sources.map((source, index) =>
+			effect(() => {
+				const value = source.get();
+
+				if (index === 0 && shouldCascade) sources.at(-1)!.set(value);
+				if (index === sources.length - 1) lastValues.push(value);
+			}),
+		);
+
+		try {
+			shouldCascade = true;
+
+			sources[0].set(1);
+
+			expect(tasks).toHaveLength(1);
+
+			tasks.shift()?.();
+
+			expect(lastValues).toEqual([0]);
+			expect(tasks).toHaveLength(1);
+
+			tasks.shift()?.();
+
+			expect(lastValues).toEqual([0, 1]);
+		} finally {
+			for (const dispose of disposers) {
+				dispose();
+			}
+
+			vi.unstubAllGlobals();
+		}
 	});
 
 	it("disposes idempotently and cancels a queued run", async () => {
@@ -69,10 +123,14 @@ describe("effect", () => {
 		const dispose = effect(() => values.push(value.get()));
 
 		value.set(1);
+
 		dispose();
 		dispose();
+
 		await flush();
+
 		value.set(2);
+
 		await flush();
 
 		expect(values).toEqual([0]);
@@ -82,42 +140,61 @@ describe("effect", () => {
 		const first = new Signal.State(0);
 		const second = new Signal.State(0);
 		const secondValues: number[] = [];
+
 		let shouldDispose = false;
 		let disposeSecond = (): void => {};
+
 		const disposeFirst = effect(() => {
 			first.get();
 
-			if (shouldDispose) disposeSecond();
+			if (shouldDispose) {
+				disposeSecond();
+			}
 		});
+
+		const disposeFillers = Array.from({ length: 512 }, () => effect(() => {}));
+
 		disposeSecond = effect(() => secondValues.push(second.get()));
 
 		shouldDispose = true;
+
 		first.set(1);
 		second.set(1);
+
 		await flush();
 
 		expect(secondValues).toEqual([0]);
 
 		disposeFirst();
+
+		for (const dispose of disposeFillers) {
+			dispose();
+		}
 	});
 
 	it("drains other effects, rearms, and recovers after an effect throws", () => {
 		const tasks: Array<() => void> = [];
+
 		vi.stubGlobal("queueMicrotask", (task: () => void) => tasks.push(task));
 
 		const first = new Signal.State(0);
 		const second = new Signal.State(0);
 		const secondValues: number[] = [];
+
 		let shouldThrow = false;
+
 		const disposeFirst = effect(() => {
 			first.get();
 
-			if (shouldThrow) throw new Error("effect failed");
+			if (shouldThrow) {
+				throw new Error("effect failed");
+			}
 		});
 		const disposeSecond = effect(() => secondValues.push(second.get()));
 
 		try {
 			shouldThrow = true;
+
 			first.set(1);
 			second.set(1);
 
@@ -126,6 +203,7 @@ describe("effect", () => {
 			expect(secondValues).toEqual([0, 1]);
 
 			shouldThrow = false;
+
 			first.set(2);
 			second.set(2);
 
@@ -135,6 +213,7 @@ describe("effect", () => {
 		} finally {
 			disposeFirst();
 			disposeSecond();
+
 			vi.unstubAllGlobals();
 		}
 	});
@@ -153,24 +232,33 @@ describe("effect", () => {
 
 	it("aggregates multiple failures after draining the queue", () => {
 		const tasks: Array<() => void> = [];
+
 		vi.stubGlobal("queueMicrotask", (task: () => void) => tasks.push(task));
 
 		const first = new Signal.State(0);
 		const second = new Signal.State(0);
+
 		let shouldThrow = false;
+
 		const disposeFirst = effect(() => {
 			first.get();
 
-			if (shouldThrow) throw new Error("first failed");
+			if (shouldThrow) {
+				throw new Error("first failed");
+			}
 		});
+
 		const disposeSecond = effect(() => {
 			second.get();
 
-			if (shouldThrow) throw new Error("second failed");
+			if (shouldThrow) {
+				throw new Error("second failed");
+			}
 		});
 
 		try {
 			shouldThrow = true;
+
 			first.set(1);
 			second.set(1);
 
@@ -179,6 +267,7 @@ describe("effect", () => {
 		} finally {
 			disposeFirst();
 			disposeSecond();
+
 			vi.unstubAllGlobals();
 		}
 	});
@@ -191,14 +280,18 @@ describe("createEffect", () => {
 		const controller = createEffect(() => values.push(value.get()));
 
 		value.set(1);
+
 		expect(values).toEqual([]);
 
 		controller.start();
 		controller.start();
+
 		expect(values).toEqual([1]);
 
 		value.set(2);
+
 		await flush();
+
 		expect(values).toEqual([1, 2]);
 
 		controller.dispose();
@@ -206,6 +299,7 @@ describe("createEffect", () => {
 
 	it("can be permanently disposed before its initial run", () => {
 		let runs = 0;
+
 		const controller = createEffect(() => runs++);
 
 		controller.dispose();
@@ -216,16 +310,36 @@ describe("createEffect", () => {
 
 	it("can be disposed by ownership registered before start", () => {
 		const cleanups = new Set<() => void>();
-		let runs = 0;
-		const controller = createEffect(() => {
-			runs++;
 
-			for (const cleanup of cleanups) cleanup();
+		let runs = 0;
+
+		const controller = createEffect(() => {
+			++runs;
+
+			for (const cleanup of cleanups) {
+				cleanup();
+			}
 		});
 
 		cleanups.add(controller.dispose);
 		controller.start();
 
 		expect(runs).toBe(1);
+	});
+
+	it("preserves the initial error when the effect disposes itself before throwing", () => {
+		const failure = new Error("initial failure");
+		const value = new Signal.State(0);
+
+		let controller: ReturnType<typeof createEffect>;
+
+		controller = createEffect(() => {
+			value.get();
+			controller.dispose();
+			throw failure;
+		});
+
+		expect(() => controller.start()).toThrow(failure);
+		expect(Signal.subtle.hasSinks(value)).toBe(false);
 	});
 });

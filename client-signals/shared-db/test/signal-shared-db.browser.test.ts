@@ -3,11 +3,11 @@
 import { Signal } from "@serve-tools/signal";
 import { expect, test } from "vitest";
 
-import { SignalDB } from "../src/db.js";
-import type { BrowserTestSchema, User } from "./db.worker.js";
+import { SignalDB } from "../src/signal-shared-db.js";
+import type { BrowserTestSchema, User } from "./signal-shared-db.worker.js";
 
 const connect = (name: string) => {
-	const worker = new SharedWorker(new URL("./db.worker.ts", import.meta.url), { name, type: "module" });
+	const worker = new SharedWorker(new URL("./signal-shared-db.worker.ts", import.meta.url), { name, type: "module" });
 	const database = SignalDB.connect<BrowserTestSchema>(worker.port);
 
 	return {

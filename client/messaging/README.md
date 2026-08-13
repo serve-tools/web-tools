@@ -30,7 +30,7 @@ console.log(await client.request("greet", "Ada")); // "Hello, Ada!"
 npm install @serve-tools/client-messaging
 ```
 
-## Exports
+## Usage
 
 The `scope/window` entrypoint exports `SharedWorker`, which extends the platform class with a `client` property.
 
@@ -167,15 +167,6 @@ A page that owns a `SharedWorker` port should close that port after closing its 
 Messages retain the ordering guarantees of their underlying endpoint.
 The protocol does not retry, persist, or claim delivery after a worker or document is destroyed.
 
-## Compatibility
-
-The root entrypoint works with event-target-style endpoints in browser windows, dedicated workers, shared workers, and `MessageChannel`s.
-It also works with structurally compatible endpoints in Node.js, although the `./scope/window` and `./scope/worker` entrypoints are browser-specific.
-Values must be supported by the endpoint's structured-clone algorithm, and transferables must be valid for that runtime.
-
-Using `using` for automatic cleanup requires compiler and runtime support for `Symbol.dispose`, or a compatible polyfill.
-The equivalent `close()` and `unsubscribe()` methods are always available.
-
 ## Public API
 
 - The root entrypoint exports `connect`, `serve`, `transfer`, and `WorkerRemoteError`.
@@ -187,20 +178,20 @@ The equivalent `close()` and `unsubscribe()` methods are always available.
 - `WorkerRequestOptions`, `WorkerSubscribeOptions`, `WorkerRequestContext`, and `WorkerSubscriptionContext` describe cancellation and handler state.
 - `WorkerTransferResult` associates a result with native `Transferable` objects, and `MessageEndpoint` describes a compatible transport.
 
+## Compatibility
+
+The root entrypoint works with event-target-style endpoints in browser windows, dedicated workers, shared workers, and `MessageChannel`s.
+It also works with structurally compatible endpoints in Node.js, although the `./scope/window` and `./scope/worker` entrypoints are browser-specific.
+Values must be supported by the endpoint's structured-clone algorithm, and transferables must be valid for that runtime.
+
+Using `using` for automatic cleanup requires compiler and runtime support for `Symbol.dispose`, or a compatible polyfill.
+The equivalent `close()` and `unsubscribe()` methods are always available.
+
 ## Trust boundary
 
 The protocol exists only at compile time.
 Validate values received from an untrusted execution context.
 Once passed to `connect()` or `serve()`, an endpoint is protocol-owned and must not also carry unrelated application messages.
-
-## Migrating from the Channel experiment
-
-- Replace `new Channel(port)` with `connect<YourProtocol>(port)` on the caller and `serve(port, handlers)` on the worker.
-- Replace `remote()` and `expose()` methods with named requests.
-- Replace repeated callback capabilities or raw message iteration with named subscriptions.
-- Pass cancellation in operation options rather than placing `AbortSignal` objects inside argument graphs.
-- Use `transfer(value, transferList)` for worker-to-client transfers.
-- Remove `ChannelTarget`, `Target`, `Remote`, `Moved`, `readable`, and `writable`; this package no longer implements a distributed object or general stream transport.
 
 ## Demo
 
@@ -219,7 +210,7 @@ npm run dev --workspace @serve-tools/client-messaging-demo
 ## Agent Skill
 
 This package includes `skills/serve-tools-client-messaging/SKILL.md` with version-aligned usage guidance for compatible coding agents.
-Listening is explicit; installing the package does not automatically trust or enable it.
+Activation is explicit; installing the package does not automatically trust or enable it.
 
 ## Development
 

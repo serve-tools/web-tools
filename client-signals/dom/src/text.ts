@@ -1,4 +1,4 @@
-import { handler, type Watchable } from "./_internal.js";
+import { handler, type Watchable } from "./.internals.js";
 
 /** Creates a text node with the specified content. */
 export const text =
@@ -13,6 +13,8 @@ export const text =
 		return text;
 	};
 
+/** Types used by {@link text}. */
 export namespace text {
+	/** A template that creates a text node and optionally appends it to a parent. */
 	export type Template<P extends ParentNode = ParentNode> = (parent?: P) => Text;
 }

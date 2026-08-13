@@ -104,6 +104,12 @@ The observation does not own or close its messaging client, worker, or message p
 - `ObservationState<Value>` describes `pending`, `ready`, `complete`, and `error` states.
 - `ObserveOptions` describes optional cancellation and input transfer.
 
+## Compatibility
+
+The package is an ES module for runtimes supported by the root `@serve-tools/client-messaging` entrypoint and a compatible `@serve-tools/signal` installation.
+Browser-specific worker helpers remain in the messaging client's scope entrypoints.
+Explicit resource management requires `Symbol.dispose` support or a compatible polyfill; `dispose()` is always available.
+
 ## Agent Skill
 
 This package includes `skills/serve-tools-signal-messaging/SKILL.md` with version-aligned usage guidance for compatible coding agents.
@@ -111,8 +117,16 @@ Activation is explicit; installing the package does not automatically trust or e
 
 ## Development
 
+The default test command runs the observation suite in Node.js, Chromium, Firefox, and WebKit.
+
 ```shell
 npm test --workspace @serve-tools/signal-messaging
+```
+
+Run the opt-in Chromium benchmarks for observation lifecycle and delivery fanout with:
+
+```shell
+npm run benchmark --workspace @serve-tools/signal-messaging
 ```
 
 ## License

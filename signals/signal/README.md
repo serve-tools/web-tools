@@ -29,10 +29,10 @@ npm install @serve-tools/signal
 - Reactive primitives aligned with the current proposal: `State`, `Computed`, and `Watcher`
 - Glitch-free execution with topological ordering
 - Type guards: `Signal.isState()`, `Signal.isComputed()`, and `Signal.isWatcher()`
-- Zero dependencies; consumer minifiers reduce it to ~3.1KB, or ~1.3KB gzipped
+- Zero runtime dependencies and no global mutation
 - Tested across Node.js, Chromium, Firefox, and WebKit
 
-## Watcher
+## Watchers
 
 ```js
 import { Signal } from "@serve-tools/signal";
@@ -52,7 +52,7 @@ count.set(10); // logs: "Signal changed!"
 watcher.unwatch(doubled);
 ```
 
-## API
+## Public API
 
 ### `Signal.State<T>`
 
@@ -78,7 +78,7 @@ Low-level primitive for effect scheduling.
 - `.unwatch(...signals)` — stop watching signals
 - `.getPending()` — get signals needing recomputation
 
-### Type Guards
+### Type guards
 
 - `Signal.isState(value)` — returns `true` if value is a `State` signal
 - `Signal.isComputed(value)` — returns `true` if value is a `Computed` signal
@@ -93,6 +93,8 @@ Low-level primitive for effect scheduling.
 - `hasSources(signal)` — check if signal has dependencies
 - `hasSinks(signal)` — check if signal has dependents
 - `watched` / `unwatched` — symbols for lifecycle callbacks
+
+The root also exports `AnySignal<T>`, `StateSignal<T>`, and `ComputedSignal<T>` instance aliases.
 
 ## Options
 
@@ -110,11 +112,30 @@ const state = new Signal.State(0, {
 });
 ```
 
+## Compatibility
+
+The package is a dependency-free ES module for modern JavaScript runtimes and does not modify the global environment.
+Its API follows an exploratory Stage 1 proposal and may evolve with that proposal.
+
 ## Agent Skill
 
 This package includes `skills/serve-tools-signal/SKILL.md` with version-aligned usage guidance for compatible coding agents.
 Activation is explicit; installing the package does not automatically trust or enable it.
 
+## Development
+
+The default test command runs the proposal-behavior suite in Node.js, Chromium, Firefox, and WebKit.
+
+```shell
+npm test --workspace @serve-tools/signal
+```
+
+Run the opt-in construction, graph, and invalidation benchmarks with:
+
+```shell
+npm run benchmark --workspace @serve-tools/signal
+```
+
 ## License
 
-[MIT-0](LICENSE.md) — No attribution required.
+[MIT-0](./LICENSE.md)

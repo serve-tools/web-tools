@@ -1,5 +1,5 @@
 import { Signal } from "@serve-tools/signal";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { SignalArray, SignalMap, SignalObject, SignalSet } from "../src/signal-collections.js";
 import { watch } from "./watch.js";
@@ -19,6 +19,7 @@ describe("SignalObject", () => {
 
 		expect(object).not.toBe(source);
 		expect(object).not.toBeInstanceOf(Value);
+		expect(object).toBeInstanceOf(SignalObject);
 		expect(object.a).toBe(1);
 		expect("doubled" in object).toBe(false);
 	});
@@ -38,8 +39,10 @@ describe("SignalObject", () => {
 	it("tracks symbol values and enumeration", () => {
 		const symbol = Symbol("value");
 		const object: Partial<Record<typeof symbol, number>> = new SignalObject({ [symbol]: 1 });
+
 		let valueReads = 0;
 		let keyReads = 0;
+
 		const value = new Signal.Computed(() => {
 			valueReads += 1;
 			return object[symbol];
@@ -51,38 +54,50 @@ describe("SignalObject", () => {
 
 		expect(value.get()).toBe(1);
 		expect(keys.get()).toEqual([symbol]);
+
 		object[symbol] = 2;
+
 		expect(value.get()).toBe(2);
 		expect(keys.get()).toEqual([symbol]);
 		expect(valueReads).toBe(2);
 		expect(keyReads).toBe(1);
+
 		delete object[symbol];
+
 		expect(value.get()).toBeUndefined();
 		expect(keys.get()).toEqual([]);
 	});
 
 	it("isolates property reads and ignores identical writes", () => {
 		const object = new SignalObject({ a: 1, b: 2 });
+
 		let reads = 0;
+
 		const value = new Signal.Computed(() => {
 			reads += 1;
 			return object.a;
 		});
 
 		expect(value.get()).toBe(1);
+
 		object.b = 3;
 		object.a = 1;
+
 		expect(value.get()).toBe(1);
 		expect(reads).toBe(1);
+
 		object.a = 4;
+
 		expect(value.get()).toBe(4);
 		expect(reads).toBe(2);
 	});
 
 	it("tracks has and ownKeys with structural isolation", () => {
 		const object: Record<string, number> = new SignalObject({ a: 1 });
+
 		let hasReads = 0;
 		let keyReads = 0;
+
 		const hasA = new Signal.Computed(() => {
 			hasReads += 1;
 			return "a" in object;
@@ -94,13 +109,16 @@ describe("SignalObject", () => {
 
 		hasA.get();
 		keys.get();
+
 		object.a = 2;
+
 		expect(hasA.get()).toBe(true);
 		expect(keys.get()).toBe("a");
 		expect(hasReads).toBe(1);
 		expect(keyReads).toBe(1);
 
 		object.b = 3;
+
 		expect(keys.get()).toBe("a,b");
 		expect(keyReads).toBe(2);
 	});
@@ -114,11 +132,15 @@ describe("SignalObject", () => {
 		);
 
 		delete object.value;
+
 		await Promise.resolve();
+
 		object.value = 2;
+
 		await Promise.resolve();
 
 		expect(values).toEqual([undefined, 2]);
+
 		stop();
 	});
 
@@ -137,10 +159,48 @@ describe("SignalObject", () => {
 		const sizes = new Signal.Computed(() => [array.length, map.size, set.size, Object.keys(object).length]);
 
 		expect(sizes.get()).toEqual([0, 0, 0, 0]);
+
 		array.push(1);
 		map.set("a", 1);
 		set.add(1);
 		object.a = 1;
+
 		expect(sizes.get()).toEqual([1, 1, 1, 1]);
+	});
+
+	it("allocates keyed dependency maps only for tracked reads", () => {
+		const NativeMap = Map;
+		let constructions = 0;
+
+		class CountingMap<Key, Value> extends NativeMap<Key, Value> {
+			constructor() {
+				super();
+
+				++constructions;
+			}
+		}
+
+		vi.stubGlobal("Map", CountingMap);
+
+		try {
+			const map = new SignalMap<string, number>();
+			const set = new SignalSet<number>();
+			const object: Record<string, number> = new SignalObject();
+
+			map.get("value");
+			set.has(1);
+
+			void object.value;
+
+			expect(constructions).toBe(0);
+
+			new Signal.Computed(() => map.get("value")).get();
+			new Signal.Computed(() => set.has(1)).get();
+			new Signal.Computed(() => object.value).get();
+
+			expect(constructions).toBe(3);
+		} finally {
+			vi.unstubAllGlobals();
+		}
 	});
 });

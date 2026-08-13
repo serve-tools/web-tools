@@ -348,6 +348,7 @@ export class DB<Schema extends SchemaDefinition<Schema> = DBSchema> implements D
 	}
 }
 
+/** Schema declarations used by {@link DB}. */
 export namespace DB {
 	/** Declares the value, primary-key, and index-key types of one object store. */
 	export interface Store<

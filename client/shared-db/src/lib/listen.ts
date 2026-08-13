@@ -5,8 +5,8 @@ import type { SchemaDefinition, SharedDBChange, SharedDBEvent, SharedDBProtocol,
 
 interface ChangeTarget<Schema extends SchemaDefinition<Schema>> {
 	readonly emit: (change: SharedDBEvent<Schema>) => void;
-	readonly pending: SharedDBChange<Schema>[];
 	readonly storeNames: ReadonlySet<Extract<keyof Schema, string>>;
+	pending: SharedDBChange<Schema>[] | undefined;
 	ready: boolean;
 }
 
@@ -33,7 +33,7 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 			if (target.ready) {
 				target.emit(change);
 			} else {
-				target.pending.push(change);
+				(target.pending ??= []).push(change);
 			}
 		}
 	};
@@ -130,6 +130,7 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 
 			clear: async ({ storeName, options: operationOptions }, { signal }) => {
 				await (await database).clear(storeName, { ...operationOptions, signal });
+
 				emitChange({
 					kind: "invalidated",
 					store: storeName,
@@ -142,7 +143,7 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 			changes: async ({ storeNames }, { emit, signal }) => {
 				const target: ChangeTarget<Schema> = {
 					emit,
-					pending: [],
+					pending: undefined,
 					ready: false,
 					storeNames: new Set(storeNames),
 				};
@@ -153,6 +154,7 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 					await database;
 				} catch (error) {
 					subscribers.delete(target);
+
 					throw error;
 				}
 
@@ -162,13 +164,16 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 				}
 
 				emit({ kind: "ready", revision });
+
 				target.ready = true;
 
-				for (const change of target.pending) {
-					emit(change);
-				}
+				if (target.pending !== undefined) {
+					for (const change of target.pending) {
+						emit(change);
+					}
 
-				target.pending.length = 0;
+					target.pending = undefined;
+				}
 
 				return () => subscribers.delete(target);
 			},
@@ -181,8 +186,10 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 		}
 
 		isClosed = true;
+
 		connections.close(reason);
 		subscribers.clear();
+
 		void database.then(
 			(value) => value.close(),
 			() => undefined,

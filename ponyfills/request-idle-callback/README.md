@@ -38,7 +38,7 @@ Work is delayed while the document is hidden to reduce background activity.
 
 The scheduling and cancellation pattern above is covered by the package's TypeScript fixture and browser tests.
 
-## Exports
+## Public API
 
 - `requestIdleCallback`: schedules one callback and returns its numeric cancellation handle.
 - `cancelIdleCallback`: cancels a pending callback created by this module.
@@ -46,8 +46,8 @@ The scheduling and cancellation pattern above is covered by the package's TypeSc
 
 ## Ponyfill boundary
 
-The exported functions always use the module's scheduler, even when the browser already provides native globals.
-They share their own cancellation handles and never install or replace `globalThis.requestIdleCallback` or `globalThis.cancelIdleCallback`.
+The exported functions always use the package's scheduler, even when the browser already provides native globals.
+Root and `lib/*` imports share one cancellation domain and never install or replace `globalThis.requestIdleCallback` or `globalThis.cancelIdleCallback`.
 
 ## Compatibility
 

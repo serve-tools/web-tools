@@ -12,6 +12,7 @@ description: Use @serve-tools/signal-shared-db when implementing, reviewing, or 
 - Keep asynchronous query state explicit as `pending`, `ready`, or `error`.
   Do not hide loading and failure inside an undefined value.
 - Let a watch key or option be a State or Computed only when changing it should refresh the query.
+- Expect active queries for the same store to share one remote change subscription.
 
 ## Preserve refresh semantics
 

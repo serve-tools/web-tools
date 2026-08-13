@@ -23,7 +23,7 @@ Finite operations remain Promise-based; subscriptions provide the explicit bridg
 npm install @serve-tools/client-shared-db @serve-tools/client-db
 ```
 
-## Basic use
+## Usage
 
 Once the worker is listening, the connected database provides the familiar Promise-based point operations from `@serve-tools/client-db`.
 The result of `get()` is typed from the worker schema; the same client also provides `add`, `put`, `delete`, `clear`, `has`, `count`, `getAll`, and `getAllKeys`.
@@ -99,16 +99,6 @@ Direct IndexedDB access from another connection bypasses the feed.
 Once passed to `connect()`, the port is protocol-owned and must not carry unrelated messages.
 Closing the client does not close the port; the page that created the `SharedWorker` remains responsible for it.
 
-## Compatibility
-
-The package is an ES module for browser windows and shared workers that provide IndexedDB, `SharedWorker`, `MessagePort`, structured clone, and `AbortSignal`.
-It does not install browser APIs in Node.js.
-Using `await using` for cleanup additionally requires `Symbol.dispose` support or a compatible polyfill.
-
-The subscription protocol cannot reliably detect every abruptly destroyed tab; applications that require crash detection should add a heartbeat policy.
-
-The examples above are covered by the package's TypeScript fixture and native browser integration test.
-
 ## Public API
 
 The package exports shared declarations from its root entrypoint and runtime operations from scope-specific entrypoints:
@@ -119,10 +109,20 @@ The package exports shared declarations from its root entrypoint and runtime ope
 - `SchemaType` extracts the schema retained by the result of `listen<Schema>()`.
 - `SharedDBChange`, `SharedDBSubscriber`, and `SharedDBSubscribeOptions` describe post-commit change delivery.
 
+## Compatibility
+
+The package is an ES module for browser windows and shared workers that provide IndexedDB, `SharedWorker`, `MessagePort`, structured clone, and `AbortSignal`.
+It does not install browser APIs in Node.js.
+Using `await using` for cleanup additionally requires `Symbol.dispose` support or a compatible polyfill.
+
+The subscription protocol cannot reliably detect every abruptly destroyed tab; applications that require crash detection should add a heartbeat policy.
+
+The examples above are covered by the package's TypeScript fixture and native browser integration test.
+
 ## Agent Skill
 
 This package includes `skills/serve-tools-client-shared-db/SKILL.md` with version-aligned usage guidance for compatible coding agents.
-Listening is explicit; installing the package does not automatically trust or enable it.
+Activation is explicit; installing the package does not automatically trust or enable it.
 
 ## Development
 

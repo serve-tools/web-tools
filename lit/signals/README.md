@@ -130,6 +130,46 @@ Reading `this.doubled` returns the computed value.
 Use `SignalWatcher` when a Lit template should rerender after reading a computed getter.
 Use `watch(() => this.doubled)` when only that template part should update.
 
+## Public API
+
+The package root exports:
+
+- `watch(source)` for fine-grained rendering of a signal or reactive callback.
+- `WatchSource<Value>` and `WatchCallback<Value>` for reusable directive inputs.
+- `SignalWatcher(BaseElement)` for component-wide render tracking.
+
+The `@serve-tools/lit-signals/decorators` entrypoint exports:
+
+- `property(options?)` for signal-backed standard auto-accessors.
+- `computed` for memoized standard getter decorators.
+- `defaultAttributeConverter` for Lit-compatible default attribute conversion.
+- `SignalPropertyDeclaration`, `PropertyDeclaration`, `AttributeConverter`, and `TypeHint` for decorator configuration.
+
+## Compatibility
+
+The package is an ES module for Lit 3.3 and a compatible `@serve-tools/signal` installation.
+The decorators require the current standard decorator proposal and auto-accessor support from the application's compiler and runtime.
+
+## Agent Skill
+
+This package includes `skills/serve-tools-lit-signals/SKILL.md` with version-aligned usage guidance for compatible coding agents.
+Activation is explicit; installing the package does not automatically trust or enable it.
+
+## Development
+
+The default test command runs the Lit integration suite in Chromium, Firefox, and WebKit.
+
+```shell
+npx playwright install chromium firefox webkit
+npm test --workspace @serve-tools/lit-signals
+```
+
+Run the opt-in Chromium benchmarks for directive, mixin, and decorator updates with:
+
+```shell
+npm run benchmark --workspace @serve-tools/lit-signals
+```
+
 ## License
 
-[MIT-0](LICENSE.md) — No attribution required.
+[MIT-0](./LICENSE.md)

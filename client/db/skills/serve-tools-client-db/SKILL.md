@@ -33,5 +33,5 @@ description: Use @serve-tools/client-db when implementing, reviewing, or debuggi
 
 ## Validate changes
 
-Update behavior, declarations, README recipes, and runtime/type tests together.
+Update behavior, declarations, README examples, and runtime/type tests together.
 Run the package's typecheck, Node tests, browser tests, build, and package-shape check.
