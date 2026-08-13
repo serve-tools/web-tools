@@ -6,5 +6,12 @@
 		"types": ["vitest"]
 	},
 	"references": [{ "path": "../db/tsconfig.json" }, { "path": "../messaging/tsconfig.json" }],
-	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "test/**/.*.ts", "vitest*.config.ts"]
+	"include": [
+		"benchmark/**/*.ts",
+		"src/**/*.ts",
+		"src/**/.*.ts",
+		"test/**/*.ts",
+		"test/**/.*.ts",
+		"vitest*.config.ts"
+	]
 }

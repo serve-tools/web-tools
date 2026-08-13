@@ -5,5 +5,12 @@
 		"noEmit": true,
 		"types": ["vitest"]
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "test/**/.*.ts", "vitest*.config.ts"]
+	"include": [
+		"benchmark/**/*.ts",
+		"src/**/*.ts",
+		"src/**/.*.ts",
+		"test/**/*.ts",
+		"test/**/.*.ts",
+		"vitest*.config.ts"
+	]
 }

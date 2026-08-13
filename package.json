@@ -37,6 +37,8 @@
 		"vite/polyfills"
 	],
 	"scripts": {
+		"benchmark": "npm run benchmark --workspaces --if-present",
+		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-storage",
 		"build": "npm run build --workspaces --if-present",
 		"check:packages": "npm run check:package --workspaces --if-present",
 		"check:skills": "node scripts/check-skills.mjs",

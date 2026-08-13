@@ -133,6 +133,15 @@ npx playwright install chromium firefox webkit
 npm test --workspace @serve-tools/client-shared-db
 ```
 
+Run the opt-in Chromium benchmarks for SharedWorker database round trips and multi-client change fanout with:
+
+```shell
+npm run benchmark --workspace @serve-tools/client-shared-db
+```
+
+Benchmark results report warmup-separated mean, median, p95, and operations per second.
+They are descriptive measurements and do not impose environment-sensitive pass/fail thresholds.
+
 ## License
 
 [MIT-0](./LICENSE.md)

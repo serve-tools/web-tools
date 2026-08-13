@@ -2,8 +2,9 @@
 	"extends": "../../tsconfig.json",
 	"compilerOptions": {
 		"composite": false,
+		"lib": ["ES2025", "DOM", "DOM.Iterable"],
 		"noEmit": true,
 		"types": ["vitest"]
 	},
-	"include": ["benchmark/**/*.ts", "src/**/*.ts", "test/**/*.ts", "vitest*.config.ts"]
+	"include": ["benchmark/**/*.ts", "src/**/*.ts", "vitest.benchmark.config.ts"]
 }

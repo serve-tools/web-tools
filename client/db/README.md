@@ -187,6 +187,15 @@ npx playwright install chromium firefox webkit
 npm test --workspace @serve-tools/client-db
 ```
 
+Run the opt-in Chromium benchmarks for point reads, point writes, and batched transactions with:
+
+```shell
+npm run benchmark --workspace @serve-tools/client-db
+```
+
+Benchmark results report warmup-separated mean, median, p95, and operations per second.
+They are descriptive measurements and do not impose environment-sensitive pass/fail thresholds.
+
 ## License
 
 [MIT-0](./LICENSE.md)
