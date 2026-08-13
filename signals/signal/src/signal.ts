@@ -126,6 +126,7 @@ const removeSink = (source: AnySignalNode, sink: AnyConsumerNode) => {
 
 const markDirty = (node: AnyConsumerNode) => {
 	if (node[_.dirty]) return;
+
 	node[_.dirty] = true;
 
 	const watcher = node as WatcherNode;
@@ -142,6 +143,7 @@ const markDirty = (node: AnyConsumerNode) => {
 
 const track = (source: AnySignalNode) => {
 	if (!computing) return;
+
 	const sourceIndex = computing[_.nextSource]!++;
 	const previousSource = computing[_.sources][sourceIndex];
 
@@ -220,7 +222,7 @@ const recompute = <T>(node: ComputedNode<T>) => {
 	if (error !== err) {
 		node[_.error] = error;
 		node[_.value] = runHook;
-		node[_.version]++;
+		++node[_.version];
 	} else {
 		node[_.value] = equal ? previousValue : value;
 
@@ -320,7 +322,7 @@ class State<T> {
 
 		if (!(node[_.eq] ? node[_.eq].call(this, node[_.value], value) : Object.is(node[_.value], value))) {
 			node[_.value] = value;
-			node[_.version]++;
+			++node[_.version];
 
 			++epoch;
 

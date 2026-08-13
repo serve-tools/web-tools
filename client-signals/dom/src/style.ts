@@ -7,6 +7,7 @@ import type { DOM } from "./types.js";
 /** Creates a constructed stylesheet from a static or signal-derived CSS template. */
 export const css = (strings: TemplateStringsArray, ...values: Array<Watchable<CSSValue>>): CSSStyleSheet => {
 	const sheet = new CSSStyleSheet();
+
 	const serializeTemplate = () => {
 		let cssText = strings.raw[0];
 

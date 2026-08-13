@@ -55,9 +55,6 @@ export const post = (endpoint: MessageEndpoint, message: WireMessage, transfer?:
 	}
 };
 
-export const unwrapTransfer = (value: unknown): { value: unknown; transfer?: readonly Transferable[] } =>
-	isTransferResult(value) ? value : { value };
-
 export const isTransferResult = (value: unknown): value is WorkerTransferResult<unknown> =>
 	!!value && typeof value === "object" && (value as Record<PropertyKey, unknown>)[transferBrand] === true;
 

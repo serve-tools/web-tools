@@ -32,6 +32,7 @@ export const listen = <const P extends T.WorkerProtocol>(handlers: T.WorkerHandl
 			if (index !== -1) connections.splice(index, 1);
 		});
 	};
+
 	const connected = ({ ports }: MessageEvent): void => {
 		const port = ports[0];
 

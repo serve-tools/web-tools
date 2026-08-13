@@ -6,11 +6,11 @@ export const property =
 	<Value>(options: SignalPropertyDeclaration<Value> = {}) =>
 	<This extends ReactiveElement>(
 		target: ClassAccessorDecoratorTarget<This, Value>,
-		{ name, metadata }: ClassAccessorDecoratorContext<This, Value>,
+		context: ClassAccessorDecoratorContext<This, Value>,
 	): ClassAccessorDecoratorResult<This, Value> => {
 		options ??= {};
 
-		return signalAccessor(target, { name, metadata } as ClassAccessorDecoratorContext<This, Value>, options, identity);
+		return signalAccessor(target, context, options, identity);
 	};
 
 const identity = <Value>(value: Value): Value => value;

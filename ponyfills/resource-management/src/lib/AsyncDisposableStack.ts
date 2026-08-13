@@ -25,7 +25,9 @@ export class AsyncDisposableStack {
 			const method =
 				getDisposeMethod<void | PromiseLike<void>>(value, asyncDispose) ??
 				getDisposeMethod<void>(value, dispose);
+
 			if (!method) throw new TypeError("Object is not disposable");
+
 			this.#disposers.push(method);
 		}
 

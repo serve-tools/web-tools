@@ -31,6 +31,30 @@ All constructors preserve native Array, Map, Set, or Object behavior.
 Unchanged writes do not invalidate tracked computations.
 The package shares the application's compatible `@serve-tools/signal` installation.
 
+## Lit integration
+
+Use `SignalWatcher` or callback-form `watch()` from `@serve-tools/lit-signals` to track ordinary collection reads in Lit templates.
+Use the `collection()` decorator when a standard auto-accessor should convert plain initializers and replacements to a particular signal collection.
+
+```ts
+import { SignalSet } from "@serve-tools/signal-collections";
+import { SignalWatcher } from "@serve-tools/lit-signals";
+import { collection } from "@serve-tools/lit-signals/decorators";
+import { html, LitElement } from "lit";
+
+class SelectionList extends SignalWatcher(LitElement) {
+	@collection(SignalSet)
+	accessor selected = new Set<string>();
+
+	render() {
+		return html`${this.selected.size} selected`;
+	}
+}
+```
+
+The decorator preserves an assigned `SignalSet` instance and converts an assigned plain `Set` to a new signal-backed collection.
+Equivalent behavior applies to `SignalArray`, `SignalMap`, and `SignalObject`.
+
 ## Compatibility
 
 The package is an ES module for JavaScript runtimes with `Proxy`, Array, Map, Set, Object, and a compatible `@serve-tools/signal` installation.

@@ -42,7 +42,7 @@ describe("Signal.State", () => {
 
 		let runs = 0;
 
-		const c = new Signal.Computed(() => (runs++, s.get() * 2));
+		const c = new Signal.Computed(() => (++runs, s.get() * 2));
 
 		c.get();
 		s.set(1);
@@ -75,7 +75,7 @@ describe("Signal.Computed", () => {
 	it("caches computed value", () => {
 		let runs = 0;
 
-		const c = new Signal.Computed(() => (runs++, 1));
+		const c = new Signal.Computed(() => (++runs, 1));
 
 		c.get();
 		c.get();
@@ -102,7 +102,7 @@ describe("Signal.Computed", () => {
 
 		let runs = 0;
 
-		const c = new Signal.Computed(() => (runs++, flag.get() ? a.get() : b.get()));
+		const c = new Signal.Computed(() => (++runs, flag.get() ? a.get() : b.get()));
 
 		c.get();
 
@@ -175,7 +175,7 @@ describe("Signal.Computed", () => {
 				return a.val === b.val;
 			},
 		});
-		const d = new Signal.Computed(() => (runs++, c.get().val));
+		const d = new Signal.Computed(() => (++runs, c.get().val));
 
 		d.get();
 		s.set(2);
@@ -223,7 +223,7 @@ describe("Signal.subtle.Watcher", () => {
 		let calls = 0;
 
 		const s = new Signal.State(1);
-		const w = new Signal.subtle.Watcher(() => calls++);
+		const w = new Signal.subtle.Watcher(() => ++calls);
 
 		w.watch(s);
 
@@ -287,7 +287,7 @@ describe("Signal.subtle.Watcher", () => {
 		let calls = 0;
 
 		const s = new Signal.State(1);
-		const w = new Signal.subtle.Watcher(() => calls++);
+		const w = new Signal.subtle.Watcher(() => ++calls);
 
 		w.watch(s);
 		s.set(2);
@@ -331,7 +331,7 @@ describe("Signal.subtle.Watcher", () => {
 
 		const s = new Signal.State(1);
 		const c = new Signal.Computed(() => s.get() * 2);
-		const w = new Signal.subtle.Watcher(() => calls++);
+		const w = new Signal.subtle.Watcher(() => ++calls);
 
 		w.watch(c);
 		c.get();
@@ -384,7 +384,7 @@ describe("Signal.subtle utilities", () => {
 
 		let runs = 0;
 
-		const c = new Signal.Computed(() => (runs++, Signal.subtle.untrack(() => s.get())));
+		const c = new Signal.Computed(() => (++runs, Signal.subtle.untrack(() => s.get())));
 
 		c.get();
 		s.set(2);
@@ -477,7 +477,7 @@ describe("Glitch-free execution", () => {
 
 		let runs = 0;
 
-		const sum = new Signal.Computed(() => (runs++, a.get() + b.get()));
+		const sum = new Signal.Computed(() => (++runs, a.get() + b.get()));
 
 		sum.get();
 		a.set(2);
@@ -494,7 +494,7 @@ describe("Glitch-free execution", () => {
 
 		let runs = 0;
 
-		const d = new Signal.Computed(() => (runs++, b.get() + c.get()));
+		const d = new Signal.Computed(() => (++runs, b.get() + c.get()));
 
 		expect(d.get()).toBe(5);
 
@@ -512,7 +512,7 @@ describe("Glitch-free execution", () => {
 
 		c.get();
 
-		const w = new Signal.subtle.Watcher(() => calls++);
+		const w = new Signal.subtle.Watcher(() => ++calls);
 
 		w.watch(c);
 
@@ -578,7 +578,7 @@ describe("Edge cases", () => {
 	it("sink tracking propagates through computed chain", () => {
 		let watched = 0;
 
-		const a = new Signal.State(1, { [Signal.subtle.watched]: () => watched++ });
+		const a = new Signal.State(1, { [Signal.subtle.watched]: () => ++watched });
 		const b = new Signal.Computed(() => a.get());
 		const c = new Signal.Computed(() => b.get());
 		const w = new Signal.subtle.Watcher(() => {});
@@ -594,7 +594,7 @@ describe("Edge cases", () => {
 	it("removeSink propagates through computed chain", () => {
 		let unwatched = 0;
 
-		const a = new Signal.State(1, { [Signal.subtle.unwatched]: () => unwatched++ });
+		const a = new Signal.State(1, { [Signal.subtle.unwatched]: () => ++unwatched });
 		const b = new Signal.Computed(() => a.get());
 		const c = new Signal.Computed(() => b.get());
 		const w = new Signal.subtle.Watcher(() => {});
@@ -638,8 +638,8 @@ describe("Edge cases", () => {
 		let unwatched = 0;
 
 		const s = new Signal.State(0, {
-			[Signal.subtle.watched]: () => watched++,
-			[Signal.subtle.unwatched]: () => unwatched++,
+			[Signal.subtle.watched]: () => ++watched,
+			[Signal.subtle.unwatched]: () => ++unwatched,
 		});
 		const c = new Signal.Computed(() => s.get() % 2);
 		const w = new Signal.subtle.Watcher(() => {});

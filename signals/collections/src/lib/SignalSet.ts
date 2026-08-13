@@ -1,6 +1,6 @@
 import { Signal } from "@serve-tools/signal";
 
-import { consumeKey, type VersionSignal, versionSignal } from "./.internals.js";
+import { consumeKey, dirty, dirtyAll, type VersionSignal, versionSignal } from "./.internals.js";
 
 /** A Set with signal-backed membership and iteration reads. */
 export class SignalSet<Value = unknown> extends Set<Value> {
@@ -74,8 +74,8 @@ export class SignalSet<Value = unknown> extends Set<Value> {
 
 		super.add(value);
 
-		this.#members?.get(value)?.set(undefined);
-		this.#collection?.set(undefined);
+		dirty(this.#members?.get(value));
+		dirty(this.#collection);
 
 		return this;
 	}
@@ -86,9 +86,9 @@ export class SignalSet<Value = unknown> extends Set<Value> {
 			return false;
 		}
 
-		this.#members?.get(value)?.set(undefined);
+		dirty(this.#members?.get(value));
 		this.#members?.delete(value);
-		this.#collection?.set(undefined);
+		dirty(this.#collection);
 
 		return true;
 	}
@@ -101,17 +101,10 @@ export class SignalSet<Value = unknown> extends Set<Value> {
 
 		super.clear();
 
-		const members = this.#members;
+		dirtyAll(this.#members);
+		this.#members?.clear();
 
-		if (members !== undefined) {
-			for (const signal of members.values()) {
-				signal.set(undefined);
-			}
-
-			members.clear();
-		}
-
-		this.#collection?.set(undefined);
+		dirty(this.#collection);
 	}
 
 	#consume(): void {

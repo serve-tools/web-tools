@@ -6,9 +6,11 @@
 		"computed",
 		"decorator",
 		"directive",
+		"effect",
 		"lit",
 		"property",
 		"reactive",
+		"repeat",
 		"signal",
 		"tc39",
 		"template",
@@ -45,10 +47,10 @@
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/signal": "^0.1"
+		"@serve-tools/signal": "^0.1",
+		"@serve-tools/signal-collections": "^0.1"
 	},
 	"devDependencies": {
-		"@serve-tools/signal-collections": "^0.1",
 		"lit": "3.3.3"
 	},
 	"peerDependencies": {

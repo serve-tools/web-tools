@@ -1,37 +1,17 @@
 import { Signal } from "@serve-tools/signal";
 import { nothing } from "lit";
-import { AsyncDirective } from "lit/async-directive.js";
 import type { DirectiveResult } from "lit/directive.js";
 import { directive } from "lit/directive.js";
-import { enqueueMicrotask } from "../lib/scheduler.js";
+import { ReactiveDirective, type ReactiveSource } from "./.internals.js";
 
 /** A callback whose signal reads determine when its Lit part updates. */
 export type WatchCallback<Value> = () => Value;
 
 /** A signal or reactive callback rendered by `watch()`. */
-export type WatchSource<Value> = Signal.Any<Value> | WatchCallback<Value>;
+export type WatchSource<Value> = ReactiveSource<Value>;
 
-class WatchDirective<T = unknown> extends AsyncDirective {
-	#isPending = false;
+class WatchDirective<T = unknown> extends ReactiveDirective<T> {
 	#source: WatchSource<T> | undefined;
-	#signal: Signal.Any<T> | undefined;
-
-	readonly #watcher = new Signal.subtle.Watcher(() => {
-		if (!this.#isPending) {
-			this.#isPending = true;
-
-			enqueueMicrotask(this);
-		}
-	});
-
-	run(): void {
-		this.#isPending = false;
-		this.#watcher.watch();
-
-		if (this.isConnected && this.#signal !== undefined) {
-			this.setValue(this.#signal.get());
-		}
-	}
 
 	render(source: WatchSource<T> | undefined): unknown {
 		if (source === undefined) {
@@ -45,33 +25,12 @@ class WatchDirective<T = unknown> extends AsyncDirective {
 
 	update(_part: unknown, [source]: [WatchSource<T> | undefined]): T {
 		if (source !== this.#source) {
-			if (this.#signal !== undefined) {
-				this.#watcher.unwatch(this.#signal);
-			}
-
 			this.#source = source;
-			this.#signal = typeof source === "function" ? new Signal.Computed(source) : source;
 
-			if (this.isConnected && this.#signal !== undefined) {
-				this.#watcher.watch(this.#signal);
-			}
+			return this.observe(typeof source === "function" ? new Signal.Computed(source) : source);
 		}
 
-		return this.#signal?.get() ?? (nothing as T);
-	}
-
-	disconnected(): void {
-		if (this.#signal !== undefined) {
-			this.#watcher.unwatch(this.#signal);
-		}
-	}
-
-	reconnected(): void {
-		if (this.#signal !== undefined) {
-			this.#watcher.watch(this.#signal);
-
-			this.setValue(this.#signal.get());
-		}
+		return this.read();
 	}
 }
 

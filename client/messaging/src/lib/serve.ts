@@ -6,7 +6,6 @@ import {
 	post,
 	protocol,
 	report,
-	unwrapTransfer,
 } from "./.internals.js";
 import type {
 	AnyHandler,
@@ -175,9 +174,11 @@ export function serve<const P extends WorkerProtocol>(
 			.then(
 				(result) => {
 					if (kind === "request") {
-						const response = unwrapTransfer(result);
-
-						settle(id, operation, { ok: true, data: response.value }, response.transfer);
+						if (isTransferResult(result)) {
+							settle(id, operation, { ok: true, data: result.value }, result.transfer);
+						} else {
+							settle(id, operation, { ok: true, data: result });
+						}
 					} else if (typeof result === "function") {
 						operation.cleanup = result as () => void;
 

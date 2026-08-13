@@ -1,6 +1,6 @@
 import { Signal } from "@serve-tools/signal";
 
-import { consumeKey, type VersionSignal, versionSignal } from "./.internals.js";
+import { consumeKey, dirty, dirtyAll, type VersionSignal, versionSignal } from "./.internals.js";
 
 /** A Map with signal-backed key and iteration reads. */
 export class SignalMap<Key = unknown, Value = unknown> extends Map<Key, Value> {
@@ -145,19 +145,5 @@ export class SignalMap<Key = unknown, Value = unknown> extends Map<Key, Value> {
 		if (Signal.subtle.currentComputed() !== undefined) {
 			(this.#contents ??= versionSignal()).get();
 		}
-	}
-}
-
-function dirty(signal?: VersionSignal): void {
-	signal?.set(undefined);
-}
-
-function dirtyAll<Key>(signals?: Map<Key, VersionSignal>): void {
-	if (signals === undefined) {
-		return;
-	}
-
-	for (const signal of signals.values()) {
-		signal.set(undefined);
 	}
 }

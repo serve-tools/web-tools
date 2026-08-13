@@ -12,6 +12,7 @@ import { Signal } from "@serve-tools/signal";
 
 const pending = { status: "pending" } as const;
 const complete = { status: "complete" } as const;
+
 const noop = (): void => {};
 
 type Subscribe<Value> = {
@@ -45,6 +46,7 @@ class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>
 
 		let settled = false;
 		let off = noop;
+
 		const settle = (next: ObservationState<Value>): void => {
 			if (settled) return;
 
@@ -52,6 +54,7 @@ class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>
 			off();
 			state.set(next);
 		};
+
 		const signal = options?.signal;
 
 		if (signal !== undefined) {
@@ -74,12 +77,14 @@ class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>
 			const onValue = (value: Value) => {
 				if (!settled) state.set({ status: "ready", value });
 			};
+
 			const subscriptionOptions = {
 				...(signal === undefined ? {} : { signal }),
 				...(options?.transfer === undefined ? {} : { transfer: options.transfer }),
 				onComplete: () => settle(complete),
 				onError: (error: Error) => settle({ status: "error", error }),
 			};
+
 			const subscription =
 				options && "input" in options
 					? subscribe.call(client, name, options.input, onValue, subscriptionOptions)

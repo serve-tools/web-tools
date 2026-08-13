@@ -4,7 +4,7 @@ import { expect, test } from "vitest";
 
 import { benchmark } from "../../../client/benchmark.js";
 import { computed, property } from "../src/decorators.js";
-import { SignalWatcher, watch } from "../src/lit-signals.js";
+import { repeat, SignalWatcher, watch } from "../src/lit-signals.js";
 
 const microtask = () => new Promise<void>(queueMicrotask);
 const componentSource = new Signal.State(0);
@@ -163,6 +163,7 @@ test("watch lifecycle and parent render hot paths", async () => {
 	const renderDirect = () => {
 		render(html`${watch(source)}`, container);
 	};
+
 	const renderCallback = () => {
 		render(html`${watch(() => source.get())}`, container);
 	};
@@ -225,6 +226,47 @@ test("watch sparse and dense invalidation hot paths", async () => {
 
 	expect(denseContainer.textContent).toContain(String(denseValue));
 	render(nothing, denseContainer);
+});
+
+test("repeat sparse row and structural update hot paths", async () => {
+	const rows = Array.from({ length: 10_000 }, (_, id) => ({ id, value: new Signal.State(0) }));
+	const source = new Signal.State<readonly (typeof rows)[number][]>(rows);
+	const container = document.createElement("div");
+
+	render(
+		html`${repeat(
+			source,
+			(row) => row.id,
+			(row) => row.value.get(),
+		)}`,
+		container,
+	);
+
+	let nextValue = 0;
+
+	await benchmark(
+		"lit-signals/update-one-row-among-10k-repeat-rows",
+		async () => {
+			rows[5_000]!.value.set(++nextValue);
+			await microtask();
+		},
+		{ iterations: 1_000, samples: 10, warmup: 3 },
+	);
+
+	await benchmark(
+		"lit-signals/append-one-keyed-repeat-row-among-10k",
+		async () => {
+			const row = { id: rows.length, value: new Signal.State(0) };
+
+			rows.push(row);
+			source.set(rows.slice());
+			await microtask();
+		},
+		{ iterations: 100, samples: 10, warmup: 3 },
+	);
+
+	expect(container.textContent).toContain(String(nextValue));
+	render(nothing, container);
 });
 
 test("SignalWatcher lifecycle and dense invalidation hot paths", async () => {

@@ -17,7 +17,7 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 ): SharedDBServer<Schema> => {
 	const subscribers = new Set<ChangeTarget<Schema>>();
 
-	let revision = 0;
+	let currentRevision = 0;
 	let isClosed = false;
 
 	const database = DB.open<Schema>(name, options);
@@ -38,7 +38,6 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 		}
 	};
 
-	const nextRevision = (): number => ++revision;
 	const connections = listenForMessages<SharedDBProtocol<Schema>>({
 		requests: {
 			get: async ({ storeName, query }, { signal }) =>
@@ -83,7 +82,7 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 					store: storeName,
 					key,
 					value,
-					revision: nextRevision(),
+					revision: ++currentRevision,
 				} as SharedDBChange<Schema>);
 
 				return key;
@@ -103,7 +102,7 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 					kind: "invalidated",
 					store: storeName,
 					key,
-					revision: nextRevision(),
+					revision: ++currentRevision,
 				} as SharedDBChange<Schema>);
 
 				return key;
@@ -112,7 +111,7 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 			delete: async ({ storeName, query, options: operationOptions }, { signal }) => {
 				await (await database).delete(storeName, decodeQuery(query) as never, { ...operationOptions, signal });
 
-				const revision = nextRevision();
+				const revision = ++currentRevision;
 
 				if (!isEncodedKeyRange(query)) {
 					emitChange({ kind: "removed", store: storeName, key: query, revision } as SharedDBChange<Schema>);
@@ -134,7 +133,7 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 				emitChange({
 					kind: "invalidated",
 					store: storeName,
-					revision: nextRevision(),
+					revision: ++currentRevision,
 				} as SharedDBChange<Schema>);
 			},
 		},
@@ -163,7 +162,7 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 					return;
 				}
 
-				emit({ kind: "ready", revision });
+				emit({ kind: "ready", revision: currentRevision });
 
 				target.ready = true;
 

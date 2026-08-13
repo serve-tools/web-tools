@@ -300,7 +300,7 @@ describe("createEffect", () => {
 	it("can be permanently disposed before its initial run", () => {
 		let runs = 0;
 
-		const controller = createEffect(() => runs++);
+		const controller = createEffect(() => ++runs);
 
 		controller.dispose();
 		controller.start();

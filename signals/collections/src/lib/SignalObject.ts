@@ -2,19 +2,23 @@ import { signalProxy } from "./signalProxy.js";
 
 const instances = new WeakSet<object>();
 
+const createSignalObject = (value: object): object => {
+	const object = signalProxy(value);
+
+	instances.add(object);
+
+	return object;
+};
+
 /** A shallow signal-backed plain record constructor. */
 export const SignalObject = Object.assign(
 	function SignalObject(value: object = {}): object {
-		const object = signalProxy({ ...value });
-
-		instances.add(object);
-
-		return object;
+		return createSignalObject({ ...value });
 	},
 	{
 		/** Creates a shallow signal-backed plain record from key/value entries. */
 		fromEntries: <Value = unknown>(entries: Iterable<readonly [PropertyKey, Value]>): { [key: string]: Value } =>
-			signalProxy(Object.fromEntries(entries)) as { [key: string]: Value },
+			createSignalObject(Object.fromEntries(entries)) as { [key: string]: Value },
 	},
 ) as unknown as {
 	/** Creates a shallow signal-backed copy of a plain record. */

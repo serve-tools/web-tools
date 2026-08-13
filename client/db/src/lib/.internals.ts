@@ -10,10 +10,12 @@ export const completion = (transaction: IDBTransaction, signal?: AbortSignal): P
 			signal?.removeEventListener("abort", abort);
 			resolve();
 		};
+
 		const aborted = () => {
 			signal?.removeEventListener("abort", abort);
 			reject(abortReason ?? transaction.error ?? new DOMException("Transaction aborted", "AbortError"));
 		};
+
 		const abort = () => {
 			abortReason = signal?.reason;
 

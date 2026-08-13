@@ -3,20 +3,6 @@ import type { PropertyDeclaration } from "lit";
 
 export type { PropertyDeclaration } from "lit";
 
-export const initializeDecorator = <Value>(
-	metadata: DecoratorMetadataObject | undefined,
-	name: string | symbol,
-	options: PropertyDeclaration<Value, unknown>,
-): void => {
-	let properties = litPropertyMetadata.get(metadata);
-
-	if (properties === undefined) {
-		litPropertyMetadata.set(metadata, (properties = new Map()));
-	}
-
-	properties.set(name, options);
-};
-
 const alwaysChanged = () => true;
 
 export const signalAccessor = <This extends ReactiveElement, Value>(
@@ -25,7 +11,13 @@ export const signalAccessor = <This extends ReactiveElement, Value>(
 	options: PropertyDeclaration<Value, unknown>,
 	normalize: (value: Value) => Value,
 ): ClassAccessorDecoratorResult<This, Value> => {
-	initializeDecorator(metadata, name, options);
+	let properties = litPropertyMetadata.get(metadata);
+
+	if (properties === undefined) {
+		litPropertyMetadata.set(metadata, (properties = new Map()));
+	}
+
+	properties.set(name, options);
 
 	const stateOf = (instance: This) => target.get.call(instance) as unknown as Signal.State<Value>;
 

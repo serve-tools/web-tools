@@ -1,5 +1,5 @@
 import { Signal } from "@serve-tools/signal";
-import { html, LitElement } from "lit";
+import { html, LitElement, type PropertyValues } from "lit";
 import { describe, expect, it } from "vitest";
 import { SignalWatcher, watch } from "../src/lit-signals.js";
 
@@ -16,13 +16,68 @@ class SignalWatcherTestElement extends SignalWatcher(LitElement) {
 
 		return html`
 			${this.usePrimary.get() ? this.primary.get() : this.secondary.get()}
-			${watch(() => this.status.get())}
+			${watch(this.status)}
 			${this.plainValue}
 		`;
 	}
 }
 
 customElements.define("serve-tools-signal-watcher-test", SignalWatcherTestElement);
+
+class LifecycleSignalWatcherElement extends SignalWatcher(LitElement) {
+	readonly shouldUpdateSignal = new Signal.State(0);
+	readonly willUpdateSignal = new Signal.State(0);
+	readonly updateSignal = new Signal.State(0);
+	readonly renderSignal = new Signal.State(0);
+	readonly updatedSignal = new Signal.State(0);
+	readonly firstUpdatedSignal = new Signal.State(0);
+	readonly controllerUpdateSignal = new Signal.State(0);
+	readonly controllerUpdatedSignal = new Signal.State(0);
+	renders = 0;
+
+	constructor() {
+		super();
+
+		this.addController({
+			hostUpdate: () => this.controllerUpdateSignal.get(),
+			hostUpdated: () => this.controllerUpdatedSignal.get(),
+		});
+	}
+
+	protected override shouldUpdate(changedProperties: PropertyValues<this>): boolean {
+		this.shouldUpdateSignal.get();
+
+		return super.shouldUpdate(changedProperties);
+	}
+
+	protected override willUpdate(changedProperties: PropertyValues<this>): void {
+		this.willUpdateSignal.get();
+		super.willUpdate(changedProperties);
+	}
+
+	protected override update(changedProperties: PropertyValues<this>): void {
+		this.updateSignal.get();
+		super.update(changedProperties);
+	}
+
+	protected override render() {
+		++this.renders;
+
+		return this.renderSignal.get();
+	}
+
+	protected override updated(changedProperties: PropertyValues<this>): void {
+		this.updatedSignal.get();
+		super.updated(changedProperties);
+	}
+
+	protected override firstUpdated(changedProperties: PropertyValues<this>): void {
+		this.firstUpdatedSignal.get();
+		super.firstUpdated(changedProperties);
+	}
+}
+
+customElements.define("serve-tools-lifecycle-signal-watcher-test", LifecycleSignalWatcherElement);
 
 const connect = async (): Promise<SignalWatcherTestElement> => {
 	const element = new SignalWatcherTestElement();
@@ -33,12 +88,52 @@ const connect = async (): Promise<SignalWatcherTestElement> => {
 	return element;
 };
 
-const update = async (element: SignalWatcherTestElement): Promise<void> => {
+const update = async (element: LitElement): Promise<void> => {
 	await Promise.resolve();
 	await element.updateComplete;
 };
 
 describe("SignalWatcher", () => {
+	it("tracks signals across Lit update hooks and reactive controllers", async () => {
+		const element = new LifecycleSignalWatcherElement();
+
+		document.body.append(element);
+		await element.updateComplete;
+
+		try {
+			const firstUpdatedRenders = element.renders;
+
+			expect(Signal.subtle.hasSinks(element.firstUpdatedSignal)).toBe(true);
+
+			element.firstUpdatedSignal.set(1);
+			await update(element);
+
+			expect(element.renders).toBe(firstUpdatedRenders + 1);
+			expect(Signal.subtle.hasSinks(element.firstUpdatedSignal)).toBe(false);
+
+			const sources = [
+				element.shouldUpdateSignal,
+				element.willUpdateSignal,
+				element.updateSignal,
+				element.renderSignal,
+				element.updatedSignal,
+				element.controllerUpdateSignal,
+				element.controllerUpdatedSignal,
+			];
+
+			for (const source of sources) {
+				const renders = element.renders;
+
+				source.set(source.get() + 1);
+				await update(element);
+
+				expect(element.renders).toBe(renders + 1);
+			}
+		} finally {
+			element.remove();
+		}
+	});
+
 	it("rerenders when a signal read by render changes", async () => {
 		const element = await connect();
 

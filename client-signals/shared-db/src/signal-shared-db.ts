@@ -41,6 +41,7 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 		let generation = 0;
 		const disposedReady = Promise.withResolvers<never>();
 		const ready = Promise.race([groupReady, disposedReady.promise]);
+
 		const fail = (error: unknown) => {
 			if (disposed) return;
 
@@ -50,6 +51,7 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 
 			state.set({ status: "error", error });
 		};
+
 		const refresh = (options?: OperationOptions): Promise<void> => {
 			if (disposed) {
 				return Promise.reject(new DOMException("Query is disposed", "InvalidStateError"));
@@ -78,10 +80,12 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 
 			return current;
 		};
+
 		const controller = createEffect(() => {
 			invalidation.get();
 			void refresh();
 		});
+
 		this.#fail = fail;
 		this.#invalidate = () => invalidation.set(invalidation.get() + 1);
 		this.#refresh = refresh;
@@ -208,7 +212,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 
 	/** Refreshes every active query for one or more stores. */
 	invalidate<const Names extends StoreName<Schema>>(storeNames: Names | readonly Names[]): void {
-		const names = typeof storeNames === "string" ? [storeNames] : new Set(storeNames);
+		const names = typeof storeNames === "string" ? [storeNames] : storeNames;
 
 		for (const storeName of names) {
 			for (const query of this.#queryGroups.get(storeName)?.queries ?? []) query.invalidate();

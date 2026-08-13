@@ -21,7 +21,9 @@ export class DisposableStack {
 
 		if (value != null) {
 			const method = getDisposeMethod<void>(value, dispose);
+
 			if (!method) throw new TypeError("Object is not disposable");
+
 			this.#disposers.push(method);
 		}
 

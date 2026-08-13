@@ -54,7 +54,7 @@ test("SharedWorker database change fanout", async () => {
 	const ready = connections.map(() => Promise.withResolvers<number>());
 	let deliveries = 0;
 	const subscriptions = connections.map(({ database }, index) =>
-		database.subscribe("records", () => deliveries++, {
+		database.subscribe("records", () => ++deliveries, {
 			onReady: ready[index]!.resolve,
 			onError: ready[index]!.reject,
 		}),

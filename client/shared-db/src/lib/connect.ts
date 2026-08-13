@@ -15,41 +15,42 @@ export const connect = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 	port: MessagePort,
 ): SharedDBClient<Schema> => {
 	const client = connectPort<SharedDBProtocol<Schema>>(port);
+	const request = client.request;
 
 	return {
 		closed: client.closed,
 
 		get: (storeName, key, options) =>
-			client.request("get", { storeName, query: encodeQuery(key) }, requestOptions(options)) as Promise<
+			request("get", { storeName, query: encodeQuery(key) }, requestOptions(options)) as Promise<
 				StoreValue<Schema[typeof storeName]> | undefined
 			>,
 
 		getAll: (storeName, options) =>
-			client.request(
+			request(
 				"getAll",
 				{ storeName, options: queryOptions(options as DBGetAllOptions<StoreDefinition>) },
 				requestOptions(options),
 			) as Promise<StoreValue<Schema[typeof storeName]>[]>,
 
 		getAllKeys: (storeName, options) =>
-			client.request(
+			request(
 				"getAllKeys",
 				{ storeName, options: queryOptions(options as DBGetAllOptions<StoreDefinition>) },
 				requestOptions(options),
 			) as Promise<StoreKey<Schema[typeof storeName]>[]>,
 
 		has: (storeName, key, options) =>
-			client.request("has", { storeName, query: encodeQuery(key) }, requestOptions(options)),
+			request("has", { storeName, query: encodeQuery(key) }, requestOptions(options)),
 
 		count: (storeName, options) =>
-			client.request(
+			request(
 				"count",
 				{ storeName, options: queryOptions(options as DBCountOptions<StoreDefinition>) },
 				requestOptions(options),
 			),
 
 		add: (storeName, value, options) =>
-			client.request(
+			request(
 				"add",
 				{
 					storeName,
@@ -60,7 +61,7 @@ export const connect = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 			) as Promise<StoreKey<Schema[typeof storeName]>>,
 
 		put: (storeName, value, options) =>
-			client.request(
+			request(
 				"put",
 				{
 					storeName,
@@ -71,14 +72,14 @@ export const connect = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 			) as Promise<StoreKey<Schema[typeof storeName]>>,
 
 		delete: (storeName, key, options) =>
-			client.request(
+			request(
 				"delete",
 				{ storeName, query: encodeQuery(key), options: mutationOptions(options) },
 				requestOptions(options),
 			),
 
 		clear: (storeName, options) =>
-			client.request("clear", { storeName, options: mutationOptions(options) }, requestOptions(options)),
+			request("clear", { storeName, options: mutationOptions(options) }, requestOptions(options)),
 
 		subscribe(storeNames, subscriber, options): SharedDBSubscription {
 			const names = typeof storeNames === "string" ? [storeNames] : storeNames;

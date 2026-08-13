@@ -99,7 +99,9 @@ export const createDisposableStack = <Dispose extends symbol>(
 
 			if (value != null) {
 				const method = getMethod<void>(value, dispose);
+
 				if (!method) throw new TypeError("Object is not disposable");
+
 				this.#stack.push(method);
 			}
 
@@ -108,6 +110,7 @@ export const createDisposableStack = <Dispose extends symbol>(
 
 		adopt<T>(value: T, onDispose: (value: T) => void): T {
 			this.#assertPending();
+
 			this.#stack.push(() => onDispose(value));
 
 			return value;
@@ -115,6 +118,7 @@ export const createDisposableStack = <Dispose extends symbol>(
 
 		defer(onDispose: () => void): void {
 			this.#assertPending();
+
 			this.#stack.push(onDispose);
 		}
 
@@ -122,7 +126,9 @@ export const createDisposableStack = <Dispose extends symbol>(
 			this.#assertPending();
 
 			const stack = new DisposableStack();
+
 			stack.#stack = this.#stack;
+
 			this.#stack = [];
 			this.#disposed = true;
 
@@ -131,6 +137,7 @@ export const createDisposableStack = <Dispose extends symbol>(
 
 		dispose(): void {
 			if (this.#disposed) return;
+
 			this.#disposed = true;
 
 			const errors: unknown[] = [];
@@ -183,7 +190,9 @@ export const createAsyncDisposableStack = <AsyncDispose extends symbol, Dispose 
 			if (value != null) {
 				const method =
 					getMethod<void | PromiseLike<void>>(value, asyncDispose) ?? getMethod<void>(value, dispose);
+
 				if (!method) throw new TypeError("Object is not disposable");
+
 				this.#stack.push(method);
 			}
 
@@ -192,6 +201,7 @@ export const createAsyncDisposableStack = <AsyncDispose extends symbol, Dispose 
 
 		adopt<T>(value: T, onDisposeAsync: (value: T) => void | PromiseLike<void>): T {
 			this.#assertPending();
+
 			this.#stack.push(() => onDisposeAsync(value));
 
 			return value;
@@ -199,6 +209,7 @@ export const createAsyncDisposableStack = <AsyncDispose extends symbol, Dispose 
 
 		defer(onDisposeAsync: () => void | PromiseLike<void>): void {
 			this.#assertPending();
+
 			this.#stack.push(onDisposeAsync);
 		}
 
@@ -206,7 +217,9 @@ export const createAsyncDisposableStack = <AsyncDispose extends symbol, Dispose 
 			this.#assertPending();
 
 			const stack = new AsyncDisposableStack();
+
 			stack.#stack = this.#stack;
+
 			this.#stack = [];
 			this.#disposed = true;
 
@@ -215,6 +228,7 @@ export const createAsyncDisposableStack = <AsyncDispose extends symbol, Dispose 
 
 		async disposeAsync(): Promise<void> {
 			if (this.#disposed) return;
+
 			this.#disposed = true;
 
 			const errors: unknown[] = [];

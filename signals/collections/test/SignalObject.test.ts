@@ -33,6 +33,7 @@ describe("SignalObject", () => {
 
 		expect(object.a).toBe(1);
 		expect(Reflect.get(object, symbol)).toBe(2);
+		expect(object).toBeInstanceOf(SignalObject);
 		expect(Reflect.ownKeys(object)).toEqual(["a", symbol]);
 	});
 
