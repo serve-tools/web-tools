@@ -147,11 +147,10 @@ jobs:
           path: ${{ runner.temp }}/release
       - name: Verify and publish artifact
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           cd "$RUNNER_TEMP/release"
           sha256sum --check *.sha256
           TARBALL=$(find . -maxdepth 1 -type f -name '*.tgz' -print -quit)
           test -n "$TARBALL"
-          npm publish "$TARBALL" --access public --provenance --tag "$RELEASE_TAG"
+          npm publish "$TARBALL" --access public --tag "$RELEASE_TAG"
