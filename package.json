@@ -81,22 +81,76 @@
 		}
 	},
 	"knip": {
-		"ignore": [
-			"**/dist/**",
-			"**/test/**"
-		],
+		"ignoreExportsUsedInFile": true,
 		"workspaces": {
+			"client-signals/dom": {
+				"ignoreUnresolved": [
+					"/dom/signal-dom.js"
+				]
+			},
+			"client-signals/messaging": {
+				"entry": [
+					"test/*.types.ts"
+				]
+			},
+			"client/db": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"client/messaging": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"client/shared-db": {
+				"entry": [
+					"test/*.types.ts"
+				]
+			},
+			"client/storage": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"lit/signals": {
+				"entry": [
+					"src/{decorators,lit-signals}.ts",
+					"test/*.types.ts"
+				]
+			},
+			"polyfills/request-idle-callback": {
+				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
+			"polyfills/resource-management": {
+				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
 			"ponyfills/request-idle-callback": {
 				"entry": [
-					"src/ponyfill-request-idle-callback.ts"
-				]
+					"src/ponyfill-request-idle-callback.ts",
+					"test/*.recipes.ts"
+				],
+				"ignoreIssues": {
+					"src/lib/.internals.ts": [
+						"exports"
+					]
+				}
 			},
 			"ponyfills/resource-management": {
 				"entry": [
-					"src/ponyfill-resource-management.ts"
+					"src/ponyfill-resource-management.ts",
+					"test/*.recipes.ts"
 				]
 			},
 			"vite/polyfills": {
+				"entry": [
+					"src/vite-polyfills.ts",
+					"test/*.recipes.ts"
+				],
 				"ignoreDependencies": [
 					"@serve-tools/polyfill-request-idle-callback",
 					"@serve-tools/polyfill-resource-management",
