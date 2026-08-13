@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-dom",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Functional DOM, SVG, and MathML templating with TC39 Signals",
 	"keywords": [
 		"dom",

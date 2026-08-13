@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-messaging",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Typed messaging subscriptions observed as explicit Signal state",
 	"keywords": [
 		"messageport",

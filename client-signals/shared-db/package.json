@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-shared-db",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Typed, promise-based IndexedDB access with signal-backed reactive queries",
 	"keywords": [
 		"database",

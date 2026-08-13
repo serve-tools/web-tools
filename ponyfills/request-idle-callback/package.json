@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/ponyfill-request-idle-callback",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Implements requestIdleCallback and cancelIdleCallback without global mutation",
 	"keywords": [
 		"request-idle-callback",

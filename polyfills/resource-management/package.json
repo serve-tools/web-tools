@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-resource-management",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Implements Explicit Resource Management with global mutation",
 	"keywords": [
 		"async-disposable-stack",

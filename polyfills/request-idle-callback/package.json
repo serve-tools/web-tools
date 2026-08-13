@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-request-idle-callback",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Implements requestIdleCallback and cancelIdleCallback with global mutation",
 	"keywords": [
 		"browser",

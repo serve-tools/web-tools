@@ -4,6 +4,21 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
+## 0.2.0 - 2026-08-13
+
+- Expand `@serve-tools/lit-signals` with signal-aware `when`, `choose`, and keyed `repeat` directives.
+- Add signal collection and effect decorators, lifecycle-owned update effects, and complete Lit update tracking.
+- Re-export the compatible Signal runtime and signal collections from `@serve-tools/lit-signals`.
+
+## 0.1.1 - 2026-08-13
+
+- Improve runtime performance and reduce allocation overhead across the client, Signal, and DOM packages.
+- Harden messaging, shared database, storage, disposal, and idle-callback lifecycle behavior.
+- Correct native collection semantics and improve reactive invalidation precision.
+- Add package benchmarks and expand consumer documentation and Skills.
+
+## 0.1.0 - 2026-08-12
+
 - Create the npm workspace for client libraries, polyfills, ponyfills, and Vite plugins.
 - Add `@serve-tools/client-db` with promise-based IndexedDB operations, abortable transactions, async scans, and explicit resource management.
 - Add `@serve-tools/client-shared-db` with SharedWorker-coordinated IndexedDB operations and post-commit change subscriptions.

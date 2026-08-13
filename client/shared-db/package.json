@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-shared-db",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "SharedWorker-coordinated IndexedDB operations and change subscriptions",
 	"keywords": [
 		"browser",
