@@ -21,7 +21,7 @@ body {
 }
 
 main {
-	width: min(52rem, calc(100% - 2rem));
+	width: min(74rem, calc(100% - 2rem));
 	margin: 0 auto;
 	padding: 3rem 0 6rem;
 }
@@ -40,9 +40,9 @@ nav a {
 }
 
 h1 {
-	max-width: 11ch;
+	max-width: 12ch;
 	margin: 0;
-	font-size: clamp(3rem, 10vw, 6.5rem);
+	font-size: clamp(3rem, 9vw, 7rem);
 	letter-spacing: -0.065em;
 	line-height: 0.9;
 }
@@ -51,4 +51,10 @@ h1 {
 	max-width: 42rem;
 	color: #574b72;
 	font-size: 1.2rem;
+}
+
+.examples {
+	display: grid;
+	gap: 6rem;
+	margin-top: 6rem;
 }

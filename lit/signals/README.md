@@ -512,6 +512,18 @@ The decorators require the current standard decorator proposal and auto-accessor
 This package includes `skills/serve-tools-lit-signals/SKILL.md` with version-aligned usage guidance for compatible coding agents.
 Activation is explicit; installing the package does not automatically trust or enable it.
 
+## Demo
+
+The [hosted demo](https://serve-tools.github.io/web-tools/lit/signals/) provides small runnable examples for direct Signal substitutions, keyed collections, context, and reactive styles.
+Each example reveals the exact TypeScript module powering its live preview, so the displayed sample cannot drift from the code being exercised.
+
+[Open the demo directory in StackBlitz](https://stackblitz.com/fork/github/serve-tools/web-tools/tree/main/lit/signals/demo), or run it against the local workspace package:
+
+```shell
+npm run build --workspace @serve-tools/lit-signals
+npm run dev --workspace @serve-tools/lit-signals-demo
+```
+
 ## Development
 
 The default test command runs the Lit integration suite in Chromium, Firefox, and WebKit.

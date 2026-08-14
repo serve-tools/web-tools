@@ -1,8 +1,9 @@
 # @serve-tools/lit-signals demo
 
-A private Vite application demonstrating direct Signal substitutions and signal-aware conditional template parts in Lit.
+A private Vite application with runnable examples for direct Signal substitutions, signal-aware conditionals, keyed collections, context decorators, computed values, and reactive host styles.
+Every example exposes the exact TypeScript module that powers its live preview.
 
-[Open the hosted demo](https://serve-tools.github.io/web-tools/lit/signals/).
+[Open the hosted demo](https://serve-tools.github.io/web-tools/lit/signals/), or [open this directory in StackBlitz](https://stackblitz.com/fork/github/serve-tools/web-tools/tree/main/lit/signals/demo).
 
 From the repository root, run:
 
