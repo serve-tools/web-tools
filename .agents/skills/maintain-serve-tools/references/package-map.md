@@ -4,11 +4,17 @@ Load only the Skill for the affected public package.
 
 | Workspace                         | Package Skill                                                                                |
 | --------------------------------- | -------------------------------------------------------------------------------------------- |
+| `client/client`                   | `client/client/skills/serve-tools-client/SKILL.md`                                           |
+| `client/context`                  | `client/context/skills/serve-tools-client-context/SKILL.md`                                  |
 | `client/db`                       | `client/db/skills/serve-tools-client-db/SKILL.md`                                            |
+| `client/input`                    | `client/input/skills/serve-tools-client-input/SKILL.md`                                      |
+| `client/interaction`              | `client/interaction/skills/serve-tools-client-interaction/SKILL.md`                          |
+| `client/keyboard`                 | `client/keyboard/skills/serve-tools-client-keyboard/SKILL.md`                                |
 | `client/messaging`                | `client/messaging/skills/serve-tools-client-messaging/SKILL.md`                              |
 | `client/shared-db`                | `client/shared-db/skills/serve-tools-client-shared-db/SKILL.md`                              |
 | `client/storage`                  | `client/storage/skills/serve-tools-client-storage/SKILL.md`                                  |
 | `client-signals/dom`              | `client-signals/dom/skills/serve-tools-signal-dom/SKILL.md`                                  |
+| `client-signals/event-target`     | `client-signals/event-target/skills/serve-tools-signal-event-target/SKILL.md`                |
 | `client-signals/messaging`        | `client-signals/messaging/skills/serve-tools-signal-messaging/SKILL.md`                      |
 | `client-signals/shared-db`        | `client-signals/shared-db/skills/serve-tools-signal-shared-db/SKILL.md`                      |
 | `client-signals/storage`          | `client-signals/storage/skills/serve-tools-signal-storage/SKILL.md`                          |
@@ -22,4 +28,4 @@ Load only the Skill for the affected public package.
 | `signals/signal`                  | `signals/signal/skills/serve-tools-signal/SKILL.md`                                          |
 | `vite/polyfills`                  | `vite/polyfills/skills/serve-tools-vite-polyfills/SKILL.md`                                  |
 
-The three private `demo` workspaces provide examples and build fixtures. They do not publish package Skills.
+The private `demo` workspaces provide examples and build fixtures. They do not publish package Skills.

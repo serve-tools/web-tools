@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="description" content="Interactive demos for the @serve-tools browser and Lit packages." />
+		<title>@serve-tools demos</title>
+		<link rel="stylesheet" href="./style.css" />
+	</head>
+	<body>
+		<header>
+			<a class="wordmark" href="https://github.com/serve-tools/web-tools">@serve-tools/web-tools</a>
+			<h1>Small tools,<br />native foundations.</h1>
+			<p>Live browser examples for typed client APIs, signal-aware DOM, and fine-grained Lit updates.</p>
+		</header>
+		<main>
+			<section aria-labelledby="client-heading">
+				<div class="section-heading">
+					<p class="eyebrow">Client</p>
+					<h2 id="client-heading">Browser capabilities</h2>
+				</div>
+				<nav class="cards" aria-label="Client demos">
+					<a href="./client/context/">
+						<span class="number">01</span>
+						<strong>Context</strong>
+						<span>Live subscriptions that follow component ancestry.</span>
+					</a>
+					<a href="./client/db/">
+						<span class="number">02</span>
+						<strong>IndexedDB</strong>
+						<span>Typed operations, transactions, scans, and cancellation.</span>
+					</a>
+					<a href="./client/input/">
+						<span class="number">03</span>
+						<strong>Input</strong>
+						<span>Pointer geometry and normalized drop sessions.</span>
+					</a>
+					<a href="./client/interaction/">
+						<span class="number">04</span>
+						<strong>Interaction</strong>
+						<span>Clipboard, sharing, file selection, and color picking.</span>
+					</a>
+					<a href="./client/keyboard/">
+						<span class="number">05</span>
+						<strong>Keyboard</strong>
+						<span>Platform-relative chords with accessible output.</span>
+					</a>
+					<a href="./client/messaging/">
+						<span class="number">06</span>
+						<strong>Messaging</strong>
+						<span>Requests and subscriptions across a shared worker.</span>
+					</a>
+					<a href="./client/shared-db/">
+						<span class="number">07</span>
+						<strong>Shared database</strong>
+						<span>Committed IndexedDB changes coordinated across tabs.</span>
+					</a>
+					<a href="./client/storage/">
+						<span class="number">08</span>
+						<strong>Storage</strong>
+						<span>Observable local and session storage.</span>
+					</a>
+				</nav>
+			</section>
+			<section aria-labelledby="reactive-heading">
+				<div class="section-heading">
+					<p class="eyebrow">Reactive</p>
+					<h2 id="reactive-heading">Signals in the DOM</h2>
+				</div>
+				<nav class="cards" aria-label="Reactive demos">
+					<a href="./client-signals/dom/">
+						<span class="number">09</span>
+						<strong>Signal DOM</strong>
+						<span>Functional templates operating directly on platform nodes.</span>
+					</a>
+					<a href="./lit/signals/">
+						<span class="number">10</span>
+						<strong>Lit Signals</strong>
+						<span>Fine-grained template parts inside a Lit component.</span>
+					</a>
+				</nav>
+			</section>
+		</main>
+		<footer>
+			<span>Built from the current <code>main</code> branch.</span>
+			<a href="https://github.com/serve-tools/web-tools">View source on GitHub ↗</a>
+		</footer>
+	</body>
+</html>

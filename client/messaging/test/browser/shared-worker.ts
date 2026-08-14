@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import { listen, type ProtocolType, transfer, type WorkerOperation } from "../../src/scope/worker.js";
+import { listen, type ProtocolType, transfer, type WorkerOperation } from "../../src/lib/scope/worker.js";
 
 let total = 0;
 let cancellationCount = 0;

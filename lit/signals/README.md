@@ -4,11 +4,10 @@ The `@serve-tools/lit-signals` package provides fine-grained TC39 Signal binding
 Atomic updates change one template part without requesting a complete component update.
 
 ```ts
-import { SignalWatcher } from "@serve-tools/lit-signals";
+import { html, SignalElement } from "@serve-tools/lit-signals";
 import { computed, property } from "@serve-tools/lit-signals/decorators";
-import { html, LitElement } from "lit";
 
-class SignalCounter extends SignalWatcher(LitElement) {
+class SignalCounter extends SignalElement {
 	@property()
 	accessor count = 0;
 
@@ -35,8 +34,77 @@ npm install @serve-tools/lit-signals lit
 ```
 
 Lit is a peer dependency.
-The package root re-exports its compatible `Signal` runtime and signal collections.
-Applications that import `@serve-tools/signal` or `@serve-tools/signal-collections` by their own package names should declare those packages directly.
+The package root re-exports the compatible `@serve-tools/client-context` runtime used by its context decorators.
+`@lit/context` remains structurally interoperable and is not a runtime dependency of this package.
+The package root exports signal-native `html` and `svg` tags, Lit's static `css` tag, `SignalElement`, `SignalWatcher`, context primitives, its compatible `Signal` runtime, signal collections, and event-target state utilities.
+Applications that import `@serve-tools/signal`, `@serve-tools/signal-collections`, or `@serve-tools/signal-event-target` by their own package names should declare those packages directly.
+
+## Signal-native templates
+
+Import `html` and `svg` from `@serve-tools/lit-signals` instead of `lit`.
+A direct `Signal.State` or `Signal.Computed` substitution automatically updates only its Lit template part.
+Ordinary Lit substitutions retain their normal behavior.
+
+```ts
+import { html, Signal, svg } from "@serve-tools/lit-signals";
+
+const label = new Signal.State("Ready");
+const radius = new Signal.State(4);
+
+html`<button title=${label}>${label}</button>`;
+html`<svg>${svg`<circle cx="8" cy="8" r=${radius}></circle>`}</svg>`;
+```
+
+Automatic binding applies to direct substitutions.
+Use `watch(() => expression)` when reactive values must be derived from signal reads, selected conditionally, or nested behind another API.
+Callbacks and other ordinary function values remain unchanged, including event listeners.
+
+The root also exports Lit's `css` tag for static class styles that return `CSSResult`.
+Use the `@style` decorator for instance-owned reactive host declarations.
+
+## `callbackRef(callback, options?)`
+
+`callbackRef()` creates an element ref for Lit's `ref()` directive and invokes a setup callback whenever the referenced element changes.
+The callback may return cleanup, which runs before the element is replaced or unset and when Lit disconnects the directive.
+
+```ts
+import { callbackRef, html, SignalElement } from "@serve-tools/lit-signals";
+import { ref } from "lit/directives/ref.js";
+
+class ChartElement extends SignalElement {
+	readonly canvas = callbackRef<HTMLCanvasElement>((canvas) => {
+		const chart = createChart(canvas);
+
+		return () => chart.destroy();
+	}, { waitUntilConnected: true });
+
+	protected render() {
+		return html`<canvas ${ref(this.canvas)}></canvas>`;
+	}
+}
+```
+
+The returned ref exposes its current element as readonly `.value` and is structurally compatible with Lit's `Ref` type.
+Assigning the same element again is a no-op.
+By default, setup runs synchronously during Lit rendering and the element may not yet be connected.
+Set `waitUntilConnected: true` to defer setup until the current element is connected; replacement or removal cancels pending work.
+An element that remains detached continues waiting one animation frame at a time.
+
+## Event-target state
+
+`EventTargetSignal` and `MatchMediaSignal` are re-exported for browser state consumed by `watch()`, `when()`, `choose()`, `SignalElement`, or `SignalWatcher`.
+
+```ts
+import { MatchMediaSignal, when } from "@serve-tools/lit-signals";
+
+const dark = new MatchMediaSignal("(prefers-color-scheme: dark)");
+
+html`${when(dark, () => html`Dark mode`, () => html`Light mode`)}`;
+```
+
+These observations remain eagerly active while their target listener is installed.
+Lit disconnection does not dispose them automatically; call `dispose()` when an observation is permanently retired or pass an external `AbortSignal` for explicit lifetime ownership.
+Use direct event listeners when every event occurrence or payload must be processed rather than represented as current state.
 
 ## `watch(signalOrCallback)`
 
@@ -65,7 +133,7 @@ The subscription is removed while the containing part is disconnected and restor
 All signals passed to `watch()` must come from the same compatible `@serve-tools/signal` implementation used by this package.
 
 Use `watch()` when only the bound template part needs to change.
-Use `SignalWatcher` when signal changes should rerun the component's Lit update lifecycle.
+Use `SignalElement` or `SignalWatcher` when signal changes should rerun the component's Lit update lifecycle.
 Use Lit's normal reactive property and update lifecycle when a change must reflect an attribute or invoke lifecycle callbacks.
 
 ## `when(source, trueCase, falseCase?)`
@@ -145,9 +213,23 @@ When the key callback is omitted, the current index is used, matching Lit's unke
 Removed rows immediately release those subscriptions.
 Reconciliation scans the iterable, but performs only the DOM insertions, removals, and moves required by the key change.
 
-## `SignalWatcher(BaseElement)`
+## `SignalElement` and `SignalWatcher(BaseElement)`
+
+`SignalElement` precomposes Lit's `LitElement` with complete Signal update tracking.
+Use it as the default base class for signal-native Lit components.
+
+```ts
+import { html, SignalElement } from "@serve-tools/lit-signals";
+
+class UserStatus extends SignalElement {
+	render() {
+		return html`${user.get().name}`;
+	}
+}
+```
 
 `SignalWatcher` is a mixin that tracks signals read by a Lit element's complete update lifecycle and requests an update when one changes.
+Use the mixin when integrating with a custom `LitElement` subclass or another class hierarchy.
 This includes `shouldUpdate()`, `willUpdate()`, `update()`, `render()`, `firstUpdated()`, `updated()`, and reactive controller `hostUpdate()` and `hostUpdated()` hooks.
 Signal changes use Lit's microtask-batched update scheduler without an intermediate task or per-update computed allocation.
 Conditional dependencies update on each lifecycle run, and subscriptions are removed while the element is disconnected.
@@ -156,8 +238,8 @@ Nested `watch()` callbacks retain their fine-grained boundary.
 Their signal reads update only the nested directive part and do not rerun the containing element's `render()` method.
 
 ```ts
-import { SignalWatcher, watch } from "@serve-tools/lit-signals";
-import { html, LitElement } from "lit";
+import { html, SignalWatcher, watch } from "@serve-tools/lit-signals";
+import { LitElement } from "lit";
 
 class UserStatus extends SignalWatcher(LitElement) {
 	render() {
@@ -175,7 +257,7 @@ Elements produced by `SignalWatcher` provide `updateEffect()` for imperative rea
 An effect runs once after connection, reruns when a signal it reads changes, and may return cleanup that runs before its next execution, on disposal, or after a lasting disconnection.
 
 ```ts
-class ChartElement extends SignalWatcher(LitElement) {
+class ChartElement extends SignalElement {
 	constructor() {
 		super();
 
@@ -197,6 +279,103 @@ A remove-and-reinsert move within the same task does not tear them down.
 The returned disposer is idempotent.
 Set `manualDispose: true` only for dynamically managed effects that must remain active while disconnected, then retain and call the disposer yourself.
 
+## `@style`
+
+`style` is a standard auto-accessor decorator that creates one constructed stylesheet and one `:host` rule for each element instance.
+It accepts static declaration values, direct Signals, and tracked callbacks.
+Each reactive declaration updates independently through `CSSStyleDeclaration.setProperty()` without rerendering the element or replacing the whole stylesheet.
+
+```ts
+import { css, SignalElement } from "@serve-tools/lit-signals";
+import { property, style } from "@serve-tools/lit-signals/decorators";
+
+class ProgressRing extends SignalElement {
+	static styles = css`
+		:host {
+			display: block;
+		}
+	`;
+
+	@property()
+	accessor accent = "royalblue";
+
+	@property()
+	accessor size = 20;
+
+	@style
+	accessor hostStyle = {
+		"--accent": () => this.accent,
+		"--size": () => `${this.size}px`,
+	};
+}
+```
+
+Property names use authored CSS spelling, including kebab-case standard properties and `--custom-properties`.
+`null` and `undefined` remove a declaration.
+Reading the accessor returns its declarations object.
+Mutating that object is not observed; update a declaration's nested Signal or callback dependency, or assign a new declarations object instead.
+Whole-object assignment replaces every declaration and reactive source while preserving the constructed sheet and its cascade position.
+Annotate a replaceable accessor as `style.Declarations` when later assignments need a broader shape than its inferred initializer.
+The `style` namespace also provides `style.Source` and `style.Value`; standalone `StyleDeclarations`, `StyleSource`, and `StyleValue` type exports remain available.
+
+The sheet is adopted after Lit creates the instance render root and after the class's static styles, so equal-specificity instance declarations come later in cascade order.
+Reactive subscriptions pause after a lasting disconnection and refresh on reconnection.
+The decorator requires `SignalElement` or `SignalWatcher` and a shadow render root with constructed stylesheet support.
+
+## `consume(options)` and `provide(options)`
+
+`consume()` and `provide()` are standard auto-accessor decorators that connect plain values to the interoperable Lit context protocol while keeping accessor reads in the Signal graph.
+Context values remain ordinary values rather than `Signal.State` instances, so signal-aware and standard context elements interoperate.
+
+```ts
+import { createContext, html, SignalElement, watch } from "@serve-tools/lit-signals";
+import { consume, provide } from "@serve-tools/lit-signals/decorators";
+
+interface Theme {
+	name: string;
+}
+
+const themeContext = createContext<Theme>(Symbol("theme"));
+
+class ThemeProvider extends SignalElement {
+	@provide({ context: themeContext })
+	accessor theme: Theme = { name: "light" };
+}
+
+class ThemeConsumer extends SignalElement {
+	@consume({ context: themeContext, subscribe: true })
+	accessor theme: Theme = { name: "fallback" };
+
+	protected render() {
+		return html`${watch(() => this.theme.name)}`;
+	}
+}
+```
+
+A consumed initializer is the fallback until a provider responds.
+The provider owns subsequent consumed values, so assigning a consumed accessor throws a `TypeError`.
+Set `subscribe: true` to receive later values from the active provider; one-shot consumers still request a fresh value after reconnection.
+Subscribing consumers retain an unanswered request at a shared document root, so a provider that connects later can satisfy it.
+Provider announcements move subscriptions to newly nearer providers, and provider disconnection gives them a chance to fall back to another ancestor.
+
+Ordinary disconnection and reconnection re-evaluate context automatically.
+When `connectedMoveCallback()` preserves element state, call `refreshContexts(this)` from that callback to re-evaluate decorated consumers and reannounce decorated providers without interrupting active subscriptions or adding methods to `Element.prototype`.
+
+```ts
+import { refreshContexts } from "@serve-tools/lit-signals/decorators";
+
+connectedMoveCallback() {
+	refreshContexts(this);
+}
+```
+
+Both decorators default to atomic signal invalidation without requesting a complete Lit update.
+Set `update: "lifecycle"` to request a named Lit update for the accessor as well.
+Context accessors never associate with HTML attributes.
+
+Signal backing is shallow.
+Replace the provided value to notify consumers, or provide an object whose internals are independently reactive when in-place mutations must propagate.
+
 ## `property(options?)`
 
 Import decorators from `@serve-tools/lit-signals/decorators`.
@@ -205,7 +384,7 @@ Reading tracks the signal and assigning invalidates signal consumers.
 Atomic signal updates are the default.
 
 ```ts
-class UserBadge extends LitElement {
+class UserBadge extends SignalElement {
 	@property()
 	accessor displayName = "Guest";
 }
@@ -222,7 +401,7 @@ The decorator requires standard auto-accessors.
 The computed getter tracks decorated properties and other signals that it reads.
 
 ```ts
-class Counter extends LitElement {
+class Counter extends SignalElement {
 	@property()
 	accessor count = 0;
 
@@ -234,7 +413,7 @@ class Counter extends LitElement {
 ```
 
 Reading `this.doubled` returns the computed value.
-Use `SignalWatcher` when a Lit template should rerender after reading a computed getter.
+Use `SignalElement` or `SignalWatcher` when a Lit template should rerender after reading a computed getter.
 Use `watch(() => this.doubled)` when only that template part should update.
 
 ## `effect(options?)`
@@ -245,7 +424,7 @@ The containing class must apply `SignalWatcher`, and decorated effects are alway
 ```ts
 import { effect } from "@serve-tools/lit-signals/decorators";
 
-class ChartElement extends SignalWatcher(LitElement) {
+class ChartElement extends SignalElement {
 	@effect({ phase: "after-update" })
 	protected synchronizeChart() {
 		const chart = renderChart(this.canvas, this.data);
@@ -264,14 +443,13 @@ It converts the initializer and later plain collection assignments with the prov
 An assignment that is already an instance of that constructor preserves its identity.
 
 Collection properties are atomic and do not have an associated HTML attribute.
-Use `SignalWatcher` to rerender the component when collection reads change, or wrap collection reads in `watch()` to update only one template part.
+Use `SignalElement` or `SignalWatcher` to rerender the component when collection reads change, or wrap collection reads in `watch()` to update only one template part.
 
 ```ts
-import { SignalArray, SignalWatcher } from "@serve-tools/lit-signals";
+import { html, SignalArray, SignalElement } from "@serve-tools/lit-signals";
 import { collection } from "@serve-tools/lit-signals/decorators";
-import { html, LitElement } from "lit";
 
-class TodoList extends SignalWatcher(LitElement) {
+class TodoList extends SignalElement {
 	@collection(SignalArray)
 	accessor items = ["First"];
 
@@ -294,6 +472,11 @@ The package root exports:
 
 - The public `@serve-tools/signal` API, including `Signal`, `AnySignal`, `ComputedSignal`, and `StateSignal`.
 - The public `@serve-tools/signal-collections` API: `SignalArray`, `SignalMap`, `SignalObject`, and `SignalSet`.
+- The public `@serve-tools/signal-event-target` API: `EventTargetSignal`, `MatchMediaSignal`, and `EventTargetSignalOptions`.
+- Signal-native `html` and `svg` tags that automatically bind direct Signal substitutions.
+- Lit's static `css` tag and its `CSSResult` and `CSSResultGroup` types.
+- `callbackRef(callback, options?)` for Lit-compatible element refs with setup cleanup and optional connection waiting.
+- `callbackRef.Callback`, `callbackRef.Cleanup`, `callbackRef.Options`, and `callbackRef.Result` for callback-ref integrations.
 - `when(source, trueCase, falseCase?)` for fine-grained reactive conditional templates.
 - `choose(source, cases, defaultCase?)` for fine-grained reactive case selection.
 - `repeat(source, key?, renderItem)` for keyed structural reconciliation and independently reactive rows.
@@ -301,21 +484,27 @@ The package root exports:
 - `WhenTrueCase`, `WhenFalseCase`, `ChooseCase`, `ChooseDefaultCase`, `RepeatKey`, and `RepeatItem` for reusable directive inputs.
 - `ReactiveSource<Value>` and `ReactiveCallback<Value>` for sources shared by all fine-grained directives.
 - `WatchSource<Value>` and `WatchCallback<Value>` for reusable directive inputs.
-- `SignalWatcher(BaseElement)` for complete update-lifecycle tracking and host-owned effects.
+- `SignalElement` as the precomposed signal-watching Lit base class.
+- `SignalWatcher(BaseElement)` for applying complete update-lifecycle tracking and host-owned effects to another Lit base class.
 - `SignalWatcherApi`, `EffectCallback`, `EffectCleanup`, `EffectOptions`, and `EffectPhase` for effect integrations.
 
 The `@serve-tools/lit-signals/decorators` entrypoint exports:
 
+- `refreshContexts(host)` for non-destructive provider announcements and consumer refreshes after state-preserving moves.
 - `collection(Collection)` for atomic, signal-collection-backed standard auto-accessors.
+- `consume(options)` for read-only signal-backed context accessors, with optional subscription and named lifecycle updates.
 - `property(options?)` for signal-backed standard auto-accessors.
+- `provide(options)` for writable signal-backed context accessors that notify protocol consumers.
+- `style` for instance-owned reactive `:host` style declarations.
 - `computed` for memoized standard getter decorators.
 - `effect(options?)` for lifecycle-owned reactive methods.
 - `defaultAttributeConverter` for Lit-compatible default attribute conversion.
-- `CollectionConstructor`, `EffectDecoratorOptions`, `SignalPropertyDeclaration`, `PropertyDeclaration`, `AttributeConverter`, and `TypeHint` for decorator configuration.
+- `CollectionConstructor`, `ConsumeOptions`, `EffectDecoratorOptions`, `ProvideOptions`, `SignalPropertyDeclaration`, `StyleDeclarations`, `StyleSource`, `StyleValue`, `PropertyDeclaration`, `AttributeConverter`, and `TypeHint` for decorator configuration.
 
 ## Compatibility
 
-The package is an ES module for Lit 3.3 and re-exports its compatible signal runtime and collections.
+The package is an ES module for Lit 3.3 and re-exports its compatible signal runtime, collections, event-target state utilities, and curated static CSS API.
+`@style` requires a shadow render root with constructed stylesheet support.
 The decorators require the current standard decorator proposal and auto-accessor support from the application's compiler and runtime.
 
 ## Agent Skill

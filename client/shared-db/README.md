@@ -119,6 +119,21 @@ The subscription protocol cannot reliably detect every abruptly destroyed tab; a
 
 The examples above are covered by the package's TypeScript fixture and native browser integration test.
 
+## Demo
+
+The [`demo`](./demo) workspace demonstrates SharedWorker-coordinated task storage and committed changes shared across tabs:
+
+[Try the demo in StackBlitz](https://stackblitz.com/fork/github/serve-tools/web-tools/tree/main/client/shared-db/demo)
+
+The demo directory is standalone-importable and installs the published packages when it is used outside this repository.
+To run it against the local workspace packages instead:
+
+```shell
+npm run build:dependencies --workspace @serve-tools/client-shared-db
+npm run build --workspace @serve-tools/client-shared-db
+npm run dev --workspace @serve-tools/client-shared-db-demo
+```
+
 ## Agent Skill
 
 This package includes `skills/serve-tools-client-shared-db/SKILL.md` with version-aligned usage guidance for compatible coding agents.

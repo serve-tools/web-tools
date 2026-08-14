@@ -1,8 +1,13 @@
+export * from "@serve-tools/client-context";
 export * from "@serve-tools/signal";
 export * from "@serve-tools/signal-collections";
+export * from "@serve-tools/signal-event-target";
+export * from "./callbackRef.js";
 export type { ReactiveCallback, ReactiveSource } from "./directives/.internals.js";
 export * from "./directives/choose.js";
 export * from "./directives/repeat.js";
 export * from "./directives/watch.js";
 export * from "./directives/when.js";
+export * from "./elements/SignalElement.js";
 export * from "./mixins/SignalWatcher.js";
+export * from "./templates.js";

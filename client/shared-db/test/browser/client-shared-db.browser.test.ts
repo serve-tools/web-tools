@@ -2,7 +2,7 @@
 
 import { expect, test } from "vitest";
 
-import { connect, type SharedDBChange } from "../../src/scope/window.js";
+import { connect, type SharedDBChange } from "../../src/lib/scope/window.js";
 import type { TestSchema } from "./shared-db.js";
 
 const open = (name: string) => {

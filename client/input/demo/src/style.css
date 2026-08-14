@@ -1,0 +1,145 @@
+:root {
+	color: #182239;
+	background: #eef2fb;
+	font:
+		16px / 1.5 system-ui,
+		sans-serif;
+	font-synthesis: none;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-width: 20rem;
+	min-height: 100vh;
+	background: radial-gradient(circle at 80% 0%, #b9d7ff 0, transparent 36rem);
+}
+
+main {
+	width: min(68rem, calc(100% - 2rem));
+	margin: 0 auto;
+	padding: 4rem 0 6rem;
+}
+
+a {
+	color: inherit;
+}
+
+h1 {
+	max-width: 13ch;
+	margin: 4rem 0 1rem;
+	font-size: clamp(3rem, 9vw, 6.5rem);
+	letter-spacing: -0.065em;
+	line-height: 0.9;
+}
+
+.intro {
+	max-width: 43rem;
+	color: #53627d;
+	font-size: 1.2rem;
+}
+
+.eyebrow {
+	margin: 0;
+	color: #2859a8;
+	font:
+		700 0.72rem / 1.2 ui-monospace,
+		monospace;
+	letter-spacing: 0.11em;
+	text-transform: uppercase;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+	gap: 1rem;
+	margin-top: 3rem;
+}
+
+section {
+	padding: 1.5rem;
+	border: 1px solid #aebbd0;
+	border-radius: 1.2rem;
+	background: #fafdffdd;
+}
+
+h2 {
+	margin: 0.35rem 0 1.5rem;
+	font-size: 2rem;
+}
+
+#pointer-pad {
+	--pointer-x: 50%;
+	--pointer-y: 50%;
+	position: relative;
+	height: 16rem;
+	border-radius: 1rem;
+	background:
+		linear-gradient(#ffffff22 1px, transparent 1px) 0 0 / 2rem 2rem,
+		linear-gradient(90deg, #ffffff22 1px, transparent 1px) 0 0 / 2rem 2rem,
+		#234b8f;
+	overflow: hidden;
+	touch-action: none;
+}
+
+#pointer-marker {
+	position: absolute;
+	left: var(--pointer-x);
+	top: var(--pointer-y);
+	width: 2.5rem;
+	height: 2.5rem;
+	border: 0.35rem solid white;
+	border-radius: 50%;
+	background: #ffca3a;
+	box-shadow: 0 0.75rem 2rem #0e234a88;
+	transform: translate(-50%, -50%);
+	transition: scale 120ms ease;
+}
+
+#pointer-pad[data-active] #pointer-marker {
+	scale: 1.2;
+}
+
+#drag-token {
+	width: fit-content;
+	padding: 0.7rem 1rem;
+	border-radius: 999px;
+	color: white;
+	background: #182239;
+	font-weight: 700;
+	cursor: grab;
+}
+
+#drop-zone {
+	display: grid;
+	min-height: 11rem;
+	padding: 1.5rem;
+	border: 2px dashed #7890b7;
+	border-radius: 1rem;
+	color: #53627d;
+	place-content: center;
+	text-align: center;
+	transition: 150ms ease;
+}
+
+#drop-zone strong {
+	color: #182239;
+	font-size: 1.5rem;
+}
+
+#drop-zone[data-active] {
+	border-color: #ff8c42;
+	background: #fff1e6;
+	transform: scale(1.015);
+}
+
+output {
+	display: block;
+	min-height: 1.5rem;
+	margin-top: 1rem;
+	color: #53627d;
+	font-family: ui-monospace, monospace;
+}

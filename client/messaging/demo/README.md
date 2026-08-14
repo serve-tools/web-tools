@@ -2,6 +2,8 @@
 
 A private multi-page Vite application demonstrating requests and subscriptions with one `SharedWorker`.
 
+[Open the hosted demo](https://serve-tools.github.io/web-tools/client/messaging/).
+
 ## Run
 
 [Open this directory in StackBlitz](https://stackblitz.com/fork/github/serve-tools/web-tools/tree/main/client/messaging/demo), or run it as a standalone project:

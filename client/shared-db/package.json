@@ -26,7 +26,7 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/client-shared-db.js",
-		"./scope/*": "./dist/scope/*.js"
+		"./scope/*": "./dist/lib/scope/*.js"
 	},
 	"files": [
 		"dist",

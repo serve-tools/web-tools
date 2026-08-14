@@ -1,0 +1,156 @@
+:root {
+	color: #162221;
+	background: #edf5f3;
+	font:
+		16px / 1.5 system-ui,
+		sans-serif;
+	font-synthesis: none;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-width: 20rem;
+	min-height: 100vh;
+	background: radial-gradient(circle at 75% 0%, #a8ddd4 0, transparent 36rem);
+}
+
+main {
+	width: min(62rem, calc(100% - 2rem));
+	margin: 0 auto;
+	padding: 4rem 0 6rem;
+}
+
+a {
+	color: inherit;
+}
+
+h1 {
+	max-width: 13ch;
+	margin: 4rem 0 1rem;
+	font-size: clamp(3rem, 9vw, 6.5rem);
+	letter-spacing: -0.065em;
+	line-height: 0.9;
+}
+
+.intro {
+	max-width: 47rem;
+	color: #506765;
+	font-size: 1.2rem;
+}
+
+.eyebrow,
+label {
+	margin: 0;
+	color: #117669;
+	font:
+		700 0.72rem / 1.2 ui-monospace,
+		monospace;
+	letter-spacing: 0.11em;
+	text-transform: uppercase;
+}
+
+section {
+	margin-top: 3rem;
+	padding: clamp(1.25rem, 4vw, 2rem);
+	border: 1px solid #9bbab5;
+	border-radius: 1.25rem;
+	background: #fbfefddd;
+}
+
+form {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 0.75rem;
+}
+
+label {
+	grid-column: 1 / -1;
+}
+
+input,
+button {
+	min-height: 2.8rem;
+	border: 1px solid #648a84;
+	border-radius: 0.65rem;
+	font: inherit;
+}
+
+input {
+	min-width: 0;
+	padding: 0 0.9rem;
+	background: white;
+}
+
+button {
+	padding: 0 1rem;
+	color: white;
+	background: #126f64;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+button.secondary,
+button.remove,
+button.toggle {
+	color: #24423f;
+	background: transparent;
+}
+
+.status {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	margin: 1.5rem 0;
+	color: #506765;
+	font-size: 0.85rem;
+}
+
+ul {
+	display: grid;
+	gap: 0.65rem;
+	padding: 0;
+	list-style: none;
+}
+
+li {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.75rem;
+	border: 1px solid #c2d4d1;
+	border-radius: 0.75rem;
+	background: white;
+}
+
+li[data-done] span {
+	color: #71817f;
+	text-decoration: line-through;
+}
+
+button.toggle,
+button.remove {
+	min-height: 2.25rem;
+	padding: 0 0.7rem;
+}
+
+button.toggle {
+	font-size: 1.2rem;
+}
+
+#empty {
+	color: #71817f;
+	text-align: center;
+}
+
+@media (max-width: 32rem) {
+	form {
+		grid-template-columns: 1fr;
+	}
+}

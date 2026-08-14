@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client Context"
+  short_description: "Coordinate interoperable web-component context"
+  default_prompt: "Use $serve-tools-client-context to implement interoperable web-component context lifecycle correctly."

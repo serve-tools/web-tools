@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client Keyboard"
+  short_description: "Normalize and present keyboard chords"
+  default_prompt: "Use $serve-tools-client-keyboard to implement platform-aware keyboard chord matching and presentation."

@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import type { DB } from "@serve-tools/client-db";
-import { listen } from "../../src/scope/shared-worker.js";
+import { listen } from "../../src/lib/scope/shared-worker.js";
 
 const scope = globalThis as unknown as SharedWorkerGlobalScope;
 

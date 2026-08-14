@@ -1,17 +1,23 @@
 {
 	"name": "@serve-tools/lit-signals",
 	"version": "0.2.0",
-	"description": "Fine-grained TC39 Signal bindings and decorators for Lit",
+	"description": "Signal-native Lit templates, styles, directives, and decorators",
 	"keywords": [
 		"computed",
+		"css",
+		"context",
 		"decorator",
 		"directive",
 		"effect",
 		"lit",
 		"property",
 		"reactive",
+		"ref",
 		"repeat",
 		"signal",
+		"style",
+		"stylesheet",
+		"svg",
 		"tc39",
 		"template",
 		"web-components"
@@ -40,17 +46,20 @@
 	"scripts": {
 		"benchmark": "vitest run --config vitest.benchmark.config.ts",
 		"build": "npm run clean && tsc --build --force tsconfig.json",
-		"build:dependencies": "npm run build --workspace @serve-tools/signal --workspace @serve-tools/signal-collections",
+		"build:dependencies": "npm run build --workspace @serve-tools/client-context --workspace @serve-tools/signal --workspace @serve-tools/signal-collections --workspace @serve-tools/signal-event-target",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build:dependencies && vitest run --config vitest.browser.config.ts",
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
+		"@serve-tools/client-context": "^0.1",
 		"@serve-tools/signal": "^0.1",
-		"@serve-tools/signal-collections": "^0.1"
+		"@serve-tools/signal-collections": "^0.1",
+		"@serve-tools/signal-event-target": "^0.1"
 	},
 	"devDependencies": {
+		"@lit/context": "1.1.6",
 		"lit": "3.3.3"
 	},
 	"peerDependencies": {

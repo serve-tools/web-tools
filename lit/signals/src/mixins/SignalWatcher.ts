@@ -288,7 +288,7 @@ interface EffectRecord {
 	phase: EffectPhase;
 }
 
-interface SignalWatcherConstructor {
+export interface SignalWatcherConstructor {
 	new (...args: any[]): LitElement & SignalWatcherApi;
 }
 

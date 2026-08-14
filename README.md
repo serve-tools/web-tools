@@ -14,17 +14,37 @@ Client libraries, Lit integrations, polyfills, ponyfills, Signal libraries, and 
 
 Each package directory owns its package metadata, source, tests, and documentation.
 
+## Demos
+
+Interactive demos for the client, signal-aware client, and Lit packages are published at [serve-tools.github.io/web-tools](https://serve-tools.github.io/web-tools/).
+The `Pages` workflow rebuilds and deploys them after every push to `main`.
+
+Build the same static site locally with:
+
+```shell
+npm run build:pages
+```
+
+The generated site is written to `dist/pages`.
+To activate a new repository deployment, select **GitHub Actions** as the source under **Settings → Pages** once; subsequent pushes deploy automatically.
+
 ## Packages
 
+- [`@serve-tools/client`](./client/client/) provides namespace-oriented access to the client libraries and focused capability subpaths.
+- [`@serve-tools/client-context`](./client/context/) provides interoperable context events, lifecycle-owned providers and consumers, and indexed late-registration replay.
 - [`@serve-tools/client-db`](./client/db/) provides promise-based IndexedDB operations, transactions, and scans.
+- [`@serve-tools/client-input`](./client/input/) observes pointer and drag-and-drop input sessions with explicit lifecycle ownership.
+- [`@serve-tools/client-interaction`](./client/interaction/) provides one-shot clipboard, picker, sharing, and eyedropper interactions with explicit outcomes.
+- [`@serve-tools/client-keyboard`](./client/keyboard/) provides platform-aware keyboard chords, labels, symbols, and ARIA shortcuts.
 - [`@serve-tools/client-messaging`](./client/messaging/) provides requests and subscriptions across workers and message ports.
 - [`@serve-tools/client-shared-db`](./client/shared-db/) coordinates IndexedDB operations and change subscriptions through a SharedWorker.
 - [`@serve-tools/client-storage`](./client/storage/) provides observable access to local and session storage.
 - [`@serve-tools/signal-dom`](./client-signals/dom/) provides functional signal-aware DOM, SVG, and MathML templating.
+- [`@serve-tools/signal-event-target`](./client-signals/event-target/) observes EventTarget state and media-query matches as read-only Signals.
 - [`@serve-tools/signal-messaging`](./client-signals/messaging/) observes typed messaging subscriptions as explicit Signal state.
 - [`@serve-tools/signal-shared-db`](./client-signals/shared-db/) adds reactive queries to the shared IndexedDB client.
 - [`@serve-tools/signal-storage`](./client-signals/storage/) adds reactive watches to the Web Storage client.
-- [`@serve-tools/lit-signals`](./lit/signals/) provides fine-grained Signal directives and signal-backed reactive decorators for Lit elements.
+- [`@serve-tools/lit-signals`](./lit/signals/) provides signal-native Lit templates, reactive host styles, lifecycle tracking, directives, and decorators.
 - [`@serve-tools/polyfill-request-idle-callback`](./polyfills/request-idle-callback/) installs the `requestIdleCallback` and `cancelIdleCallback` globals.
 - [`@serve-tools/polyfill-resource-management`](./polyfills/resource-management/) installs ECMAScript Explicit Resource Management globals.
 - [`@serve-tools/ponyfill-request-idle-callback`](./ponyfills/request-idle-callback/) provides `requestIdleCallback` and `cancelIdleCallback` without global mutation.

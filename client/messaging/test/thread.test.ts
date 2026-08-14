@@ -2,7 +2,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { connect, type WorkerOperation } from "../src/client-messaging.js";
-import { listen, type ProtocolType } from "../src/scope/worker.js";
+import { listen, type ProtocolType } from "../src/lib/scope/worker.js";
 
 type TestProtocol = {
 	requests: { echo: WorkerOperation<string, string> };

@@ -10,7 +10,7 @@ import {
 	type WorkerOperation,
 } from "../src/client-messaging.js";
 import type * as WorkerTypes from "../src/lib/.types.js";
-import { listen as listenWorker } from "../src/scope/worker.js";
+import { listen as listenWorker } from "../src/lib/scope/worker.js";
 
 type ApplicationProtocol = {
 	requests: {

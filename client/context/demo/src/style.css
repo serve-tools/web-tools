@@ -1,0 +1,128 @@
+:root {
+	color: #17201c;
+	background: #f3f0e8;
+	font:
+		16px / 1.5 system-ui,
+		sans-serif;
+	font-synthesis: none;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-width: 20rem;
+	min-height: 100vh;
+	background: radial-gradient(circle at 15% 0%, #d4e7e0 0, transparent 34rem);
+}
+
+main {
+	width: min(68rem, calc(100% - 2rem));
+	margin: 0 auto;
+	padding: 4rem 0 6rem;
+}
+
+a {
+	color: inherit;
+}
+
+h1 {
+	max-width: 14ch;
+	margin: 4rem 0 1rem;
+	font-size: clamp(3rem, 9vw, 6.5rem);
+	letter-spacing: -0.065em;
+	line-height: 0.9;
+}
+
+.intro {
+	max-width: 46rem;
+	color: #506059;
+	font-size: 1.2rem;
+}
+
+.eyebrow,
+.consumer-label {
+	margin: 0;
+	font:
+		700 0.72rem / 1.2 ui-monospace,
+		monospace;
+	letter-spacing: 0.11em;
+	text-transform: uppercase;
+}
+
+.providers {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+	gap: 1rem;
+	margin-top: 3rem;
+}
+
+demo-theme-provider {
+	display: grid;
+	gap: 1.5rem;
+	padding: 1.5rem;
+	border: 1px solid color-mix(in srgb, var(--accent) 50%, #17201c);
+	border-radius: 1.25rem;
+	background: #fffdf8cc;
+}
+
+demo-theme-provider header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+h2 {
+	margin: 0.25rem 0 0;
+	font-size: 2rem;
+}
+
+.consumer-slot {
+	display: grid;
+	min-height: 11rem;
+	padding: 1rem;
+	border: 1px dashed #94a19b;
+	border-radius: 1rem;
+	place-items: center;
+}
+
+demo-theme-consumer {
+	display: grid;
+	gap: 0.25rem;
+	min-width: 12rem;
+	padding: 1.25rem;
+	border-radius: 0.8rem;
+	color: white;
+	background: var(--accent);
+	box-shadow: 0 1rem 2.5rem color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+demo-theme-consumer strong {
+	font-size: 1.7rem;
+}
+
+button {
+	min-height: 2.75rem;
+	padding: 0 1rem;
+	border: 1px solid #17201c;
+	border-radius: 999px;
+	color: white;
+	background: #17201c;
+	font: inherit;
+	font-weight: 700;
+	cursor: pointer;
+}
+
+button.secondary {
+	color: #17201c;
+	background: transparent;
+}
+
+.note {
+	margin-top: 2rem;
+	color: #506059;
+}

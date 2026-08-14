@@ -1,0 +1,42 @@
+{
+	"name": "@serve-tools/client-context",
+	"version": "0.1.0",
+	"description": "Interoperable context events, providers, consumers, and late-registration coordination for web components",
+	"keywords": [
+		"context",
+		"context-protocol",
+		"custom-elements",
+		"dependency-injection",
+		"events",
+		"subscriptions",
+		"typescript",
+		"web-components"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/context#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "client/context"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/client-context.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "vitest run --config vitest.browser.config.ts",
+		"typecheck": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	}
+}

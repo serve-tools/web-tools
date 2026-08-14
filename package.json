@@ -15,18 +15,31 @@
 	"author": "Jonathan Neal",
 	"type": "module",
 	"workspaces": [
+		"client/context",
+		"client/context/demo",
 		"client/db",
 		"client/db/demo",
+		"client/input",
+		"client/input/demo",
+		"client/interaction",
+		"client/interaction/demo",
+		"client/keyboard",
+		"client/keyboard/demo",
 		"client/messaging",
 		"client/messaging/demo",
 		"client/shared-db",
+		"client/shared-db/demo",
 		"client/storage",
+		"client/client",
 		"client/storage/demo",
 		"client-signals/dom",
+		"client-signals/dom/demo",
+		"client-signals/event-target",
 		"client-signals/messaging",
 		"client-signals/shared-db",
 		"client-signals/storage",
 		"lit/signals",
+		"lit/signals/demo",
 		"polyfills/request-idle-callback",
 		"polyfills/resource-management",
 		"ponyfills/request-idle-callback",
@@ -40,6 +53,7 @@
 		"benchmark": "npm run benchmark --workspaces --if-present",
 		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-storage",
 		"build": "npm run build --workspaces --if-present",
+		"build:pages": "node scripts/build-pages.mjs",
 		"check:packages": "npm run check:package --workspaces --if-present",
 		"check:skills": "node scripts/check-skills.mjs",
 		"format": "dprint fmt",
@@ -83,9 +97,39 @@
 	"knip": {
 		"ignoreExportsUsedInFile": true,
 		"workspaces": {
+			"client/client": {
+				"entry": [
+					"test/*.types.ts"
+				]
+			},
+			"client/context": {
+				"entry": [
+					"test/*.types.ts"
+				]
+			},
+			"client/input": {
+				"entry": [
+					"test/*.types.ts"
+				]
+			},
+			"client/interaction": {
+				"entry": [
+					"test/*.types.ts"
+				]
+			},
+			"client/keyboard": {
+				"entry": [
+					"test/*.types.ts"
+				]
+			},
 			"client-signals/dom": {
 				"ignoreUnresolved": [
 					"/dom/signal-dom.js"
+				]
+			},
+			"client-signals/event-target": {
+				"entry": [
+					"test/*.types.ts"
 				]
 			},
 			"client-signals/messaging": {

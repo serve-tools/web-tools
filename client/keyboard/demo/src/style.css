@@ -1,0 +1,147 @@
+:root {
+	color: #201d17;
+	background: #f5f2e8;
+	font:
+		16px / 1.5 system-ui,
+		sans-serif;
+	font-synthesis: none;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-width: 20rem;
+	min-height: 100vh;
+	background: radial-gradient(circle at 20% 0%, #f2d98e 0, transparent 34rem);
+}
+
+main {
+	width: min(62rem, calc(100% - 2rem));
+	margin: 0 auto;
+	padding: 4rem 0 6rem;
+}
+
+a {
+	color: inherit;
+}
+
+h1 {
+	max-width: 13ch;
+	margin: 4rem 0 1rem;
+	font-size: clamp(3rem, 9vw, 6.5rem);
+	letter-spacing: -0.065em;
+	line-height: 0.9;
+}
+
+.intro {
+	max-width: 43rem;
+	color: #665f50;
+	font-size: 1.2rem;
+}
+
+.eyebrow,
+dt {
+	margin: 0;
+	color: #7d641d;
+	font:
+		700 0.72rem / 1.2 ui-monospace,
+		monospace;
+	letter-spacing: 0.11em;
+	text-transform: uppercase;
+}
+
+#capture {
+	display: grid;
+	gap: 1.5rem;
+	margin-top: 3rem;
+	padding: clamp(1.5rem, 5vw, 3rem);
+	border: 2px solid #201d17;
+	border-radius: 1.5rem;
+	background: #fffdf7dd;
+	outline: 0;
+}
+
+#capture::after {
+	color: #7d7567;
+	content: attr(data-platform) " modifier mapping";
+	font-size: 0.8rem;
+}
+
+#capture:focus-visible {
+	box-shadow: 0 0 0 0.35rem #e9b949;
+}
+
+#symbols,
+.shortcut-symbols {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+kbd {
+	display: grid;
+	min-width: 3rem;
+	min-height: 3rem;
+	padding: 0.5rem;
+	border: 1px solid #8c826e;
+	border-bottom-width: 0.3rem;
+	border-radius: 0.55rem;
+	background: white;
+	font:
+		700 1.25rem / 1 ui-monospace,
+		monospace;
+	place-items: center;
+}
+
+#label {
+	font-size: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+dl {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+	gap: 1rem;
+	margin: 0;
+}
+
+dd {
+	margin: 0.25rem 0 0;
+	font-family: ui-monospace, monospace;
+}
+
+.examples {
+	margin-top: 2rem;
+}
+
+ul {
+	display: grid;
+	gap: 0.75rem;
+	padding: 0;
+	list-style: none;
+}
+
+li {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+	padding: 0.85rem;
+	border: 1px solid #c9bfaa;
+	border-radius: 0.8rem;
+	transition: 150ms ease;
+}
+
+li[data-matched] {
+	border-color: #946c00;
+	background: #ffe7a5;
+	transform: translateX(0.4rem);
+}
+
+.shortcut-symbols kbd {
+	min-width: 2rem;
+	min-height: 2rem;
+	font-size: 0.9rem;
+}

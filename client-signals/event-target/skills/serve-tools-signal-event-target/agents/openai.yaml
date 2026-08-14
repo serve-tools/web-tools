@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal Event Target"
+  short_description: "Observe EventTarget state with read-only Signals"
+  default_prompt: "Use $serve-tools-signal-event-target to implement this event-backed reactive state correctly."

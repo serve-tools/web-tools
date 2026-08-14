@@ -27,7 +27,7 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/client-messaging.js",
-		"./scope/*": "./dist/scope/*.js"
+		"./scope/*": "./dist/lib/scope/*.js"
 	},
 	"files": [
 		"dist",

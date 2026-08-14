@@ -2,6 +2,8 @@
 
 A private multi-page Vite application demonstrating `@serve-tools/client-db` in the browser with IndexedDB.
 
+[Open the hosted demo](https://serve-tools.github.io/web-tools/client/db/).
+
 ## Run
 
 [Open this directory in StackBlitz](https://stackblitz.com/fork/github/serve-tools/web-tools/tree/main/client/db/demo), or run it as a standalone project:

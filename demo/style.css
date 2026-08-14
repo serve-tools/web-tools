@@ -1,0 +1,161 @@
+:root {
+	color: #17201c;
+	background: #f1efe7;
+	font:
+		16px / 1.5 Inter,
+		ui-sans-serif,
+		system-ui,
+		sans-serif;
+	font-synthesis: none;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	min-width: 20rem;
+}
+
+body::before {
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	background:
+		linear-gradient(90deg, #17201c0b 1px, transparent 1px) 0 0 / 4rem 4rem,
+		linear-gradient(#17201c0b 1px, transparent 1px) 0 0 / 4rem 4rem;
+	content: "";
+}
+
+header,
+main,
+footer {
+	width: min(74rem, calc(100% - 2rem));
+	margin: 0 auto;
+}
+
+header {
+	padding: 3rem 0 6rem;
+}
+
+.wordmark {
+	color: inherit;
+	font-size: 0.8rem;
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-decoration: none;
+	text-transform: uppercase;
+}
+
+h1 {
+	max-width: 11ch;
+	margin: 5rem 0 2rem;
+	font-size: clamp(3.4rem, 11vw, 8.5rem);
+	font-weight: 760;
+	letter-spacing: -0.07em;
+	line-height: 0.78;
+}
+
+header > p {
+	max-width: 40rem;
+	margin: 0;
+	color: #4b5852;
+	font-size: clamp(1.15rem, 2vw, 1.5rem);
+}
+
+main {
+	display: grid;
+	gap: 6rem;
+}
+
+.section-heading {
+	display: grid;
+	grid-template-columns: minmax(7rem, 1fr) 3fr;
+	align-items: baseline;
+	gap: 1rem;
+	padding-top: 1rem;
+	border-top: 1px solid #aeb5ae;
+}
+
+.eyebrow,
+h2 {
+	margin: 0;
+}
+
+.eyebrow,
+.number {
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+	font-size: 0.72rem;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+h2 {
+	font-size: clamp(1.6rem, 4vw, 3rem);
+	letter-spacing: -0.04em;
+}
+
+.cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+	gap: 1rem;
+	margin-top: 2rem;
+}
+
+footer a {
+	color: inherit;
+}
+
+.cards a {
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	gap: 2rem;
+	min-height: 18rem;
+	padding: 1.5rem;
+	border: 1px solid #aeb5ae;
+	border-radius: 0.3rem;
+	color: inherit;
+	background: #f8f6efcc;
+	text-decoration: none;
+	transition: 150ms ease;
+	transition-property: color, background, transform;
+}
+
+.cards a:hover {
+	color: #f7f6ef;
+	background: #17201c;
+	transform: translateY(-0.25rem);
+}
+
+.cards strong {
+	align-self: end;
+	font-size: 2rem;
+	letter-spacing: -0.045em;
+}
+
+.cards a > span:last-child {
+	color: #66716b;
+}
+
+.cards a:hover > span:last-child {
+	color: #bbc5bf;
+}
+
+footer {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	gap: 1rem;
+	margin-top: 8rem;
+	padding: 2rem 0;
+	border-top: 1px solid #aeb5ae;
+	color: #4b5852;
+	font-size: 0.85rem;
+}
+
+@media (max-width: 36rem) {
+	.section-heading {
+		grid-template-columns: 1fr;
+	}
+}

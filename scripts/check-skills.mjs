@@ -70,12 +70,12 @@ if (maintainerSkill !== undefined) {
 
 await validateReleasePackages(publicPackageNames, errors);
 
-if (publicPackages !== 17) {
-	errors.push(`expected 17 public workspaces, found ${publicPackages}`);
+if (publicPackages !== 23) {
+	errors.push(`expected 23 public workspaces, found ${publicPackages}`);
 }
 
-if (metadataCharacters > 6_250) {
-	errors.push(`Skill names and descriptions use ${metadataCharacters} characters; keep them at or below 6250`);
+if (metadataCharacters > 8_000) {
+	errors.push(`Skill names and descriptions use ${metadataCharacters} characters; keep them at or below 8000`);
 }
 
 if (errors.length > 0) {

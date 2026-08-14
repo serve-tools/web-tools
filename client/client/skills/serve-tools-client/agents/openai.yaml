@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client"
+  short_description: "Use client tools through stable namespaces"
+  default_prompt: "Use $serve-tools-client to choose namespaced or focused client-library imports."

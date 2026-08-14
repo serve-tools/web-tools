@@ -1,10 +1,11 @@
 import { Signal } from "@serve-tools/signal";
-import { html, LitElement, nothing, render } from "lit";
+import { LitElement, nothing, render } from "lit";
+import { ref } from "lit/directives/ref.js";
 import { expect, test } from "vitest";
 
 import { benchmark } from "../../../client/benchmark.js";
 import { computed, property } from "../src/decorators.js";
-import { repeat, SignalWatcher, watch } from "../src/lit-signals.js";
+import { callbackRef, html, repeat, SignalWatcher, watch } from "../src/lit-signals.js";
 
 const microtask = () => new Promise<void>(queueMicrotask);
 const componentSource = new Signal.State(0);
@@ -163,11 +164,23 @@ test("watch lifecycle and parent render hot paths", async () => {
 	const renderDirect = () => {
 		render(html`${watch(source)}`, container);
 	};
+	const renderAutomatic = () => {
+		render(html`${source}`, container);
+	};
 
 	const renderCallback = () => {
 		render(html`${watch(() => source.get())}`, container);
 	};
 
+	renderAutomatic();
+
+	await benchmark("lit-signals/parent-render-stable-direct-signal", renderAutomatic, {
+		iterations: 100_000,
+		samples: 10,
+		warmup: 3,
+	});
+
+	render(nothing, container);
 	renderDirect();
 
 	await benchmark("lit-signals/parent-render-stable-signal-watch", renderDirect, {
@@ -305,4 +318,27 @@ test("SignalWatcher lifecycle and dense invalidation hot paths", async () => {
 	expect(elements[0].shadowRoot?.textContent).toBe(String(nextValue));
 	for (const element of elements) element.remove();
 	mountContainer.remove();
+});
+
+test("callback ref lifecycle hot path", async () => {
+	const container = document.createElement("div");
+	let cleanups = 0;
+	let setups = 0;
+	const elementRef = callbackRef(() => {
+		++setups;
+
+		return () => ++cleanups;
+	});
+	const mounted = html`<button ${ref(elementRef)}></button>`;
+
+	await benchmark(
+		"lit-signals/mount-dispose-callback-ref",
+		() => {
+			render(mounted, container);
+			render(nothing, container);
+		},
+		{ iterations: 10_000 },
+	);
+
+	expect(setups).toBe(cleanups);
 });

@@ -4,6 +4,17 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
+- Add hosted demos for client context, input, interaction, keyboard, and SharedWorker-coordinated database behavior.
+- Add `@serve-tools/client` with namespace-oriented root exports, focused capability subpaths, messaging scope helpers, and scoped shared database entrypoints under `db/scope/*`.
+- Add `@serve-tools/client-context` with protocol-compatible events, deterministic provider and consumer lifecycle, indexed late-registration replay, subscription takeover, fallback, and explicit topology refresh.
+- Move the `@serve-tools/lit-signals` context decorators onto the owned context runtime, re-export its context primitives, and retain bidirectional Lit interoperability.
+- Add `@serve-tools/client-interaction` with explicit browser-interaction outcomes, transient-activation-safe clipboard writes, pickers, and sharing.
+- Add `@serve-tools/client-input` with abortable pointer and drop-target session observation.
+- Add `@serve-tools/client-keyboard` with platform-aware chord matching, labels, symbols, and ARIA shortcuts.
+- Add `@serve-tools/signal-event-target` with disposable read-only EventTarget state and media-query Signals.
+- Re-export the event-target Signal utilities from `@serve-tools/lit-signals` for direct use in Lit reactive boundaries.
+- Add signal-native `html` and `svg`, a precomposed `SignalElement`, curated static `css`, and the `@style` reactive host-style decorator to `@serve-tools/lit-signals`.
+
 ## 0.2.0 - 2026-08-13
 
 - Expand `@serve-tools/lit-signals` with signal-aware `when`, `choose`, and keyed `repeat` directives.

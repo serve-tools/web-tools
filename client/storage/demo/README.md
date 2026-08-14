@@ -2,6 +2,8 @@
 
 A private Vite application demonstrating local and session storage with synchronous subscriptions.
 
+[Open the hosted demo](https://serve-tools.github.io/web-tools/client/storage/).
+
 ## Run
 
 [Open this directory in StackBlitz](https://stackblitz.com/fork/github/serve-tools/web-tools/tree/main/client/storage/demo), or run it as a standalone project:

@@ -1,0 +1,45 @@
+{
+	"name": "@serve-tools/client-interaction",
+	"version": "0.1.0",
+	"description": "One-shot clipboard, picker, sharing, and eyedropper interactions with explicit outcomes",
+	"keywords": [
+		"clipboard",
+		"eyedropper",
+		"file-picker",
+		"share",
+		"transient-activation",
+		"typescript",
+		"web-api"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/interaction#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "client/interaction"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/client-interaction.js",
+		"./*": "./dist/lib/*.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"benchmark": "vitest run --config vitest.benchmark.config.ts",
+		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run test:node && npm run test:browser",
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"test:node": "vitest run --config vitest.config.ts",
+		"typecheck": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	}
+}

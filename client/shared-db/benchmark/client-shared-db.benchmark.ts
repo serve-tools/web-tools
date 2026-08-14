@@ -3,7 +3,7 @@
 import { expect, test } from "vitest";
 
 import { benchmark } from "../../benchmark.js";
-import { connect } from "../src/scope/window.js";
+import { connect } from "../src/lib/scope/window.js";
 import type { BenchmarkSchema } from "./client-shared-db.worker.js";
 
 const open = (name: string) => {

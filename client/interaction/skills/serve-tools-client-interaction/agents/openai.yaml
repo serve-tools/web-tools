@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client Interaction"
+  short_description: "Run one-shot browser interactions safely"
+  default_prompt: "Use $serve-tools-client-interaction to implement one-shot browser-mediated interactions with explicit outcomes."
