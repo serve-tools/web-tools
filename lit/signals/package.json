@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/lit-signals",
-	"version": "0.2.0",
+	"version": "0.3.0",
 	"description": "Signal-native Lit templates, styles, directives, and decorators",
 	"keywords": [
 		"computed",

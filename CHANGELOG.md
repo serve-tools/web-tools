@@ -4,6 +4,8 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
+## 0.3.0 - 2026-08-14
+
 - Add hosted demos for client context, input, interaction, keyboard, and SharedWorker-coordinated database behavior.
 - Add `@serve-tools/client` with namespace-oriented root exports, focused capability subpaths, messaging scope helpers, and scoped shared database entrypoints under `db/scope/*`.
 - Add `@serve-tools/client-context` with protocol-compatible events, deterministic provider and consumer lifecycle, indexed late-registration replay, subscription takeover, fallback, and explicit topology refresh.
