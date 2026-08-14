@@ -1,5 +1,6 @@
 import { rolldownTransform } from "@jsxtools/rolldown-transform";
-import { type Plugin, Visitor } from "vite";
+import type { Plugin } from "vite";
+import { Visitor } from "vite";
 import type { Polyfill } from "./define-polyfill.js";
 
 const PLUGIN_NAME = "vite-plugin-polyfills";

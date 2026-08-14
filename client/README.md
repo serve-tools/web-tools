@@ -14,3 +14,4 @@ Each immediate subdirectory is an independently versioned npm workspace.
 - [`@serve-tools/client-messaging`](./messaging/) provides requests and subscriptions across workers and message ports.
 - [`@serve-tools/client-shared-db`](./shared-db/) coordinates IndexedDB operations and change subscriptions through a SharedWorker.
 - [`@serve-tools/client-storage`](./storage/) provides observable access to local and session storage.
+- [`@serve-tools/client-websocket`](./websocket/) provides typed requests and subscriptions over binary structured-data WebSockets.

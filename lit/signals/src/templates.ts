@@ -1,5 +1,6 @@
 import { Signal } from "@serve-tools/signal";
-import { html as litHTML, svg as litSVG, type TemplateResult } from "lit";
+import type { TemplateResult } from "lit";
+import { html as litHTML, svg as litSVG } from "lit";
 
 import { watch } from "./directives/watch.js";
 

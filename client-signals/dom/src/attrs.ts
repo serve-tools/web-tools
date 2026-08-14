@@ -1,4 +1,5 @@
-import { handler, type Watchable } from "./.internals.js";
+import type { Watchable } from "./.internals.js";
+import { handler } from "./.internals.js";
 
 /** Sets attributes on an element. */
 export const attrs =

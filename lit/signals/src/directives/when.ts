@@ -1,6 +1,7 @@
 import type { DirectiveResult } from "lit/directive.js";
 import { directive } from "lit/directive.js";
-import { ReactiveDirective, type ReactiveSource, readSource } from "./.internals.js";
+import type { ReactiveSource } from "./.internals.js";
+import { ReactiveDirective, readSource } from "./.internals.js";
 
 class WhenDirective<Condition = unknown, TrueValue = unknown, FalseValue = undefined> extends ReactiveDirective<
 	TrueValue | FalseValue | undefined

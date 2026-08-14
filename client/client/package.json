@@ -10,7 +10,8 @@
 		"messaging",
 		"storage",
 		"typescript",
-		"web-api"
+		"web-api",
+		"websocket"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/client#readme",
 	"bugs": {
@@ -35,7 +36,7 @@
 	],
 	"scripts": {
 		"build": "npm run clean && tsc --build --force tsconfig.json",
-		"build:dependencies": "npm run build --workspace @serve-tools/client-context --workspace @serve-tools/client-db --workspace @serve-tools/client-input --workspace @serve-tools/client-interaction --workspace @serve-tools/client-keyboard --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-storage",
+		"build:dependencies": "npm run build --workspace @serve-tools/client-context --workspace @serve-tools/client-db --workspace @serve-tools/client-input --workspace @serve-tools/client-interaction --workspace @serve-tools/client-keyboard --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build:dependencies && vitest run --config vitest.browser.config.ts",
@@ -49,6 +50,7 @@
 		"@serve-tools/client-keyboard": "^0.1",
 		"@serve-tools/client-messaging": "^0.1",
 		"@serve-tools/client-shared-db": "^0.1",
-		"@serve-tools/client-storage": "^0.1"
+		"@serve-tools/client-storage": "^0.1",
+		"@serve-tools/client-websocket": "^0.1"
 	}
 }

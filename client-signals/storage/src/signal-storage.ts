@@ -1,6 +1,7 @@
 /// <reference lib="esnext.disposable" preserve="true" />
 
-import { Storage as ClientStorage, type StorageKey, type StorageValue } from "@serve-tools/client-storage";
+import type { StorageKey, StorageValue } from "@serve-tools/client-storage";
+import { Storage as ClientStorage } from "@serve-tools/client-storage";
 import { Signal } from "@serve-tools/signal";
 
 export type {

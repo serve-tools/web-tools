@@ -1,4 +1,5 @@
-import { build, type Plugin, type Rollup } from "vite";
+import type { Plugin, Rollup } from "vite";
+import { build } from "vite";
 
 const VIRTUAL_PREFIX = "virtual:test:";
 const RESOLVED_PREFIX = "\0" + VIRTUAL_PREFIX;

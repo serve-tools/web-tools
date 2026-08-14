@@ -1,5 +1,6 @@
-import { getContextConsumer, getContextProvider, isUsableContext } from "./.internals.js";
-import { type ContextCallback, ContextRequestEvent, type UnknownContext } from "./context.js";
+import { getContextConsumer, getContextProvider, isInvalidContext } from "./.internals.js";
+import type { ContextCallback, UnknownContext } from "./context.js";
+import { ContextRequestEvent } from "./context.js";
 
 interface PendingRequest {
 	readonly callbackRef: WeakRef<ContextCallback<unknown>>;
@@ -80,7 +81,7 @@ export class ContextRoot {
 		const consumer = getContextConsumer(event);
 		const request = event as Event & {
 			readonly callback?: ContextCallback<unknown>;
-			readonly context?: UnknownContext;
+			readonly context: UnknownContext;
 			readonly subscribe?: unknown;
 		};
 
@@ -88,7 +89,7 @@ export class ContextRoot {
 			consumer === undefined ||
 			!request.subscribe ||
 			typeof request.callback !== "function" ||
-			!isUsableContext(request.context)
+			isInvalidContext(request.context)
 		) {
 			return;
 		}

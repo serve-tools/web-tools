@@ -1,5 +1,6 @@
 import { Signal } from "@serve-tools/signal";
-import { html, LitElement, type PropertyValues } from "lit";
+import type { PropertyValues } from "lit";
+import { html, LitElement } from "lit";
 import { describe, expect, it } from "vitest";
 import { SignalWatcher, watch } from "../src/lit-signals.js";
 

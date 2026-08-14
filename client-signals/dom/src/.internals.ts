@@ -1,7 +1,7 @@
 import { Signal } from "@serve-tools/signal";
 import { createEffect } from "@serve-tools/signal-effect";
-
-import { type Disposer, disown, own } from "./dispose.js";
+import type { Disposer } from "./dispose.js";
+import { disown, own } from "./dispose.js";
 
 export const assign = (owner: Node, target: object, values: object): void => {
 	for (const name in values) handler((values as any)[name], (value) => ((target as any)[name] = value), owner);

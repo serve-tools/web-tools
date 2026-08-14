@@ -5,7 +5,7 @@ import type {
 	DBOperationOptions,
 	DBWriteOptions,
 } from "@serve-tools/client-db";
-import type { WorkerRequestOptions } from "@serve-tools/client-messaging";
+import type { RequestOptions } from "@serve-tools/client-messaging";
 import type {
 	EncodedKeyRange,
 	EncodedQuery,
@@ -64,7 +64,7 @@ export const decodeQuery = (query: EncodedQuery): IDBValidKey | IDBKeyRange | nu
 	}
 };
 
-export const requestOptions = (options?: DBOperationOptions): WorkerRequestOptions | undefined =>
+export const requestOptions = (options?: DBOperationOptions): RequestOptions | undefined =>
 	options?.signal === undefined ? undefined : { signal: options.signal };
 
 export const queryOptions = (

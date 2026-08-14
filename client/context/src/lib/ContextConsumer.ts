@@ -1,6 +1,8 @@
 import { reportContextError } from "./.internals.js";
-import { type ContextRoot, getContextRoot } from "./ContextRoot.js";
-import { type Context, type ContextCallback, ContextRequestEvent, type ContextType } from "./context.js";
+import type { ContextRoot } from "./ContextRoot.js";
+import { getContextRoot } from "./ContextRoot.js";
+import type { Context, ContextCallback, ContextType } from "./context.js";
+import { ContextRequestEvent } from "./context.js";
 
 /** Options for a context consumer. */
 export interface ContextConsumerOptions<RequestedContext extends Context<unknown, unknown>> {

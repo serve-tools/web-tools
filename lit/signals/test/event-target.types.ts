@@ -1,4 +1,5 @@
-import { EventTargetSignal, type EventTargetSignalOptions, MatchMediaSignal, watch } from "../src/lit-signals.js";
+import type { EventTargetSignalOptions } from "../src/lit-signals.js";
+import { EventTargetSignal, MatchMediaSignal, watch } from "../src/lit-signals.js";
 
 const options = { signal: new AbortController().signal } satisfies EventTargetSignalOptions<number>;
 const value = new EventTargetSignal(new EventTarget(), "change", () => 1, options);

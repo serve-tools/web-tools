@@ -1,11 +1,9 @@
 /// <reference lib="esnext.disposable" preserve="true" />
 
-import {
-	connect as connectSharedDB,
-	type SharedDBClient,
-	type SharedDBSubscription,
-} from "@serve-tools/client-shared-db/scope/window";
-import { type AnySignal, Signal } from "@serve-tools/signal";
+import type { SharedDBClient, SharedDBSubscription } from "@serve-tools/client-shared-db/scope/window";
+import { connect as connectSharedDB } from "@serve-tools/client-shared-db/scope/window";
+import type { AnySignal } from "@serve-tools/signal";
+import { Signal } from "@serve-tools/signal";
 import { createEffect } from "@serve-tools/signal-effect";
 
 export type {

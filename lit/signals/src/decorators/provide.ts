@@ -1,12 +1,7 @@
 import type { Context } from "@serve-tools/client-context";
 import type { Signal } from "@serve-tools/signal";
-import {
-	AtomicContextProvider,
-	type ContextElement,
-	type ContextUpdate,
-	initializeContextState,
-	setContextState,
-} from "./.context.js";
+import type { ContextElement, ContextUpdate } from "./.context.js";
+import { AtomicContextProvider, initializeContextState, setContextState } from "./.context.js";
 
 /** Creates a signal-backed accessor that provides its value through context. */
 export const provide =

@@ -1,4 +1,5 @@
-import { type Context, ContextConsumer, ContextProvider, type ContextType } from "@serve-tools/client-context";
+import type { Context, ContextType } from "@serve-tools/client-context";
+import { ContextConsumer, ContextProvider } from "@serve-tools/client-context";
 import { Signal } from "@serve-tools/signal";
 import type { ReactiveController } from "lit";
 import type { ReactiveElement } from "./.internals.js";

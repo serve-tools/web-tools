@@ -1,7 +1,7 @@
 import { Signal } from "@serve-tools/signal";
 import { beforeEach, describe, expect, expectTypeOf, it, vi } from "vitest";
-
-import { SignalStorage, type StorageChange } from "../src/signal-storage.js";
+import type { StorageChange } from "../src/signal-storage.js";
+import { SignalStorage } from "../src/signal-storage.js";
 
 interface TestStorage {
 	theme: "dark" | "light";

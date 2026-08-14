@@ -1,6 +1,6 @@
 import type { LitElement } from "lit";
-
-import { SignalElement, type SignalWatcherApi } from "../src/lit-signals.js";
+import type { SignalWatcherApi } from "../src/lit-signals.js";
+import { SignalElement } from "../src/lit-signals.js";
 
 class TestElement extends SignalElement {}
 

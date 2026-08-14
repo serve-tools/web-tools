@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 
-import { listen, type ProtocolType, transfer, type WorkerOperation } from "@serve-tools/client-messaging/scope/worker";
+import type { ProtocolType } from "@serve-tools/client-messaging/scope/worker";
+import { listen, transfer } from "@serve-tools/client-messaging/scope/worker";
 
 let total = 0;
 
@@ -8,14 +9,14 @@ const subscribers = new Set<(value: number) => void>();
 
 const connections = listen<{
 	requests: {
-		greet: WorkerOperation<string, string>;
-		fail: WorkerOperation<void, never>;
-		increment: WorkerOperation<number, number>;
-		wait: WorkerOperation<number, string>;
-		reverse: WorkerOperation<ArrayBuffer, ArrayBuffer>;
+		greet(name: string): string;
+		fail(): never;
+		increment(amount: number): number;
+		wait(duration: number): string;
+		reverse(buffer: ArrayBuffer): ArrayBuffer;
 	};
 	subscriptions: {
-		totals: WorkerOperation<void, number>;
+		totals(): number;
 	};
 }>({
 	requests: {

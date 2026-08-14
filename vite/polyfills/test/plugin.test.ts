@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { builtinPolyfills, definePolyfill, type VitePolyfillsOptions, vitePolyfills } from "../src/vite-polyfills.js";
+import type { VitePolyfillsOptions } from "../src/vite-polyfills.js";
+import { builtinPolyfills, definePolyfill, vitePolyfills } from "../src/vite-polyfills.js";
 import { transformTest } from "./helpers.js";
 
 const VIRTUAL_PREFIX = "virtual:@serve-tools/vite-polyfill/";

@@ -1,4 +1,5 @@
-import { cancelIdleCallback, type IdleDeadline, requestIdleCallback } from "../src/ponyfill-request-idle-callback.js";
+import type { IdleDeadline } from "../src/ponyfill-request-idle-callback.js";
+import { cancelIdleCallback, requestIdleCallback } from "../src/ponyfill-request-idle-callback.js";
 
 /** A compile-tested recipe for scheduling and cancelling idle work. */
 export function scheduleIdleWork(): void {

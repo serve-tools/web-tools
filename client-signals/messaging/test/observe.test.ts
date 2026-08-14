@@ -1,37 +1,29 @@
 /// <reference lib="esnext.disposable" />
 
-import {
-	connect,
-	serve,
-	type WorkerClient,
-	type WorkerOperation,
-	type WorkerServer,
-	type WorkerSubscriptionContext,
-} from "@serve-tools/client-messaging";
+import type { Client, Server, SubscriptionContext } from "@serve-tools/client-messaging";
+import { connect, serve } from "@serve-tools/client-messaging";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { observe } from "../src/signal-messaging.js";
 
 type TestProtocol = {
-	requests: Record<never, never>;
 	subscriptions: {
-		values: WorkerOperation<void, number>;
-		labeled: WorkerOperation<{ readonly label: string }, string>;
+		values(): number;
+		labeled(input: { readonly label: string }): string;
 	};
 };
 
 describe("observe", () => {
-	let client: WorkerClient<TestProtocol>;
+	let client: Client<TestProtocol>;
 	let clientPort: MessagePort;
-	let server: WorkerServer<TestProtocol>;
+	let server: Server<TestProtocol>;
 	let serverPort: MessagePort;
-	let valueContext: WorkerSubscriptionContext<number> | undefined;
+	let valueContext: SubscriptionContext<number> | undefined;
 
 	beforeEach(() => {
 		const { port1, port2 } = new MessageChannel();
 
 		client = connect<TestProtocol>(port1);
 		server = serve<TestProtocol>(port2, {
-			requests: {},
 			subscriptions: {
 				values: (_input, context) => {
 					valueContext = context;

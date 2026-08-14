@@ -1,4 +1,5 @@
-import { type DropEndReason, type DropTargetCleanup, observeDropTarget } from "../src/client-input.js";
+import type { DropEndReason, DropTargetCleanup } from "../src/client-input.js";
+import { observeDropTarget } from "../src/client-input.js";
 
 const dropZone = document.createElement("div");
 const controller = new AbortController();

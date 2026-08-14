@@ -1,19 +1,11 @@
 /// <reference lib="esnext.disposable" />
 
 import { describe, expect, it, vi } from "vitest";
+import type { Handlers, Protocol, RequestContext } from "../src/client-messaging.js";
+import { connect, RemoteError, serve, transfer } from "../src/client-messaging.js";
+import type { ProtocolDefinition } from "../src/lib/.types.js";
 
-import {
-	connect,
-	serve,
-	transfer,
-	type WorkerHandlers,
-	type WorkerOperation,
-	type WorkerProtocol,
-	WorkerRemoteError,
-	type WorkerRequestContext,
-} from "../src/client-messaging.js";
-
-const open = <P extends WorkerProtocol>(handlers: WorkerHandlers<P>) => {
+const open = <P extends Protocol & ProtocolDefinition<P>>(handlers: Handlers<P>) => {
 	const { port1, port2 } = new MessageChannel();
 	const client = connect<P>(port1);
 	const server = serve<P>(port2, handlers);
@@ -34,10 +26,9 @@ describe("requests", () => {
 	it("correlates concurrent requests and preserves remote errors", async () => {
 		type P = {
 			requests: {
-				add: WorkerOperation<{ a: number; b: number }, number>;
-				fail: WorkerOperation<void, never>;
+				add(input: { a: number; b: number }): number;
+				fail(): never;
 			};
-			subscriptions: Record<never, never>;
 		};
 		const connection = open<P>({
 			requests: {
@@ -49,7 +40,6 @@ describe("requests", () => {
 					throw new TypeError("expected failure");
 				},
 			},
-			subscriptions: {},
 		});
 
 		try {
@@ -69,14 +59,23 @@ describe("requests", () => {
 		}
 	});
 
+	it("serves request-only handlers", async () => {
+		type P = { requests: { status(): string } };
+		const connection = open<P>({ requests: { status: () => "ready" } });
+
+		try {
+			expect(await connection.client.request("status")).toBe("ready");
+		} finally {
+			connection.close();
+		}
+	});
+
 	it("transfers values in both directions", async () => {
 		type P = {
-			requests: { echo: WorkerOperation<ArrayBuffer, ArrayBuffer> };
-			subscriptions: Record<never, never>;
+			requests: { echo(buffer: ArrayBuffer): ArrayBuffer };
 		};
 		const connection = open<P>({
 			requests: { echo: (buffer) => transfer(buffer, [buffer]) },
-			subscriptions: {},
 		});
 		const input = new Uint8Array([4, 8, 15, 16, 23, 42]);
 
@@ -92,12 +91,10 @@ describe("requests", () => {
 
 	it("rejects when a response cannot be structured-cloned", async () => {
 		type P = {
-			requests: { uncloneable: WorkerOperation<void, unknown> };
-			subscriptions: Record<never, never>;
+			requests: { uncloneable(): unknown };
 		};
 		const connection = open<P>({
 			requests: { uncloneable: () => () => undefined },
-			subscriptions: {},
 		});
 
 		try {
@@ -109,8 +106,7 @@ describe("requests", () => {
 
 	it("propagates AbortSignal cancellation to a running handler", async () => {
 		type P = {
-			requests: { hold: WorkerOperation<void, never> };
-			subscriptions: Record<never, never>;
+			requests: { hold(): never };
 		};
 		const aborted = Promise.withResolvers<void>();
 		const connection = open<P>({
@@ -127,7 +123,6 @@ describe("requests", () => {
 						);
 					}),
 			},
-			subscriptions: {},
 		});
 		const controller = new AbortController();
 		const request = connection.client.request("hold", undefined, { signal: controller.signal });
@@ -145,17 +140,16 @@ describe("requests", () => {
 	it("creates operation signals only when handlers observe them", async () => {
 		type P = {
 			requests: {
-				ignored: WorkerOperation<number, number>;
-				late: WorkerOperation<void, void>;
-				observed: WorkerOperation<void, boolean>;
+				ignored(value: number): number;
+				late(): void;
+				observed(): boolean;
 			};
-			subscriptions: Record<never, never>;
 		};
 
 		const NativeAbortController = AbortController;
 
 		let constructions = 0;
-		let lateContext: WorkerRequestContext | undefined;
+		let lateContext: RequestContext | undefined;
 
 		class CountingAbortController extends NativeAbortController {
 			constructor() {
@@ -175,7 +169,6 @@ describe("requests", () => {
 				},
 				observed: (_input, { signal }) => signal.aborted,
 			},
-			subscriptions: {},
 		});
 
 		try {
@@ -201,16 +194,37 @@ describe("requests", () => {
 });
 
 describe("subscriptions", () => {
+	it("serves subscription-only handlers", async () => {
+		type P = { subscriptions: { ready(): string } };
+		const completed = Promise.withResolvers<void>();
+		const connection = open<P>({
+			subscriptions: {
+				ready: (_input, { emit, complete }) => {
+					emit("ready");
+					complete();
+				},
+			},
+		});
+		const values: string[] = [];
+
+		connection.client.subscribe("ready", (value) => values.push(value), { onComplete: completed.resolve });
+
+		try {
+			await completed.promise;
+			expect(values).toEqual(["ready"]);
+		} finally {
+			connection.close();
+		}
+	});
+
 	it("delivers ordered values, completes, and runs cleanup once", async () => {
 		type P = {
-			requests: Record<never, never>;
-			subscriptions: { numbers: WorkerOperation<{ start: number }, number> };
+			subscriptions: { numbers(input: { start: number }): number };
 		};
 
 		const cleanup = vi.fn();
 		const completed = Promise.withResolvers<void>();
 		const connection = open<P>({
-			requests: {},
 			subscriptions: {
 				numbers: ({ start }, { emit, complete }) => {
 					emit(start);
@@ -240,13 +254,11 @@ describe("subscriptions", () => {
 
 	it("uses explicit disposal to cancel and clean up", async () => {
 		type P = {
-			requests: Record<never, never>;
-			subscriptions: { hold: WorkerOperation<void, void> };
+			subscriptions: { hold(): void };
 		};
 
 		const cleaned = Promise.withResolvers<boolean>();
 		const connection = open<P>({
-			requests: {},
 			subscriptions: {
 				hold: async (_input, { signal }) => {
 					await Promise.resolve();
@@ -269,13 +281,11 @@ describe("subscriptions", () => {
 
 	it("transfers subscription events", async () => {
 		type P = {
-			requests: Record<never, never>;
-			subscriptions: { chunk: WorkerOperation<void, ArrayBuffer> };
+			subscriptions: { chunk(): ArrayBuffer };
 		};
 
 		const completed = Promise.withResolvers<void>();
 		const connection = open<P>({
-			requests: {},
 			subscriptions: {
 				chunk: (_input, { emit, complete }) => {
 					const bytes = new Uint8Array([7, 9]);
@@ -301,14 +311,12 @@ describe("subscriptions", () => {
 
 	it("fails and cleans up when an event cannot be structured-cloned", async () => {
 		type P = {
-			requests: Record<never, never>;
-			subscriptions: { uncloneable: WorkerOperation<void, unknown> };
+			subscriptions: { uncloneable(): unknown };
 		};
 
 		const cleanup = vi.fn();
 		const failed = Promise.withResolvers<Error>();
 		const connection = open<P>({
-			requests: {},
 			subscriptions: {
 				uncloneable: (_input, { emit }) => {
 					emit(() => undefined);
@@ -327,17 +335,17 @@ describe("subscriptions", () => {
 		}
 	});
 
-	it("rethrows unhandled subscription failures through a microtask", async () => {
+	it("reports unhandled subscription failures", async () => {
 		type P = {
-			requests: Record<never, never>;
-			subscriptions: { fail: WorkerOperation<void, void> };
+			subscriptions: { fail(): void };
 		};
 
 		const failure = new Error("expected failure");
-		const queued = Promise.withResolvers<VoidFunction>();
-		const queue = vi.spyOn(globalThis, "queueMicrotask").mockImplementation(queued.resolve);
+		const reported = Promise.withResolvers<unknown>();
+
+		vi.stubGlobal("reportError", reported.resolve);
+
 		const connection = open<P>({
-			requests: {},
 			subscriptions: {
 				fail: (_input, { error }) => error(failure),
 			},
@@ -346,18 +354,20 @@ describe("subscriptions", () => {
 		try {
 			connection.client.subscribe("fail", noop);
 
-			expect(await queued.promise).toThrow("expected failure");
-		} finally {
-			queue.mockRestore();
+			const error = await reported.promise;
 
+			expect(error).toBeInstanceOf(RemoteError);
+			expect(error).toMatchObject({ name: "Error", message: failure.message });
+		} finally {
+			vi.unstubAllGlobals();
 			connection.close();
 		}
 	});
 
 	it("does not open operations for signals that are already aborted", async () => {
 		type P = {
-			requests: { request: WorkerOperation<void, void> };
-			subscriptions: { subscription: WorkerOperation<void, void> };
+			requests: { request(): void };
+			subscriptions: { subscription(): void };
 		};
 
 		const request = vi.fn();
@@ -394,20 +404,20 @@ describe("subscriptions", () => {
 describe("protocol and lifecycle", () => {
 	it("reports unknown and inherited operation names instead of hanging", async () => {
 		type P = {
-			requests: { missing: WorkerOperation<void, never> };
-			subscriptions: { constructor: WorkerOperation<void, never> };
+			requests: { missing(): never };
+			subscriptions: { constructor(): never };
 		};
 
 		const connection = open<P>({
-			requests: {} as WorkerHandlers<P>["requests"],
-			subscriptions: {} as WorkerHandlers<P>["subscriptions"],
+			requests: {} as Handlers<P>["requests"],
+			subscriptions: {} as Handlers<P>["subscriptions"],
 		});
 		const subscriptionError = Promise.withResolvers<Error>();
 
 		try {
 			connection.client.subscribe("constructor", noop, { onError: subscriptionError.resolve });
 
-			await expect(connection.client.request("missing")).rejects.toBeInstanceOf(WorkerRemoteError);
+			await expect(connection.client.request("missing")).rejects.toBeInstanceOf(RemoteError);
 			await expect(connection.client.request("missing")).rejects.toMatchObject({ name: "UnknownOperationError" });
 
 			expect(await subscriptionError.promise).toMatchObject({ name: "UnknownOperationError" });
@@ -416,10 +426,34 @@ describe("protocol and lifecycle", () => {
 		}
 	});
 
+	it("reports remote unknown operations for omitted handler sections", async () => {
+		type P = {
+			requests: { missingRequest(): never };
+			subscriptions: { missingSubscription(): never };
+		};
+		const { port1, port2 } = new MessageChannel();
+		const client = connect<P>(port1);
+		const server = serve<Record<never, never>>(port2, {});
+		const subscriptionError = Promise.withResolvers<Error>();
+		const request = client.request("missingRequest");
+
+		client.subscribe("missingSubscription", noop, { onError: subscriptionError.resolve });
+
+		try {
+			await expect(request).rejects.toBeInstanceOf(RemoteError);
+			await expect(request).rejects.toMatchObject({ name: "UnknownOperationError" });
+			expect(await subscriptionError.promise).toMatchObject({ name: "UnknownOperationError" });
+		} finally {
+			client.close();
+			server.close();
+			port1.close();
+			port2.close();
+		}
+	});
+
 	it("propagates explicit server closure and settles closed", async () => {
 		type P = {
-			requests: { hold: WorkerOperation<void, never> };
-			subscriptions: Record<never, never>;
+			requests: { hold(): never };
 		};
 
 		const started = Promise.withResolvers<void>();
@@ -431,7 +465,6 @@ describe("protocol and lifecycle", () => {
 						signal.addEventListener("abort", () => reject(signal.reason), { once: true });
 					}),
 			},
-			subscriptions: {},
 		});
 		const request = connection.client.request("hold");
 
@@ -449,16 +482,44 @@ describe("protocol and lifecycle", () => {
 		connection.close();
 	});
 
+	it("rejects pending requests when the client closes", async () => {
+		type P = {
+			requests: { hold(): never };
+		};
+
+		const started = Promise.withResolvers<void>();
+		const connection = open<P>({
+			requests: {
+				hold: (_input, { signal }) =>
+					new Promise<never>((_resolve, reject) => {
+						started.resolve();
+						signal.addEventListener("abort", () => reject(signal.reason), { once: true });
+					}),
+			},
+		});
+		const request = connection.client.request("hold");
+
+		await started.promise;
+
+		connection.client.close("window stopped");
+
+		await expect(request).rejects.toMatchObject({
+			name: "ConnectionClosedError",
+			message: "window stopped",
+		});
+		await expect(connection.server.closed).resolves.toBeUndefined();
+
+		connection.close();
+	});
+
 	it("propagates client closure and cleans up server operations", async () => {
 		type P = {
-			requests: Record<never, never>;
-			subscriptions: { hold: WorkerOperation<void, void> };
+			subscriptions: { hold(): void };
 		};
 
 		const started = Promise.withResolvers<void>();
 		const cleaned = Promise.withResolvers<boolean>();
 		const connection = open<P>({
-			requests: {},
 			subscriptions: {
 				hold: (_input, { signal }) => {
 					started.resolve();
@@ -483,7 +544,7 @@ describe("protocol and lifecycle", () => {
 	it("ignores malformed frames without consuming a pending request", async () => {
 		const { port1, port2 } = new MessageChannel();
 
-		type P = { requests: { manual: WorkerOperation<void, string> }; subscriptions: Record<never, never> };
+		type P = { requests: { manual(): string } };
 
 		const client = connect<P>(port1);
 		const opened = new Promise<unknown[]>((resolve) =>
@@ -496,6 +557,7 @@ describe("protocol and lifecycle", () => {
 		const message = await opened;
 
 		port2.postMessage([message[0], "settle", message[2], "malformed"]);
+		port2.postMessage([message[0], "reject", message[2], { name: "Error", message: "malformed", stack: 42 }]);
 		port2.postMessage([message[0], "resolve", message[2], "valid"]);
 
 		try {

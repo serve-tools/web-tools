@@ -1,4 +1,5 @@
-import { failed, type InteractionResult, isAbortError, settle, unavailable } from "./.result.js";
+import type { InteractionResult } from "./.result.js";
+import { failed, isAbortError, settle, unavailable } from "./.result.js";
 
 /** Opens the native share target chooser with already-prepared data. */
 export const share = (data: ShareData): Promise<InteractionResult<void>> => {

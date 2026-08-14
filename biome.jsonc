@@ -39,6 +39,12 @@
 			},
 			"style": {
 				"noNonNullAssertion": "off",
+				"useImportType": {
+					"level": "error",
+					"options": {
+						"style": "separatedType"
+					}
+				},
 				"useShorthandFunctionType": "off",
 				"useTemplate": "off"
 			},

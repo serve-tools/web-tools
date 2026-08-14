@@ -1,13 +1,14 @@
 # @serve-tools/client-messaging
 
-The `@serve-tools/client-messaging` package helps you manage requests and subscriptions across workers and message ports.
+The `@serve-tools/client-messaging` package helps you manage typed requests and subscriptions across workers and message ports.
 
 ```ts
-import { connect, serve, type WorkerOperation } from "@serve-tools/client-messaging";
+import { connect, serve } from "@serve-tools/client-messaging";
 
 type GreetingProtocol = {
-	requests: { greet: WorkerOperation<string, string> };
-	subscriptions: Record<never, never>;
+	requests: {
+		greet(name: string): string;
+	};
 };
 
 const { port1, port2 } = new MessageChannel();
@@ -16,7 +17,6 @@ using server = serve<GreetingProtocol>(port1, {
 	requests: {
 		greet: (name) => `Hello, ${name}!`,
 	},
-	subscriptions: {},
 });
 
 using client = connect<GreetingProtocol>(port2);
@@ -32,13 +32,31 @@ npm install @serve-tools/client-messaging
 
 ## Usage
 
+Declare each operation as a callable method with either zero parameters or one input parameter.
+The `requests` and `subscriptions` sections are optional, so omit an unused section instead of declaring an empty record:
+
+```ts
+interface CounterProtocol {
+	requests: {
+		current(): number;
+		increment(amount: number): number;
+	};
+	subscriptions: {
+		totals(): number;
+	};
+}
+```
+
+For requests, the client resolves to `Awaited<ReturnType<Operation>>`, so a declaration may return either a value or a promise of that value.
+For subscriptions, each event is the operation's raw `ReturnType<Operation>` without promise unwrapping.
+
 The `scope/window` entrypoint exports `SharedWorker`, which extends the platform class with a `client` property.
+It also exports `connect()` for direct access to the same client surface.
 
 The `scope/worker` entrypoint exports `listen<Protocol>(handlers)` for either a dedicated or shared worker scope.
 In a dedicated worker, the returned listener immediately contains its active server.
 In a shared worker, it tracks each active server as its connection arrives.
 Closing the listener stops accepting shared-worker connections and closes every active server.
-The inline `WorkerProtocol` supplies contextual types to every handler.
 `ProtocolType<typeof connections>` extracts that retained protocol so the worker can export it without a separate declaration module.
 
 ### Message endpoints
@@ -52,10 +70,13 @@ const client = connect<CounterProtocol>(workerOrPort);
 const server = serve<CounterProtocol>(workerScopeOrPort, handlers);
 ```
 
-`ProtocolType` also extracts the protocol retained by a single server, so another endpoint can reference it without repeating the inline declaration:
+`ProtocolType` extracts the retained protocol from a `Client`, `Server`, or `Listener`, including a promise-wrapped branded value:
 
 ```ts
+type ClientProtocol = ProtocolType<typeof client>;
 type ServedProtocol = ProtocolType<typeof server>;
+type ListenedProtocol = ProtocolType<typeof connections>;
+type PendingProtocol = ProtocolType<Promise<typeof client>>;
 
 const client = connect<ServedProtocol>(clientEndpoint);
 ```
@@ -64,11 +85,11 @@ Once connected or served, an endpoint is protocol-owned and must not also carry 
 
 ### Requests
 
-`client.request(name, input, options?)` correlates one named operation with one promised result.
+`client.request(name, input?, options?)` correlates one named operation with one promised result.
 Multiple requests may be in flight at once and may settle in any order.
 A handler may return its result directly or through a promise.
 
-Operations declared with `void` input omit the input argument:
+Zero-input methods omit the input argument, while one-input methods require it:
 
 ```ts
 const current = await client.request("current");
@@ -86,8 +107,13 @@ Results that cannot be structured-cloned, including invalid transfer lists, reje
 
 ### Subscriptions
 
-`client.subscribe(name, input, listener, options?)` delivers ordered values until either peer completes, fails, cancels, or closes the operation.
-A `void` input is omitted in the same way as it is for requests.
+`client.subscribe(name, input?, listener, options?)` delivers ordered values until either peer completes, fails, cancels, or closes the operation.
+A zero-input subscription takes its listener immediately after the name, while a one-input subscription takes its input first:
+
+```ts
+const totals = client.subscribe("totals", renderTotal);
+const changes = client.subscribe("changes", projectID, renderChange);
+```
 
 The listener runs when each message is received.
 Subscriptions intentionally do not invent flow control over `postMessage`; applications producing unbounded or expensive event streams should batch, sample, or acknowledge events in their own protocol.
@@ -141,10 +167,10 @@ The request, subscription, cancellation, transfer, and disposal patterns above a
 
 ## Errors and lifecycle
 
-Thrown handler errors reject requests as `WorkerRemoteError` instances with the remote `name`, `message`, and stack.
+Thrown handler errors reject requests as `RemoteError` instances with the remote `name`, `message`, and stack.
 A subscription reports its terminal failure through `onError`.
 
-`WorkerClient`, `WorkerServer`, and `WorkerSubscription` implement explicit resource management.
+`Client`, `Server`, and `Subscription` implement explicit resource management.
 `client.closed` and `server.closed` resolve after explicit local or remote closure.
 Browsers do not consistently report an abruptly destroyed peer, so these promises intentionally do not claim to be tab-liveness signals.
 Applications that require crash detection should add a heartbeat policy at the application layer.
@@ -169,23 +195,16 @@ The protocol does not retry, persist, or claim delivery after a worker or docume
 
 ## Public API
 
-- The root entrypoint exports `connect`, `serve`, `transfer`, and `WorkerRemoteError`.
-- `@serve-tools/client-messaging/scope/window` exports the `SharedWorker` convenience class.
-- `@serve-tools/client-messaging/scope/worker` exports `listen<Protocol>(handlers)` for dedicated and shared worker scopes.
-- `WorkerOperation` and `WorkerProtocol` define explicit operations, while `WorkerHandlers` implements them.
-- `ProtocolType` extracts the retained protocol from a `WorkerServer` or the result of worker-scope `listen()`.
-- `WorkerClient`, `WorkerServer`, `WorkerListener`, and `WorkerSubscription` describe active resources.
-- `WorkerRequestOptions`, `WorkerSubscribeOptions`, `WorkerRequestContext`, and `WorkerSubscriptionContext` describe cancellation and handler state.
-- `WorkerTransferResult` associates a result with native `Transferable` objects, and `MessageEndpoint` describes a compatible transport.
+- The root entrypoint exports `connect`, `serve`, `transfer`, `RemoteError`, and the generic types `Client`, `Server`, `Listener`, `Handlers`, `Subscription`, `RequestOptions`, `SubscribeOptions`, `RequestContext`, `SubscriptionContext`, `TransferResult`, `MessageEndpoint`, `Protocol`, and `ProtocolType`.
+- The root `connect` namespace exposes `Client`, `MessageEndpoint`, `Protocol`, `ProtocolType`, `RequestOptions`, `SubscribeOptions`, and `Subscription`.
+- The root `serve` namespace exposes `Handlers`, `MessageEndpoint`, `Protocol`, `ProtocolType`, `RequestContext`, `Server`, `SubscriptionContext`, and `TransferResult`.
+- `@serve-tools/client-messaging/scope/window` exports the `SharedWorker` convenience class, `connect`, `transfer`, and all generic types.
+  Its `connect` namespace has the same surface as the root `connect` namespace.
+- `@serve-tools/client-messaging/scope/worker` exports `listen`, `transfer`, and all generic types.
+  Its `listen` namespace exposes `Handlers`, `Listener`, `MessageEndpoint`, `Protocol`, `ProtocolType`, `RequestContext`, `Server`, `SubscriptionContext`, and `TransferResult`.
 
-## Compatibility
-
-The root entrypoint works with event-target-style endpoints in browser windows, dedicated workers, shared workers, and `MessageChannel`s.
-It also works with structurally compatible endpoints in Node.js, although the `./scope/window` and `./scope/worker` entrypoints are browser-specific.
-Values must be supported by the endpoint's structured-clone algorithm, and transferables must be valid for that runtime.
-
-Using `using` for automatic cleanup requires compiler and runtime support for `Symbol.dispose`, or a compatible polyfill.
-The equivalent `close()` and `unsubscribe()` methods are always available.
+The protocol and resource declarations are compile-time only and emit no runtime values.
+The wire frames and the `@serve-tools/client-messaging/2` protocol constant did not change.
 
 ## Trust boundary
 

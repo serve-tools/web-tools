@@ -17,6 +17,7 @@ on:
           - "@serve-tools/client-messaging"
           - "@serve-tools/client-shared-db"
           - "@serve-tools/client-storage"
+          - "@serve-tools/client-websocket"
           - "@serve-tools/lit-signals"
           - "@serve-tools/signal"
           - "@serve-tools/signal-effect"

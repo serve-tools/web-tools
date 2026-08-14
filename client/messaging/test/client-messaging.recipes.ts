@@ -1,20 +1,14 @@
 /// <reference lib="esnext.disposable" />
 
-import {
-	connect,
-	type MessageEndpoint,
-	serve,
-	transfer,
-	type WorkerHandlers,
-	type WorkerOperation,
-} from "../src/client-messaging.js";
+import type { Handlers, MessageEndpoint } from "../src/client-messaging.js";
+import { connect, serve, transfer } from "../src/client-messaging.js";
 
 type FilesProtocol = {
 	requests: {
-		bytes: WorkerOperation<string, ArrayBuffer>;
+		bytes(path: string): ArrayBuffer;
 	};
 	subscriptions: {
-		progress: WorkerOperation<string, number>;
+		progress(path: string): number;
 	};
 };
 
@@ -31,7 +25,7 @@ const handlers = {
 			if (!signal.aborted) emit(1);
 		},
 	},
-} satisfies WorkerHandlers<FilesProtocol>;
+} satisfies Handlers<FilesProtocol>;
 
 /** A compile-tested request, subscription, transfer, and disposal recipe. */
 export async function messagePortRecipe(

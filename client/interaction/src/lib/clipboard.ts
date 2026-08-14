@@ -1,4 +1,5 @@
-import { failed, type InteractionResult, settle, unavailable } from "./.result.js";
+import type { InteractionResult } from "./.result.js";
+import { failed, settle, unavailable } from "./.result.js";
 
 /** Reads all available items from the system clipboard. */
 export const readFromClipboard = (): Promise<InteractionResult<ClipboardItems>> => {

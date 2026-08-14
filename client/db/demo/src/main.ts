@@ -1,15 +1,8 @@
 /// <reference lib="dom" />
 
 import type { DB } from "@serve-tools/client-db";
-import {
-	type Contact,
-	clearDemoData,
-	type DemoSchema,
-	database,
-	ensureExamples,
-	resetDemoData,
-	seedContacts,
-} from "./database.js";
+import type { Contact, DemoSchema } from "./database.js";
+import { clearDemoData, database, ensureExamples, resetDemoData, seedContacts } from "./database.js";
 
 const query = <ElementType extends Element>(selector: string): ElementType => {
 	const element = document.querySelector<ElementType>(selector);

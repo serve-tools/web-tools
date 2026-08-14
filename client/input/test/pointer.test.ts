@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
-
-import { observePointer, type PointerEndState, type PointerState } from "../src/lib/pointer.js";
+import type { PointerEndState, PointerState } from "../src/lib/pointer.js";
+import { observePointer } from "../src/lib/pointer.js";
 
 class PointerElement {
 	readonly #captures = new Set<number>();

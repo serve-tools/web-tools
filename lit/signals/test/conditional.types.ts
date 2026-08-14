@@ -2,14 +2,8 @@ import { Signal } from "@serve-tools/signal";
 import { SignalArray, SignalObject } from "@serve-tools/signal-collections";
 import { html, LitElement } from "lit";
 import { collection, property } from "../src/decorators.js";
-import {
-	type ChooseCase,
-	type ChooseDefaultCase,
-	choose,
-	type WhenFalseCase,
-	type WhenTrueCase,
-	when,
-} from "../src/lit-signals.js";
+import type { ChooseCase, ChooseDefaultCase, WhenFalseCase, WhenTrueCase } from "../src/lit-signals.js";
+import { choose, when } from "../src/lit-signals.js";
 
 const enabled = new Signal.State<boolean>(true);
 const status = new Signal.State<"idle" | "ready">("idle");

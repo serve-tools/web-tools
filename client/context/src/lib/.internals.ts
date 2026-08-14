@@ -1,4 +1,4 @@
-import type { ContextProviderAnnouncement, ContextRequest, UnknownContext } from "./context.js";
+import type { ContextProviderAnnouncement, ContextRequest } from "./context.js";
 
 export const isElement = (value: unknown): value is Element =>
 	typeof value === "object" && value !== null && "nodeType" in value && value.nodeType === 1;
@@ -33,8 +33,6 @@ export const getContextProvider = (event: Event): Element | undefined => {
 	return isElement(provider) ? provider : undefined;
 };
 
-export const isUsableContext = (context: unknown): context is UnknownContext => !Number.isNaN(context);
+export const isInvalidContext = Number.isNaN;
 
-export const reportContextError = (error: unknown): void => {
-	globalThis.reportError(error);
-};
+export const reportContextError = (error: unknown): void => reportError(error);

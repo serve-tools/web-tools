@@ -1,8 +1,8 @@
 /// <reference lib="dom" />
 
 import { expect, test, vi } from "vitest";
-
-import { Storage, type StorageChange } from "../../src/client-storage.js";
+import type { StorageChange } from "../../src/client-storage.js";
+import { Storage } from "../../src/client-storage.js";
 
 interface Schema {
 	"client-storage-test-theme": "light" | "dark";

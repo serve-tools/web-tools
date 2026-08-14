@@ -1,16 +1,12 @@
-import { getContextConsumer, getContextProvider, isUsableContext, reportContextError } from "./.internals.js";
-import {
-	type Context,
-	type ContextCallback,
-	ContextProviderEvent,
-	ContextRequestEvent,
-	type ContextType,
-} from "./context.js";
+import { getContextConsumer, getContextProvider, isInvalidContext, reportContextError } from "./.internals.js";
+import type { Context, ContextCallback, ContextType } from "./context.js";
+import { ContextProviderEvent, ContextRequestEvent } from "./context.js";
 
 interface Subscription<ValueType> {
 	readonly callback: ContextCallback<ValueType>;
 	readonly consumer: Element;
 	readonly unsubscribe: () => void;
+
 	active: boolean;
 }
 
@@ -37,7 +33,7 @@ export class ContextProvider<ProvidedContext extends Context<unknown, unknown>> 
 	#value: ContextType<ProvidedContext>;
 
 	constructor(host: Element, { context, initialValue }: ContextProviderOptions<ProvidedContext>) {
-		if (!isUsableContext(context)) {
+		if (isInvalidContext(context)) {
 			throw new TypeError("A context key cannot be NaN.");
 		}
 

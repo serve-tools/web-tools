@@ -30,6 +30,7 @@
 		"client/shared-db",
 		"client/shared-db/demo",
 		"client/storage",
+		"client/websocket",
 		"client/client",
 		"client/storage/demo",
 		"client-signals/dom",
@@ -51,7 +52,7 @@
 	],
 	"scripts": {
 		"benchmark": "npm run benchmark --workspaces --if-present",
-		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-storage",
+		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket",
 		"build": "npm run build --workspaces --if-present",
 		"build:pages": "node scripts/build-pages.mjs",
 		"check:packages": "npm run check:package --workspaces --if-present",
@@ -156,6 +157,17 @@
 				"entry": [
 					"test/*.{recipes,types}.ts"
 				]
+			},
+			"client/websocket": {
+				"entry": [
+					"benchmark/*.benchmark.ts",
+					"test/*.{recipes,types}.ts"
+				],
+				"ignoreIssues": {
+					"src/lib/.serialization.ts": [
+						"exports"
+					]
+				}
 			},
 			"lit/signals": {
 				"entry": [

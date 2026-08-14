@@ -1,26 +1,10 @@
 declare const protocolBrand: unique symbol;
 declare const transferBrand: unique symbol;
 
-/** Describes one request or subscription operation. */
-export interface WorkerOperation<Input = void, Output = void> {
-	/** The structured-clone input accepted by the operation. */
-	readonly input: Input;
-
-	/** The structured-clone value returned or emitted by the operation. */
-	readonly output: Output;
-}
-
-/** A collection of named request and subscription operations. */
-export type WorkerProtocol = {
-	/** Named operations that settle with one promised result. */
-	readonly requests: {
-		readonly [Name: string]: any;
-	};
-
-	/** Named operations that emit zero or more values before settling. */
-	readonly subscriptions: {
-		readonly [Name: string]: any;
-	};
+/** A compile-time collection of named request and subscription signatures. */
+export type Protocol = {
+	readonly requests?: object;
+	readonly subscriptions?: object;
 };
 
 /** An endpoint compatible with workers and message ports. */
@@ -39,7 +23,7 @@ export interface MessageEndpoint {
 }
 
 /** Options for sending and cancelling a request. */
-export interface WorkerRequestOptions {
+export interface RequestOptions {
 	/** Cancels the operation locally and aborts its server-side context. */
 	readonly signal?: AbortSignal;
 
@@ -48,7 +32,7 @@ export interface WorkerRequestOptions {
 }
 
 /** Options for sending, cancelling, and observing the completion of a subscription. */
-export interface WorkerSubscribeOptions extends WorkerRequestOptions {
+export interface SubscribeOptions extends RequestOptions {
 	/** Called when the server completes the subscription normally. */
 	readonly onComplete?: () => void;
 
@@ -57,15 +41,15 @@ export interface WorkerSubscribeOptions extends WorkerRequestOptions {
 }
 
 /** State supplied to a request handler. */
-export interface WorkerRequestContext {
+export interface RequestContext {
 	/** Aborts when the caller cancels or either side closes the operation. */
 	readonly signal: AbortSignal;
 }
 
 /** Controls event delivery and settlement from a subscription handler. */
-export interface WorkerSubscriptionContext<Value> extends WorkerRequestContext {
+export interface SubscriptionContext<Value> extends RequestContext {
 	/** Emits one structured-clone value, optionally with a transfer list. */
-	emit(value: Value | WorkerTransferResult<Value>): void;
+	emit(value: Value | TransferResult<Value>): void;
 
 	/** Completes the subscription successfully. */
 	complete(): void;
@@ -75,7 +59,7 @@ export interface WorkerSubscriptionContext<Value> extends WorkerRequestContext {
 }
 
 /** A result value paired with objects whose ownership should be transferred. */
-export interface WorkerTransferResult<Value> {
+export interface TransferResult<Value> {
 	/** The structured-clone value to send. */
 	readonly value: Value;
 
@@ -85,7 +69,7 @@ export interface WorkerTransferResult<Value> {
 }
 
 /** A disposable handle for one active subscription. */
-export interface WorkerSubscription extends Disposable {
+export interface Subscription extends Disposable {
 	/** Whether the subscription can still receive values. */
 	readonly active: boolean;
 
@@ -94,29 +78,31 @@ export interface WorkerSubscription extends Disposable {
 }
 
 /** A typed, disposable connection used to request and subscribe to remote operations. */
-export interface WorkerClient<P extends WorkerProtocol> extends Disposable {
+export interface Client<P extends Protocol = Protocol> extends Disposable {
 	/** Sends a named request and resolves with its remote result. */
 	request<Name extends RequestName<P>>(
 		name: Name,
-		...arguments_: RequestArguments<P["requests"][Name]>
-	): Promise<OutputOf<P["requests"][Name]>>;
+		...arguments_: RequestArguments<RequestOperation<P, Name>>
+	): Promise<RequestOutput<RequestOperation<P, Name>>>;
 
 	/** Opens a named subscription and returns its disposable local handle. */
 	subscribe<Name extends SubscriptionName<P>>(
 		name: Name,
-		...arguments_: SubscribeArguments<P["subscriptions"][Name]>
-	): WorkerSubscription;
+		...arguments_: SubscribeArguments<SubscriptionOperation<P, Name>>
+	): Subscription;
 
 	/** Resolves after either peer closes the protocol connection. */
 	readonly closed: Promise<void>;
 
 	/** Closes the protocol connection without closing or terminating its underlying endpoint. */
 	close(reason?: unknown): void;
+
+	readonly [protocolBrand]: P;
 }
 
 /** A disposable server attached to one message endpoint. */
-export interface WorkerServer<P extends WorkerProtocol = WorkerProtocol> extends Disposable {
-	readonly [protocolBrand]?: P;
+export interface Server<P extends Protocol = Protocol> extends Disposable {
+	readonly [protocolBrand]: P;
 
 	/** Resolves after either peer closes the protocol connection. */
 	readonly closed: Promise<void>;
@@ -126,38 +112,61 @@ export interface WorkerServer<P extends WorkerProtocol = WorkerProtocol> extends
 }
 
 /** A disposable collection of the active protocol servers owned by a worker scope. */
-export interface WorkerListener<P extends WorkerProtocol = WorkerProtocol>
-	extends ReadonlyArray<WorkerServer<P>>,
-		Disposable {
+export interface Listener<P extends Protocol = Protocol> extends ReadonlyArray<Server<P>>, Disposable {
+	readonly [protocolBrand]: P;
+
 	/** Stops accepting connections and closes every active server. */
 	close(reason?: unknown): void;
 }
 
-/** Extracts the protocol retained by a server or worker-scope listener result. */
-export type ProtocolType<Value extends WorkerServer | readonly WorkerServer[]> =
-	Value extends WorkerServer<infer Protocol>
-		? Protocol
-		: Value extends readonly WorkerServer<infer Protocol>[]
-			? Protocol
-			: never;
+/** Extracts the inline protocol retained by a client, server, or listener, including promise-wrapped resources. */
+export type ProtocolType<Value> =
+	Awaited<Value> extends { readonly [protocolBrand]: infer P extends Protocol } ? P : never;
+
+export type ProtocolDefinition<P> = {
+	readonly [Section in keyof P]: Section extends "requests" | "subscriptions"
+		? P[Section] extends object
+			? OperationDefinitions<P[Section]>
+			: never
+		: never;
+};
+
+export type OperationDefinitions<Operations> = {
+	readonly [Name in keyof Operations]: Operations[Name] extends (...arguments_: infer Arguments) => infer Output
+		? Arguments extends [] | [unknown]
+			? (...arguments_: Arguments) => Output
+			: never
+		: never;
+};
 
 /** Handler tables implementing every request and subscription in a protocol. */
-export type WorkerHandlers<P extends WorkerProtocol> = {
-	/** Request handlers, keyed by the names declared in the protocol. */
-	readonly requests: {
-		readonly [Name in keyof P["requests"]]: (
-			input: InputOf<P["requests"][Name]>,
-			context: WorkerRequestContext,
-		) => Awaitable<OutputOf<P["requests"][Name]> | WorkerTransferResult<OutputOf<P["requests"][Name]>>>;
-	};
+export type Handlers<P extends Protocol> = {
+	readonly [Section in keyof P]-?: Section extends "requests"
+		? P[Section] extends object
+			? RequestHandlers<P[Section]>
+			: never
+		: Section extends "subscriptions"
+			? P[Section] extends object
+				? SubscriptionHandlers<P[Section]>
+				: never
+			: never;
+};
 
-	/** Subscription handlers, keyed by the names declared in the protocol. */
-	readonly subscriptions: {
-		readonly [Name in keyof P["subscriptions"]]: (
-			input: InputOf<P["subscriptions"][Name]>,
-			context: WorkerSubscriptionContext<OutputOf<P["subscriptions"][Name]>>,
-		) => Awaitable<SubscriptionHandlerResult>;
-	};
+type RequestHandlers<Operations> = {
+	readonly [Name in keyof Operations]: (
+		input: OperationInput<Extract<Operations[Name], Operation>>,
+		context: RequestContext,
+	) => Awaitable<
+		| RequestOutput<Extract<Operations[Name], Operation>>
+		| TransferResult<RequestOutput<Extract<Operations[Name], Operation>>>
+	>;
+};
+
+type SubscriptionHandlers<Operations> = {
+	readonly [Name in keyof Operations]: (
+		input: OperationInput<Extract<Operations[Name], Operation>>,
+		context: SubscriptionContext<SubscriptionEvent<Extract<Operations[Name], Operation>>>,
+	) => Awaitable<SubscriptionHandlerResult>;
 };
 
 export interface MessageEventLike {
@@ -170,17 +179,25 @@ export interface ErrorRecord {
 	readonly stack?: string;
 }
 
-export type InputOf<Value> = Value extends WorkerOperation<infer Input, unknown> ? Input : never;
-export type OutputOf<Value> = Value extends WorkerOperation<unknown, infer Output> ? Output : never;
-export type RequestName<P extends WorkerProtocol> = Extract<keyof P["requests"], string>;
-export type SubscriptionName<P extends WorkerProtocol> = Extract<keyof P["subscriptions"], string>;
+export type Requests<P> = P extends { readonly requests: infer Operations } ? Operations : Record<never, never>;
+export type Subscriptions<P> = P extends { readonly subscriptions: infer Operations }
+	? Operations
+	: Record<never, never>;
+export type RequestName<P> = Extract<keyof Requests<P>, string>;
+export type SubscriptionName<P> = Extract<keyof Subscriptions<P>, string>;
+export type RequestOperation<P, Name extends RequestName<P>> = Extract<Requests<P>[Name], Operation>;
+export type SubscriptionOperation<P, Name extends SubscriptionName<P>> = Extract<Subscriptions<P>[Name], Operation>;
+export type Operation = (...arguments_: any[]) => unknown;
 type NoInput = ReturnType<() => void>;
-export type RequestArguments<Value> = [InputOf<Value>] extends [NoInput]
-	? [input?: undefined, options?: WorkerRequestOptions]
-	: [input: InputOf<Value>, options?: WorkerRequestOptions];
-export type SubscribeArguments<Value> = [InputOf<Value>] extends [NoInput]
-	? [onEvent: (value: OutputOf<Value>) => void, options?: WorkerSubscribeOptions]
-	: [input: InputOf<Value>, onEvent: (value: OutputOf<Value>) => void, options?: WorkerSubscribeOptions];
+export type OperationInput<Value extends Operation> = Parameters<Value> extends [] ? NoInput : Parameters<Value>[0];
+export type RequestOutput<Value extends Operation> = Awaited<ReturnType<Value>>;
+export type SubscriptionEvent<Value extends Operation> = ReturnType<Value>;
+export type RequestArguments<Value extends Operation> = [OperationInput<Value>] extends [NoInput]
+	? [input?: undefined, options?: RequestOptions]
+	: [input: OperationInput<Value>, options?: RequestOptions];
+export type SubscribeArguments<Value extends Operation> = [OperationInput<Value>] extends [NoInput]
+	? [onEvent: (value: SubscriptionEvent<Value>) => void, options?: SubscribeOptions]
+	: [input: OperationInput<Value>, onEvent: (value: SubscriptionEvent<Value>) => void, options?: SubscribeOptions];
 export type Awaitable<Value> = Value | PromiseLike<Value>;
 export type SubscriptionHandlerResult = ReturnType<() => void> | (() => void);
 export type EventListener = (value: unknown) => void;
@@ -210,7 +227,4 @@ export interface ClientOperation {
 	readonly off: () => void;
 }
 
-export type AnyHandler = (
-	input: unknown,
-	context: WorkerRequestContext | WorkerSubscriptionContext<unknown>,
-) => Awaitable<unknown>;
+export type AnyHandler = (input: unknown, context: RequestContext | SubscriptionContext<unknown>) => Awaitable<unknown>;

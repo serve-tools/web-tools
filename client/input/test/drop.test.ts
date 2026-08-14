@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from "vitest";
-
-import { type DropEndState, observeDropTarget } from "../src/lib/drop.js";
+import type { DropEndState } from "../src/lib/drop.js";
+import { observeDropTarget } from "../src/lib/drop.js";
 
 const createDragEvent = (type: string): DragEvent => new Event(type, { cancelable: true }) as DragEvent;
 

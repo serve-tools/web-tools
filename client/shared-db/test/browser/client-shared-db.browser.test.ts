@@ -1,8 +1,8 @@
 /// <reference lib="dom" />
 
 import { expect, test } from "vitest";
-
-import { connect, type SharedDBChange } from "../../src/lib/scope/window.js";
+import type { SharedDBChange } from "../../src/lib/scope/window.js";
+import { connect } from "../../src/lib/scope/window.js";
 import type { TestSchema } from "./shared-db.js";
 
 const open = (name: string) => {

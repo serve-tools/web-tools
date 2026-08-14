@@ -1,4 +1,5 @@
-import { handler, type Watchable } from "./.internals.js";
+import type { Watchable } from "./.internals.js";
+import { handler } from "./.internals.js";
 
 /** Creates a text node with the specified content. */
 export const text =

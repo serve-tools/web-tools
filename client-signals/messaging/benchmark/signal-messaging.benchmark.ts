@@ -1,18 +1,12 @@
-import type {
-	WorkerClient,
-	WorkerOperation,
-	WorkerSubscribeOptions,
-	WorkerSubscription,
-} from "@serve-tools/client-messaging";
+import type { Client, SubscribeOptions, Subscription } from "@serve-tools/client-messaging";
 import { expect, test } from "vitest";
 
 import { benchmark } from "../../../client/benchmark.js";
 import { observe } from "../src/signal-messaging.js";
 
 type BenchmarkProtocol = {
-	requests: Record<never, never>;
 	subscriptions: {
-		values: WorkerOperation<void, number>;
+		values(): number;
 	};
 };
 
@@ -20,11 +14,7 @@ class BenchmarkClient {
 	readonly listeners = new Set<(value: number) => void>();
 
 	readonly source = {
-		subscribe: (
-			_name: string,
-			listener: (value: number) => void,
-			_options?: WorkerSubscribeOptions,
-		): WorkerSubscription => {
+		subscribe: (_name: string, listener: (value: number) => void, _options?: SubscribeOptions): Subscription => {
 			let active = true;
 
 			this.listeners.add(listener);
@@ -44,7 +34,7 @@ class BenchmarkClient {
 				[Symbol.dispose]: unsubscribe,
 			};
 		},
-	} as unknown as WorkerClient<BenchmarkProtocol>;
+	} as unknown as Client<BenchmarkProtocol>;
 
 	emit(value: number): void {
 		for (const listener of this.listeners) listener(value);

@@ -1,4 +1,5 @@
-import { observePointer, type PointerCleanup, type PointerEndReason, type PointerState } from "../src/client-input.js";
+import type { PointerCleanup, PointerEndReason, PointerState } from "../src/client-input.js";
+import { observePointer } from "../src/client-input.js";
 
 const button = document.createElement("button");
 const controller = new AbortController();

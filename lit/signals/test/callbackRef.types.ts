@@ -1,5 +1,6 @@
 import { html } from "lit";
-import { type Ref, ref } from "lit/directives/ref.js";
+import type { Ref } from "lit/directives/ref.js";
+import { ref } from "lit/directives/ref.js";
 
 import { callbackRef } from "../src/lit-signals.js";
 

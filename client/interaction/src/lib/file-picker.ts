@@ -1,4 +1,5 @@
-import { aborted, completed, failed, type InteractionResult, isAbortError, settle } from "./.result.js";
+import type { InteractionResult } from "./.result.js";
+import { aborted, completed, failed, isAbortError, settle } from "./.result.js";
 
 /** Opens a file picker and resolves selected handles to `File` objects. */
 export const openFiles = (options: OpenFilePickerOptions = {}): Promise<InteractionResult<File[]>> => {

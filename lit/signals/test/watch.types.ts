@@ -1,6 +1,7 @@
 import { Signal } from "@serve-tools/signal";
 import { html } from "lit";
-import { type WatchCallback, type WatchSource, watch } from "../src/lit-signals.js";
+import type { WatchCallback, WatchSource } from "../src/lit-signals.js";
+import { watch } from "../src/lit-signals.js";
 
 const count = new Signal.State(1);
 const doubled = new Signal.Computed(() => count.get() * 2);

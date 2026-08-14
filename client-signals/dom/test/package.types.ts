@@ -1,9 +1,9 @@
 import { Signal } from "@serve-tools/signal";
+import type { DOM } from "@serve-tools/signal-dom";
 import {
 	adoptedCSS,
 	attrs,
 	css,
-	type DOM,
 	dispose,
 	elementInternals,
 	group,

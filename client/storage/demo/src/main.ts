@@ -1,6 +1,7 @@
 /// <reference lib="dom" />
 
-import { Storage, type StorageChange } from "@serve-tools/client-storage";
+import type { StorageChange } from "@serve-tools/client-storage";
+import { Storage } from "@serve-tools/client-storage";
 
 interface DemoStorage {
 	note: string;

@@ -1,4 +1,5 @@
-import { Storage, type StorageChange, type StorageKey, type StorageValue } from "../src/client-storage.js";
+import type { StorageChange, StorageKey, StorageValue } from "../src/client-storage.js";
+import { Storage } from "../src/client-storage.js";
 
 interface AppStorage {
 	theme: "light" | "dark";

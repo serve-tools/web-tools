@@ -1,12 +1,12 @@
 /// <reference lib="dom" />
 
+import type { KeyChord } from "@serve-tools/client-keyboard";
 import {
 	getKeyChord,
 	getKeyChordAriaKeyShortcuts,
 	getKeyChordLabel,
 	getKeyChordSymbols,
 	isApplePlatform,
-	type KeyChord,
 	matchKeyChord,
 } from "@serve-tools/client-keyboard";
 

@@ -3,17 +3,17 @@
 import { expect, test } from "vitest";
 
 import { benchmark } from "../../benchmark.js";
-import { connect, serve, transfer, type WorkerOperation } from "../src/client-messaging.js";
+import { connect, serve, transfer } from "../src/client-messaging.js";
 
 interface Protocol {
 	requests: {
-		echo: WorkerOperation<number, number>;
-		echoWithSignal: WorkerOperation<number, number>;
-		transfer: WorkerOperation<ArrayBuffer, ArrayBuffer>;
+		echo(value: number): number;
+		echoWithSignal(value: number): number;
+		transfer(value: ArrayBuffer): ArrayBuffer;
 	};
 	subscriptions: {
-		events: WorkerOperation<void, number>;
-		ready: WorkerOperation<number, number>;
+		events(): number;
+		ready(value: number): number;
 	};
 }
 

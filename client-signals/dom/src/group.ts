@@ -1,5 +1,7 @@
-import { handler, type Watchable } from "./.internals.js";
-import { type Disposer, disown, dispose, own } from "./dispose.js";
+import type { Watchable } from "./.internals.js";
+import { handler } from "./.internals.js";
+import type { Disposer } from "./dispose.js";
+import { disown, dispose, own } from "./dispose.js";
 
 /** Conditionally presents a persistent group of nodes. */
 export const group =

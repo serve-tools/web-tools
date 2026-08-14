@@ -5,3 +5,4 @@ export * as interaction from "./lib/interaction.js";
 export * as keyboard from "./lib/keyboard.js";
 export * as messaging from "./lib/messaging.js";
 export * as storage from "./lib/storage.js";
+export * as websocket from "./lib/websocket.js";

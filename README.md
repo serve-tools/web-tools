@@ -39,6 +39,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-messaging`](./client/messaging/) provides requests and subscriptions across workers and message ports.
 - [`@serve-tools/client-shared-db`](./client/shared-db/) coordinates IndexedDB operations and change subscriptions through a SharedWorker.
 - [`@serve-tools/client-storage`](./client/storage/) provides observable access to local and session storage.
+- [`@serve-tools/client-websocket`](./client/websocket/) provides typed requests and subscriptions over binary structured-data WebSockets.
 - [`@serve-tools/signal-dom`](./client-signals/dom/) provides functional signal-aware DOM, SVG, and MathML templating.
 - [`@serve-tools/signal-event-target`](./client-signals/event-target/) observes EventTarget state and media-query matches as read-only Signals.
 - [`@serve-tools/signal-messaging`](./client-signals/messaging/) observes typed messaging subscriptions as explicit Signal state.

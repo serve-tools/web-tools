@@ -1,11 +1,5 @@
-import {
-	type Context,
-	type ContextCallback,
-	ContextConsumer,
-	ContextProvider,
-	type ContextType,
-	createContext,
-} from "../src/client-context.js";
+import type { Context, ContextCallback, ContextType } from "../src/client-context.js";
+import { ContextConsumer, ContextProvider, createContext } from "../src/client-context.js";
 
 interface Theme {
 	name: string;

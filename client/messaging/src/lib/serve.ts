@@ -7,22 +7,24 @@ import {
 	protocol,
 	report,
 } from "./.internals.js";
+import type * as T from "./.types.js";
 import type {
 	AnyHandler,
+	Handlers,
 	MessageEndpoint,
 	MessageEventLike,
 	OpenMessage,
+	Protocol,
+	ProtocolDefinition,
+	RequestContext,
 	SendResult,
+	Server,
 	Settlement,
+	SubscriptionContext,
 	WireMessage,
-	WorkerHandlers,
-	WorkerProtocol,
-	WorkerRequestContext,
-	WorkerServer,
-	WorkerSubscriptionContext,
 } from "./.types.js";
 
-class ServerOperation implements WorkerRequestContext {
+class ServerOperation implements RequestContext {
 	#controller?: AbortController;
 	#aborted = false;
 	declare cleanup?: () => void;
@@ -53,12 +55,16 @@ class ServerOperation implements WorkerRequestContext {
  * The endpoint becomes protocol-owned until the server closes. Closing the server aborts active handlers but does not
  * close the underlying transport.
  */
-export function serve<const P extends WorkerProtocol>(
+export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 	endpoint: MessageEndpoint,
-	handlers: WorkerHandlers<P>,
-): WorkerServer<P> {
+	handlers: Handlers<P>,
+): Server<P> {
 	const operations = new Map<number, ServerOperation>();
 	const closed = Promise.withResolvers<void>();
+	const tables = handlers as {
+		readonly requests?: Record<string, AnyHandler | undefined>;
+		readonly subscriptions?: Record<string, AnyHandler | undefined>;
+	};
 
 	let isClosed = false;
 
@@ -119,10 +125,8 @@ export function serve<const P extends WorkerProtocol>(
 
 	const open = (message: OpenMessage): void => {
 		const [, kind, id, name, data] = message;
-		const table = kind === "request" ? handlers.requests : handlers.subscriptions;
-		const handler = Object.hasOwn(table, name)
-			? (table as unknown as Record<string, AnyHandler | undefined>)[name]
-			: undefined;
+		const table = kind === "request" ? tables.requests : tables.subscriptions;
+		const handler = table && Object.hasOwn(table, name) ? table[name] : undefined;
 
 		if (typeof handler !== "function" || operations.has(id)) {
 			const result = send([
@@ -145,7 +149,7 @@ export function serve<const P extends WorkerProtocol>(
 
 		operations.set(id, operation);
 
-		const context: WorkerRequestContext | WorkerSubscriptionContext<unknown> =
+		const context: RequestContext | SubscriptionContext<unknown> =
 			kind === "request"
 				? operation
 				: {
@@ -246,5 +250,32 @@ export function serve<const P extends WorkerProtocol>(
 		closed: closed.promise,
 		close,
 		[Symbol.dispose]: close,
-	};
+	} as Server<P>;
+}
+
+/** Types used by {@link serve}. */
+export namespace serve {
+	/** Handler tables implementing every section declared by a protocol. */
+	export type Handlers<P extends T.Protocol> = T.Handlers<P>;
+
+	/** An endpoint compatible with workers and message ports. */
+	export type MessageEndpoint = T.MessageEndpoint;
+
+	/** A compile-time collection of named request and subscription signatures. */
+	export type Protocol = T.Protocol;
+
+	/** Extracts the inline protocol retained by a client, server, or listener. */
+	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** State supplied to a request handler. */
+	export type RequestContext = T.RequestContext;
+
+	/** A disposable server attached to one message endpoint. */
+	export type Server<P extends T.Protocol = T.Protocol> = T.Server<P>;
+
+	/** Controls event delivery and settlement from a subscription handler. */
+	export type SubscriptionContext<Value> = T.SubscriptionContext<Value>;
+
+	/** A result value paired with objects whose ownership should be transferred. */
+	export type TransferResult<Value> = T.TransferResult<Value>;
 }

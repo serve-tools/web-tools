@@ -1,5 +1,5 @@
-import type { ErrorRecord, MessageEndpoint, WireMessage, WorkerSubscription, WorkerTransferResult } from "./.types.js";
-import { WorkerRemoteError } from "./WorkerRemoteError.js";
+import type { ErrorRecord, MessageEndpoint, Subscription, TransferResult, WireMessage } from "./.types.js";
+import { RemoteError } from "./RemoteError.js";
 
 export const protocol = "@serve-tools/client-messaging/2";
 
@@ -7,7 +7,7 @@ export const transferBrand: unique symbol = Symbol("Transferred value");
 
 export function noop(): void {}
 
-export const inactiveSubscription: WorkerSubscription = Object.freeze({
+export const inactiveSubscription: Subscription = Object.freeze({
 	active: false,
 	unsubscribe: noop,
 	[Symbol.dispose]: noop,
@@ -45,7 +45,8 @@ export const isErrorRecord = (value: unknown): value is ErrorRecord =>
 	!!value &&
 	typeof value === "object" &&
 	typeof (value as Partial<ErrorRecord>).name === "string" &&
-	typeof (value as Partial<ErrorRecord>).message === "string";
+	typeof (value as Partial<ErrorRecord>).message === "string" &&
+	((value as Partial<ErrorRecord>).stack === undefined || typeof (value as Partial<ErrorRecord>).stack === "string");
 
 export const post = (endpoint: MessageEndpoint, message: WireMessage, transfer?: readonly Transferable[]): void => {
 	if (transfer?.length) {
@@ -55,7 +56,7 @@ export const post = (endpoint: MessageEndpoint, message: WireMessage, transfer?:
 	}
 };
 
-export const isTransferResult = (value: unknown): value is WorkerTransferResult<unknown> =>
+export const isTransferResult = (value: unknown): value is TransferResult<unknown> =>
 	!!value && typeof value === "object" && (value as Record<PropertyKey, unknown>)[transferBrand] === true;
 
 export const errorRecord = (reason: unknown): ErrorRecord => {
@@ -68,8 +69,8 @@ export const errorRecord = (reason: unknown): ErrorRecord => {
 		: { name: reason.name || "Error", message: reason.message };
 };
 
-export const remoteError = ({ name, message, stack }: ErrorRecord): WorkerRemoteError =>
-	new WorkerRemoteError(name, message, stack);
+export const remoteError = ({ name, message, stack }: ErrorRecord): RemoteError =>
+	new RemoteError(name, message, stack);
 
 export const connectionClosedError = (reason?: unknown): Error => {
 	const message =
@@ -86,9 +87,4 @@ export const callSafely = <Value>(callback: (value: Value) => void, value: Value
 	}
 };
 
-export const report =
-	globalThis.reportError ??
-	((reason: unknown): void =>
-		queueMicrotask(() => {
-			throw reason;
-		}));
+export const report = (error: unknown): void => reportError(error);

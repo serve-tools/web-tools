@@ -1,6 +1,6 @@
 import { Signal } from "@serve-tools/signal";
-
-import { consumeKey, type VersionSignal, versionSignal } from "./.internals.js";
+import type { VersionSignal } from "./.internals.js";
+import { consumeKey, versionSignal } from "./.internals.js";
 
 /** Creates a shallow signal-backed proxy around a plain record. */
 export function signalProxy(target: object): object {

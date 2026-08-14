@@ -1,13 +1,6 @@
 /// <reference lib="esnext.disposable" preserve="true" />
 
-import type {
-	WorkerClient,
-	WorkerOperation,
-	WorkerProtocol,
-	WorkerRequestOptions,
-	WorkerSubscribeOptions,
-	WorkerSubscription,
-} from "@serve-tools/client-messaging";
+import type { Client, Protocol, RequestOptions, SubscribeOptions, Subscription } from "@serve-tools/client-messaging";
 import { Signal } from "@serve-tools/signal";
 
 const pending = { status: "pending" } as const;
@@ -17,26 +10,26 @@ const noop = (): void => {};
 
 type Subscribe<Value> = {
 	call(
-		client: WorkerClient<WorkerProtocol>,
+		client: Client<Protocol>,
 		name: string,
 		onValue: (value: Value) => void,
-		options: WorkerSubscribeOptions,
-	): WorkerSubscription;
+		options: SubscribeOptions,
+	): Subscription;
 	call(
-		client: WorkerClient<WorkerProtocol>,
+		client: Client<Protocol>,
 		name: string,
 		input: unknown,
 		onValue: (value: Value) => void,
-		options: WorkerSubscribeOptions,
-	): WorkerSubscription;
+		options: SubscribeOptions,
+	): Subscription;
 };
 
 class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>> implements Disposable {
 	#off = noop;
-	#subscription: WorkerSubscription | undefined;
+	#subscription: Subscription | undefined;
 
 	constructor(
-		client: WorkerClient<WorkerProtocol>,
+		client: Client<Protocol>,
 		name: string,
 		options: (ObserveOptions & { readonly input?: unknown }) | undefined,
 	) {
@@ -125,12 +118,12 @@ class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>
  * Signal consumers may coalesce intermediate values. Use the underlying client's `subscribe()` when every occurrence
  * must be processed.
  */
-export const observe = <const P extends WorkerProtocol, const Name extends SubscriptionName<P>>(
-	client: WorkerClient<P>,
+export const observe = <const P extends Protocol, const Name extends SubscriptionName<P>>(
+	client: Client<P>,
 	name: Name,
-	...arguments_: ObserveArguments<P["subscriptions"][Name]>
-): Observation<OutputOf<P["subscriptions"][Name]>> => {
-	type Value = OutputOf<P["subscriptions"][Name]>;
+	...arguments_: ObserveArguments<SubscriptionOperation<P, Name>>
+): Observation<ReturnType<SubscriptionOperation<P, Name>>> => {
+	type Value = ReturnType<SubscriptionOperation<P, Name>>;
 
 	const options = arguments_[0] as (ObserveOptions & { readonly input?: unknown }) | undefined;
 
@@ -173,12 +166,19 @@ export type Observation<Value> = InstanceType<typeof Signal.Computed<Observation
 	};
 
 /** Cancellation and transfer options for an observed messaging subscription. */
-export type ObserveOptions = WorkerRequestOptions;
+export type ObserveOptions = RequestOptions;
 
-type InputOf<Value> = Value extends WorkerOperation<infer Input, unknown> ? Input : never;
-type OutputOf<Value> = Value extends WorkerOperation<unknown, infer Output> ? Output : never;
-type SubscriptionName<P extends WorkerProtocol> = Extract<keyof P["subscriptions"], string>;
+type Operation = (...arguments_: any[]) => unknown;
+type Subscriptions<P extends Protocol> = P extends { readonly subscriptions: infer Operations }
+	? Operations
+	: Record<never, never>;
+type SubscriptionName<P extends Protocol> = Extract<keyof Subscriptions<P>, string>;
+type SubscriptionOperation<P extends Protocol, Name extends SubscriptionName<P>> = Extract<
+	Subscriptions<P>[Name],
+	Operation
+>;
 type NoInput = ReturnType<() => void>;
-type ObserveArguments<Value> = [InputOf<Value>] extends [NoInput]
+type OperationInput<Value extends Operation> = Parameters<Value> extends [] ? NoInput : Parameters<Value>[0];
+type ObserveArguments<Value extends Operation> = [OperationInput<Value>] extends [NoInput]
 	? [options?: ObserveOptions]
-	: [options: ObserveOptions & { readonly input: InputOf<Value> }];
+	: [options: ObserveOptions & { readonly input: OperationInput<Value> }];

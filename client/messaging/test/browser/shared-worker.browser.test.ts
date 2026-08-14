@@ -2,7 +2,7 @@
 
 import { expect, test } from "vitest";
 
-import { SharedWorker } from "../../src/lib/scope/window.js";
+import { SharedWorker } from "../../src/scope/window.js";
 import type { SharedCounterProtocol } from "./shared-worker.js";
 
 const open = (name: string) => {

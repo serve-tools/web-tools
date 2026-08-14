@@ -2,7 +2,8 @@ import { Signal } from "@serve-tools/signal";
 import type { DirectiveResult } from "lit/directive.js";
 import { directive } from "lit/directive.js";
 import { repeat as litRepeat } from "lit/directives/repeat.js";
-import { ReactiveDirective, type ReactiveSource, readSource } from "./.internals.js";
+import type { ReactiveSource } from "./.internals.js";
+import { ReactiveDirective, readSource } from "./.internals.js";
 
 /** Returns the stable identity of an item in a repeated reactive collection. */
 export type RepeatKey<Value> = (value: Value, index: number) => unknown;

@@ -1,4 +1,4 @@
-import { DefaultReporter, type UserConsoleLog } from "vitest/node";
+import { DefaultReporter } from "vitest/node";
 
 /** Prints benchmark records while retaining Vitest's default run summary. */
 export default class BenchmarkReporter extends DefaultReporter {
@@ -7,3 +7,5 @@ export default class BenchmarkReporter extends DefaultReporter {
 		else super.onUserConsoleLog(log);
 	}
 }
+
+type UserConsoleLog = Parameters<DefaultReporter["onUserConsoleLog"]>[0];

@@ -1,7 +1,7 @@
 import { Signal } from "@serve-tools/signal";
 import { LitElement } from "lit";
-
-import { property, type StyleDeclarations, type StyleSource, type StyleValue, style } from "../src/decorators.js";
+import type { StyleDeclarations, StyleSource, StyleValue } from "../src/decorators.js";
+import { property, style } from "../src/decorators.js";
 import { SignalElement } from "../src/lit-signals.js";
 
 declare const cssStyleValue: CSSStyleValue;

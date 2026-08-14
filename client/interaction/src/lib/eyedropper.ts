@@ -1,4 +1,5 @@
-import { failed, type InteractionResult, isAbortError, settle, unavailable } from "./.result.js";
+import type { InteractionResult } from "./.result.js";
+import { failed, isAbortError, settle, unavailable } from "./.result.js";
 
 /** Opens the browser eyedropper and reports selection, abortion, or failure explicitly. */
 export const openEyeDropper = (options?: EyeDropperOptions): Promise<InteractionResult<string>> => {

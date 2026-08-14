@@ -33,6 +33,7 @@ npm install @serve-tools/client
 | `keyboard`    | `@serve-tools/client/keyboard`    | `@serve-tools/client-keyboard`    |
 | `messaging`   | `@serve-tools/client/messaging`   | `@serve-tools/client-messaging`   |
 | `storage`     | `@serve-tools/client/storage`     | `@serve-tools/client-storage`     |
+| `websocket`   | `@serve-tools/client/websocket`   | `@serve-tools/client-websocket`   |
 
 The root entrypoint exports namespaces rather than flattening their members, so similarly named operations retain their owning capability.
 Use a focused subpath when only one capability is needed.
@@ -73,6 +74,32 @@ import { listen } from "@serve-tools/client/messaging/scope/worker";
 The window scope adds a typed `SharedWorker` convenience class and `connect` helper.
 The worker scope adds `listen` for dedicated and shared worker globals.
 Both scopes also re-export the messaging protocol types and transfer helper.
+Messaging uses the generic `Protocol`, `Client`, `Server`, `Listener`, `Handlers`, and `ProtocolType` names, together with the generic option, context, subscription, endpoint, and transfer types.
+The same types are available through the `messaging` aggregate namespace and focused re-exports, with operation-specific aliases under the `connect`, `serve`, and `listen` namespaces.
+
+Messaging and WebSocket protocols share one callable declaration shape.
+Declare each named request or subscription as a TypeScript method accepting zero parameters or one input value; a request return type is its response, while a subscription return type is each delivered event.
+Either `requests` or `subscriptions` may be omitted.
+These declarations and their resource brands exist only at compile time, and this harmonization did not change either transport's wire protocol.
+
+`messaging.ProtocolType` extracts a retained inline protocol from branded messaging clients, servers, and listeners, including promise-wrapped resources.
+The corresponding `connect.ProtocolType`, `serve.ProtocolType`, and `listen.ProtocolType` aliases are available where those operations are re-exported.
+
+Typed WebSocket requests and subscriptions are available through the `websocket` namespace or focused subpath:
+
+```ts
+import { websocket } from "@serve-tools/client";
+
+const pendingClient = websocket.connect<{
+	requests: { status(): Status };
+}>(url);
+
+export type PendingStatusProtocol = websocket.ProtocolType<typeof pendingClient>;
+export type StatusProtocol = websocket.connect.ProtocolType<Awaited<typeof pendingClient>>;
+```
+
+WebSocket `ProtocolType` accepts both pending and resolved clients through either the top-level type or `connect.ProtocolType` alias.
+The focused `@serve-tools/client/websocket` re-export exposes the same contract.
 
 ## Compatibility
 

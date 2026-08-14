@@ -1,12 +1,5 @@
-import {
-	type InteractionResult,
-	openEyeDropper,
-	openFiles,
-	readFromClipboard,
-	type ShareData,
-	share,
-	writeToClipboard,
-} from "../src/client-interaction.js";
+import type { InteractionResult, ShareData } from "../src/client-interaction.js";
+import { openEyeDropper, openFiles, readFromClipboard, share, writeToClipboard } from "../src/client-interaction.js";
 
 const shareData: ShareData = { url: "https://example.com" };
 const clipboardResult: Promise<InteractionResult<void>> = writeToClipboard({

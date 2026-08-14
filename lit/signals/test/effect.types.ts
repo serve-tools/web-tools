@@ -1,6 +1,7 @@
 import { LitElement } from "lit";
 import { effect } from "../src/decorators.js";
-import { type EffectCleanup, SignalWatcher, type SignalWatcherApi } from "../src/lit-signals.js";
+import type { EffectCleanup, SignalWatcherApi } from "../src/lit-signals.js";
+import { SignalWatcher } from "../src/lit-signals.js";
 
 class EffectElement extends SignalWatcher(LitElement) {
 	@effect()

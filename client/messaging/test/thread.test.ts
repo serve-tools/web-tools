@@ -1,12 +1,12 @@
 /// <reference lib="esnext.disposable" />
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { connect, type WorkerOperation } from "../src/client-messaging.js";
-import { listen, type ProtocolType } from "../src/lib/scope/worker.js";
+import { connect } from "../src/client-messaging.js";
+import type { ProtocolType } from "../src/scope/worker.js";
+import { listen } from "../src/scope/worker.js";
 
 type TestProtocol = {
-	requests: { echo: WorkerOperation<string, string> };
-	subscriptions: Record<never, never>;
+	requests: { echo(value: string): string };
 };
 
 describe("worker scope", () => {
@@ -26,7 +26,6 @@ describe("worker scope", () => {
 
 		const servers = listen<TestProtocol>({
 			requests: { echo: (value) => value },
-			subscriptions: {},
 		});
 		const { port1, port2 } = new MessageChannel();
 		const client = connect<ProtocolType<typeof servers>>(port1);
@@ -59,7 +58,6 @@ describe("worker scope", () => {
 
 		const servers = listen<TestProtocol>({
 			requests: { echo: (value) => value },
-			subscriptions: {},
 		});
 		const client = connect<ProtocolType<typeof servers>>(port1);
 

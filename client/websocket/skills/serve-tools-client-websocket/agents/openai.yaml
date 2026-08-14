@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client WebSocket"
+  short_description: "Build typed binary WebSocket clients"
+  default_prompt: "Use $serve-tools-client-websocket to build this typed WebSocket client correctly."

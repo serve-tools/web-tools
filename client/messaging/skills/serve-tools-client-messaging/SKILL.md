@@ -1,22 +1,65 @@
 ---
 name: serve-tools-client-messaging
-description: Use @serve-tools/client-messaging when designing, implementing, reviewing, or debugging typed request and subscription protocols across Worker, SharedWorker, MessagePort, or MessageChannel endpoints. Covers handlers, cancellation, transfer lists, lifecycle, and trust boundaries; do not use for arbitrary postMessage traffic or general streams.
+description: Use @serve-tools/client-messaging when building or reviewing typed request and subscription protocols across Worker, SharedWorker, MessagePort, or MessageChannel endpoints. Covers declarations, handlers, namespaces, cancellation, transfer lists, lifecycle, and trust boundaries; do not use for arbitrary postMessage traffic or general streams.
 ---
 
 # Use @serve-tools/client-messaging
 
 ## Model the protocol
 
-1. Define a `WorkerProtocol` with `requests` for one promised result and `subscriptions` for ordered values over time.
-2. Use `WorkerOperation<Input, Output>` for each named operation and implement the protocol with `WorkerHandlers`.
-3. Use `connect()` and `serve()` for direct endpoints, or `listen()` from the worker-scope entrypoint when the current dedicated or shared worker owns the server lifecycle.
+1. Declare named operations as callable methods with zero parameters or one structured input parameter.
+2. Use the optional `requests` section for one promised result and the optional `subscriptions` section for ordered values over time.
+3. Omit an unused section instead of declaring an empty record.
+4. Treat a request response as `Awaited<ReturnType<Operation>>` and each subscription event as the raw `ReturnType<Operation>`.
 
-When the worker owns the protocol definition, declare the protocol inline through `listen<Protocol>()`, export `ProtocolType<typeof connections>`, and import that exported protocol with `import type` on the window side.
-Use `ProtocolType<typeof server>` to retain the same reference pattern for a single server returned by `serve<Protocol>()`.
-Close or dispose the listener to stop accepting shared-worker connections and close every active server.
-
-Do not recreate the removed distributed-object or general-stream abstraction.
 Model finite work as requests and repeated occurrences as subscriptions.
+
+```ts
+interface Protocol {
+	requests: {
+		status(): Status;
+		save(input: SaveInput): Revision | Promise<Revision>;
+	};
+	subscriptions: {
+		changes(projectID: string): Change;
+	};
+}
+```
+
+Call a zero-input request as `client.request("status")` and pass `undefined` before options when needed.
+Call a zero-input subscription as `client.subscribe("updates", onUpdate, options)` without an input placeholder.
+For a one-input operation, pass the input immediately after its name.
+
+## Choose the entrypoint surface
+
+- Use root `connect()` and `serve()` for direct control of a worker or message port.
+- Use `connect()` or the typed `SharedWorker` convenience class from `scope/window` in a window.
+- Use `listen()` from `scope/worker` when a dedicated or shared worker owns the server lifecycle.
+  Close or dispose the returned `Listener` to stop accepting shared-worker connections and close every active `Server`.
+
+The root `connect` namespace and the window-scope `connect` namespace expose `Client`, `MessageEndpoint`, `Protocol`, `ProtocolType`, `RequestOptions`, `SubscribeOptions`, and `Subscription`.
+The root `serve` namespace exposes `Handlers`, `MessageEndpoint`, `Protocol`, `ProtocolType`, `RequestContext`, `Server`, `SubscriptionContext`, and `TransferResult`.
+The worker-scope `listen` namespace exposes `Handlers`, `Listener`, `MessageEndpoint`, `Protocol`, `ProtocolType`, `RequestContext`, `Server`, `SubscriptionContext`, and `TransferResult`.
+The generic types are also directly exported as `Client`, `Server`, `Listener`, `Handlers`, `Subscription`, `RequestOptions`, `SubscribeOptions`, `RequestContext`, `SubscriptionContext`, and `TransferResult`.
+
+## Retain inferred protocols
+
+Use `ProtocolType<Value>` to extract the protocol branded onto a `Client`, `Server`, or `Listener`.
+It also extracts through promise-wrapped branded values.
+When the worker owns an inline declaration, export `ProtocolType<typeof listener>` and import that exported type on the window side.
+
+```ts
+type ClientProtocol = ProtocolType<typeof client>;
+type ServerProtocol = ProtocolType<typeof server>;
+type ListenerProtocol = ProtocolType<typeof listener>;
+type PendingProtocol = ProtocolType<Promise<typeof client>>;
+```
+
+## Implement handlers
+
+Implement the declared sections with `Handlers<Protocol>` or let `serve()` or `listen()` contextually type the handler object.
+A request handler may return its declared result directly or through a promise and receives a `RequestContext` with its operation `signal`.
+A subscription handler receives a `SubscriptionContext<Event>` for `emit()`, `complete()`, `error()`, and cancellation, and may return a cleanup callback.
 
 ## Preserve transport semantics
 
@@ -29,7 +72,10 @@ Model finite work as requests and repeated occurrences as subscriptions.
 - Add application-level batching, sampling, acknowledgement, or backpressure for unbounded producers.
   Subscriptions intentionally add no flow control to `postMessage`.
 - Validate data received from an untrusted execution context.
-  Type declarations are not runtime validation.
+  Protocol declarations are compile-time only and are not runtime validation.
+
+The declaration names emit no runtime values.
+The wire frames and the `@serve-tools/client-messaging/2` protocol constant did not change.
 
 ## Close every owned resource
 
@@ -43,18 +89,4 @@ Model finite work as requests and repeated occurrences as subscriptions.
 
 Expect unknown operations, handler failures, and serialization failures to reject requests.
 Handle subscription termination with `onError` and `onComplete`.
-Preserve `WorkerRemoteError` as the representation of a thrown remote error.
-
-## Migrate from the Channel experiment
-
-- Replace `new Channel(port)` with `connect<Protocol>(port)` on the caller and `serve(port, handlers)` on the worker.
-- Replace `remote()` and `expose()` with named requests.
-- Replace repeated callback capabilities or raw message iteration with named subscriptions.
-- Pass cancellation through operation options instead of placing `AbortSignal` in argument graphs.
-- Use `transfer(value, transferList)` for worker-to-client transfers.
-- Remove `ChannelTarget`, `Target`, `Remote`, `Moved`, `readable`, and `writable` concepts.
-  This package does not implement distributed objects or a general stream transport.
-
-## Validate changes
-
-Update protocol declarations, runtime behavior, README examples, Node tests, browser SharedWorker tests, and type fixtures together.
+Preserve `RemoteError` as the representation of a thrown remote error.

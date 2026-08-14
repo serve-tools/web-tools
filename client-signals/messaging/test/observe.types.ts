@@ -1,20 +1,21 @@
 /// <reference lib="esnext.disposable" />
 
-import type { WorkerClient, WorkerOperation } from "@serve-tools/client-messaging";
-import { type Observation, type ObservationState, observe } from "../src/signal-messaging.js";
+import type { Client } from "@serve-tools/client-messaging";
+import type { Observation, ObservationState } from "../src/signal-messaging.js";
+import { observe } from "../src/signal-messaging.js";
 
 type Protocol = {
 	requests: {
-		refresh: WorkerOperation<void, string>;
+		refresh(): string;
 	};
 	subscriptions: {
-		status: WorkerOperation<void, string>;
-		progress: WorkerOperation<{ readonly job: string }, number>;
-		optional: WorkerOperation<string | undefined, number>;
+		status(): string;
+		progress(input: { readonly job: string }): number;
+		optional(input: string | undefined): number;
 	};
 };
 
-declare const client: WorkerClient<Protocol>;
+declare const client: Client<Protocol>;
 
 const status: Observation<string> = observe(client, "status");
 const configuredStatus: Observation<string> = observe(client, "status", { signal: new AbortController().signal });

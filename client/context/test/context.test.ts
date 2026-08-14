@@ -12,6 +12,15 @@ const appendFixture = (...elements: Element[]): (() => void) => {
 };
 
 describe("context protocol", () => {
+	it("rejects NaN context keys", () => {
+		const context = createContext<number>(Number.NaN);
+		const host = document.createElement("div");
+
+		expect(() => new ContextProvider(host, { context, initialValue: 1 })).toThrow(
+			new TypeError("A context key cannot be NaN."),
+		);
+	});
+
 	it("delivers a one-time value synchronously without retaining the callback", () => {
 		const context = createContext<number>(Symbol("one-time"));
 		const providerHost = document.createElement("section");

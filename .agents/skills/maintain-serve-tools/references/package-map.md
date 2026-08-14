@@ -13,6 +13,7 @@ Load only the Skill for the affected public package.
 | `client/messaging`                | `client/messaging/skills/serve-tools-client-messaging/SKILL.md`                              |
 | `client/shared-db`                | `client/shared-db/skills/serve-tools-client-shared-db/SKILL.md`                              |
 | `client/storage`                  | `client/storage/skills/serve-tools-client-storage/SKILL.md`                                  |
+| `client/websocket`                | `client/websocket/skills/serve-tools-client-websocket/SKILL.md`                              |
 | `client-signals/dom`              | `client-signals/dom/skills/serve-tools-signal-dom/SKILL.md`                                  |
 | `client-signals/event-target`     | `client-signals/event-target/skills/serve-tools-signal-event-target/SKILL.md`                |
 | `client-signals/messaging`        | `client-signals/messaging/skills/serve-tools-signal-messaging/SKILL.md`                      |

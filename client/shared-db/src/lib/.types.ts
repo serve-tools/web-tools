@@ -12,7 +12,6 @@ import type {
 	StoreName,
 	StoreValue,
 } from "@serve-tools/client-db";
-import type { WorkerOperation } from "@serve-tools/client-messaging";
 
 declare const schemaBrand: unique symbol;
 
@@ -205,53 +204,44 @@ export type SharedDBEvent<Schema extends SchemaDefinition<Schema>> =
 
 export type SharedDBProtocol<Schema extends SchemaDefinition<Schema>> = {
 	requests: {
-		get: WorkerOperation<
-			{ readonly storeName: StoreName<Schema>; readonly query: EncodedQuery },
-			AnyValue<Schema> | undefined
-		>;
-		getAll: WorkerOperation<
-			{ readonly storeName: StoreName<Schema>; readonly options: RemoteQueryOptions | undefined },
-			AnyValue<Schema>[]
-		>;
-		getAllKeys: WorkerOperation<
-			{ readonly storeName: StoreName<Schema>; readonly options: RemoteQueryOptions | undefined },
-			AnyKey<Schema>[]
-		>;
-		has: WorkerOperation<{ readonly storeName: StoreName<Schema>; readonly query: EncodedQuery }, boolean>;
-		count: WorkerOperation<
-			{ readonly storeName: StoreName<Schema>; readonly options: RemoteQueryOptions | undefined },
-			number
-		>;
-		add: WorkerOperation<
-			{
-				readonly storeName: StoreName<Schema>;
-				readonly value: AnyValue<Schema>;
-				readonly options: RemoteWriteOptions | undefined;
-			},
-			AnyKey<Schema>
-		>;
-		put: WorkerOperation<
-			{
-				readonly storeName: StoreName<Schema>;
-				readonly value: AnyValue<Schema>;
-				readonly options: RemoteWriteOptions | undefined;
-			},
-			AnyKey<Schema>
-		>;
-		delete: WorkerOperation<
-			{
-				readonly storeName: StoreName<Schema>;
-				readonly query: EncodedQuery;
-				readonly options: RemoteMutationOptions | undefined;
-			},
-			void
-		>;
-		clear: WorkerOperation<
-			{ readonly storeName: StoreName<Schema>; readonly options: RemoteMutationOptions | undefined },
-			void
-		>;
+		get(input: {
+			readonly storeName: StoreName<Schema>;
+			readonly query: EncodedQuery;
+		}): AnyValue<Schema> | undefined;
+		getAll(input: {
+			readonly storeName: StoreName<Schema>;
+			readonly options: RemoteQueryOptions | undefined;
+		}): AnyValue<Schema>[];
+		getAllKeys(input: {
+			readonly storeName: StoreName<Schema>;
+			readonly options: RemoteQueryOptions | undefined;
+		}): AnyKey<Schema>[];
+		has(input: { readonly storeName: StoreName<Schema>; readonly query: EncodedQuery }): boolean;
+		count(input: {
+			readonly storeName: StoreName<Schema>;
+			readonly options: RemoteQueryOptions | undefined;
+		}): number;
+		add(input: {
+			readonly storeName: StoreName<Schema>;
+			readonly value: AnyValue<Schema>;
+			readonly options: RemoteWriteOptions | undefined;
+		}): AnyKey<Schema>;
+		put(input: {
+			readonly storeName: StoreName<Schema>;
+			readonly value: AnyValue<Schema>;
+			readonly options: RemoteWriteOptions | undefined;
+		}): AnyKey<Schema>;
+		delete(input: {
+			readonly storeName: StoreName<Schema>;
+			readonly query: EncodedQuery;
+			readonly options: RemoteMutationOptions | undefined;
+		}): void;
+		clear(input: {
+			readonly storeName: StoreName<Schema>;
+			readonly options: RemoteMutationOptions | undefined;
+		}): void;
 	};
 	subscriptions: {
-		changes: WorkerOperation<{ readonly storeNames: readonly StoreName<Schema>[] }, SharedDBEvent<Schema>>;
+		changes(input: { readonly storeNames: readonly StoreName<Schema>[] }): SharedDBEvent<Schema>;
 	};
 };

@@ -1,6 +1,6 @@
 import { Signal } from "@serve-tools/signal";
-
-import { arrayIndexOf, type VersionSignal, versionSignal } from "./.internals.js";
+import type { VersionSignal } from "./.internals.js";
+import { arrayIndexOf, versionSignal } from "./.internals.js";
 
 /** An Array with lazy signal-backed index and collection reads. */
 export const SignalArray = function SignalArray<Value = unknown>(values: readonly Value[] = []): SignalArray<Value> {

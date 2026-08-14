@@ -3,13 +3,19 @@
 The `@serve-tools/signal-messaging` package observes typed `@serve-tools/client-messaging` subscriptions as explicit, read-only Signal state.
 
 ```ts
-import { SharedWorker } from "@serve-tools/client-messaging/scope/window";
+import { SharedWorker, type Client } from "@serve-tools/client-messaging/scope/window";
 import { Signal } from "@serve-tools/signal";
 import { observe } from "@serve-tools/signal-messaging";
-import type { CounterProtocol } from "./counter-worker.js";
+
+type CounterProtocol = {
+	subscriptions: {
+		totals(): number;
+	};
+};
 
 const worker = new SharedWorker<CounterProtocol>(new URL("./counter-worker.js", import.meta.url), { type: "module" });
-const totals = observe(worker.client, "totals");
+const client: Client<CounterProtocol> = worker.client;
+const totals = observe(client, "totals");
 const totalText = new Signal.Computed(() => {
 	const state = totals.get();
 
@@ -31,7 +37,7 @@ addEventListener(
 	"pagehide",
 	() => {
 		totals.dispose();
-		worker.client.close();
+		client.close();
 		worker.port.close();
 	},
 	{ once: true },
@@ -69,6 +75,14 @@ Use the messaging client's `subscribe()` directly when every occurrence must be 
 
 ## Typed inputs and options
 
+Declare subscriptions as callable signatures whose first parameter, when present, is their input and whose return type is each emitted value.
+A subscription-only protocol may omit `requests` entirely, as `CounterProtocol` does above.
+Use the generic messaging `Client<Protocol>` name for connected clients, including clients exposed by worker helpers.
+
+`observe()` derives an input-bearing subscription's `input` from `Parameters<Signature>[0]`.
+It derives the observation value from the signature's raw `ReturnType<Signature>` without Promise unwrapping.
+Zero-parameter signatures have no input.
+
 Subscriptions with input accept one options object containing a required `input` property:
 
 ```ts
@@ -85,6 +99,8 @@ const totals = observe(client, "totals", { signal: controller.signal });
 ```
 
 Using one options shape preserves runtime distinction between an input value and options, including when the declared input includes `undefined`.
+Protocol declarations and their inferred observation types exist only at compile time.
+They do not change messaging wire behavior.
 
 ## Lifecycle
 

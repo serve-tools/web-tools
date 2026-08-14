@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 
-import { listen, type ProtocolType, transfer, type WorkerOperation } from "../../src/lib/scope/worker.js";
+import type { ProtocolType } from "../../src/scope/worker.js";
+import { listen, transfer } from "../../src/scope/worker.js";
 
 let total = 0;
 let cancellationCount = 0;
@@ -9,16 +10,16 @@ const subscribers = new Set<(value: number) => void>();
 
 const connections = listen<{
 	requests: {
-		echo: WorkerOperation<string, string>;
-		increment: WorkerOperation<number, number>;
-		subscriberCount: WorkerOperation<void, number>;
-		cancellationCount: WorkerOperation<void, number>;
-		transfer: WorkerOperation<ArrayBuffer, ArrayBuffer>;
-		fail: WorkerOperation<void, never>;
-		hold: WorkerOperation<void, never>;
+		echo(value: string): string;
+		increment(amount: number): number;
+		subscriberCount(): number;
+		cancellationCount(): number;
+		transfer(buffer: ArrayBuffer): ArrayBuffer;
+		fail(): never;
+		hold(): never;
 	};
 	subscriptions: {
-		totals: WorkerOperation<void, number>;
+		totals(): number;
 	};
 }>({
 	requests: {

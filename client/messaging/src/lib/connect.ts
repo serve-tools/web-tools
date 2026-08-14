@@ -10,17 +10,19 @@ import {
 	remoteError,
 	report,
 } from "./.internals.js";
+import type * as T from "./.types.js";
 import type {
+	Client,
 	ClientOperation,
 	EventListener,
 	MessageEndpoint,
 	MessageEventLike,
 	OperationKind,
-	WorkerClient,
-	WorkerProtocol,
-	WorkerRequestOptions,
-	WorkerSubscribeOptions,
-	WorkerSubscription,
+	Protocol,
+	ProtocolDefinition,
+	RequestOptions,
+	SubscribeOptions,
+	Subscription,
 } from "./.types.js";
 
 /**
@@ -29,7 +31,7 @@ import type {
  * The endpoint becomes protocol-owned until the client closes. Closing the client does not close or terminate the
  * underlying transport.
  */
-export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): WorkerClient<P> {
+export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoint: MessageEndpoint): Client<P> {
 	const operations = new Map<number, ClientOperation>();
 	const closed = Promise.withResolvers<void>();
 
@@ -92,7 +94,7 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 		kind: OperationKind,
 		name: string,
 		input: unknown,
-		options: WorkerRequestOptions,
+		options: RequestOptions,
 		next: (value: unknown) => void,
 		settle: (ok: boolean, value: unknown) => void,
 		onAbort: (reason: unknown) => void,
@@ -163,7 +165,7 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 	endpoint.start?.();
 
 	return {
-		request(name: string, input?: unknown, options: WorkerRequestOptions = {}): Promise<unknown> {
+		request(name: string, input?: unknown, options: RequestOptions = {}): Promise<unknown> {
 			if (isClosed) {
 				return Promise.reject(connectionClosedError());
 			}
@@ -188,9 +190,9 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 		subscribe(
 			name: string,
 			inputOrListener: unknown,
-			listenerOrOptions: EventListener | WorkerSubscribeOptions,
-			maybeOptions: WorkerSubscribeOptions = null as unknown as WorkerSubscribeOptions,
-		): WorkerSubscription {
+			listenerOrOptions?: EventListener | SubscribeOptions,
+			maybeOptions?: SubscribeOptions,
+		): Subscription {
 			if (isClosed) {
 				throw connectionClosedError();
 			}
@@ -198,7 +200,7 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 			const noInput = typeof inputOrListener === "function";
 			const input = noInput ? undefined : inputOrListener;
 			const listener = (noInput ? inputOrListener : listenerOrOptions) as EventListener;
-			const options = (noInput ? listenerOrOptions : maybeOptions) as WorkerSubscribeOptions | undefined;
+			const options = (noInput ? listenerOrOptions : maybeOptions) as SubscribeOptions | undefined;
 
 			let active = !options?.signal?.aborted;
 
@@ -245,5 +247,29 @@ export function connect<P extends WorkerProtocol>(endpoint: MessageEndpoint): Wo
 		closed: closed.promise,
 		close,
 		[Symbol.dispose]: close,
-	} as WorkerClient<P>;
+	} as Client<P>;
+}
+
+/** Types used by {@link connect}. */
+export namespace connect {
+	/** A typed, disposable connection used to request and subscribe to remote operations. */
+	export type Client<P extends T.Protocol = T.Protocol> = T.Client<P>;
+
+	/** An endpoint compatible with workers and message ports. */
+	export type MessageEndpoint = T.MessageEndpoint;
+
+	/** A compile-time collection of named request and subscription signatures. */
+	export type Protocol = T.Protocol;
+
+	/** Extracts the inline protocol retained by a client, server, or listener. */
+	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** Options for sending and cancelling a request. */
+	export type RequestOptions = T.RequestOptions;
+
+	/** Options for sending, cancelling, and observing the completion of a subscription. */
+	export type SubscribeOptions = T.SubscribeOptions;
+
+	/** A disposable handle for one active subscription. */
+	export type Subscription = T.Subscription;
 }

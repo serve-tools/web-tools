@@ -1,4 +1,5 @@
-import { DB, type DBOpenOptions } from "@serve-tools/client-db";
+import type { DBOpenOptions } from "@serve-tools/client-db";
+import { DB } from "@serve-tools/client-db";
 import { listen as listenForMessages } from "@serve-tools/client-messaging/scope/worker";
 import { decodeQuery, isEncodedKeyRange } from "./.internals.js";
 import type { SchemaDefinition, SharedDBChange, SharedDBEvent, SharedDBProtocol, SharedDBServer } from "./.types.js";
@@ -40,8 +41,13 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 
 	const connections = listenForMessages<SharedDBProtocol<Schema>>({
 		requests: {
-			get: async ({ storeName, query }, { signal }) =>
-				(await database).get(storeName, decodeQuery(query) as never, { signal }),
+			get: async (
+				{ storeName, query },
+				{ signal },
+			): Promise<Awaited<ReturnType<SharedDBProtocol<Schema>["requests"]["get"]>>> =>
+				(await (await database).get(storeName, decodeQuery(query) as never, { signal })) as Awaited<
+					ReturnType<SharedDBProtocol<Schema>["requests"]["get"]>
+				>,
 
 			getAll: async ({ storeName, options: operationOptions }, { signal }) =>
 				(await database).getAll(storeName, {
@@ -67,7 +73,10 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 					signal,
 				}),
 
-			add: async ({ storeName, value, options: operationOptions }, { signal }) => {
+			add: async (
+				{ storeName, value, options: operationOptions },
+				{ signal },
+			): Promise<Awaited<ReturnType<SharedDBProtocol<Schema>["requests"]["add"]>>> => {
 				const key = await (await database).add(
 					storeName,
 					value as never,
@@ -85,10 +94,13 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 					revision: ++currentRevision,
 				} as SharedDBChange<Schema>);
 
-				return key;
+				return key as Awaited<ReturnType<SharedDBProtocol<Schema>["requests"]["add"]>>;
 			},
 
-			put: async ({ storeName, value, options: operationOptions }, { signal }) => {
+			put: async (
+				{ storeName, value, options: operationOptions },
+				{ signal },
+			): Promise<Awaited<ReturnType<SharedDBProtocol<Schema>["requests"]["put"]>>> => {
 				const key = await (await database).put(
 					storeName,
 					value as never,
@@ -105,7 +117,7 @@ export const listen = <Schema extends SchemaDefinition<Schema> = DB.Schema>(
 					revision: ++currentRevision,
 				} as SharedDBChange<Schema>);
 
-				return key;
+				return key as Awaited<ReturnType<SharedDBProtocol<Schema>["requests"]["put"]>>;
 			},
 
 			delete: async ({ storeName, query, options: operationOptions }, { signal }) => {

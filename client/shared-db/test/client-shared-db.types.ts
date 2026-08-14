@@ -1,8 +1,10 @@
 /// <reference lib="esnext.disposable" />
 
 import type { DB } from "@serve-tools/client-db";
-import { listen, type SchemaType, type SharedDBServer } from "../src/lib/scope/shared-worker.js";
-import { connect, type SharedDBChange, type SharedDBClient } from "../src/lib/scope/window.js";
+import type { SchemaType, SharedDBServer } from "../src/lib/scope/shared-worker.js";
+import { listen } from "../src/lib/scope/shared-worker.js";
+import type { SharedDBChange, SharedDBClient } from "../src/lib/scope/window.js";
+import { connect } from "../src/lib/scope/window.js";
 
 interface Schema {
 	users: DB.Store<{ id: string; name: string }, string>;

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-
-import { Storage, type StorageChange } from "../src/client-storage.js";
+import type { StorageChange } from "../src/client-storage.js";
+import { Storage } from "../src/client-storage.js";
 
 interface Schema {
 	locale: string;

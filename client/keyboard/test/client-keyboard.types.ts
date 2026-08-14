@@ -1,10 +1,10 @@
+import type { KeyChord } from "../src/client-keyboard.js";
 import {
 	auxKey,
 	getKeyChord,
 	getKeyChordAriaKeyShortcuts,
 	getKeyChordLabel,
 	getKeyChordSymbols,
-	type KeyChord,
 	matchKeyChord,
 	modKey,
 } from "../src/client-keyboard.js";

@@ -1,6 +1,7 @@
 /// <reference lib="esnext.disposable" />
 
-import { EventTargetSignal, type EventTargetSignalOptions, MatchMediaSignal } from "../src/signal-event-target.js";
+import type { EventTargetSignalOptions } from "../src/signal-event-target.js";
+import { EventTargetSignal, MatchMediaSignal } from "../src/signal-event-target.js";
 
 const target = new EventTarget();
 const options = { signal: new AbortController().signal } satisfies EventTargetSignalOptions<number>;

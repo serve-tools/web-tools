@@ -1,23 +1,22 @@
 import { Signal } from "@serve-tools/signal";
 import { afterEach, beforeEach, describe, expect, expectTypeOf, it } from "vitest";
-
-import {
-	type CountOptions,
-	type GetAllOptions,
-	type MutationOptions,
-	type OperationOptions,
-	type Query,
-	type SharedDBChange,
-	type SharedDBClient,
-	type SharedDBSubscribeOptions,
-	type SharedDBSubscriber,
-	type SharedDBSubscription,
-	SignalDB,
-	type StoreKey,
-	type StoreName,
-	type StoreValue,
-	type WriteOptions,
+import type {
+	CountOptions,
+	GetAllOptions,
+	MutationOptions,
+	OperationOptions,
+	Query,
+	SharedDBChange,
+	SharedDBClient,
+	SharedDBSubscribeOptions,
+	SharedDBSubscriber,
+	SharedDBSubscription,
+	StoreKey,
+	StoreName,
+	StoreValue,
+	WriteOptions,
 } from "../src/signal-shared-db.js";
+import { SignalDB } from "../src/signal-shared-db.js";
 
 interface User {
 	id: string;

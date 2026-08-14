@@ -1,7 +1,7 @@
 import { Signal } from "@serve-tools/signal";
 import { describe, expect, it } from "vitest";
-
-import { property, type StyleDeclarations, style } from "../src/decorators.js";
+import type { StyleDeclarations } from "../src/decorators.js";
+import { property, style } from "../src/decorators.js";
 import { html, SignalElement } from "../src/lit-signals.js";
 
 const sizes = new WeakMap<object, number>();
