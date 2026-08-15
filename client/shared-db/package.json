@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-shared-db",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"description": "SharedWorker-coordinated IndexedDB operations and change subscriptions",
 	"keywords": [
 		"browser",
@@ -44,6 +44,6 @@
 	},
 	"dependencies": {
 		"@serve-tools/client-db": "^0.1",
-		"@serve-tools/client-messaging": "^0.1"
+		"@serve-tools/client-messaging": "^0.2"
 	}
 }

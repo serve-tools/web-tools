@@ -1,0 +1,51 @@
+{
+	"name": "@serve-tools/client-signals",
+	"version": "0.1.0",
+	"description": "Namespaced access to Serve Tools signal-aware client libraries",
+	"keywords": [
+		"browser",
+		"client",
+		"reactive",
+		"signal",
+		"typescript",
+		"websocket"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/client-signals#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "client-signals/client-signals"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/client-signals.js",
+		"./*": "./dist/lib/*.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build:dependencies": "npm run build --workspace @serve-tools/signal-dom --workspace @serve-tools/signal-event-target --workspace @serve-tools/signal-messaging --workspace @serve-tools/signal-shared-db --workspace @serve-tools/signal-shared-websocket --workspace @serve-tools/signal-storage --workspace @serve-tools/signal-websocket",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/signal-dom": "^0.1",
+		"@serve-tools/signal-event-target": "^0.1",
+		"@serve-tools/signal-messaging": "^0.2",
+		"@serve-tools/signal-shared-db": "^0.2",
+		"@serve-tools/signal-shared-websocket": "^0.1",
+		"@serve-tools/signal-storage": "^0.1",
+		"@serve-tools/signal-websocket": "^0.1"
+	}
+}

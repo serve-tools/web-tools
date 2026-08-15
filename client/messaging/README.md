@@ -5,13 +5,13 @@ The `@serve-tools/client-messaging` package helps you manage typed requests and 
 ```ts
 import { connect, serve } from "@serve-tools/client-messaging";
 
+const { port1, port2 } = new MessageChannel();
+
 type GreetingProtocol = {
 	requests: {
 		greet(name: string): string;
 	};
 };
-
-const { port1, port2 } = new MessageChannel();
 
 using server = serve<GreetingProtocol>(port1, {
 	requests: {

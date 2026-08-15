@@ -45,8 +45,6 @@ export const isWireMessage = (value: unknown): value is WireMessage => {
 	}
 };
 
-export const webLocks = (): LockManager | undefined => navigator?.locks;
-
 export const isErrorRecord = (value: unknown): value is ErrorRecord =>
 	!!value &&
 	typeof value === "object" &&

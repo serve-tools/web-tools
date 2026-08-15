@@ -15,7 +15,7 @@ export const share = (data: ShareData): Promise<InteractionResult<void>> => {
 };
 
 /** Returns whether the Web Share API is exposed in the current secure context. */
-export const isShareApiAvailable = (): boolean => globalThis.isSecureContext && typeof navigator?.share === "function";
+export const isShareApiAvailable = (): boolean => globalThis.isSecureContext && typeof navigator.share === "function";
 
 /** Native share data with at least one member present. */
 export type ShareData = {

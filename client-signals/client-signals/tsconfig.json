@@ -1,0 +1,14 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": { "outDir": "dist", "rootDir": "src" },
+	"references": [
+		{ "path": "../dom/tsconfig.json" },
+		{ "path": "../event-target/tsconfig.json" },
+		{ "path": "../messaging/tsconfig.json" },
+		{ "path": "../shared-db/tsconfig.json" },
+		{ "path": "../shared-websocket/tsconfig.json" },
+		{ "path": "../storage/tsconfig.json" },
+		{ "path": "../websocket/tsconfig.json" }
+	],
+	"include": ["src/**/*.ts"]
+}

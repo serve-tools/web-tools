@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client Signals"
+  short_description: "Use signal-aware browser client namespaces"
+  default_prompt: "Use $serve-tools-client-signals to select and apply the appropriate signal-aware Serve Tools client namespace."

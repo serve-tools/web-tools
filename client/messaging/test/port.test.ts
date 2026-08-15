@@ -598,6 +598,47 @@ describe("protocol and lifecycle", () => {
 describe("liveness", () => {
 	const isLease = (lock: LockInfo | undefined): boolean => !!lock?.name?.startsWith(`${protocol}#`);
 
+	it("announces the queued lease before the first operation", async () => {
+		const messages: unknown[][] = [];
+
+		vi.stubGlobal("navigator", {
+			locks: { request: () => Promise.resolve() },
+		});
+
+		try {
+			const client = connect<{ requests: { ping(): string } }>({
+				addEventListener: noop,
+				removeEventListener: noop,
+				postMessage: (message: unknown) => messages.push(message as unknown[]),
+			});
+			const request = client.request("ping");
+
+			expect(messages.map((message) => message[1])).toEqual(["lease", "request"]);
+
+			client.close();
+
+			await expect(request).rejects.toMatchObject({ name: "ConnectionClosedError" });
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it("works without Web Locks", async () => {
+		vi.stubGlobal("navigator", {});
+
+		try {
+			const connection = open<{ requests: { ping(): string } }>({ requests: { ping: () => "pong" } });
+
+			try {
+				expect(await connection.client.request("ping")).toBe("pong");
+			} finally {
+				connection.close();
+			}
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
 	it("finishes the server when an abandoned liveness lease is released", async () => {
 		type P = { requests: { ping(): string } };
 

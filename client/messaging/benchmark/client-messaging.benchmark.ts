@@ -17,6 +17,35 @@ interface Protocol {
 	};
 }
 
+test("client lease lifecycle", async () => {
+	let announced = Promise.withResolvers<string>();
+
+	const endpoint = {
+		addEventListener: () => {},
+		removeEventListener: () => {},
+		postMessage: (message: unknown) => {
+			if (Array.isArray(message) && message[1] === "lease") {
+				announced.resolve(message[2]);
+			}
+		},
+	};
+
+	await benchmark(
+		"client-messaging/connect-lease-close",
+		async () => {
+			announced = Promise.withResolvers<string>();
+
+			const client = connect<Record<never, never>>(endpoint);
+			const name = await announced.promise;
+
+			client.close();
+
+			await navigator.locks.request(name, () => {});
+		},
+		{ iterations: 10_000 },
+	);
+});
+
 test("MessagePort request round trips", async () => {
 	const channel = new MessageChannel();
 	const server = serve<Protocol>(channel.port1, {

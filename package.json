@@ -29,6 +29,7 @@
 		"client/messaging/demo",
 		"client/shared-db",
 		"client/shared-db/demo",
+		"client/shared-websocket",
 		"client/storage",
 		"client/websocket",
 		"client/client",
@@ -38,7 +39,10 @@
 		"client-signals/event-target",
 		"client-signals/messaging",
 		"client-signals/shared-db",
+		"client-signals/shared-websocket",
 		"client-signals/storage",
+		"client-signals/websocket",
+		"client-signals/client-signals",
 		"lit/signals",
 		"lit/signals/demo",
 		"polyfills/request-idle-callback",
@@ -53,7 +57,7 @@
 	],
 	"scripts": {
 		"benchmark": "npm run benchmark --workspaces --if-present",
-		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket",
+		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket --workspace @serve-tools/signal-websocket",
 		"benchmark:skills": "node benchmark/skills/run.mjs",
 		"build": "npm run build --workspaces --if-present",
 		"build:pages": "node scripts/build-pages.mjs",
@@ -102,6 +106,11 @@
 	"knip": {
 		"ignoreExportsUsedInFile": true,
 		"workspaces": {
+			"client-signals/client-signals": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"client/client": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
@@ -160,6 +169,12 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
+			"client/shared-websocket": {
+				"entry": [
+					"benchmark/*.benchmark.ts",
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"client/storage": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
@@ -187,9 +202,20 @@
 					"test/*.recipes.ts"
 				]
 			},
+			"client-signals/shared-websocket": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"client-signals/storage": {
 				"entry": [
 					"test/*.recipes.ts"
+				]
+			},
+			"client-signals/websocket": {
+				"entry": [
+					"benchmark/*.benchmark.ts",
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"polyfills/request-idle-callback": {

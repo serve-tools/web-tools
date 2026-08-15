@@ -12,13 +12,17 @@ Load only the Skill for the affected public package.
 | `client/keyboard`                 | `client/keyboard/skills/serve-tools-client-keyboard/SKILL.md`                                |
 | `client/messaging`                | `client/messaging/skills/serve-tools-client-messaging/SKILL.md`                              |
 | `client/shared-db`                | `client/shared-db/skills/serve-tools-client-shared-db/SKILL.md`                              |
+| `client/shared-websocket`         | `client/shared-websocket/skills/serve-tools-client-shared-websocket/SKILL.md`                |
 | `client/storage`                  | `client/storage/skills/serve-tools-client-storage/SKILL.md`                                  |
 | `client/websocket`                | `client/websocket/skills/serve-tools-client-websocket/SKILL.md`                              |
 | `client-signals/dom`              | `client-signals/dom/skills/serve-tools-signal-dom/SKILL.md`                                  |
+| `client-signals/client-signals`   | `client-signals/client-signals/skills/serve-tools-client-signals/SKILL.md`                   |
 | `client-signals/event-target`     | `client-signals/event-target/skills/serve-tools-signal-event-target/SKILL.md`                |
 | `client-signals/messaging`        | `client-signals/messaging/skills/serve-tools-signal-messaging/SKILL.md`                      |
 | `client-signals/shared-db`        | `client-signals/shared-db/skills/serve-tools-signal-shared-db/SKILL.md`                      |
+| `client-signals/shared-websocket` | `client-signals/shared-websocket/skills/serve-tools-signal-shared-websocket/SKILL.md`        |
 | `client-signals/storage`          | `client-signals/storage/skills/serve-tools-signal-storage/SKILL.md`                          |
+| `client-signals/websocket`        | `client-signals/websocket/skills/serve-tools-signal-websocket/SKILL.md`                      |
 | `lit/signals`                     | `lit/signals/skills/serve-tools-lit-signals/SKILL.md`                                        |
 | `polyfills/request-idle-callback` | `polyfills/request-idle-callback/skills/serve-tools-polyfill-request-idle-callback/SKILL.md` |
 | `polyfills/resource-management`   | `polyfills/resource-management/skills/serve-tools-polyfill-resource-management/SKILL.md`     |

@@ -6,23 +6,26 @@ It uses a compact binary protocol with built-in serialization for structured Jav
 ```ts
 import { connect } from "@serve-tools/client-websocket";
 
-interface ProjectProtocol {
+await using client = await connect<{
 	requests: {
-		openProject: (input: { id: string }) => { id: string; title: string };
-		ping: () => void;
+		joinBoard: (input: { boardID: string }) => { title: string; updatedAt: Date };
+		saveSnapshot: (input: { boardID: string; png: Uint8Array }) => { revision: number };
 	};
 	subscriptions: {
-		projectChanged: (input: { id: string }) => { revision: number };
+		strokes: (input: { boardID: string }) => { points: Float32Array; color: string };
 	};
-}
+}>("wss://example.com/whiteboard");
 
-await using client = await connect<ProjectProtocol>("wss://example.com/projects");
+// values cross the wire as real types — Date stays a Date, binary stays binary
+const board = await client.request("joinBoard", { boardID: "sprint-review" });
 
-const project = await client.request("openProject", { id: "project-1" });
+console.log(board.title, board.updatedAt.toLocaleString());
 
-using changes = client.subscribe("projectChanged", { id: project.id }, (event) => {
-	console.log(event.revision);
+using strokes = client.subscribe("strokes", { boardID: board.title }, (stroke) => {
+	canvas.draw(stroke.points, stroke.color);
 });
+
+await client.request("saveSnapshot", { boardID: "sprint-review", png: canvas.toPNGBytes() });
 ```
 
 ## Install
@@ -42,20 +45,21 @@ Declare named request and subscription operations as functions with zero or one 
 A request function's return type is its response, while a subscription function's return type is each emitted event.
 
 ```ts
-interface ProjectProtocol {
+interface BoardProtocol {
 	requests: {
-		createProject: (input: { title: string }) => Promise<{ id: string }>;
+		createBoard: (input: { title: string }) => Promise<{ boardID: string }>;
 		getServerTime: () => Date;
 	};
 	subscriptions: {
-		projectChanged: (input: { id: string }) => { revision: number };
+		strokes: (input: { boardID: string }) => { points: Float32Array; color: string };
 		announcements: () => string;
 	};
 }
 ```
 
 The `requests` and `subscriptions` sections are optional, so a protocol may expose only one operation kind.
-`Promise` return types are unwrapped for requests and subscriptions.
+`Promise` return types are unwrapped for requests.
+Subscription return types are used as written for emitted events, so declare the event value rather than a `Promise` of it.
 The declarations constrain client code at compile time; they do not validate values received from the server.
 
 ### Connect and own the socket
@@ -66,8 +70,8 @@ Dispose or close the client to close the socket and release every active operati
 ```ts
 const controller = new AbortController();
 
-await using client = await connect<ProjectProtocol>("wss://example.com/projects", {
-	protocols: ["projects.v1"],
+await using client = await connect<BoardProtocol>("wss://example.com/whiteboard", {
+	protocols: ["whiteboard.v1"],
 	signal: controller.signal,
 });
 
@@ -89,7 +93,7 @@ Requests may run concurrently and may settle out of order.
 ```ts
 const controller = new AbortController();
 
-const project = await client.request("createProject", { title: "Launch" }, {
+const board = await client.request("createBoard", { title: "Sprint review" }, {
 	signal: controller.signal,
 });
 
@@ -109,10 +113,10 @@ Events for one subscription arrive in WebSocket order.
 
 ```ts
 using subscription = client.subscribe(
-	"projectChanged",
-	{ id: project.id },
-	(event) => {
-		console.log(event.revision);
+	"strokes",
+	{ boardID: board.boardID },
+	(stroke) => {
+		canvas.draw(stroke.points, stroke.color);
 	},
 	{
 		signal: controller.signal,
@@ -127,10 +131,10 @@ Aborting, unsubscribing, or disposing performs local cancellation and does not c
 A server completion calls `onComplete`, while a server, transport, or protocol failure calls `onError` when provided.
 Without `onError`, subscription failures are reported through `reportError()`.
 
-For a zero-input subscription, pass `undefined` before the listener when options are needed.
+For a zero-input subscription, pass the listener directly; no `undefined` placeholder is needed before it.
 
 ```ts
-using announcements = client.subscribe("announcements", undefined, console.log, {
+using announcements = client.subscribe("announcements", console.log, {
 	signal: controller.signal,
 });
 ```
@@ -148,20 +152,24 @@ Request inputs, responses, and subscription events may contain the following val
 - `ArrayBuffer`, `DataView`, and typed arrays, including shared backing-buffer relationships;
 - resizable `ArrayBuffer` values when the runtime supports them.
 
-This makes binary operations direct and type-safe:
+This makes structured and binary responses direct and type-safe:
 
 ```ts
-interface AssetProtocol {
+interface ExportProtocol {
 	requests: {
-		storeAsset: (input: { name: string; bytes: Uint8Array }) => { id: string };
+		exportBoard: (input: { boardID: string }) => {
+			png: Uint8Array;
+			contributors: Map<string, Date>;
+		};
 	};
 }
 
-await using assets = await connect<AssetProtocol>("wss://example.com/assets");
-const stored = await assets.request("storeAsset", {
-	name: "preview.webp",
-	bytes: new Uint8Array(await file.arrayBuffer()),
-});
+await using exporter = await connect<ExportProtocol>("wss://example.com/whiteboard");
+const exported = await exporter.request("exportBoard", { boardID: "sprint-review" });
+
+for (const [userID, lastEdit] of exported.contributors) {
+	console.log(userID, lastEdit.toLocaleString());
+}
 ```
 
 Functions, symbols, weak collections, `SharedArrayBuffer`, and unsupported host objects throw `DataCloneError`.
@@ -175,11 +183,11 @@ Use `ProtocolType` when an API should expose the protocol carried by a client wi
 ```ts
 import type { ProtocolType } from "@serve-tools/client-websocket";
 
-type PendingProtocol = ProtocolType<ReturnType<typeof connect<ProjectProtocol>>>;
-type ConnectedProtocol = ProtocolType<typeof client | undefined>;
+type PendingProtocol = ProtocolType<ReturnType<typeof connect<BoardProtocol>>>;
+type ConnectedProtocol = ProtocolType<typeof client>;
 ```
 
-`ProtocolType<T>` distributes through unions and unwraps promise-like client values.
+`ProtocolType<T>` unwraps promise-like client values.
 
 ## Errors and lifecycle
 
@@ -212,7 +220,7 @@ Do not share the underlying socket with other framing protocols because the clie
 
 ## Compatibility
 
-The package targets modern browser windows and workers with `WebSocket`, `ArrayBuffer`, `TextEncoder`, `TextDecoder`, and `reportError`.
+The package targets modern browser windows and workers with `WebSocket`, `ArrayBuffer`, `TextEncoder`, `TextDecoder`, `Promise.withResolvers()`, and `reportError()`.
 Binary messages are received as `ArrayBuffer` values.
 The explicit resource management examples require native or transpiled `using` support and a `Symbol.dispose` implementation.
 

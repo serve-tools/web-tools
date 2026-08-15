@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal Shared WebSocket"
+  short_description: "Observe shared WebSocket subscriptions as Signals"
+  default_prompt: "Use $serve-tools-signal-shared-websocket to observe this shared typed WebSocket subscription with explicit state and cleanup."

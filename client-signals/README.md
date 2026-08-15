@@ -1,6 +1,6 @@
 # Client signal libraries
 
-Signal-aware client libraries for messaging, browser storage, IndexedDB, and the DOM.
+Signal-aware client libraries for messaging, WebSockets, browser storage, IndexedDB, and the DOM.
 Each immediate subdirectory is an independently versioned npm workspace.
 
 ## Packages
@@ -9,4 +9,7 @@ Each immediate subdirectory is an independently versioned npm workspace.
 - [`@serve-tools/signal-event-target`](./event-target/) observes EventTarget state and media-query matches as read-only Signals.
 - [`@serve-tools/signal-messaging`](./messaging/) observes typed messaging subscriptions as explicit Signal state.
 - [`@serve-tools/signal-shared-db`](./shared-db/) adds reactive queries to `@serve-tools/client-shared-db`.
+- [`@serve-tools/signal-websocket`](./websocket/) observes typed WebSocket subscriptions as explicit Signal state.
+- [`@serve-tools/signal-shared-websocket`](./shared-websocket/) observes shared WebSocket subscriptions as explicit Signal state.
 - [`@serve-tools/signal-storage`](./storage/) adds reactive watches to `@serve-tools/client-storage`.
+- [`@serve-tools/client-signals`](./client-signals/) provides namespace-oriented access to every signal-aware client package.

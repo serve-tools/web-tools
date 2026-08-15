@@ -1,0 +1,44 @@
+{
+	"name": "@serve-tools/signal-shared-websocket",
+	"version": "0.1.0",
+	"description": "SharedWorker WebSocket subscriptions observed as explicit Signal state",
+	"keywords": [
+		"reactive",
+		"sharedworker",
+		"signal",
+		"subscription",
+		"websocket"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/shared-websocket#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "client-signals/shared-websocket"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/signal-shared-websocket.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build:dependencies": "npm run build --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/signal-websocket",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/client-shared-websocket": "^0.1",
+		"@serve-tools/signal-websocket": "^0.1"
+	}
+}

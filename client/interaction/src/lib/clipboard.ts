@@ -34,13 +34,13 @@ export const writeToClipboard = (...items: ClipboardData[]): Promise<Interaction
 
 /** Returns whether arbitrary clipboard reads are exposed in the current secure context. */
 export const isClipboardReadAvailable = (): boolean =>
-	globalThis.isSecureContext && typeof navigator?.clipboard?.read === "function";
+	globalThis.isSecureContext && typeof navigator.clipboard?.read === "function";
 
 /** Returns whether arbitrary clipboard writes are exposed in the current secure context. */
 export const isClipboardWriteAvailable = (): boolean =>
 	globalThis.isSecureContext &&
 	typeof ClipboardItem === "function" &&
-	typeof navigator?.clipboard?.write === "function";
+	typeof navigator.clipboard?.write === "function";
 
 /** MIME representations for one clipboard item, including asynchronously produced data. */
 export type ClipboardData = Record<string, string | Blob | PromiseLike<string | Blob>>;

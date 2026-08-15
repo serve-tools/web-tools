@@ -4,6 +4,16 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
+## 0.4.0 - 2026-08-15
+
+- Add `@serve-tools/client-websocket` with typed requests, subscriptions, cancellation, reconnection-safe ownership, and binary structured-value serialization.
+- Add `@serve-tools/client-shared-websocket` to share one worker-owned WebSocket across same-origin tabs and windows.
+- Add `@serve-tools/signal-websocket` and `@serve-tools/signal-shared-websocket` for explicit Signal-backed subscription state.
+- Add `@serve-tools/client-signals` as the namespace-oriented umbrella for the Signal-aware client packages.
+- Replace descriptor-shaped messaging operations with callable protocol methods and simplify the public messaging type names.
+- Add SharedWorker liveness leases so abandoned page connections are reclaimed without closing caller-owned ports.
+- Add the `@serve-tools/skills` package and strengthen package Skills, recipe compilation, catalog checks, and evaluation fixtures.
+
 ## 0.3.0 - 2026-08-14
 
 - Add hosted demos for client context, input, interaction, keyboard, and SharedWorker-coordinated database behavior.

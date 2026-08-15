@@ -6,7 +6,7 @@ using changes = client.subscribe("workspaceChanged", { id: workspace.id }, apply
 	onComplete: markComplete,
 	onError: showConnectionError,
 });
-using announcements = client.subscribe("announcements", undefined, displayAnnouncement);
+using announcements = client.subscribe("announcements", displayAnnouncement);
 ```
 
 Disposal, unsubscribe, and abort are idempotent local cancellations and do not call terminal callbacks.

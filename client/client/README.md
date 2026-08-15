@@ -24,16 +24,17 @@ npm install @serve-tools/client
 
 ## Namespaces
 
-| Namespace     | Focused subpath                   | Underlying package                |
-| ------------- | --------------------------------- | --------------------------------- |
-| `context`     | `@serve-tools/client/context`     | `@serve-tools/client-context`     |
-| `db`          | `@serve-tools/client/db`          | `@serve-tools/client-db`          |
-| `input`       | `@serve-tools/client/input`       | `@serve-tools/client-input`       |
-| `interaction` | `@serve-tools/client/interaction` | `@serve-tools/client-interaction` |
-| `keyboard`    | `@serve-tools/client/keyboard`    | `@serve-tools/client-keyboard`    |
-| `messaging`   | `@serve-tools/client/messaging`   | `@serve-tools/client-messaging`   |
-| `storage`     | `@serve-tools/client/storage`     | `@serve-tools/client-storage`     |
-| `websocket`   | `@serve-tools/client/websocket`   | `@serve-tools/client-websocket`   |
+| Namespace         | Focused subpath                        | Underlying package                     |
+| ----------------- | -------------------------------------- | -------------------------------------- |
+| `context`         | `@serve-tools/client/context`          | `@serve-tools/client-context`          |
+| `db`              | `@serve-tools/client/db`               | `@serve-tools/client-db`               |
+| `input`           | `@serve-tools/client/input`            | `@serve-tools/client-input`            |
+| `interaction`     | `@serve-tools/client/interaction`      | `@serve-tools/client-interaction`      |
+| `keyboard`        | `@serve-tools/client/keyboard`         | `@serve-tools/client-keyboard`         |
+| `messaging`       | `@serve-tools/client/messaging`        | `@serve-tools/client-messaging`        |
+| `sharedWebsocket` | `@serve-tools/client/shared-websocket` | `@serve-tools/client-shared-websocket` |
+| `storage`         | `@serve-tools/client/storage`          | `@serve-tools/client-storage`          |
+| `websocket`       | `@serve-tools/client/websocket`        | `@serve-tools/client-websocket`        |
 
 The root entrypoint exports namespaces rather than flattening their members, so similarly named operations retain their owning capability.
 Use a focused subpath when only one capability is needed.
@@ -100,6 +101,18 @@ export type StatusProtocol = websocket.connect.ProtocolType<Awaited<typeof pendi
 
 WebSocket `ProtocolType` accepts both pending and resolved clients through either the top-level type or `connect.ProtocolType` alias.
 The focused `@serve-tools/client/websocket` re-export exposes the same contract.
+
+Use `sharedWebsocket` when several browser windows should share one worker-owned physical connection:
+
+```ts
+import { sharedWebsocket } from "@serve-tools/client";
+import { listen } from "@serve-tools/client/shared-websocket/scope/shared-worker";
+
+const client = sharedWebsocket.connect<AppProtocol>(worker.port);
+const server = listen<AppProtocol>(url);
+```
+
+The window client retains the direct WebSocket request and subscription shape, while closing it leaves the worker's physical socket available to other pages.
 
 ## Compatibility
 

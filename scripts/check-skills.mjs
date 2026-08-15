@@ -75,8 +75,8 @@ if (maintainerSkill !== undefined) {
 
 await validateReleasePackages(publicPackageNames, errors);
 
-if (publicPackages !== 25) {
-	errors.push(`expected 25 public workspaces, found ${publicPackages}`);
+if (publicPackages !== 29) {
+	errors.push(`expected 29 public workspaces, found ${publicPackages}`);
 }
 
 if (publishedMetadataCharacters > 4_000) {

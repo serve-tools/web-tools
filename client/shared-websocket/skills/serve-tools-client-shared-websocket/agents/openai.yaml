@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Shared WebSocket"
+  short_description: "Share one typed WebSocket across browser windows"
+  default_prompt: "Use $serve-tools-client-shared-websocket to implement a typed SharedWorker-owned WebSocket with explicit lifecycle and cleanup."

@@ -35,6 +35,11 @@ const selections = [
 		"@serve-tools/client-shared-db",
 	],
 	[
+		"shared-worker-websocket",
+		"Share one typed WebSocket connection across several browser tabs while keeping requests, subscriptions, cancellation, and per-tab cleanup explicit.",
+		"@serve-tools/client-shared-websocket",
+	],
+	[
 		"observable-web-storage",
 		"Read, write, remove, and observe typed localStorage preferences, including same-document changes and cancellation. The consumer is imperative rather than Signal-based.",
 		"@serve-tools/client-storage",
@@ -63,6 +68,16 @@ const selections = [
 		"shared-query-signal",
 		"A SharedWorker owns IndexedDB. UI code needs a query that reactively refreshes when relevant records change and exposes explicit loading/error/ready states.",
 		"@serve-tools/signal-shared-db",
+	],
+	[
+		"websocket-subscription-signal",
+		"A typed WebSocket subscription should be consumed by UI code as current pending, ready, complete, or error Signal state.",
+		"@serve-tools/signal-websocket",
+	],
+	[
+		"shared-websocket-subscription-signal",
+		"A SharedWorker-owned WebSocket subscription should be exposed to each page as disposable current Signal state.",
+		"@serve-tools/signal-shared-websocket",
 	],
 	[
 		"storage-value-signal",
@@ -118,6 +133,11 @@ const selections = [
 		"client-namespace-facade",
 		"One application shell intentionally exposes database, storage, messaging, input, and interaction utilities through a single namespace-oriented import surface.",
 		"@serve-tools/client",
+	],
+	[
+		"client-signals-namespace-facade",
+		"One application shell intentionally exposes several signal-aware browser integrations through a single namespace-oriented import surface.",
+		"@serve-tools/client-signals",
 	],
 ];
 

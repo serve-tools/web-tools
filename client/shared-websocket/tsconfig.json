@@ -1,0 +1,9 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"outDir": "dist",
+		"rootDir": "src"
+	},
+	"references": [{ "path": "../messaging/tsconfig.json" }, { "path": "../websocket/tsconfig.json" }],
+	"include": ["src/**/*.ts", "src/**/.*.ts"]
+}

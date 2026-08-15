@@ -9,7 +9,6 @@ import {
 	protocol,
 	remoteError,
 	report,
-	webLocks,
 } from "./.internals.js";
 import type * as T from "./.types.js";
 import type {
@@ -128,49 +127,6 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 		return id;
 	};
 
-	const lease = (): void => {
-		const locks = webLocks();
-
-		if (!locks) {
-			return;
-		}
-
-		const name = `${protocol}#${crypto.randomUUID()}`;
-		const released = Promise.withResolvers<void>();
-		const hidden = (): void => close("The page was hidden");
-		const pageEvents =
-			"onpagehide" in globalThis
-				? (globalThis as unknown as {
-						addEventListener(type: "pagehide", listener: () => void): void;
-						removeEventListener(type: "pagehide", listener: () => void): void;
-					})
-				: undefined;
-
-		pageEvents?.addEventListener("pagehide", hidden);
-
-		releaseLease = (): void => {
-			released.resolve();
-
-			pageEvents?.removeEventListener("pagehide", hidden);
-		};
-
-		void locks
-			.request(name, async () => {
-				if (isClosed) {
-					return;
-				}
-
-				try {
-					post(endpoint, [protocol, "lease", name]);
-				} catch {
-					return;
-				}
-
-				return released.promise;
-			})
-			.catch(noop);
-	};
-
 	const finish = (error: unknown, remote: boolean): void => {
 		if (isClosed) {
 			return;
@@ -213,7 +169,30 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 	endpoint.addEventListener("message", receive);
 	endpoint.start?.();
 
-	lease();
+	const { locks } = navigator;
+
+	if (locks) {
+		const name = `${protocol}#${crypto.randomUUID()}`;
+		const released = Promise.withResolvers<void>();
+		const hidden = (): void => close("The page was hidden");
+		const pageEvents = "onpagehide" in globalThis ? globalThis : undefined;
+
+		pageEvents?.addEventListener("pagehide", hidden);
+
+		releaseLease = (): void => {
+			released.resolve();
+
+			pageEvents?.removeEventListener("pagehide", hidden);
+		};
+
+		void locks.request(name, () => released.promise).catch(noop);
+
+		try {
+			post(endpoint, [protocol, "lease", name]);
+		} catch {
+			releaseLease();
+		}
+	}
 
 	return {
 		request(name: string, input?: unknown, options: RequestOptions = {}): Promise<unknown> {

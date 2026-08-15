@@ -7,7 +7,6 @@ import {
 	post,
 	protocol,
 	report,
-	webLocks,
 } from "./.internals.js";
 import type * as T from "./.types.js";
 import type {
@@ -199,18 +198,6 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 			);
 	};
 
-	const watchLease = (name: string): void => {
-		const locks = webLocks();
-
-		if (leaseController || !locks) {
-			return;
-		}
-
-		leaseController = new AbortController();
-
-		void locks.request(name, { signal: leaseController.signal }, async () => finish()).catch(noop);
-	};
-
 	const finish = (): void => {
 		if (isClosed) {
 			return;
@@ -244,7 +231,13 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 				settle(id, operation);
 			}
 		} else if (data[1] === "lease") {
-			watchLease(data[2]);
+			const { locks } = navigator;
+
+			if (!leaseController && locks) {
+				leaseController = new AbortController();
+
+				void locks.request(data[2], { signal: leaseController.signal }, finish).catch(noop);
+			}
 		} else if (data[1] === "close") {
 			finish();
 		}

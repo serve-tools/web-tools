@@ -1,0 +1,6 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": { "composite": false, "noEmit": true, "types": ["vitest"] },
+	"references": [{ "path": "../../client/shared-websocket/tsconfig.json" }, { "path": "../websocket/tsconfig.json" }],
+	"include": ["src/**/*.ts", "test/**/*.ts", "vitest.config.ts"]
+}
