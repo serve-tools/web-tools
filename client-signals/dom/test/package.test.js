@@ -22,6 +22,8 @@ for (const [entry, exports] of Object.entries(entries)) {
 	it(`loads the ${entry} entry with its intended exports`, async () => {
 		const module = await import(entry);
 
-		for (const name of exports) assert.ok(name in module, `${entry} exports ${name}`);
+		for (const name of exports) {
+			assert.ok(name in module, `${entry} exports ${name}`);
+		}
 	});
 }

@@ -22,7 +22,10 @@ const handlers = {
 	subscriptions: {
 		progress: (_path, { emit, signal }) => {
 			emit(0);
-			if (!signal.aborted) emit(1);
+
+			if (!signal.aborted) {
+				emit(1);
+			}
 		},
 	},
 } satisfies Handlers<FilesProtocol>;

@@ -65,7 +65,9 @@ effect<EffectTestElement>()(EffectTestElement.prototype.decoratedEffect, {
 });
 
 function initializeDecoratedEffect(this: EffectTestElement): void {
-	for (const initialize of effectInitializers) initialize.call(this);
+	for (const initialize of effectInitializers) {
+		initialize.call(this);
+	}
 }
 
 customElements.define("serve-tools-effect-test", EffectTestElement);

@@ -17,7 +17,9 @@ export const style = <This extends StyleHost, Declarations extends StyleDeclarat
 	target: ClassAccessorDecoratorTarget<This, Declarations>,
 	{ static: isStatic }: ClassAccessorDecoratorContext<This, Declarations>,
 ): ClassAccessorDecoratorResult<This, Declarations> => {
-	if (isStatic) throw new TypeError("@style cannot decorate a static accessor");
+	if (isStatic) {
+		throw new TypeError("@style cannot decorate a static accessor");
+	}
 
 	const styleOf = (instance: This) => target.get.call(instance) as unknown as HostStyle<Declarations>;
 
@@ -68,7 +70,9 @@ class HostStyle<Declarations extends StyleDeclarations> implements ReactiveContr
 	}
 
 	setDeclarations(declarations: Declarations): void {
-		if (declarations === this.#declarations) return;
+		if (declarations === this.#declarations) {
+			return;
+		}
 
 		const sources = Object.entries(declarations);
 		const values = this.#rule === undefined ? undefined : readSources(sources);
@@ -124,7 +128,9 @@ class HostStyle<Declarations extends StyleDeclarations> implements ReactiveContr
 	}
 
 	#disposeEffects(effects: EffectCleanup[]): void {
-		for (const dispose of effects) dispose();
+		for (const dispose of effects) {
+			dispose();
+		}
 
 		effects.length = 0;
 	}
@@ -149,13 +155,17 @@ class HostStyle<Declarations extends StyleDeclarations> implements ReactiveContr
 	}
 
 	#setProperties(values: ReadonlyArray<readonly [name: string, value: StyleValue]>): void {
-		for (const [name, value] of values) this.#setProperty(name, value);
+		for (const [name, value] of values) {
+			this.#setProperty(name, value);
+		}
 	}
 
 	#setProperty(name: string, value: StyleValue): void {
 		const style = this.#rule?.style;
 
-		if (style === undefined) return;
+		if (style === undefined) {
+			return;
+		}
 
 		if (value === null || value === undefined) {
 			style.removeProperty(name);
@@ -186,8 +196,13 @@ const isReactiveSource = (source: StyleSource): source is Signal.Any<StyleValue>
 	typeof source === "function" || Signal.isState(source) || Signal.isComputed(source);
 
 const readSource = (source: StyleSource): StyleValue => {
-	if (typeof source === "function") return source();
-	if (Signal.isState(source) || Signal.isComputed(source)) return source.get() as StyleValue;
+	if (typeof source === "function") {
+		return source();
+	}
+
+	if (Signal.isState(source) || Signal.isComputed(source)) {
+		return source.get() as StyleValue;
+	}
 
 	return source;
 };

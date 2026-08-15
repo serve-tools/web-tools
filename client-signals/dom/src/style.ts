@@ -53,8 +53,13 @@ const isInstance = <T>(value: unknown, constructor: { prototype: T } | undefined
 	Object.prototype.isPrototypeOf.call(constructor.prototype, value);
 
 const serialize = (value: CSSValue): string => {
-	if (value === null || value === undefined) return "";
-	if (typeof value !== "object") return String(value);
+	if (value === null || value === undefined) {
+		return "";
+	}
+
+	if (typeof value !== "object") {
+		return String(value);
+	}
 
 	return isInstance(value, globalThis.CSSStyleSheet)
 		? serializeRuleList(value.cssRules)

@@ -41,7 +41,9 @@ class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>
 		let off = noop;
 
 		const settle = (next: ObservationState<Value>): void => {
-			if (settled) return;
+			if (settled) {
+				return;
+			}
 
 			settled = true;
 			off();
@@ -68,7 +70,9 @@ class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>
 		try {
 			const subscribe = client.subscribe as unknown as Subscribe<Value>;
 			const onValue = (value: Value) => {
-				if (!settled) state.set({ status: "ready", value });
+				if (!settled) {
+					state.set({ status: "ready", value });
+				}
 			};
 
 			const subscriptionOptions = {
@@ -85,7 +89,9 @@ class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>
 
 			this.#subscription = subscription;
 
-			if (settled) subscription.unsubscribe();
+			if (settled) {
+				subscription.unsubscribe();
+			}
 		} catch (error) {
 			settle({ status: "error", error });
 		}
@@ -100,7 +106,9 @@ class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>
 	dispose(): void {
 		const subscription = this.#subscription;
 
-		if (subscription === undefined) return;
+		if (subscription === undefined) {
+			return;
+		}
 
 		this.#subscription = undefined;
 		this.#off();

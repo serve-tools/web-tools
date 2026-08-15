@@ -38,18 +38,24 @@ class LoopbackWebSocket extends EventTarget {
 	}
 
 	send(data: ArrayBuffer): void {
-		if (this.readyState !== LoopbackWebSocket.OPEN) throw new DOMException("", "InvalidStateError");
+		if (this.readyState !== LoopbackWebSocket.OPEN) {
+			throw new DOMException("", "InvalidStateError");
+		}
 
 		const message = deserialize(data);
 
-		if (!Array.isArray(message) || message[0] !== protocol) throw new Error("Unexpected client message");
+		if (!Array.isArray(message) || message[0] !== protocol) {
+			throw new Error("Unexpected client message");
+		}
 
 		if (message[1] === "request") {
 			this.receive([protocol, "resolve", message[2], message[4]]);
 		} else if (message[1] === "subscribe") {
 			this.subscriptionId = message[2];
 
-			if (message[3] === "ready") this.receive([protocol, "event", message[2], message[4]]);
+			if (message[3] === "ready") {
+				this.receive([protocol, "event", message[2], message[4]]);
+			}
 		}
 	}
 
@@ -58,7 +64,9 @@ class LoopbackWebSocket extends EventTarget {
 	}
 
 	close(code = 1000, reason = ""): void {
-		if (this.readyState === LoopbackWebSocket.CLOSED) return;
+		if (this.readyState === LoopbackWebSocket.CLOSED) {
+			return;
+		}
 
 		this.readyState = LoopbackWebSocket.CLOSED;
 		this.dispatchEvent(Object.assign(new Event("close"), { code, reason, wasClean: code === 1000 }));
@@ -98,7 +106,9 @@ test("client request loopback", async () => {
 			async () => {
 				const output = await client.request("echoBuffer", new ArrayBuffer(1024 * 1024));
 
-				if (output.byteLength !== 1024 * 1024) throw new Error("Unexpected echoed buffer size");
+				if (output.byteLength !== 1024 * 1024) {
+					throw new Error("Unexpected echoed buffer size");
+				}
 			},
 			{ iterations: 20, samples: 10, warmup: 3 },
 		);

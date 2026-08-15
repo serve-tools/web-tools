@@ -15,7 +15,9 @@ test("watch construction and updates", async () => {
 		() => {
 			const watches = Array.from({ length: 100 }, (_, index) => storage.watch(`key-${index}`));
 
-			for (const watch of watches) watch.dispose();
+			for (const watch of watches) {
+				watch.dispose();
+			}
 		},
 		{ iterations: 1_000, samples: 10, warmup: 3 },
 	);
@@ -34,7 +36,9 @@ test("watch construction and updates", async () => {
 
 	expect(dense[0]!.get()).toBe(String(value));
 
-	for (const watch of dense) watch.dispose();
+	for (const watch of dense) {
+		watch.dispose();
+	}
 
 	localStorage.clear();
 });
@@ -65,7 +69,9 @@ test("sparse updates and explicit refreshes", async () => {
 		warmup: 3,
 	});
 
-	for (const watch of sparse) watch.dispose();
+	for (const watch of sparse) {
+		watch.dispose();
+	}
 
 	localStorage.clear();
 });

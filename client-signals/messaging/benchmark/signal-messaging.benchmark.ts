@@ -20,7 +20,9 @@ class BenchmarkClient {
 			this.listeners.add(listener);
 
 			const unsubscribe = () => {
-				if (!active) return;
+				if (!active) {
+					return;
+				}
 
 				active = false;
 				this.listeners.delete(listener);
@@ -37,7 +39,9 @@ class BenchmarkClient {
 	} as unknown as Client<BenchmarkProtocol>;
 
 	emit(value: number): void {
-		for (const listener of this.listeners) listener(value);
+		for (const listener of this.listeners) {
+			listener(value);
+		}
 	}
 }
 
@@ -49,7 +53,9 @@ test("observation construction and dense delivery", async () => {
 		() => {
 			const observations = Array.from({ length: 100 }, () => observe(client.source, "values"));
 
-			for (const observation of observations) observation.dispose();
+			for (const observation of observations) {
+				observation.dispose();
+			}
 		},
 		{ iterations: 1_000, samples: 10, warmup: 3 },
 	);
@@ -66,5 +72,7 @@ test("observation construction and dense delivery", async () => {
 
 	expect(observations[0]!.get()).toEqual({ status: "ready", value });
 
-	for (const observation of observations) observation.dispose();
+	for (const observation of observations) {
+		observation.dispose();
+	}
 });

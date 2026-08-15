@@ -108,7 +108,9 @@ class RepeatRowDirective<Value = unknown> extends ReactiveDirective<Value> {
 
 	update(_part: unknown, [row]: [RepeatRow<unknown, Value>]): Value {
 		if (row !== this.#row) {
-			if (this.#row?.dispose === this.#dispose) this.#row.dispose = undefined;
+			if (this.#row?.dispose === this.#dispose) {
+				this.#row.dispose = undefined;
+			}
 
 			this.#row = row;
 

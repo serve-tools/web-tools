@@ -29,7 +29,9 @@ class ThemeProvider extends LitElement {
 
 		providerValues.set(this, initializeProvider.call(this, { name: "provided" }));
 
-		for (const initialize of providerInitializers) initialize.call(this);
+		for (const initialize of providerInitializers) {
+			initialize.call(this);
+		}
 	}
 
 	protected override render() {
@@ -48,7 +50,9 @@ class ThemeConsumer extends LitElement {
 
 		consumerValues.set(this, initializeConsumer.call(this, { name: "fallback" }));
 
-		for (const initialize of consumerInitializers) initialize.call(this);
+		for (const initialize of consumerInitializers) {
+			initialize.call(this);
+		}
 	}
 
 	protected override render() {
@@ -66,7 +70,9 @@ class OneShotConsumer extends LitElement {
 
 		oneShotValues.set(this, initializeOneShot.call(this, { name: "fallback" }));
 
-		for (const initialize of oneShotInitializers) initialize.call(this);
+		for (const initialize of oneShotInitializers) {
+			initialize.call(this);
+		}
 	}
 }
 
@@ -118,11 +124,15 @@ class LifecycleProvider extends LitElement {
 
 		lifecycleProviderValues.set(this, initializeLifecycleProvider.call(this, { name: "provided" }));
 
-		for (const initialize of lifecycleProviderInitializers) initialize.call(this);
+		for (const initialize of lifecycleProviderInitializers) {
+			initialize.call(this);
+		}
 	}
 
 	protected override updated(changedProperties: Map<PropertyKey, unknown>): void {
-		for (const [name, oldValue] of changedProperties) this.changes.push({ name, oldValue });
+		for (const [name, oldValue] of changedProperties) {
+			this.changes.push({ name, oldValue });
+		}
 	}
 
 	protected override render() {
@@ -139,11 +149,15 @@ class LifecycleConsumer extends LitElement {
 
 		lifecycleConsumerValues.set(this, initializeLifecycleConsumer.call(this, { name: "fallback" }));
 
-		for (const initialize of lifecycleConsumerInitializers) initialize.call(this);
+		for (const initialize of lifecycleConsumerInitializers) {
+			initialize.call(this);
+		}
 	}
 
 	protected override updated(changedProperties: Map<PropertyKey, unknown>): void {
-		for (const [name, oldValue] of changedProperties) this.changes.push({ name, oldValue });
+		for (const [name, oldValue] of changedProperties) {
+			this.changes.push({ name, oldValue });
+		}
 	}
 
 	protected override render() {

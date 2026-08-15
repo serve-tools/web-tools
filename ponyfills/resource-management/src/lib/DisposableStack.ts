@@ -22,7 +22,9 @@ export class DisposableStack {
 		if (value != null) {
 			const method = getDisposeMethod<void>(value, dispose);
 
-			if (!method) throw new TypeError("Object is not disposable");
+			if (!method) {
+				throw new TypeError("Object is not disposable");
+			}
 
 			this.#disposers.push(method);
 		}
@@ -62,7 +64,9 @@ export class DisposableStack {
 
 	/** Disposes registered resources in reverse order and combines multiple failures with `SuppressedError`. */
 	dispose(): void {
-		if (this.#state === StackState.Disposed) return;
+		if (this.#state === StackState.Disposed) {
+			return;
+		}
 
 		this.#state = StackState.Disposed;
 		disposeResources(this.#disposers);

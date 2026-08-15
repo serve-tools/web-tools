@@ -27,7 +27,9 @@ const connections = listen<{
 		increment: (amount) => {
 			total += amount;
 
-			for (const emit of subscribers) emit(total);
+			for (const emit of subscribers) {
+				emit(total);
+			}
 
 			return total;
 		},

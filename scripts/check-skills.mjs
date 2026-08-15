@@ -301,7 +301,9 @@ async function listDirectories(directory) {
 			.map((entry) => entry.name)
 			.sort();
 	} catch (error) {
-		if (error.code === "ENOENT") return [];
+		if (error.code === "ENOENT") {
+			return [];
+		}
 
 		throw error;
 	}
@@ -314,7 +316,9 @@ async function listFiles(directory) {
 			.map((entry) => entry.name)
 			.sort();
 	} catch (error) {
-		if (error.code === "ENOENT") return [];
+		if (error.code === "ENOENT") {
+			return [];
+		}
 
 		throw error;
 	}

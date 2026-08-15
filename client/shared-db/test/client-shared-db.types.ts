@@ -37,15 +37,28 @@ const logKey: Promise<number> = client.add("logs", "started");
 const users = client.subscribe("users", (change) => {
 	const typed: SharedDBChange<Schema, "users"> = change;
 
-	if (change.kind === "added") change.value.name;
-	if (change.kind === "removed") change.key.toUpperCase();
-	if (change.kind === "invalidated") change.key?.toUpperCase();
+	if (change.kind === "added") {
+		change.value.name;
+	}
+
+	if (change.kind === "removed") {
+		change.key.toUpperCase();
+	}
+
+	if (change.kind === "invalidated") {
+		change.key?.toUpperCase();
+	}
 
 	void typed;
 });
 const both = client.subscribe(["users", "logs"] as const, (change) => {
-	if (change.store === "users" && change.kind === "added") change.value.name;
-	if (change.store === "logs" && change.kind === "added") change.value.toUpperCase();
+	if (change.store === "users" && change.kind === "added") {
+		change.value.name;
+	}
+
+	if (change.store === "logs" && change.kind === "added") {
+		change.value.toUpperCase();
+	}
 });
 
 client.subscribe("users", () => {}, {

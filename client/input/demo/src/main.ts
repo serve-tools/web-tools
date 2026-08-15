@@ -5,7 +5,9 @@ import { observeDropTarget, observePointer } from "@serve-tools/client-input";
 const query = <ElementType extends Element>(selector: string): ElementType => {
 	const element = document.querySelector<ElementType>(selector);
 
-	if (!element) throw new Error(`Missing demo element: ${selector}`);
+	if (!element) {
+		throw new Error(`Missing demo element: ${selector}`);
+	}
 
 	return element;
 };
@@ -18,7 +20,9 @@ const clamp = (value: number): number => Math.min(100, Math.max(0, value));
 
 const stopPointer = observePointer(pointerPad, {
 	start(state, event) {
-		if (!event.isPrimary || event.button !== 0) return false;
+		if (!event.isPrimary || event.button !== 0) {
+			return false;
+		}
 
 		event.preventDefault();
 		this.dataset.active = "";
@@ -49,7 +53,9 @@ const stopDrop = observeDropTarget(dropZone, {
 		dropOutput.value = "Session started.";
 	},
 	over(event) {
-		if (event.dataTransfer?.types.includes("text/plain")) event.preventDefault();
+		if (event.dataTransfer?.types.includes("text/plain")) {
+			event.preventDefault();
+		}
 	},
 	end(state, event) {
 		delete this.dataset.active;

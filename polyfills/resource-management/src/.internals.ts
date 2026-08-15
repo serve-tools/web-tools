@@ -71,15 +71,25 @@ export type AsyncDisposableStackConstructor<AsyncDispose extends symbol, Dispose
 const getMethod = <Result>(value: object, key: symbol): (() => Result) | undefined => {
 	const method = Reflect.get(value, key);
 
-	if (method == null) return undefined;
-	if (typeof method !== "function") throw new TypeError("Dispose method must be a function");
+	if (method == null) {
+		return undefined;
+	}
+
+	if (typeof method !== "function") {
+		throw new TypeError("Dispose method must be a function");
+	}
 
 	return () => Reflect.apply(method, value, []) as Result;
 };
 
 const throwErrors = (errors: unknown[], SuppressedError: SuppressedErrorConstructor) => {
-	if (errors.length === 1) throw errors[0];
-	if (errors.length > 1) throw errors.reduce((suppressed, error) => new SuppressedError(error, suppressed));
+	if (errors.length === 1) {
+		throw errors[0];
+	}
+
+	if (errors.length > 1) {
+		throw errors.reduce((suppressed, error) => new SuppressedError(error, suppressed));
+	}
 };
 
 export const createDisposableStack = <Dispose extends symbol>(
@@ -100,7 +110,9 @@ export const createDisposableStack = <Dispose extends symbol>(
 			if (value != null) {
 				const method = getMethod<void>(value, dispose);
 
-				if (!method) throw new TypeError("Object is not disposable");
+				if (!method) {
+					throw new TypeError("Object is not disposable");
+				}
 
 				this.#stack.push(method);
 			}
@@ -136,7 +148,9 @@ export const createDisposableStack = <Dispose extends symbol>(
 		}
 
 		dispose(): void {
-			if (this.#disposed) return;
+			if (this.#disposed) {
+				return;
+			}
 
 			this.#disposed = true;
 
@@ -158,7 +172,9 @@ export const createDisposableStack = <Dispose extends symbol>(
 		}
 
 		#assertPending() {
-			if (this.#disposed) throw new ReferenceError("DisposableStack is already disposed");
+			if (this.#disposed) {
+				throw new ReferenceError("DisposableStack is already disposed");
+			}
 		}
 	}
 
@@ -191,7 +207,9 @@ export const createAsyncDisposableStack = <AsyncDispose extends symbol, Dispose 
 				const method =
 					getMethod<void | PromiseLike<void>>(value, asyncDispose) ?? getMethod<void>(value, dispose);
 
-				if (!method) throw new TypeError("Object is not disposable");
+				if (!method) {
+					throw new TypeError("Object is not disposable");
+				}
 
 				this.#stack.push(method);
 			}
@@ -227,7 +245,9 @@ export const createAsyncDisposableStack = <AsyncDispose extends symbol, Dispose 
 		}
 
 		async disposeAsync(): Promise<void> {
-			if (this.#disposed) return;
+			if (this.#disposed) {
+				return;
+			}
 
 			this.#disposed = true;
 
@@ -249,7 +269,9 @@ export const createAsyncDisposableStack = <AsyncDispose extends symbol, Dispose 
 		}
 
 		#assertPending() {
-			if (this.#disposed) throw new ReferenceError("DisposableStack is already disposed");
+			if (this.#disposed) {
+				throw new ReferenceError("DisposableStack is already disposed");
+			}
 		}
 	}
 

@@ -132,7 +132,9 @@ describe("signal-dom", () => {
 		const secondTarget = element();
 		let shouldThrow = false;
 		firstTarget.setAttribute = function (name, value) {
-			if (shouldThrow) throw new Error("setter failed");
+			if (shouldThrow) {
+				throw new Error("setter failed");
+			}
 
 			this.attributes[name] = String(value);
 		};
@@ -173,7 +175,9 @@ describe("signal-dom", () => {
 		const secondTarget = element();
 		let shouldThrow = false;
 		firstTarget.setAttribute = function (name, value) {
-			if (shouldThrow) throw new Error("setter failed");
+			if (shouldThrow) {
+				throw new Error("setter failed");
+			}
 
 			this.attributes[name] = String(value);
 		};

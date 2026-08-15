@@ -31,7 +31,9 @@ export const benchmark = async (
 		for (let iteration = 0; iteration < iterations; ++iteration) {
 			const result = operation();
 
-			if (result instanceof Promise) await result;
+			if (result instanceof Promise) {
+				await result;
+			}
 		}
 	}
 
@@ -43,7 +45,9 @@ export const benchmark = async (
 		for (let iteration = 0; iteration < iterations; ++iteration) {
 			const result = operation();
 
-			if (result instanceof Promise) await result;
+			if (result instanceof Promise) {
+				await result;
+			}
 		}
 
 		durations.push(performance.now() - start);

@@ -41,7 +41,9 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 		const ready = Promise.race([groupReady, disposedReady.promise]);
 
 		const fail = (error: unknown) => {
-			if (disposed) return;
+			if (disposed) {
+				return;
+			}
 
 			++generation;
 
@@ -71,7 +73,9 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 			}
 
 			current = result.then((nextState) => {
-				if (request !== generation) return current;
+				if (request !== generation) {
+					return current;
+				}
 
 				state.set(nextState);
 			});
@@ -213,7 +217,9 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		const names = typeof storeNames === "string" ? [storeNames] : storeNames;
 
 		for (const storeName of names) {
-			for (const query of this.#queryGroups.get(storeName)?.queries ?? []) query.invalidate();
+			for (const query of this.#queryGroups.get(storeName)?.queries ?? []) {
+				query.invalidate();
+			}
 		}
 	}
 
@@ -271,7 +277,9 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		for (const group of groups) {
 			group.subscription.unsubscribe();
 
-			for (const query of group.queries) query.dispose();
+			for (const query of group.queries) {
+				query.dispose();
+			}
 		}
 	}
 
@@ -287,14 +295,18 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 			const subscription = this.source.subscribe(
 				storeName,
 				() => {
-					for (const query of queries) query.invalidate();
+					for (const query of queries) {
+						query.invalidate();
+					}
 				},
 				{
 					onReady: () => ready.resolve(),
 					onError: (error) => {
 						ready.reject(error);
 
-						for (const query of queries) query.fail(error);
+						for (const query of queries) {
+							query.fail(error);
+						}
 					},
 				},
 			);

@@ -14,7 +14,9 @@ import {
 const query = <ElementType extends Element>(selector: string): ElementType => {
 	const element = document.querySelector<ElementType>(selector);
 
-	if (!element) throw new Error(`Missing demo element: ${selector}`);
+	if (!element) {
+		throw new Error(`Missing demo element: ${selector}`);
+	}
 
 	return element;
 };

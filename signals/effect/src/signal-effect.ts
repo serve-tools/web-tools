@@ -21,7 +21,9 @@ let flushingSchedulers: Scheduler[] = [];
 let pendingSchedulers: Scheduler[] = [];
 
 const schedule = (scheduler: Scheduler): void => {
-	if (scheduler.queued) return;
+	if (scheduler.queued) {
+		return;
+	}
 
 	scheduler.queued = true;
 	pendingSchedulers.push(scheduler);
@@ -154,7 +156,9 @@ export const createEffect = (run: () => void): Effect => {
 	};
 
 	const start = (): void => {
-		if (!startable) return;
+		if (!startable) {
+			return;
+		}
 
 		startable = false;
 

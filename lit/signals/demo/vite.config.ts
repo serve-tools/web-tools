@@ -16,7 +16,9 @@ export default defineConfig({
 		{
 			name: "transform-demo-decorators",
 			transform(_code, id) {
-				if (!id.includes("/src/examples/") || !id.endsWith(".ts")) return;
+				if (!id.includes("/src/examples/") || !id.endsWith(".ts")) {
+					return;
+				}
 
 				execFileSync(
 					process.execPath,

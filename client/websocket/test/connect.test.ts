@@ -43,7 +43,9 @@ class FakeWebSocket extends EventTarget {
 	}
 
 	send(data: ArrayBuffer): void {
-		if (this.readyState !== FakeWebSocket.OPEN) throw new DOMException("", "InvalidStateError");
+		if (this.readyState !== FakeWebSocket.OPEN) {
+			throw new DOMException("", "InvalidStateError");
+		}
 
 		this.sent.push(data);
 	}
@@ -57,7 +59,9 @@ class FakeWebSocket extends EventTarget {
 	}
 
 	close(code = 1000, reason = ""): void {
-		if (this.readyState === FakeWebSocket.CLOSED) return;
+		if (this.readyState === FakeWebSocket.CLOSED) {
+			return;
+		}
 
 		this.readyState = FakeWebSocket.CLOSED;
 		this.dispatchEvent(Object.assign(new Event("close"), { code, reason, wasClean: code === 1000 }));

@@ -25,7 +25,9 @@ export const observeDropTarget = <TTarget extends DropTarget>(
 	};
 
 	const start = (event: DragEvent): void => {
-		if (!observing || active) return;
+		if (!observing || active) {
+			return;
+		}
 
 		active = true;
 
@@ -40,7 +42,9 @@ export const observeDropTarget = <TTarget extends DropTarget>(
 	};
 
 	const finish = (event: DragEvent, reason: Exclude<DropEndReason, "stopped">): void => {
-		if (!active) return;
+		if (!active) {
+			return;
+		}
 
 		active = false;
 		depth = 0;
@@ -49,37 +53,53 @@ export const observeDropTarget = <TTarget extends DropTarget>(
 	};
 
 	function handleDragEnter(event: DragEvent): void {
-		if (!observing) return;
+		if (!observing) {
+			return;
+		}
 
 		++depth;
 		start(event);
 	}
 
 	function handleDragOver(event: DragEvent): void {
-		if (!observing) return;
+		if (!observing) {
+			return;
+		}
 
 		start(event);
-		if (!active) return;
+		if (!active) {
+			return;
+		}
 
 		handlers.over?.call(target, event);
 	}
 
 	function handleDragLeave(event: DragEvent): void {
-		if (!active) return;
+		if (!active) {
+			return;
+		}
 
-		if (depth > 0) --depth;
-		if (depth === 0) finish(event, "leave");
+		if (depth > 0) {
+			--depth;
+		}
+		if (depth === 0) {
+			finish(event, "leave");
+		}
 	}
 
 	function handleDrop(event: DragEvent): void {
-		if (!observing) return;
+		if (!observing) {
+			return;
+		}
 
 		start(event);
 		finish(event, "drop");
 	}
 
 	const stop = (): void => {
-		if (!observing) return;
+		if (!observing) {
+			return;
+		}
 
 		observing = false;
 		removeListeners();
@@ -97,7 +117,9 @@ export const observeDropTarget = <TTarget extends DropTarget>(
 		handlers.end?.call(target, { reason: "stopped" }, undefined);
 	};
 
-	if (!observing) return stop;
+	if (!observing) {
+		return stop;
+	}
 
 	signal?.addEventListener("abort", stop, { once: true });
 

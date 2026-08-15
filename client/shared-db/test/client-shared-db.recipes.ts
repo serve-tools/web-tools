@@ -11,7 +11,9 @@ declare const port: MessagePort;
 
 const database = connect<Schema>(port);
 const changes = database.subscribe("users", (change) => {
-	if (change.kind === "added") console.log(change.value.name);
+	if (change.kind === "added") {
+		console.log(change.value.name);
+	}
 });
 
 await database.put("users", { id: "ada", name: "Ada" });

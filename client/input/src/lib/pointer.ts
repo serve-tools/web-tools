@@ -24,7 +24,9 @@ export const observePointer = <TElement extends Element>(
 	};
 
 	const finish = (event: PointerEvent, reason: Exclude<PointerEndReason, "stopped">): void => {
-		if (state === undefined || event.pointerId !== state.pointerId) return;
+		if (state === undefined || event.pointerId !== state.pointerId) {
+			return;
+		}
 
 		const endState = { ...updateState(state, event), reason };
 
@@ -35,7 +37,9 @@ export const observePointer = <TElement extends Element>(
 	};
 
 	function handlePointerDown(event: PointerEvent): void {
-		if (state !== undefined) return;
+		if (state !== undefined) {
+			return;
+		}
 
 		const bounds = getBounds(element.getBoundingClientRect());
 		const position = getPoint(event.clientX, event.clientY);
@@ -56,12 +60,16 @@ export const observePointer = <TElement extends Element>(
 		try {
 			accepted = handlers.start?.call(element, initialState, event) !== false;
 		} catch (error) {
-			if (state === initialState) state = undefined;
+			if (state === initialState) {
+				state = undefined;
+			}
 
 			throw error;
 		}
 
-		if (state !== initialState || !observing) return;
+		if (state !== initialState || !observing) {
+			return;
+		}
 
 		if (!accepted) {
 			state = undefined;
@@ -85,7 +93,9 @@ export const observePointer = <TElement extends Element>(
 	}
 
 	function handlePointerMove(event: PointerEvent): void {
-		if (state === undefined || event.pointerId !== state.pointerId) return;
+		if (state === undefined || event.pointerId !== state.pointerId) {
+			return;
+		}
 
 		state = updateState(state, event);
 
@@ -105,13 +115,17 @@ export const observePointer = <TElement extends Element>(
 	}
 
 	const stop = (): void => {
-		if (!observing) return;
+		if (!observing) {
+			return;
+		}
 
 		observing = false;
 		removePointerListener("pointerdown", handlePointerDown);
 		signal?.removeEventListener("abort", stop);
 
-		if (state === undefined) return;
+		if (state === undefined) {
+			return;
+		}
 
 		const endState: PointerEndState = { ...state, reason: "stopped" };
 		const pointerId = state.pointerId;
@@ -120,13 +134,17 @@ export const observePointer = <TElement extends Element>(
 		removeSessionListeners();
 
 		try {
-			if (element.hasPointerCapture(pointerId)) element.releasePointerCapture(pointerId);
+			if (element.hasPointerCapture(pointerId)) {
+				element.releasePointerCapture(pointerId);
+			}
 		} finally {
 			handlers.end?.call(element, endState, undefined);
 		}
 	};
 
-	if (!observing) return stop;
+	if (!observing) {
+		return stop;
+	}
 
 	signal?.addEventListener("abort", stop, { once: true });
 

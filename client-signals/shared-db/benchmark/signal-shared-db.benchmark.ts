@@ -42,7 +42,9 @@ class BenchmarkClient {
 			options?.onReady?.(0);
 
 			const unsubscribe = () => {
-				if (!record.active) return;
+				if (!record.active) {
+					return;
+				}
 
 				record.active = false;
 				this.subscriptions.delete(record);
@@ -76,7 +78,9 @@ interface Subscription {
 }
 
 const settle = async (): Promise<void> => {
-	for (let turn = 0; turn < 5; ++turn) await Promise.resolve();
+	for (let turn = 0; turn < 5; ++turn) {
+		await Promise.resolve();
+	}
 };
 
 test("query construction and shared-store change delivery", async () => {
@@ -90,7 +94,9 @@ test("query construction and shared-store change delivery", async () => {
 
 			await settle();
 
-			for (const query of queries) query.dispose();
+			for (const query of queries) {
+				query.dispose();
+			}
 		},
 		{ iterations: 100, samples: 10, warmup: 3 },
 	);
@@ -115,7 +121,9 @@ test("query construction and shared-store change delivery", async () => {
 	expect(queries[0]!.get().status).toBe("ready");
 	expect(revision).toBeGreaterThan(0);
 
-	for (const query of queries) query.dispose();
+	for (const query of queries) {
+		query.dispose();
+	}
 
 	database.close();
 });
@@ -138,7 +146,9 @@ test("sparse explicit invalidation", async () => {
 
 	expect(queries[5_000]!.get().status).toBe("ready");
 
-	for (const query of queries) query.dispose();
+	for (const query of queries) {
+		query.dispose();
+	}
 
 	database.close();
 });

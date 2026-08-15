@@ -20,12 +20,18 @@ class PointerElement {
 	}
 
 	emit(type: string, event: PointerEvent): void {
-		if (type === "lostpointercapture") this.#captures.delete(event.pointerId);
+		if (type === "lostpointercapture") {
+			this.#captures.delete(event.pointerId);
+		}
 
 		try {
-			for (const listener of [...(this.#listeners.get(type) ?? [])]) listener.call(this, event);
+			for (const listener of [...(this.#listeners.get(type) ?? [])]) {
+				listener.call(this, event);
+			}
 		} finally {
-			if (type === "pointerup" || type === "pointercancel") this.#captures.delete(event.pointerId);
+			if (type === "pointerup" || type === "pointercancel") {
+				this.#captures.delete(event.pointerId);
+			}
 		}
 	}
 
@@ -38,11 +44,15 @@ class PointerElement {
 	}
 
 	listenerCount(type?: string): number {
-		if (type !== undefined) return this.#listeners.get(type)?.size ?? 0;
+		if (type !== undefined) {
+			return this.#listeners.get(type)?.size ?? 0;
+		}
 
 		let count = 0;
 
-		for (const listeners of this.#listeners.values()) count += listeners.size;
+		for (const listeners of this.#listeners.values()) {
+			count += listeners.size;
+		}
 
 		return count;
 	}
@@ -248,10 +258,14 @@ describe(observePointer.name, (): void => {
 
 		observePointer(element, {
 			start() {
-				if (++starts === 1) throw startError;
+				if (++starts === 1) {
+					throw startError;
+				}
 			},
 			end() {
-				if (++ends === 1) throw endError;
+				if (++ends === 1) {
+					throw endError;
+				}
 			},
 		});
 

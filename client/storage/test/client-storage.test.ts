@@ -46,15 +46,21 @@ class StorageWindow {
 	}
 
 	addEventListener(type: string, listener: (event: StorageEvent) => void): void {
-		if (type === "storage") this.#listeners.add(listener);
+		if (type === "storage") {
+			this.#listeners.add(listener);
+		}
 	}
 
 	removeEventListener(type: string, listener: (event: StorageEvent) => void): void {
-		if (type === "storage") this.#listeners.delete(listener);
+		if (type === "storage") {
+			this.#listeners.delete(listener);
+		}
 	}
 
 	emit(event: Partial<StorageEvent> & Pick<StorageEvent, "key" | "newValue" | "oldValue" | "storageArea">): void {
-		for (const listener of [...this.#listeners]) listener(event as StorageEvent);
+		for (const listener of [...this.#listeners]) {
+			listener(event as StorageEvent);
+		}
 	}
 }
 

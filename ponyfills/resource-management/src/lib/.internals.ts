@@ -6,21 +6,33 @@ export const enum StackState {
 }
 
 export const assertPending = (state: StackState): void => {
-	if (state === StackState.Disposed) throw new ReferenceError("DisposableStack is already disposed");
+	if (state === StackState.Disposed) {
+		throw new ReferenceError("DisposableStack is already disposed");
+	}
 };
 
 export const getDisposeMethod = <Result>(value: object, key: symbol): (() => Result) | undefined => {
 	const method = Reflect.get(value, key);
 
-	if (method == null) return undefined;
-	if (typeof method !== "function") throw new TypeError("Dispose method must be a function");
+	if (method == null) {
+		return undefined;
+	}
+
+	if (typeof method !== "function") {
+		throw new TypeError("Dispose method must be a function");
+	}
 
 	return () => Reflect.apply(method, value, []) as Result;
 };
 
 const throwDisposalErrors = (errors: unknown[]): void => {
-	if (errors.length === 1) throw errors[0];
-	if (errors.length > 1) throw errors.reduce((suppressed, error) => new SuppressedError(error, suppressed));
+	if (errors.length === 1) {
+		throw errors[0];
+	}
+
+	if (errors.length > 1) {
+		throw errors.reduce((suppressed, error) => new SuppressedError(error, suppressed));
+	}
 };
 
 export const disposeResources = (disposers: Array<() => void>): void => {

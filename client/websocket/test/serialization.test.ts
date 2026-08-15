@@ -9,8 +9,11 @@ describe("structured serialization", () => {
 		for (const value of [undefined, null, true, false, "text", 0, 42, Number.NaN, Infinity, -Infinity, -0, 42n]) {
 			const clone = roundTrip(value);
 
-			if (typeof value === "number") expect(Object.is(clone, value)).toBe(true);
-			else expect(clone).toBe(value);
+			if (typeof value === "number") {
+				expect(Object.is(clone, value)).toBe(true);
+			} else {
+				expect(clone).toBe(value);
+			}
 		}
 	});
 
@@ -111,7 +114,9 @@ describe("structured serialization", () => {
 	it("preserves resizable ArrayBuffers when supported", () => {
 		const input = new ArrayBuffer(4, { maxByteLength: 16 });
 
-		if (!input.resizable) return;
+		if (!input.resizable) {
+			return;
+		}
 
 		new Uint8Array(input).set([1, 2, 3, 4]);
 

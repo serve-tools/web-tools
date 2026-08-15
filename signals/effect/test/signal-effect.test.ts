@@ -60,7 +60,9 @@ describe("effect", () => {
 		const disposeTrigger = effect(() => {
 			const value = trigger.get();
 
-			if (value) downstream.set(value);
+			if (value) {
+				downstream.set(value);
+			}
 		});
 		const disposeDownstream = effect(() => values.push(downstream.get()));
 
@@ -88,8 +90,13 @@ describe("effect", () => {
 			effect(() => {
 				const value = source.get();
 
-				if (index === 0 && shouldCascade) sources.at(-1)!.set(value);
-				if (index === sources.length - 1) lastValues.push(value);
+				if (index === 0 && shouldCascade) {
+					sources.at(-1)!.set(value);
+				}
+
+				if (index === sources.length - 1) {
+					lastValues.push(value);
+				}
 			}),
 		);
 

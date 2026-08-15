@@ -8,5 +8,7 @@ provider.connect();
 provider.setValue(preferences.get("theme") ?? "light");
 
 window.addEventListener("keydown", (event) => {
-	if (keyboard.matchKeyChord("Mod+K", event)) event.preventDefault();
+	if (keyboard.matchKeyChord("Mod+K", event)) {
+		event.preventDefault();
+	}
 });

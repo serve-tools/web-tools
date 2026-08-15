@@ -71,6 +71,9 @@ Do not mount instructions from arbitrary transitive dependencies.
 Within this repository, Codex discovers the repo-only `maintain-serve-tools` Skill from `.agents/skills/`.
 It routes maintenance work to the affected package's canonical Skill without publishing maintainer instructions in package tarballs.
 
+The repository also includes a paired [package Skill evaluation benchmark](./benchmark/skills/) covering package selection, cross-package composition, focused reference retrieval, public API use, and generated TypeScript compilation.
+Run `npm run check:skill-bench` for its offline self-test or `npm run benchmark:skills -- --help` to configure repeated live model comparisons.
+
 ## Development
 
 Node.js 22.14 or newer and npm 11.5.1 or newer are required.

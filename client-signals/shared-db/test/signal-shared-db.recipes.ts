@@ -15,7 +15,9 @@ await database.put("users", { id: "ada", name: "Ada" });
 
 const state = selectedUser.get();
 
-if (state.status === "ready") console.log(state.value?.name);
+if (state.status === "ready") {
+	console.log(state.value?.name);
+}
 
 selectedUser.dispose();
 database.close();

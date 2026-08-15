@@ -12,12 +12,16 @@ const cleanup: DropTargetCleanup = observeDropTarget(
 			console.log(event.dataTransfer?.types);
 		},
 		over(event) {
-			if (event.dataTransfer?.types.includes("Files")) event.preventDefault();
+			if (event.dataTransfer?.types.includes("Files")) {
+				event.preventDefault();
+			}
 		},
 		end(state, event) {
 			this.classList.remove("drag-active");
 
-			if (state.reason === "drop") event?.preventDefault();
+			if (state.reason === "drop") {
+				event?.preventDefault();
+			}
 		},
 	},
 	{ signal: controller.signal },

@@ -5,7 +5,9 @@ const iteratorHelpers = definePolyfill({
 	code: `import "iterator-helpers-polyfill";`,
 	detect: (found) => ({
 		MemberExpression(node) {
-			if (!node.computed && node.property.type === "Identifier" && node.property.name === "take") found();
+			if (!node.computed && node.property.type === "Identifier" && node.property.name === "take") {
+				found();
+			}
 		},
 	}),
 });

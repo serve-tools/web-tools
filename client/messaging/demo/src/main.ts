@@ -5,7 +5,9 @@ import { client } from "./client.js";
 const query = <ElementType extends Element>(selector: string): ElementType => {
 	const element = document.querySelector<ElementType>(selector);
 
-	if (!element) throw new Error(`Missing demo element: ${selector}`);
+	if (!element) {
+		throw new Error(`Missing demo element: ${selector}`);
+	}
 
 	return element;
 };
@@ -92,7 +94,9 @@ const setupTransfers = (): void => {
 		const size = query<HTMLInputElement>("#size").valueAsNumber * 1024;
 		const bytes = new Uint8Array(size);
 
-		for (let index = 0; index < bytes.length; ++index) bytes[index] = index % 251;
+		for (let index = 0; index < bytes.length; ++index) {
+			bytes[index] = index % 251;
+		}
 
 		const first = bytes[0];
 		const last = bytes.at(-1);
@@ -115,4 +119,6 @@ const setups: Record<string, () => void> = {
 };
 const setup = setups[document.body.dataset.demo ?? ""];
 
-if (setup) setup();
+if (setup) {
+	setup();
+}

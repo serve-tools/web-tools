@@ -44,7 +44,9 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 			run: (): void => {
 				this.#effectTaskPending = false;
 
-				if (this.#isConnected && this.isUpdatePending) return;
+				if (this.#isConnected && this.isUpdatePending) {
+					return;
+				}
 
 				this.#collectPendingEffects();
 				this.#effectWatcher.watch();
@@ -59,7 +61,9 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 		readonly #effectWatcher = new Signal.subtle.Watcher(() => this.#enqueueEffects());
 
 		readonly #updateWatcher = new Signal.subtle.Watcher(() => {
-			if (!this.#isForcingUpdate && this.#isConnected) this.requestUpdate();
+			if (!this.#isForcingUpdate && this.#isConnected) {
+				this.requestUpdate();
+			}
 		});
 
 		updateEffect(callback: EffectCallback, options: EffectOptions = {}): EffectCleanup {
@@ -82,7 +86,9 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 			}
 
 			return (): void => {
-				if (effect.disposed) return;
+				if (effect.disposed) {
+					return;
+				}
 
 				effect.disposed = true;
 				this.#effects.delete(effect);
@@ -91,7 +97,9 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 		}
 
 		protected override performUpdate(): void {
-			if (!this.isUpdatePending) return;
+			if (!this.isUpdatePending) {
+				return;
+			}
 
 			this.#ensureUpdateSignal();
 			this.#collectPendingEffects();
@@ -146,7 +154,9 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 			}
 
 			queueMicrotask(() => {
-				if (this.#isConnected || disconnectVersion !== this.#disconnectVersion) return;
+				if (this.#isConnected || disconnectVersion !== this.#disconnectVersion) {
+					return;
+				}
 
 				const errors: unknown[] = [];
 
@@ -167,7 +177,9 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 		}
 
 		#activateEffect(effect: EffectRecord): void {
-			if (effect.active || effect.disposed) return;
+			if (effect.active || effect.disposed) {
+				return;
+			}
 
 			effect.pending = true;
 			effect.computed = new Signal.Computed(() => {
@@ -191,7 +203,9 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 		}
 
 		#deactivateEffect(effect: EffectRecord): void {
-			if (!effect.active) return;
+			if (!effect.active) {
+				return;
+			}
 
 			const computed = effect.computed!;
 
@@ -211,7 +225,9 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 			for (const signal of this.#effectWatcher.getPending()) {
 				const effect = this.#effectForSignal.get(signal as Signal.Computed<void>);
 
-				if (effect !== undefined) effect.pending = true;
+				if (effect !== undefined) {
+					effect.pending = true;
+				}
 			}
 		}
 
@@ -225,7 +241,9 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 		}
 
 		#ensureUpdateSignal(): void {
-			if (this.#updateSignal !== undefined) return;
+			if (this.#updateSignal !== undefined) {
+				return;
+			}
 
 			this.#updateSignal = new Signal.Computed(() => {
 				this.#updateVersion.get();
@@ -262,15 +280,22 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 
 		#hasActiveManualEffect(): boolean {
 			for (const effect of this.#effects) {
-				if (effect.active && effect.manualDispose) return true;
+				if (effect.active && effect.manualDispose) {
+					return true;
+				}
 			}
 
 			return false;
 		}
 
 		#throwErrors(errors: unknown[]): void {
-			if (errors.length === 1) throw errors[0];
-			if (errors.length > 1) throw new AggregateError(errors, "Multiple signal update effects failed");
+			if (errors.length === 1) {
+				throw errors[0];
+			}
+
+			if (errors.length > 1) {
+				throw new AggregateError(errors, "Multiple signal update effects failed");
+			}
 		}
 	}
 

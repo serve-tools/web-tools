@@ -13,11 +13,17 @@ export const isErrorRecord = (value: unknown): value is ErrorRecord =>
 	((value as Partial<ErrorRecord>).stack === undefined || typeof (value as Partial<ErrorRecord>).stack === "string");
 
 export const isServerMessage = (value: unknown): value is ServerMessage => {
-	if (!Array.isArray(value) || value[0] !== protocol) return false;
+	if (!Array.isArray(value) || value[0] !== protocol) {
+		return false;
+	}
 
-	if (value[1] === "close") return value.length === 3 && isErrorRecord(value[2]);
+	if (value[1] === "close") {
+		return value.length === 3 && isErrorRecord(value[2]);
+	}
 
-	if (!Number.isSafeInteger(value[2]) || (value[2] as number) < 0) return false;
+	if (!Number.isSafeInteger(value[2]) || (value[2] as number) < 0) {
+		return false;
+	}
 
 	switch (value[1]) {
 		case "complete":
@@ -33,7 +39,9 @@ export const isServerMessage = (value: unknown): value is ServerMessage => {
 };
 
 export const errorRecord = (reason: unknown): ErrorRecord => {
-	if (!(reason instanceof Error)) return { name: "Error", message: String(reason) };
+	if (!(reason instanceof Error)) {
+		return { name: "Error", message: String(reason) };
+	}
 
 	return reason.stack
 		? { name: reason.name || "Error", message: reason.message, stack: reason.stack }

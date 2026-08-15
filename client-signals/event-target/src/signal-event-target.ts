@@ -43,7 +43,9 @@ export class EventTargetSignal<Value> extends Signal.Computed<Value> implements 
 		this.target = target;
 		this.type = type;
 
-		if (!this.#active) return;
+		if (!this.#active) {
+			return;
+		}
 
 		this.#abortSignal?.addEventListener("abort", this.#abort, { once: true });
 
@@ -69,12 +71,16 @@ export class EventTargetSignal<Value> extends Signal.Computed<Value> implements 
 
 	/** Rereads the current value synchronously while observation is active. */
 	refresh(): void {
-		if (this.#active) this.#state.set(this.#read());
+		if (this.#active) {
+			this.#state.set(this.#read());
+		}
 	}
 
 	/** Stops observation once and freezes the last value. */
 	dispose(): void {
-		if (!this.#active) return;
+		if (!this.#active) {
+			return;
+		}
 
 		this.#active = false;
 		this.target.removeEventListener(this.type, this.#update);

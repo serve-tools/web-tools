@@ -20,7 +20,9 @@ const sources = new Map<string, string>([
 for (const [id, source] of sources) {
 	const example = document.querySelector<CodeExampleElement>(`#${id}`);
 
-	if (!example) throw new Error(`Missing demo example: ${id}`);
+	if (!example) {
+		throw new Error(`Missing demo example: ${id}`);
+	}
 
 	example.source = source;
 }

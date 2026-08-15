@@ -71,7 +71,9 @@ test("SharedWorker database change fanout", async () => {
 
 				await connections[0]!.database.put("records", { id: id++, value: "value" });
 
-				while (deliveries < expectedDeliveries) await new Promise(requestAnimationFrame);
+				while (deliveries < expectedDeliveries) {
+					await new Promise(requestAnimationFrame);
+				}
 			},
 			{ iterations: 25, samples: 10, warmup: 3 },
 		);

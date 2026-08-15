@@ -26,7 +26,9 @@ export class AsyncDisposableStack {
 				getDisposeMethod<void | PromiseLike<void>>(value, asyncDispose) ??
 				getDisposeMethod<void>(value, dispose);
 
-			if (!method) throw new TypeError("Object is not disposable");
+			if (!method) {
+				throw new TypeError("Object is not disposable");
+			}
 
 			this.#disposers.push(method);
 		}
@@ -66,7 +68,9 @@ export class AsyncDisposableStack {
 
 	/** Asynchronously disposes resources in reverse order and combines multiple failures with `SuppressedError`. */
 	async disposeAsync(): Promise<void> {
-		if (this.#state === StackState.Disposed) return;
+		if (this.#state === StackState.Disposed) {
+			return;
+		}
 
 		this.#state = StackState.Disposed;
 		await disposeResourcesAsync(this.#disposers);

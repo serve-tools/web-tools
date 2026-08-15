@@ -14,7 +14,10 @@ export async function buildDemoDependencies(demoPackageURL) {
 	if (demoPackage.dependencies[localPackage.name] === undefined) {
 		throw new Error(`${demoPackage.name} must depend on its local package, ${localPackage.name}`);
 	}
-	if (npmPath === undefined) throw new Error("npm_execpath is unavailable");
+
+	if (npmPath === undefined) {
+		throw new Error("npm_execpath is unavailable");
+	}
 
 	for (const script of ["build:dependencies", "build"]) {
 		const result = spawnSync(
@@ -26,7 +29,12 @@ export async function buildDemoDependencies(demoPackageURL) {
 			},
 		);
 
-		if (result.error !== undefined) throw result.error;
-		if (result.status !== 0) process.exit(result.status ?? 1);
+		if (result.error !== undefined) {
+			throw result.error;
+		}
+
+		if (result.status !== 0) {
+			process.exit(result.status ?? 1);
+		}
 	}
 }

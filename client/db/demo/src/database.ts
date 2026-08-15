@@ -48,7 +48,9 @@ export const ensureExamples = (db: DB<DemoSchema>): Promise<void> =>
 		const contacts = transaction.objectStore("contacts");
 
 		for (const contact of exampleContacts) {
-			if (!(await contacts.has(contact.id))) await contacts.add(contact);
+			if (!(await contacts.has(contact.id))) {
+				await contacts.add(contact);
+			}
 		}
 	});
 

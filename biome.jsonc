@@ -39,6 +39,10 @@
 			},
 			"style": {
 				"noNonNullAssertion": "off",
+				"useBlockStatements": {
+					"fix": "safe",
+					"level": "error"
+				},
 				"useImportType": {
 					"level": "error",
 					"options": {

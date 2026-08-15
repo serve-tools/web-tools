@@ -14,7 +14,9 @@ const session = new Storage<DemoStorage>("session");
 const query = <ElementType extends Element>(selector: string): ElementType => {
 	const element = document.querySelector<ElementType>(selector);
 
-	if (!element) throw new Error(`Missing demo element: ${selector}`);
+	if (!element) {
+		throw new Error(`Missing demo element: ${selector}`);
+	}
 
 	return element;
 };
@@ -80,7 +82,9 @@ query("#clear-session").addEventListener("click", () => {
 addEventListener(
 	"pagehide",
 	() => {
-		for (const unsubscribe of unsubscribers) unsubscribe();
+		for (const unsubscribe of unsubscribers) {
+			unsubscribe();
+		}
 	},
 	{ once: true },
 );

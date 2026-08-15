@@ -118,8 +118,13 @@ test("reuses fragmented scheduler capacity", async () => {
 	await benchmark(
 		"signal-effect/reuse-fragmented-scheduler-capacity",
 		() => {
-			for (const slot of churnSlots) disposers[slot]();
-			for (const slot of churnSlots) disposers[slot] = effect(() => source.get());
+			for (const slot of churnSlots) {
+				disposers[slot]();
+			}
+
+			for (const slot of churnSlots) {
+				disposers[slot] = effect(() => source.get());
+			}
 		},
 		{ iterations: 5_000, samples: 10, warmup: 3 },
 	);

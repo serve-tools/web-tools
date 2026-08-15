@@ -15,7 +15,9 @@ export const callbackRef = <TElement extends Element>(
 
 		const element = value;
 
-		if (!element) return;
+		if (!element) {
+			return;
+		}
 
 		if (waitUntilConnected && !element.isConnected) {
 			animationFrame = requestAnimationFrame(attach);
@@ -38,11 +40,15 @@ export const callbackRef = <TElement extends Element>(
 			return value;
 		},
 		set value(element: TElement | undefined) {
-			if (value === element) return;
+			if (value === element) {
+				return;
+			}
 
 			const nextRevision = ++revision;
 
-			if (animationFrame !== undefined) cancelAnimationFrame(animationFrame);
+			if (animationFrame !== undefined) {
+				cancelAnimationFrame(animationFrame);
+			}
 
 			animationFrame = undefined;
 
@@ -52,11 +58,15 @@ export const callbackRef = <TElement extends Element>(
 			value = undefined;
 			previousCleanup?.();
 
-			if (nextRevision !== revision) return;
+			if (nextRevision !== revision) {
+				return;
+			}
 
 			value = element;
 
-			if (element) attach();
+			if (element) {
+				attach();
+			}
 		},
 	} as callbackRef.Result<TElement>;
 };

@@ -19,6 +19,7 @@
 		"**/node_modules": true
 	},
 	"files.watcherExclude": {
+		"**/.tmp-*": true,
 		"**/dist/**": true
 	},
 

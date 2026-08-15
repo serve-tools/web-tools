@@ -6,7 +6,9 @@ import type { DemoSchema, Task } from "./database-worker.js";
 const query = <ElementType extends Element>(selector: string): ElementType => {
 	const element = document.querySelector<ElementType>(selector);
 
-	if (!element) throw new Error(`Missing demo element: ${selector}`);
+	if (!element) {
+		throw new Error(`Missing demo element: ${selector}`);
+	}
 
 	return element;
 };
@@ -35,7 +37,9 @@ if (typeof SharedWorker === "undefined") {
 
 	const refresh = async (nextRevision?: number): Promise<void> => {
 		tasks = await database.getAll("tasks");
-		if (nextRevision !== undefined) revision.textContent = String(nextRevision);
+		if (nextRevision !== undefined) {
+			revision.textContent = String(nextRevision);
+		}
 		render();
 	};
 
@@ -76,9 +80,13 @@ if (typeof SharedWorker === "undefined") {
 		event.preventDefault();
 
 		const title = input.value.trim();
-		if (!title) return;
+
+		if (!title) {
+			return;
+		}
 
 		input.value = "";
+
 		void database.add("tasks", {
 			done: false,
 			id: crypto.randomUUID(),

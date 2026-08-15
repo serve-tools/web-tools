@@ -83,6 +83,8 @@ test("coordinates real shared database operations with reactive signals", async 
 		selected.dispose();
 		users.dispose();
 
-		for (const connection of connections) connection.close();
+		for (const connection of connections) {
+			connection.close();
+		}
 	}
 });

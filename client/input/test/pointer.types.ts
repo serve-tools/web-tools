@@ -13,7 +13,9 @@ const cleanup: PointerCleanup = observePointer(
 		start(state, event) {
 			this.disabled = true;
 
-			if (!event.isPrimary || state.pointerType === "ignored") return false;
+			if (!event.isPrimary || state.pointerType === "ignored") {
+				return false;
+			}
 		},
 		move(state, event) {
 			this.style.translate = `${state.delta.x}px ${state.delta.y}px`;
@@ -22,7 +24,9 @@ const cleanup: PointerCleanup = observePointer(
 		end(state, event) {
 			this.disabled = false;
 
-			if (event === undefined) console.log(state.reason);
+			if (event === undefined) {
+				console.log(state.reason);
+			}
 		},
 	},
 	{ signal: controller.signal },

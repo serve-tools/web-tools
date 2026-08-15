@@ -15,7 +15,9 @@ test("observation construction and dense delivery", async () => {
 				() => new EventTargetSignal(target, "change", () => value),
 			);
 
-			for (const observation of observations) observation.dispose();
+			for (const observation of observations) {
+				observation.dispose();
+			}
 		},
 		{ iterations: 1_000, samples: 10, warmup: 3 },
 	);
@@ -33,5 +35,7 @@ test("observation construction and dense delivery", async () => {
 
 	expect(observations[0]!.get()).toBe(value);
 
-	for (const observation of observations) observation.dispose();
+	for (const observation of observations) {
+		observation.dispose();
+	}
 });

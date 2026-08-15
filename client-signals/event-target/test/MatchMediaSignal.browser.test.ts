@@ -45,10 +45,14 @@ class MutableMediaQueryList extends EventTarget {
 	}
 
 	addListener(listener: ((this: MediaQueryList, event: MediaQueryListEvent) => any) | null): void {
-		if (listener) this.addEventListener("change", listener as EventListener);
+		if (listener) {
+			this.addEventListener("change", listener as EventListener);
+		}
 	}
 
 	removeListener(listener: ((this: MediaQueryList, event: MediaQueryListEvent) => any) | null): void {
-		if (listener) this.removeEventListener("change", listener as EventListener);
+		if (listener) {
+			this.removeEventListener("change", listener as EventListener);
+		}
 	}
 }

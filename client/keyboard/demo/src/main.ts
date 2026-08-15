@@ -13,7 +13,9 @@ import {
 const query = <ElementType extends Element>(selector: string): ElementType => {
 	const element = document.querySelector<ElementType>(selector);
 
-	if (!element) throw new Error(`Missing demo element: ${selector}`);
+	if (!element) {
+		throw new Error(`Missing demo element: ${selector}`);
+	}
 
 	return element;
 };
@@ -41,8 +43,13 @@ for (const chord of shortcuts) {
 capture.addEventListener("keydown", (event) => {
 	const chord = getKeyChord(event);
 
-	if (!chord) return;
-	if (shortcuts.some((expected) => matchKeyChord(expected, event))) event.preventDefault();
+	if (!chord) {
+		return;
+	}
+
+	if (shortcuts.some((expected) => matchKeyChord(expected, event))) {
+		event.preventDefault();
+	}
 
 	symbols.replaceChildren(...getKeyChordSymbols(chord).map(createKey));
 	label.textContent = getKeyChordLabel(chord);

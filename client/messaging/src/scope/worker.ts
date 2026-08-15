@@ -22,7 +22,9 @@ export const listen = <const P extends T.Protocol & ProtocolDefinition<P>>(handl
 	let isClosed = false;
 
 	const add = (endpoint: T.MessageEndpoint): void => {
-		if (isClosed) return;
+		if (isClosed) {
+			return;
+		}
 
 		const server = serve<P>(endpoint, handlers);
 
@@ -30,14 +32,18 @@ export const listen = <const P extends T.Protocol & ProtocolDefinition<P>>(handl
 		void server.closed.then(() => {
 			const index = connections.indexOf(server);
 
-			if (index !== -1) connections.splice(index, 1);
+			if (index !== -1) {
+				connections.splice(index, 1);
+			}
 		});
 	};
 
 	const connected = ({ ports }: MessageEvent): void => {
 		const port = ports[0];
 
-		if (port) add(port);
+		if (port) {
+			add(port);
+		}
 	};
 
 	if ("onconnect" in scope) {
@@ -49,13 +55,19 @@ export const listen = <const P extends T.Protocol & ProtocolDefinition<P>>(handl
 	}
 
 	const close = (reason?: unknown): void => {
-		if (isClosed) return;
+		if (isClosed) {
+			return;
+		}
 
 		isClosed = true;
 
-		if ("onconnect" in scope) scope.removeEventListener("connect", connected);
+		if ("onconnect" in scope) {
+			scope.removeEventListener("connect", connected);
+		}
 
-		for (const server of [...connections]) server.close(reason);
+		for (const server of [...connections]) {
+			server.close(reason);
+		}
 
 		connections.length = 0;
 	};

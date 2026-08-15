@@ -114,7 +114,9 @@ test("signal hot paths", async () => {
 	const wideComputed = new Signal.Computed(() => {
 		let total = 0;
 
-		for (const source of wideSources) total += source.get();
+		for (const source of wideSources) {
+			total += source.get();
+		}
 
 		return total;
 	});
@@ -133,14 +135,19 @@ test("signal hot paths", async () => {
 	const fanoutState = new Signal.State(0);
 	const watchers = Array.from({ length: 1_000 }, () => new Signal.subtle.Watcher(() => undefined));
 
-	for (const watcher of watchers) watcher.watch(fanoutState);
+	for (const watcher of watchers) {
+		watcher.watch(fanoutState);
+	}
 
 	let fanoutValue = 0;
 
 	await benchmark(
 		"signal/state-set-1k-watchers",
 		() => {
-			for (const watcher of watchers) watcher.watch();
+			for (const watcher of watchers) {
+				watcher.watch();
+			}
+
 			fanoutState.set(++fanoutValue);
 		},
 		{ iterations: 10_000, samples: 10, warmup: 3 },
@@ -164,8 +171,13 @@ test("signal hot paths", async () => {
 	await benchmark(
 		"signal/watcher-cycle-1k-sinks",
 		() => {
-			for (const fanoutWatcher of fanoutWatchers) fanoutWatcher.watch(fanoutSource);
-			for (const fanoutWatcher of fanoutWatchers) fanoutWatcher.unwatch(fanoutSource);
+			for (const fanoutWatcher of fanoutWatchers) {
+				fanoutWatcher.watch(fanoutSource);
+			}
+
+			for (const fanoutWatcher of fanoutWatchers) {
+				fanoutWatcher.unwatch(fanoutSource);
+			}
 		},
 		{ iterations: 1_000, samples: 10, warmup: 3 },
 	);

@@ -19,10 +19,14 @@ observePointer(
 
 observeDropTarget(dropZone, {
 	over(event) {
-		if (event.dataTransfer?.types.includes("Files")) event.preventDefault();
+		if (event.dataTransfer?.types.includes("Files")) {
+			event.preventDefault();
+		}
 	},
 	end(state) {
-		if (state.reason === "drop") this.dataset.received = "true";
+		if (state.reason === "drop") {
+			this.dataset.received = "true";
+		}
 	},
 });
 

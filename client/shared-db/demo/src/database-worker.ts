@@ -8,7 +8,9 @@ const server = listen<{
 }>("serve-tools-client-shared-db-demo", {
 	version: 1,
 	upgrade(database, { oldVersion }) {
-		if (oldVersion < 1) database.createObjectStore("tasks", { keyPath: "id" });
+		if (oldVersion < 1) {
+			database.createObjectStore("tasks", { keyPath: "id" });
+		}
 	},
 });
 

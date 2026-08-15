@@ -4,7 +4,9 @@ import type { Disposer } from "./dispose.js";
 import { disown, own } from "./dispose.js";
 
 export const assign = (owner: Node, target: object, values: object): void => {
-	for (const name in values) handler((values as any)[name], (value) => ((target as any)[name] = value), owner);
+	for (const name in values) {
+		handler((values as any)[name], (value) => ((target as any)[name] = value), owner);
+	}
 };
 
 export const isSignal = <T>(value: Watchable<T>): value is ReadableSignal<T> =>

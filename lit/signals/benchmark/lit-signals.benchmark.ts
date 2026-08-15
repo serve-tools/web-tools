@@ -30,7 +30,9 @@ class BenchmarkDecoratedModel {
 		this[atomicState] = atomicProperty.init!.call(this, 0);
 		this[lifecycleState] = lifecycleProperty.init!.call(this, 0);
 
-		for (const initialize of computedInitializers) initialize.call(this);
+		for (const initialize of computedInitializers) {
+			initialize.call(this);
+		}
 	}
 
 	get atomicValue(): number {
@@ -294,7 +296,9 @@ test("SignalWatcher lifecycle and dense invalidation hot paths", async () => {
 
 			mountContainer.append(...elements);
 			await elements.at(-1)!.updateComplete;
-			for (const element of elements) element.remove();
+			for (const element of elements) {
+				element.remove();
+			}
 		},
 		{ iterations: 10, samples: 5, warmup: 2 },
 	);
@@ -316,7 +320,9 @@ test("SignalWatcher lifecycle and dense invalidation hot paths", async () => {
 	);
 
 	expect(elements[0].shadowRoot?.textContent).toBe(String(nextValue));
-	for (const element of elements) element.remove();
+	for (const element of elements) {
+		element.remove();
+	}
 	mountContainer.remove();
 });
 

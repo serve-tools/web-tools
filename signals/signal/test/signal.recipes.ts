@@ -4,7 +4,9 @@ const first = new Signal.State("Ada");
 const last = new Signal.State("Lovelace");
 const fullName = new Signal.Computed(() => `${first.get()} ${last.get()}`);
 const watcher = new Signal.subtle.Watcher(() => {
-	for (const pending of watcher.getPending()) pending.get();
+	for (const pending of watcher.getPending()) {
+		pending.get();
+	}
 
 	watcher.watch();
 });

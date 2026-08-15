@@ -80,7 +80,9 @@ test("reactive DOM update hot paths", async () => {
 		{ iterations: 500, samples: 10, warmup: 3 },
 	);
 
-	for (const node of textNodes) dispose(node);
+	for (const node of textNodes) {
+		dispose(node);
+	}
 
 	const title = new Signal.State(0);
 	const elements = Array.from({ length: 1_000 }, () => html("div", attrs({ title }))());
@@ -95,7 +97,9 @@ test("reactive DOM update hot paths", async () => {
 		{ iterations: 500, samples: 10, warmup: 3 },
 	);
 
-	for (const element of elements) dispose(element);
+	for (const element of elements) {
+		dispose(element);
+	}
 });
 
 test("stylesheet creation and update hot paths", async () => {
@@ -123,7 +127,9 @@ test("stylesheet creation and update hot paths", async () => {
 		{ iterations: 500, samples: 10, warmup: 3 },
 	);
 
-	for (const sheet of sheets) dispose(sheet);
+	for (const sheet of sheets) {
+		dispose(sheet);
+	}
 });
 
 test("group and subtree lifecycle hot paths", async () => {

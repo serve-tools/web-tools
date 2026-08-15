@@ -7,7 +7,9 @@ import { clearDemoData, database, ensureExamples, resetDemoData, seedContacts } 
 const query = <ElementType extends Element>(selector: string): ElementType => {
 	const element = document.querySelector<ElementType>(selector);
 
-	if (!element) throw new Error(`Missing demo element: ${selector}`);
+	if (!element) {
+		throw new Error(`Missing demo element: ${selector}`);
+	}
 
 	return element;
 };
@@ -94,7 +96,9 @@ const setupTransactions = async (db: DB<DemoSchema>): Promise<void> => {
 			const contacts = transaction.objectStore("contacts");
 			const current = await contacts.get("ada");
 
-			if (!current) throw new Error("Ada is missing from the contact store.");
+			if (!current) {
+				throw new Error("Ada is missing from the contact store.");
+			}
 
 			const next = { ...current, visits: current.visits + 1 };
 
@@ -189,7 +193,9 @@ const setups: Record<string, (db: DB<DemoSchema>) => Promise<void>> = {
 };
 const setup = setups[document.body.dataset.demo ?? ""];
 
-if (setup) void database.then(setup).catch(showError);
+if (setup) {
+	void database.then(setup).catch(showError);
+}
 
 addEventListener(
 	"pagehide",

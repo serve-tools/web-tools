@@ -23,7 +23,9 @@ test("MessagePort request round trips", async () => {
 		requests: {
 			echo: (value) => value,
 			echoWithSignal: (value, { signal }) => {
-				if (signal.aborted) throw signal.reason;
+				if (signal.aborted) {
+					throw signal.reason;
+				}
 				return value;
 			},
 			transfer: (value) => transfer(value, [value]),
@@ -60,7 +62,9 @@ test("MessagePort request round trips", async () => {
 				const input = new ArrayBuffer(1024 * 1024);
 				const output = await client.request("transfer", input, { transfer: [input] });
 
-				if (output.byteLength !== 1024 * 1024) throw new Error("Unexpected transferred buffer size");
+				if (output.byteLength !== 1024 * 1024) {
+					throw new Error("Unexpected transferred buffer size");
+				}
 			},
 			{ iterations: 200, samples: 10, warmup: 3 },
 		);

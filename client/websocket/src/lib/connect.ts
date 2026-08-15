@@ -48,13 +48,17 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	let isClosed = false;
 
 	const send = (message: ClientMessage): void => {
-		if (socket.readyState !== WebSocket.OPEN) throw connectionClosedError();
+		if (socket.readyState !== WebSocket.OPEN) {
+			throw connectionClosedError();
+		}
 
 		socket.send(serialize(message));
 	};
 
 	const finish = (error: unknown, remote: boolean): void => {
-		if (isClosed) return;
+		if (isClosed) {
+			return;
+		}
 
 		isClosed = true;
 
@@ -65,15 +69,20 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 			operations.delete(id);
 			operation.off();
 
-			if (operation.kind === "request" || remote) operation.settle(false, error);
-			else operation.cancel(error);
+			if (operation.kind === "request" || remote) {
+				operation.settle(false, error);
+			} else {
+				operation.cancel(error);
+			}
 		}
 
 		closed.resolve();
 	};
 
 	const closeSocket = (): void => {
-		if (socket.readyState >= WebSocket.CLOSING) return;
+		if (socket.readyState >= WebSocket.CLOSING) {
+			return;
+		}
 
 		try {
 			socket.close(1000);
@@ -90,12 +99,16 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	};
 
 	function receive({ data }: MessageEvent): void {
-		if (isClosed) return;
+		if (isClosed) {
+			return;
+		}
 
 		let message: unknown;
 
 		try {
-			if (!(data instanceof ArrayBuffer)) throw protocolError("Expected a binary WebSocket message");
+			if (!(data instanceof ArrayBuffer)) {
+				throw protocolError("Expected a binary WebSocket message");
+			}
 
 			message = deserialize(data);
 		} catch (error) {
@@ -120,7 +133,9 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		const id = message[2];
 		const operation = operations.get(id);
 
-		if (!operation) return;
+		if (!operation) {
+			return;
+		}
 
 		if (message[1] === "event") {
 			if (operation.kind !== "subscription") {
@@ -160,7 +175,9 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	const cancel = (id: number): boolean => {
 		const operation = operations.get(id);
 
-		if (!operation) return false;
+		if (!operation) {
+			return false;
+		}
 
 		operations.delete(id);
 		operation.off();
@@ -181,13 +198,17 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		settle: (ok: boolean, value: unknown) => void,
 		onAbort: (reason: unknown) => void,
 	): number => {
-		if (nextId >= Number.MAX_SAFE_INTEGER) throw new RangeError("The connection exhausted its operation IDs");
+		if (nextId >= Number.MAX_SAFE_INTEGER) {
+			throw new RangeError("The connection exhausted its operation IDs");
+		}
 
 		const id = ++nextId;
 		const signal = options.signal;
 		const abort = signal
 			? (): void => {
-					if (cancel(id)) onAbort(signal.reason);
+					if (cancel(id)) {
+						onAbort(signal.reason);
+					}
 				}
 			: noop;
 		const off = signal ? (): void => signal.removeEventListener("abort", abort) : noop;
@@ -207,7 +228,9 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	};
 
 	const close = (reason?: unknown): void => {
-		if (isClosed) return;
+		if (isClosed) {
+			return;
+		}
 
 		const error = connectionClosedError(reason);
 
@@ -224,8 +247,13 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 	return {
 		request(name: string, input?: unknown, requestOptions: RequestOptions = {}): Promise<unknown> {
-			if (isClosed) return Promise.reject(connectionClosedError());
-			if (requestOptions.signal?.aborted) return Promise.reject(requestOptions.signal.reason);
+			if (isClosed) {
+				return Promise.reject(connectionClosedError());
+			}
+
+			if (requestOptions.signal?.aborted) {
+				return Promise.reject(requestOptions.signal.reason);
+			}
 
 			return new Promise((resolve, reject) => {
 				open(
@@ -246,7 +274,9 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 			listenerOrOptions?: ((value: unknown) => void) | SubscribeOptions,
 			maybeOptions?: SubscribeOptions,
 		): Subscription {
-			if (isClosed) throw connectionClosedError();
+			if (isClosed) {
+				throw connectionClosedError();
+			}
 
 			const noInput = typeof inputOrListener === "function";
 			const input = noInput ? undefined : inputOrListener;
@@ -255,7 +285,9 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 			let active = !subscribeOptions?.signal?.aborted;
 
-			if (!active) return inactiveSubscription;
+			if (!active) {
+				return inactiveSubscription;
+			}
 
 			const id = open(
 				"subscription",
@@ -282,7 +314,9 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 				},
 			);
 			const unsubscribe = (): void => {
-				if (cancel(id)) active = false;
+				if (cancel(id)) {
+					active = false;
+				}
 			};
 
 			return {

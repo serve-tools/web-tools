@@ -20,11 +20,15 @@ export const clearCallbackTimeout = (handle: ReturnType<typeof setTimeout>) => c
 export const setCallbackTimeout = (callback: () => void, timeout: number) => setTimeout(callback, timeout);
 
 export const resetScheduleIfEmpty = () => {
-	if (!callbacks.size) isScheduled = false;
+	if (!callbacks.size) {
+		isScheduled = false;
+	}
 };
 
 export function getChannel(): MessageChannel {
-	if (channel) return channel;
+	if (channel) {
+		return channel;
+	}
 
 	channel = new MessageChannel();
 	channel.port1.onmessage = runCallbacks;
@@ -46,10 +50,17 @@ function runCallbacks(): void {
 
 	try {
 		for (const [handle, scheduled] of runnableCallbacks) {
-			if (performance.now() >= end) break;
-			if (!callbacks.delete(handle)) continue;
+			if (performance.now() >= end) {
+				break;
+			}
 
-			if (scheduled.timeoutHandle !== undefined) clearTimeout(scheduled.timeoutHandle);
+			if (!callbacks.delete(handle)) {
+				continue;
+			}
+
+			if (scheduled.timeoutHandle !== undefined) {
+				clearTimeout(scheduled.timeoutHandle);
+			}
 
 			scheduled.callback({
 				didTimeout: false,
@@ -59,12 +70,16 @@ function runCallbacks(): void {
 	} finally {
 		isScheduled = false;
 
-		if (callbacks.size) schedule();
+		if (callbacks.size) {
+			schedule();
+		}
 	}
 }
 
 export function schedule(): void {
-	if (isScheduled) return;
+	if (isScheduled) {
+		return;
+	}
 
 	isScheduled = true;
 
@@ -84,9 +99,13 @@ export function requestIdleCallback(callback: IdleRequestCallback, options?: Idl
 
 	if (options?.timeout !== undefined && options.timeout > 0) {
 		scheduled.timeoutHandle = setTimeout(() => {
-			if (!callbacks.delete(handle)) return;
+			if (!callbacks.delete(handle)) {
+				return;
+			}
 
-			if (!callbacks.size) isScheduled = false;
+			if (!callbacks.size) {
+				isScheduled = false;
+			}
 
 			callback({ didTimeout: true, timeRemaining: () => 0 });
 		}, options.timeout);
@@ -103,9 +122,13 @@ export function requestIdleCallback(callback: IdleRequestCallback, options?: Idl
 export function cancelIdleCallback(handle: number): void {
 	const scheduled = callbacks.get(handle);
 
-	if (scheduled?.timeoutHandle !== undefined) clearTimeout(scheduled.timeoutHandle);
+	if (scheduled?.timeoutHandle !== undefined) {
+		clearTimeout(scheduled.timeoutHandle);
+	}
 
-	if (callbacks.delete(handle) && !callbacks.size) isScheduled = false;
+	if (callbacks.delete(handle) && !callbacks.size) {
+		isScheduled = false;
+	}
 }
 
 declare var MessageChannel: typeof globalThis extends { onmessage: any; MessageChannel: infer T }

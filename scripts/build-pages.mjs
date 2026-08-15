@@ -12,7 +12,9 @@ const demoLocations = rootPackage.workspaces.filter((location) =>
 );
 const npmPath = process.env.npm_execpath;
 
-if (npmPath === undefined) throw new Error("npm_execpath is unavailable");
+if (npmPath === undefined) {
+	throw new Error("npm_execpath is unavailable");
+}
 
 await rm(pagesDirectory, { force: true, recursive: true });
 await mkdir(dirname(pagesDirectory), { recursive: true });

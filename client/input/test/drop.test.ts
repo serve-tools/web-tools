@@ -19,7 +19,9 @@ class DropTargetStub {
 	}
 
 	emit(event: DragEvent): void {
-		for (const listener of [...(this.#listeners.get(event.type) ?? [])]) listener.call(this, event);
+		for (const listener of [...(this.#listeners.get(event.type) ?? [])]) {
+			listener.call(this, event);
+		}
 	}
 
 	removeEventListener(type: string, listener: EventListener): void {
@@ -157,10 +159,14 @@ describe(observeDropTarget.name, (): void => {
 
 		observeDropTarget(target as unknown as Element, {
 			start() {
-				if (++starts === 1) throw startError;
+				if (++starts === 1) {
+					throw startError;
+				}
 			},
 			end() {
-				if (++ends === 1) throw endError;
+				if (++ends === 1) {
+					throw endError;
+				}
 			},
 		});
 

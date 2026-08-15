@@ -48,5 +48,7 @@ test("reports an unavailable API as a failure", async (): Promise<void> => {
 	const result = await share({ text: "Hello" });
 
 	expect(result.status).toBe("failed");
-	if (result.status === "failed") expect((result.error as DOMException).name).toBe("NotSupportedError");
+	if (result.status === "failed") {
+		expect((result.error as DOMException).name).toBe("NotSupportedError");
+	}
 });

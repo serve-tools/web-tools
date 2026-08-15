@@ -130,13 +130,17 @@ class SignalTaskList extends SignalElement {
 	#removeTask(task: Task): void {
 		const index = this.tasks.findIndex(({ id }) => id === task.id);
 
-		if (index !== -1) this.tasks.splice(index, 1);
+		if (index !== -1) {
+			this.tasks.splice(index, 1);
+		}
 	}
 
 	#toggleTask(task: Task): void {
 		const index = this.tasks.findIndex(({ id }) => id === task.id);
 
-		if (index !== -1) this.tasks[index] = { ...task, done: !task.done };
+		if (index !== -1) {
+			this.tasks[index] = { ...task, done: !task.done };
+		}
 	}
 }
 

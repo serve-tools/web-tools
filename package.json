@@ -54,9 +54,11 @@
 	"scripts": {
 		"benchmark": "npm run benchmark --workspaces --if-present",
 		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket",
+		"benchmark:skills": "node benchmark/skills/run.mjs",
 		"build": "npm run build --workspaces --if-present",
 		"build:pages": "node scripts/build-pages.mjs",
 		"check:packages": "npm run check:package --workspaces --if-present",
+		"check:skill-bench": "node --test benchmark/skills/test/*.test.mjs && node benchmark/skills/run.mjs --provider fixture --no-compile --quiet",
 		"check:skills": "node scripts/check-skills.mjs",
 		"format": "dprint fmt",
 		"format:check": "dprint check",
@@ -64,7 +66,7 @@
 		"lint:fix": "biome check --write",
 		"test": "npm run test --workspaces --if-present",
 		"typecheck": "npm run typecheck --workspaces --if-present",
-		"verify": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run check:skills && npm run build && npm run check:packages"
+		"verify": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run check:skills && npm run check:skill-bench && npm run build && npm run check:packages"
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "0.18.5",
