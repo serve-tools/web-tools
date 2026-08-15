@@ -180,7 +180,9 @@ describe("requests", () => {
 		});
 
 		try {
-			await vi.waitFor(() => expect(constructions).toBe(1));
+			if (navigator.locks) {
+				await vi.waitFor(() => expect(constructions).toBe(1));
+			}
 
 			const baseline = constructions;
 
@@ -597,6 +599,7 @@ describe("protocol and lifecycle", () => {
 
 describe("liveness", () => {
 	const isLease = (lock: LockInfo | undefined): boolean => !!lock?.name?.startsWith(`${protocol}#`);
+	const hasWebLocks = typeof navigator.locks?.query === "function";
 
 	it("announces the queued lease before the first operation", async () => {
 		const messages: unknown[][] = [];
@@ -639,7 +642,7 @@ describe("liveness", () => {
 		}
 	});
 
-	it("finishes the server when an abandoned liveness lease is released", async () => {
+	it.runIf(hasWebLocks)("finishes the server when an abandoned liveness lease is released", async () => {
 		type P = { requests: { ping(): string } };
 
 		const { port1, port2 } = new MessageChannel();
@@ -667,7 +670,7 @@ describe("liveness", () => {
 		port2.close();
 	});
 
-	it("releases the liveness lease when the client closes", async () => {
+	it.runIf(hasWebLocks)("releases the liveness lease when the client closes", async () => {
 		type P = { requests: { ping(): string } };
 
 		const { port1, port2 } = new MessageChannel();
@@ -697,7 +700,7 @@ describe("liveness", () => {
 		port2.close();
 	});
 
-	it("closes the client and releases the lease on pagehide", async () => {
+	it.runIf(hasWebLocks)("closes the client and releases the lease on pagehide", async () => {
 		type P = { requests: { ping(): string } };
 
 		const listeners = new Set<() => void>();
