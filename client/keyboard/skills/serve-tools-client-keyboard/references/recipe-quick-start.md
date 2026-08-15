@@ -12,7 +12,9 @@ button.textContent = `Commands (${getKeyChordLabel(shortcut)})`;
 button.setAttribute("aria-keyshortcuts", getKeyChordAriaKeyShortcuts(shortcut));
 
 window.addEventListener("keydown", (event) => {
-	if (!matchKeyChord(shortcut, event)) return;
+	if (!matchKeyChord(shortcut, event)) {
+		return;
+	}
 
 	event.preventDefault();
 	button.click();

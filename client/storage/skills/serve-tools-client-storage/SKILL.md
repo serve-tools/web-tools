@@ -10,7 +10,7 @@ Read only the references needed for the current task.
 
 ## Route by task
 
-- [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.
+- [Recipe: observable typed preference](references/recipe-quick-start.md): compile-checked `Storage`, change variants, cancellation, `get()`, and `set()`.
 - To use the platform-shaped contract, read [Use the platform-shaped contract](references/use-the-platform-shaped-contract.md).
 - To preserve observation semantics, read [Preserve observation semantics](references/preserve-observation-semantics.md).
 - To respect the environment, read [Respect the environment](references/respect-the-environment.md).

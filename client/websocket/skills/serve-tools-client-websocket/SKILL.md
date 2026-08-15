@@ -10,7 +10,7 @@ Read only the references needed for the current task.
 
 ## Route by task
 
-- [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.
+- [Recipe: complete typed client](references/recipe-quick-start.md): compile-checked connection, request, subscription, cancellation, protocol extraction, and disposal.
 - To choose the package deliberately, read [Choose the package deliberately](references/choose-the-package-deliberately.md).
 - [Recipe: model named operations](references/recipe-model-named-operations.md): focused implementation pattern.
 - [Recipe: own a connection](references/recipe-own-a-connection.md): focused implementation pattern.

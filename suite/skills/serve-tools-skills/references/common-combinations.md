@@ -12,7 +12,8 @@ Use `@serve-tools/client-messaging` for request and subscription transport and `
 ## Signal-aware Lit components
 
 Use `@serve-tools/lit-signals` for Lit lifecycle integration.
-Add `@serve-tools/signal`, `@serve-tools/signal-effect`, or `@serve-tools/signal-collections` only when the component directly needs those primitives.
+`@serve-tools/lit-signals` re-exports `Signal`; add `@serve-tools/signal` only when importing it directly.
+Add `@serve-tools/signal-effect` or `@serve-tools/signal-collections` only when the component directly needs those APIs.
 
 ## Browser compatibility
 

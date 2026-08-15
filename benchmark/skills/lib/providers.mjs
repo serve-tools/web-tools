@@ -24,7 +24,9 @@ export class FixtureProvider {
 			}
 
 			for (const suffix of task.expected.documentSuffixes ?? []) {
-				const reference = packageEntry.references.find((candidate) => candidate.path.endsWith(`/${suffix}`));
+				const reference = packageEntry.references.find(
+					(candidate) => candidate.path === suffix || candidate.path.endsWith(`/${suffix}`),
+				);
 
 				if (reference !== undefined) {
 					documents.push(reference.path);

@@ -10,7 +10,7 @@ Read only the references needed for the current task.
 
 ## Route by task
 
-- [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.
+- [Recipe: localStorage-backed Signal](references/recipe-quick-start.md): compile-checked `SignalStorage`, `watch()`, `get()`, and disposal.
 - To choose occurrences or state, read [Choose occurrences or state](references/choose-occurrences-or-state.md).
 - To preserve source semantics, read [Preserve source semantics](references/preserve-source-semantics.md).
 - To own the lifecycle, read [Own the lifecycle](references/own-the-lifecycle.md).

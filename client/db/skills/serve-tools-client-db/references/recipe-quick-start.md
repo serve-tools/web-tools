@@ -25,7 +25,9 @@ export async function databaseRecipe(signal: AbortSignal): Promise<void> {
 		const notes = transaction.objectStore("notes");
 		const note = await notes.get("welcome");
 
-		if (note) await notes.put({ ...note, body: "Hello again" });
+		if (note) {
+			await notes.put({ ...note, body: "Hello again" });
+		}
 	});
 
 	for await (const { value } of db.scan("notes", { batchSize: 50, signal })) {

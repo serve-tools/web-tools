@@ -217,6 +217,7 @@ export type WireMessage =
 	| readonly [protocol: string, type: "resolve", id: number, data: unknown]
 	| readonly [protocol: string, type: "reject", id: number, error: ErrorRecord]
 	| readonly [protocol: string, type: "cancel", id: number]
+	| readonly [protocol: string, type: "lease", name: string]
 	| readonly [protocol: string, type: "close", error: ErrorRecord];
 
 export interface ClientOperation {

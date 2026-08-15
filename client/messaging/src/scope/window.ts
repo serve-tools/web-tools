@@ -19,7 +19,13 @@ export class SharedWorker<
 	const P extends T.Protocol & ProtocolDefinition<P> = Record<never, never>,
 > extends globalThis.SharedWorker {
 	/** The typed client connected to the worker's port. */
-	readonly client: T.Client<P> = connectPort<P>(this.port);
+	readonly client: T.Client<P>;
+
+	constructor(scriptURL: string | URL, options?: string | WorkerOptions) {
+		super(scriptURL, options);
+
+		this.client = connectPort<P>(this.port);
+	}
 }
 
 /** Connects a typed protocol client to a worker or message port. */

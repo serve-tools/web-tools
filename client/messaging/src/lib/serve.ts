@@ -3,9 +3,11 @@ import {
 	errorRecord,
 	isTransferResult,
 	isWireMessage,
+	noop,
 	post,
 	protocol,
 	report,
+	webLocks,
 } from "./.internals.js";
 import type * as T from "./.types.js";
 import type {
@@ -53,7 +55,8 @@ class ServerOperation implements RequestContext {
  * Serves a typed collection of request and subscription handlers on an endpoint.
  *
  * The endpoint becomes protocol-owned until the server closes. Closing the server aborts active handlers but does not
- * close the underlying transport.
+ * close the underlying transport. The server finishes automatically when a client's announced Web Lock lease is
+ * released by the client's destruction.
  */
 export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 	endpoint: MessageEndpoint,
@@ -67,6 +70,7 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 	};
 
 	let isClosed = false;
+	let leaseController: AbortController | undefined;
 
 	const send = (message: WireMessage, transfer?: readonly Transferable[]): SendResult => {
 		try {
@@ -195,13 +199,28 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 			);
 	};
 
+	const watchLease = (name: string): void => {
+		const locks = webLocks();
+
+		if (leaseController || !locks) {
+			return;
+		}
+
+		leaseController = new AbortController();
+
+		void locks.request(name, { signal: leaseController.signal }, async () => finish()).catch(noop);
+	};
+
 	const finish = (): void => {
 		if (isClosed) {
 			return;
 		}
 
 		isClosed = true;
+
 		endpoint.removeEventListener("message", receive);
+
+		leaseController?.abort();
 
 		for (const [id, operation] of operations) {
 			settle(id, operation);
@@ -224,6 +243,8 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 			if (operation) {
 				settle(id, operation);
 			}
+		} else if (data[1] === "lease") {
+			watchLease(data[2]);
 		} else if (data[1] === "close") {
 			finish();
 		}

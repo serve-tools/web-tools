@@ -29,6 +29,9 @@ Select the narrowest package that owns the required behavior.
 | Import explicit-resource-management classes     | `@serve-tools/ponyfill-resource-management`   | No global mutation                                                     |
 | Inject required polyfills during Vite builds    | `@serve-tools/vite-polyfills`                 | Build-time detection and injection                                     |
 
+`@serve-tools/lit-signals` re-exports its compatible `Signal` runtime.
+Select `@serve-tools/signal` separately only when application code imports it directly.
+
 ## Selection rules
 
 - Choose a `client-*` package for imperative state or transport APIs.

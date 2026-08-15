@@ -9,6 +9,7 @@ import {
 	protocol,
 	remoteError,
 	report,
+	webLocks,
 } from "./.internals.js";
 import type * as T from "./.types.js";
 import type {
@@ -29,7 +30,9 @@ import type {
  * Connects a typed client to a worker or message port.
  *
  * The endpoint becomes protocol-owned until the client closes. Closing the client does not close or terminate the
- * underlying transport.
+ * underlying transport. When Web Locks are available, the client announces its lifetime through a held lock so the
+ * serving peer can detect abrupt client loss, and window clients close automatically on `pagehide` to stay
+ * back/forward-cache eligible.
  */
 export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoint: MessageEndpoint): Client<P> {
 	const operations = new Map<number, ClientOperation>();
@@ -37,6 +40,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 
 	let nextId = 0;
 	let isClosed = false;
+	let releaseLease: (() => void) | undefined;
 
 	const receive = ({ data }: MessageEventLike): void => {
 		if (!isWireMessage(data)) {
@@ -124,6 +128,49 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 		return id;
 	};
 
+	const lease = (): void => {
+		const locks = webLocks();
+
+		if (!locks) {
+			return;
+		}
+
+		const name = `${protocol}#${crypto.randomUUID()}`;
+		const released = Promise.withResolvers<void>();
+		const hidden = (): void => close("The page was hidden");
+		const pageEvents =
+			"onpagehide" in globalThis
+				? (globalThis as unknown as {
+						addEventListener(type: "pagehide", listener: () => void): void;
+						removeEventListener(type: "pagehide", listener: () => void): void;
+					})
+				: undefined;
+
+		pageEvents?.addEventListener("pagehide", hidden);
+
+		releaseLease = (): void => {
+			released.resolve();
+
+			pageEvents?.removeEventListener("pagehide", hidden);
+		};
+
+		void locks
+			.request(name, async () => {
+				if (isClosed) {
+					return;
+				}
+
+				try {
+					post(endpoint, [protocol, "lease", name]);
+				} catch {
+					return;
+				}
+
+				return released.promise;
+			})
+			.catch(noop);
+	};
+
 	const finish = (error: unknown, remote: boolean): void => {
 		if (isClosed) {
 			return;
@@ -132,6 +179,8 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 		isClosed = true;
 
 		endpoint.removeEventListener("message", receive);
+
+		releaseLease?.();
 
 		for (const [id, operation] of operations) {
 			operations.delete(id);
@@ -163,6 +212,8 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 
 	endpoint.addEventListener("message", receive);
 	endpoint.start?.();
+
+	lease();
 
 	return {
 		request(name: string, input?: unknown, options: RequestOptions = {}): Promise<unknown> {

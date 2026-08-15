@@ -1,8 +1,9 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const writeRecipes = process.argv.includes("--write-recipes");
 const rootPackage = await readJSON(path.join(root, "package.json"));
 const errors = [];
 const names = new Set();
@@ -247,6 +248,11 @@ async function validateRecipe(packageRoot, skillRoot, packageName, validationErr
 	}
 
 	if (reference !== expectedReference) {
+		if (writeRecipes) {
+			await writeFile(path.join(skillRoot, "references", "recipe-quick-start.md"), expectedReference);
+			return;
+		}
+
 		validationErrors.push(
 			`${relative(skillRoot)}: references/recipe-quick-start.md must mirror the compile-checked ${recipeFile} fixture`,
 		);

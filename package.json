@@ -64,6 +64,7 @@
 		"format:check": "dprint check",
 		"lint": "biome check",
 		"lint:fix": "biome check --write",
+		"sync:skill-recipes": "node scripts/check-skills.mjs --write-recipes",
 		"test": "npm run test --workspaces --if-present",
 		"typecheck": "npm run typecheck --workspaces --if-present",
 		"verify": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run check:skills && npm run check:skill-bench && npm run build && npm run check:packages"

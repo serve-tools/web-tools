@@ -10,7 +10,7 @@ Read only the references needed for the current task.
 
 ## Route by task
 
-- [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.
+- [Recipe: custom polyfill](references/recipe-quick-start.md): compile-checked `definePolyfill()`, `builtinPolyfills`, and `vitePolyfills()` configuration.
 - To configure the plugin, read [Configure the plugin](references/configure-the-plugin.md).
 - To design detection and runtime together, read [Design detection and runtime together](references/design-detection-and-runtime-together.md).
 - To keep typescript aligned, read [Keep TypeScript aligned](references/keep-typescript-aligned.md).

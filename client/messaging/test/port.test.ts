@@ -3,6 +3,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Handlers, Protocol, RequestContext } from "../src/client-messaging.js";
 import { connect, RemoteError, serve, transfer } from "../src/client-messaging.js";
+import { protocol } from "../src/lib/.internals.js";
 import type { ProtocolDefinition } from "../src/lib/.types.js";
 
 const open = <P extends Protocol & ProtocolDefinition<P>>(handlers: Handlers<P>) => {
@@ -16,6 +17,7 @@ const open = <P extends Protocol & ProtocolDefinition<P>>(handlers: Handlers<P>)
 		close(): void {
 			client.close();
 			server.close();
+
 			port1.close();
 			port2.close();
 		},
@@ -30,6 +32,7 @@ describe("requests", () => {
 				fail(): never;
 			};
 		};
+
 		const connection = open<P>({
 			requests: {
 				add: async ({ a, b }) => {
@@ -61,6 +64,7 @@ describe("requests", () => {
 
 	it("serves request-only handlers", async () => {
 		type P = { requests: { status(): string } };
+
 		const connection = open<P>({ requests: { status: () => "ready" } });
 
 		try {
@@ -74,9 +78,11 @@ describe("requests", () => {
 		type P = {
 			requests: { echo(buffer: ArrayBuffer): ArrayBuffer };
 		};
+
 		const connection = open<P>({
 			requests: { echo: (buffer) => transfer(buffer, [buffer]) },
 		});
+
 		const input = new Uint8Array([4, 8, 15, 16, 23, 42]);
 
 		try {
@@ -93,6 +99,7 @@ describe("requests", () => {
 		type P = {
 			requests: { uncloneable(): unknown };
 		};
+
 		const connection = open<P>({
 			requests: { uncloneable: () => () => undefined },
 		});
@@ -108,6 +115,7 @@ describe("requests", () => {
 		type P = {
 			requests: { hold(): never };
 		};
+
 		const aborted = Promise.withResolvers<void>();
 		const connection = open<P>({
 			requests: {
@@ -172,22 +180,27 @@ describe("requests", () => {
 		});
 
 		try {
+			await vi.waitFor(() => expect(constructions).toBe(1));
+
+			const baseline = constructions;
+
 			expect(await connection.client.request("ignored", 42)).toBe(42);
-			expect(constructions).toBe(0);
+			expect(constructions).toBe(baseline);
 			expect(await connection.client.request("observed")).toBe(false);
-			expect(constructions).toBe(1);
+			expect(constructions).toBe(baseline + 1);
 
 			await connection.client.request("late");
 
-			expect(constructions).toBe(1);
+			expect(constructions).toBe(baseline + 1);
 
 			const lateSignal = lateContext!.signal;
 
 			expect(lateSignal.aborted).toBe(true);
 			expect(lateContext!.signal).toBe(lateSignal);
-			expect(constructions).toBe(2);
+			expect(constructions).toBe(baseline + 2);
 		} finally {
 			connection.close();
+
 			vi.unstubAllGlobals();
 		}
 	});
@@ -196,6 +209,7 @@ describe("requests", () => {
 describe("subscriptions", () => {
 	it("serves subscription-only handlers", async () => {
 		type P = { subscriptions: { ready(): string } };
+
 		const completed = Promise.withResolvers<void>();
 		const connection = open<P>({
 			subscriptions: {
@@ -211,6 +225,7 @@ describe("subscriptions", () => {
 
 		try {
 			await completed.promise;
+
 			expect(values).toEqual(["ready"]);
 		} finally {
 			connection.close();
@@ -360,6 +375,7 @@ describe("subscriptions", () => {
 			expect(error).toMatchObject({ name: "Error", message: failure.message });
 		} finally {
 			vi.unstubAllGlobals();
+
 			connection.close();
 		}
 	});
@@ -442,10 +458,12 @@ describe("protocol and lifecycle", () => {
 		try {
 			await expect(request).rejects.toBeInstanceOf(RemoteError);
 			await expect(request).rejects.toMatchObject({ name: "UnknownOperationError" });
+
 			expect(await subscriptionError.promise).toMatchObject({ name: "UnknownOperationError" });
 		} finally {
 			client.close();
 			server.close();
+
 			port1.close();
 			port2.close();
 		}
@@ -547,9 +565,16 @@ describe("protocol and lifecycle", () => {
 		type P = { requests: { manual(): string } };
 
 		const client = connect<P>(port1);
-		const opened = new Promise<unknown[]>((resolve) =>
-			port2.addEventListener("message", ({ data }) => resolve(data as unknown[]), { once: true }),
-		);
+		const opened = new Promise<unknown[]>((resolve) => {
+			const receive = ({ data }: MessageEvent): void => {
+				if (Array.isArray(data) && data[1] === "request") {
+					port2.removeEventListener("message", receive);
+					resolve(data as unknown[]);
+				}
+			};
+
+			port2.addEventListener("message", receive);
+		});
 
 		port2.start();
 
@@ -566,6 +591,124 @@ describe("protocol and lifecycle", () => {
 			client.close();
 			port1.close();
 			port2.close();
+		}
+	});
+});
+
+describe("liveness", () => {
+	const isLease = (lock: LockInfo | undefined): boolean => !!lock?.name?.startsWith(`${protocol}#`);
+
+	it("finishes the server when an abandoned liveness lease is released", async () => {
+		type P = { requests: { ping(): string } };
+
+		const { port1, port2 } = new MessageChannel();
+		const client = connect<P>(port1);
+		const server = serve<P>(port2, { requests: { ping: () => "pong" } });
+
+		expect(await client.request("ping")).toBe("pong");
+
+		const name = await vi.waitFor(async () => {
+			const { held } = await navigator.locks.query();
+			const lease = held?.find(isLease);
+
+			expect(lease?.name).toBeDefined();
+
+			return lease?.name as string;
+		});
+
+		await navigator.locks.request(name, { steal: true }, noop);
+
+		await expect(server.closed).resolves.toBeUndefined();
+
+		client.close();
+
+		port1.close();
+		port2.close();
+	});
+
+	it("releases the liveness lease when the client closes", async () => {
+		type P = { requests: { ping(): string } };
+
+		const { port1, port2 } = new MessageChannel();
+		const client = connect<P>(port1);
+		const server = serve<P>(port2, { requests: { ping: () => "pong" } });
+
+		expect(await client.request("ping")).toBe("pong");
+
+		await vi.waitFor(async () => {
+			const { held } = await navigator.locks.query();
+
+			expect(held?.some(isLease)).toBe(true);
+		});
+
+		client.close();
+
+		await expect(server.closed).resolves.toBeUndefined();
+
+		await vi.waitFor(async () => {
+			const { held, pending } = await navigator.locks.query();
+
+			expect(held?.some(isLease) ?? false).toBe(false);
+			expect(pending?.some(isLease) ?? false).toBe(false);
+		});
+
+		port1.close();
+		port2.close();
+	});
+
+	it("closes the client and releases the lease on pagehide", async () => {
+		type P = { requests: { ping(): string } };
+
+		const listeners = new Set<() => void>();
+
+		vi.stubGlobal("onpagehide", null);
+		vi.stubGlobal("addEventListener", (type: string, listener: () => void) => {
+			if (type === "pagehide") {
+				listeners.add(listener);
+			}
+		});
+		vi.stubGlobal("removeEventListener", (type: string, listener: () => void) => {
+			if (type === "pagehide") {
+				listeners.delete(listener);
+			}
+		});
+
+		try {
+			const { port1, port2 } = new MessageChannel();
+			const client = connect<P>(port1);
+			const server = serve<P>(port2, { requests: { ping: () => "pong" } });
+
+			expect(await client.request("ping")).toBe("pong");
+
+			await vi.waitFor(async () => {
+				const { held } = await navigator.locks.query();
+
+				expect(held?.some(isLease)).toBe(true);
+			});
+
+			expect(listeners.size).toBe(1);
+
+			listeners.forEach((listener) => {
+				listener();
+			});
+
+			await expect(client.closed).resolves.toBeUndefined();
+			await expect(server.closed).resolves.toBeUndefined();
+			await expect(client.request("ping")).rejects.toMatchObject({ name: "ConnectionClosedError" });
+
+			expect(listeners.size).toBe(0);
+
+			await vi.waitFor(async () => {
+				const { held, pending } = await navigator.locks.query();
+
+				expect(held?.some(isLease) ?? false).toBe(false);
+				expect(pending?.some(isLease) ?? false).toBe(false);
+			});
+
+			port1.close();
+			port2.close();
+		} finally {
+			vi.unstubAllGlobals();
 		}
 	});
 });

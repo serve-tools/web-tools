@@ -16,5 +16,7 @@ if (files.status === "completed") {
 
 const clipboard = await writeToClipboard({ "text/plain": "Copied with @serve-tools/client-interaction" });
 
-if (clipboard.status === "failed") console.error(clipboard.error);
+if (clipboard.status === "failed") {
+	console.error(clipboard.error);
+}
 ```

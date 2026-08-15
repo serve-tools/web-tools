@@ -10,7 +10,7 @@ Read only the references needed for the current task.
 
 ## Route by task
 
-- [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.
+- [Recipe: Map, object, and computed state](references/recipe-quick-start.md): compile-checked `SignalMap`, `SignalObject`, and `Signal.Computed` composition.
 - To choose the native-shaped collection, read [Choose the native-shaped collection](references/choose-the-native-shaped-collection.md).
 - To preserve native and reactive semantics, read [Preserve native and reactive semantics](references/preserve-native-and-reactive-semantics.md).
 - To keep one compatible runtime, read [Keep one compatible runtime](references/keep-one-compatible-runtime.md).

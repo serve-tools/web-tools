@@ -10,7 +10,7 @@ Read only the references needed for the current task.
 
 ## Route by task
 
-- [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.
+- [Recipe: complete MessagePort protocol](references/recipe-quick-start.md): compile-checked handlers, transfer, request, subscription, cancellation, and disposal.
 - To model the protocol, read [Model the protocol](references/model-the-protocol.md).
 - To choose the entrypoint surface, read [Choose the entrypoint surface](references/choose-the-entrypoint-surface.md).
 - To retain inferred protocols, read [Retain inferred protocols](references/retain-inferred-protocols.md).

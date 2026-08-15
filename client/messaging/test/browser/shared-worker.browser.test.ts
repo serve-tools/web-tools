@@ -1,7 +1,8 @@
 /// <reference lib="dom" />
 
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 
+import { protocol } from "../../src/lib/.internals.js";
 import { SharedWorker } from "../../src/scope/window.js";
 import type { SharedCounterProtocol } from "./shared-worker.js";
 
@@ -13,6 +14,7 @@ const open = (name: string) => {
 
 	return {
 		client: worker.client,
+		port: worker.port,
 		close(): void {
 			worker.client.close();
 			worker.port.close();
@@ -78,5 +80,43 @@ test("coordinates independent clients through one shared worker", async () => {
 		connections.forEach((connection) => {
 			connection.close();
 		});
+	}
+});
+
+test("cleans up a client whose liveness lease is released without a protocol close", async () => {
+	const sharedName = crypto.randomUUID();
+	const observer = open(sharedName);
+	const priorLeases = await vi.waitFor(async () => {
+		const { held } = await navigator.locks.query();
+		const leases = held?.filter((lock) => lock.name?.startsWith(`${protocol}#`)) ?? [];
+
+		expect(leases.length).toBeGreaterThan(0);
+
+		return new Set(leases.map((lock) => lock.name));
+	});
+	const abandoned = open(sharedName);
+	const subscription = abandoned.client.subscribe("totals", () => {});
+
+	try {
+		await expect.poll(() => observer.client.request("subscriberCount")).toBe(1);
+
+		const name = await vi.waitFor(async () => {
+			const { held } = await navigator.locks.query();
+			const lease = held?.find((lock) => lock.name?.startsWith(`${protocol}#`) && !priorLeases.has(lock.name));
+
+			expect(lease?.name).toBeDefined();
+
+			return lease?.name as string;
+		});
+
+		abandoned.port.close();
+
+		await navigator.locks.request(name, { steal: true }, () => {});
+
+		await expect.poll(() => observer.client.request("subscriberCount")).toBe(0);
+	} finally {
+		subscription.unsubscribe();
+		abandoned.client.close();
+		observer.close();
 	}
 });

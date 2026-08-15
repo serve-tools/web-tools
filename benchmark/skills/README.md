@@ -61,8 +61,9 @@ Run `node benchmark/skills/run.mjs --help` for every option.
 
 ## Interpreting results
 
-The report provides per-condition pass rates with Wilson 95% confidence intervals and paired Skill-minus-baseline differences for score, pass rate, tokens, and latency.
-Paired difference intervals are withheld below five pairs.
+The report provides task-clustered 95% confidence intervals and paired Skill-minus-baseline differences for score, pass rate, total tokens, uncached tokens, and latency.
+Repetitions are averaged within each task before intervals are computed so repeated generations are not treated as independent tasks.
+Paired difference intervals are withheld below five tasks.
 Use at least 10 repetitions for candidate decisions, retain the same task set and model snapshot, and compare more than one execution order seed before removing or expanding Skill content.
 
 Treat a change as an improvement only when correctness is preserved or improved and its token or latency reduction is credible across repeated paired runs.

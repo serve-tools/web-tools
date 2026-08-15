@@ -172,8 +172,27 @@ A subscription reports its terminal failure through `onError`.
 
 `Client`, `Server`, and `Subscription` implement explicit resource management.
 `client.closed` and `server.closed` resolve after explicit local or remote closure.
-Browsers do not consistently report an abruptly destroyed peer, so these promises intentionally do not claim to be tab-liveness signals.
-Applications that require crash detection should add a heartbeat policy at the application layer.
+
+### Liveness detection
+
+A `MessagePort` cannot report an abruptly destroyed peer, such as a crashed or discarded tab holding a `SharedWorker` port.
+The library covers that gap automatically: each client holds a uniquely named Web Lock and announces it to the serving peer, and the browser releases the lock when the client's agent is destroyed for any reason.
+The server watches the announced lock and finishes — aborting handlers and running subscription cleanups — when it is released.
+The lease requires no configuration; it is skipped only where Web Locks are unavailable, and closing the client releases it immediately.
+
+### Back/forward cache
+
+To keep pages eligible for the back/forward cache, a window client also closes itself automatically on `pagehide`, releasing its lease before the page is snapshotted.
+The lease never blocks caching on its own; note, however, that Chrome currently declines to cache any page connected to a `SharedWorker` (reported as `SharedWorkerWithNoActiveClient` in its bfcache diagnostics), which is a platform constraint independent of this library.
+A page restored from the cache must reconnect and re-subscribe, for example from a `pageshow` listener when `event.persisted` is `true`:
+
+```ts
+addEventListener("pageshow", (event) => {
+	if (event.persisted) {
+		client = connect<CounterProtocol>(worker.port);
+	}
+});
+```
 
 When explicit resource management fits the surrounding code, clients and subscriptions can instead be scoped with `using`.
 Resources are disposed in reverse declaration order, so the subscription closes before its client:
@@ -204,7 +223,7 @@ The protocol does not retry, persist, or claim delivery after a worker or docume
   Its `listen` namespace exposes `Handlers`, `Listener`, `MessageEndpoint`, `Protocol`, `ProtocolType`, `RequestContext`, `Server`, `SubscriptionContext`, and `TransferResult`.
 
 The protocol and resource declarations are compile-time only and emit no runtime values.
-The wire frames and the `@serve-tools/client-messaging/2` protocol constant did not change.
+The `@serve-tools/client-messaging/2` protocol constant did not change; the added liveness lease frame is safely ignored by peers that predate it.
 
 ## Trust boundary
 

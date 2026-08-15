@@ -110,7 +110,7 @@ function gradeDocuments(catalog, documents, task, variant) {
 		return skillPath !== undefined && documents.includes(skillPath);
 	});
 	const referencesPresent = (task.expected.documentSuffixes ?? []).every((suffix) =>
-		documents.some((document) => document.endsWith(`/${suffix}`)),
+		documents.some((document) => document === suffix || document.endsWith(`/${suffix}`)),
 	);
 
 	return packageSkillsPresent && referencesPresent ? 1 : 0;

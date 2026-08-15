@@ -22,6 +22,10 @@ export const isWireMessage = (value: unknown): value is WireMessage => {
 		return isErrorRecord(value[2]);
 	}
 
+	if (value[1] === "lease") {
+		return typeof value[2] === "string";
+	}
+
 	if (!Number.isSafeInteger(value[2]) || (value[2] as number) < 0) {
 		return false;
 	}
@@ -40,6 +44,8 @@ export const isWireMessage = (value: unknown): value is WireMessage => {
 			return false;
 	}
 };
+
+export const webLocks = (): LockManager | undefined => navigator?.locks;
 
 export const isErrorRecord = (value: unknown): value is ErrorRecord =>
 	!!value &&
