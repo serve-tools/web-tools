@@ -9,6 +9,7 @@ const names = new Set();
 const publicPackageNames = new Set();
 let publicPackages = 0;
 let metadataCharacters = 0;
+let publishedMetadataCharacters = 0;
 
 for (const workspace of rootPackage.workspaces) {
 	const packageRoot = path.join(root, workspace);
@@ -41,7 +42,10 @@ for (const workspace of rootPackage.workspaces) {
 	const skill = await validateSkill(skillRoot, expectedName, packageJSON.name, errors);
 
 	if (skill !== undefined) {
-		metadataCharacters += skill.name.length + skill.description.length;
+		const skillMetadataCharacters = skill.name.length + skill.description.length;
+
+		metadataCharacters += skillMetadataCharacters;
+		publishedMetadataCharacters += skillMetadataCharacters;
 
 		if (names.has(skill.name)) {
 			errors.push(`${workspace}: duplicate Skill name ${skill.name}`);
@@ -70,12 +74,18 @@ if (maintainerSkill !== undefined) {
 
 await validateReleasePackages(publicPackageNames, errors);
 
-if (publicPackages !== 24) {
-	errors.push(`expected 24 public workspaces, found ${publicPackages}`);
+if (publicPackages !== 25) {
+	errors.push(`expected 25 public workspaces, found ${publicPackages}`);
 }
 
-if (metadataCharacters > 8_000) {
-	errors.push(`Skill names and descriptions use ${metadataCharacters} characters; keep them at or below 8000`);
+if (publishedMetadataCharacters > 4_000) {
+	errors.push(
+		`Published Skill names and descriptions use ${publishedMetadataCharacters} characters; keep them at or below 4000`,
+	);
+}
+
+if (metadataCharacters > 4_500) {
+	errors.push(`All Skill names and descriptions use ${metadataCharacters} characters; keep them at or below 4500`);
 }
 
 if (errors.length > 0) {
@@ -141,8 +151,26 @@ async function validateSkill(skillRoot, expectedName, packageName, validationErr
 		validationErrors.push(`${relative(skillRoot)}: description must name ${packageName}`);
 	}
 
-	if (source.includes("TODO") || source.split("\n").length > 120) {
-		validationErrors.push(`${relative(skillRoot)}: remove placeholders and keep SKILL.md at or below 120 lines`);
+	const maximumLines = packageName === undefined ? 120 : 40;
+
+	if (source.includes("TODO") || source.split("\n").length > maximumLines) {
+		validationErrors.push(
+			`${relative(skillRoot)}: remove placeholders and keep SKILL.md at or below ${maximumLines} lines`,
+		);
+	}
+
+	if (packageName !== undefined) {
+		await validateReferences(skillRoot, source, validationErrors);
+
+		if (packageName !== "@serve-tools/skills") {
+			await validateRecipe(path.dirname(path.dirname(skillRoot)), skillRoot, packageName, validationErrors);
+		}
+
+		if (source.includes("Validate changes")) {
+			validationErrors.push(
+				`${relative(skillRoot)}: package Skills must not include maintainer validation instructions`,
+			);
+		}
 	}
 
 	let openAI;
@@ -165,6 +193,83 @@ async function validateSkill(skillRoot, expectedName, packageName, validationErr
 	}
 
 	return { name, description };
+}
+
+async function validateReferences(skillRoot, source, validationErrors) {
+	const referenceRoot = path.join(skillRoot, "references");
+	const references = (await listFiles(referenceRoot)).filter((file) => file.endsWith(".md"));
+	const linkedReferences = [...source.matchAll(/\]\(references\/([^)#]+)(?:#[^)]+)?\)/g)].map((match) => match[1]);
+
+	if (references.length === 0 || linkedReferences.length === 0) {
+		validationErrors.push(`${relative(skillRoot)}: package Skills must route to focused references`);
+		return;
+	}
+
+	for (const reference of linkedReferences) {
+		if (!references.includes(reference)) {
+			validationErrors.push(`${relative(skillRoot)}: missing linked reference references/${reference}`);
+		}
+	}
+
+	for (const reference of references) {
+		if (!linkedReferences.includes(reference)) {
+			validationErrors.push(`${relative(skillRoot)}: unlinked reference references/${reference}`);
+		}
+
+		const referenceSource = await readFile(path.join(referenceRoot, reference), "utf8");
+
+		if (referenceSource.includes("TODO") || referenceSource.includes("## Validate changes")) {
+			validationErrors.push(`${relative(skillRoot)}: references/${reference} contains unpublished guidance`);
+		}
+	}
+}
+
+async function validateRecipe(packageRoot, skillRoot, packageName, validationErrors) {
+	const recipeFiles = (await listFiles(path.join(packageRoot, "test"))).filter((file) =>
+		file.endsWith(".recipes.ts"),
+	);
+
+	if (recipeFiles.length !== 1) {
+		validationErrors.push(`${relative(skillRoot)}: expected exactly one compile-checked test/*.recipes.ts fixture`);
+		return;
+	}
+
+	const [recipeFile] = recipeFiles;
+	const recipe = await readFile(path.join(packageRoot, "test", recipeFile), "utf8");
+	const expectedReference = createRecipeReference(recipe, recipeFile, packageName);
+	let reference;
+
+	try {
+		reference = await readFile(path.join(skillRoot, "references", "recipe-quick-start.md"), "utf8");
+	} catch {
+		validationErrors.push(`${relative(skillRoot)}: missing references/recipe-quick-start.md`);
+		return;
+	}
+
+	if (reference !== expectedReference) {
+		validationErrors.push(
+			`${relative(skillRoot)}: references/recipe-quick-start.md must mirror the compile-checked ${recipeFile} fixture`,
+		);
+	}
+}
+
+function createRecipeReference(source, recipeFile, packageName) {
+	const publicSource = source
+		.replace(/(["'])\.\.\/src\/lib\/scope\/([^"']+)\.js\1/g, `$1${packageName}/scope/$2$1`)
+		.replace(/(["'])\.\.\/src\/exports\/Symbol\/([^"']+)\.js\1/g, `$1${packageName}/Symbol/$2$1`)
+		.replace(/(["'])\.\.\/src\/exports\/([^"']+)\.js\1/g, `$1${packageName}/$2$1`)
+		.replace(/(["'])\.\.\/src\/[^"']+\.js\1/g, `$1${packageName}$1`);
+
+	return [
+		"# Recipe: quick start",
+		"",
+		`This public-import example is generated from the compile-checked \`test/${recipeFile}\` fixture in the package source.`,
+		"",
+		"```ts",
+		publicSource.trimEnd(),
+		"```",
+		"",
+	].join("\n");
 }
 
 async function validateReleasePackages(packageNames, validationErrors) {
@@ -193,6 +298,19 @@ async function listDirectories(directory) {
 	try {
 		return (await readdir(directory, { withFileTypes: true }))
 			.filter((entry) => entry.isDirectory())
+			.map((entry) => entry.name)
+			.sort();
+	} catch (error) {
+		if (error.code === "ENOENT") return [];
+
+		throw error;
+	}
+}
+
+async function listFiles(directory) {
+	try {
+		return (await readdir(directory, { withFileTypes: true }))
+			.filter((entry) => entry.isFile())
 			.map((entry) => entry.name)
 			.sort();
 	} catch (error) {

@@ -9,7 +9,6 @@ import {
 	protocol,
 	protocolError,
 	remoteError,
-	report,
 } from "./.internals.js";
 import { deserialize, serialize } from "./.serialization.js";
 import type * as T from "./.types.js";
@@ -275,7 +274,7 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 							value instanceof Error ? value : remoteError(errorRecord(value)),
 						);
 					} else {
-						report(value);
+						reportError(value);
 					}
 				},
 				() => {

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Package Guide"
+  short_description: "Choose the right @serve-tools package and recipe"
+  default_prompt: "Use $serve-tools-skills to choose the smallest @serve-tools package for this task."

@@ -1,28 +1,28 @@
 # @serve-tools/client-websocket
 
-The `@serve-tools/client-websocket` package provides typed requests and subscriptions over one owned WebSocket connection.
-Messages use a built-in binary structured-data format, so application values are not limited to JSON.
+`@serve-tools/client-websocket` provides typed requests and subscriptions over a client-owned browser `WebSocket`.
+It uses a compact binary protocol with built-in serialization for structured JavaScript values, including cyclic graphs and binary data.
 
 ```ts
-import { connect, type ProtocolType } from "@serve-tools/client-websocket";
+import { connect } from "@serve-tools/client-websocket";
 
-const pendingClient = connect<{
+interface ProjectProtocol {
 	requests: {
-		authenticate(credentials: Credentials): Session;
-		ping(): void;
+		openProject: (input: { id: string }) => { id: string; title: string };
+		ping: () => void;
 	};
 	subscriptions: {
-		messages(room: RoomID): Message;
+		projectChanged: (input: { id: string }) => { revision: number };
 	};
-}>("wss://example.com/socket");
+}
 
-export type ChatProtocol = ProtocolType<typeof pendingClient>;
+await using client = await connect<ProjectProtocol>("wss://example.com/projects");
 
-await using client = await pendingClient;
-export type ResolvedChatProtocol = connect.ProtocolType<typeof client>;
+const project = await client.request("openProject", { id: "project-1" });
 
-const session = await client.request("authenticate", credentials);
-using messages = client.subscribe("messages", roomID, renderMessage);
+using changes = client.subscribe("projectChanged", { id: project.id }, (event) => {
+	console.log(event.revision);
+});
 ```
 
 ## Install
@@ -31,155 +31,212 @@ using messages = client.subscribe("messages", roomID, renderMessage);
 npm install @serve-tools/client-websocket
 ```
 
-The server must implement the same versioned binary and messaging protocols.
-The planned `@serve-tools/server-websocket` package will provide the corresponding `serve()` API; this client package does not install or configure a server.
+The server must implement the same version of the binary messaging protocol.
+This package does not include a server implementation or a raw-frame API.
 
-## Protocol declarations
+## Usage
 
-Declare request and subscription operations as TypeScript method signatures.
-An operation accepts either no input or one structured input value.
+### Declare a protocol
+
+Declare named request and subscription operations as functions with zero or one input parameter.
+A request function's return type is its response, while a subscription function's return type is each emitted event.
 
 ```ts
 interface ProjectProtocol {
 	requests: {
-		project(id: string): Project;
-		save(input: { project: Project; revision: number }): Revision;
-		ping(): void;
+		createProject: (input: { title: string }) => Promise<{ id: string }>;
+		getServerTime: () => Date;
 	};
 	subscriptions: {
-		changes(projectID: string): ProjectChange;
+		projectChanged: (input: { id: string }) => { revision: number };
+		announcements: () => string;
 	};
 }
 ```
 
-For a request, the method return type is the response value; `client.request()` supplies its promise.
-For a subscription, the return type is the type of each delivered event.
-Place multiple input fields in one object rather than declaring multiple parameters.
-Either `requests` or `subscriptions` may be omitted when the protocol does not use it.
+The `requests` and `subscriptions` sections are optional, so a protocol may expose only one operation kind.
+`Promise` return types are unwrapped for requests and subscriptions.
+The declarations constrain client code at compile time; they do not validate values received from the server.
 
-Protocol declarations and `ProtocolType` extraction exist only at compile time.
-Extracting a type from a pending or resolved client does not change wire frames or protocol constants.
-Validate values received from an untrusted server when application correctness or security requires it.
+### Connect and own the socket
 
-The top-level `ProtocolType` export and `connect.ProtocolType` both extract an inline protocol directly from either a pending `connect()` promise or its resolved client; no explicit `Awaited` type is needed:
+`connect()` resolves after the native WebSocket opens and returns a client that owns that socket.
+Dispose or close the client to close the socket and release every active operation.
 
 ```ts
-import { connect, type ProtocolType } from "@serve-tools/client-websocket";
+const controller = new AbortController();
 
-const pendingClient = connect<{
-	requests: { status(): Status };
-}>(url);
-
-export type PendingStatusProtocol = ProtocolType<typeof pendingClient>;
-
-const client = await pendingClient;
-export type StatusProtocol = connect.ProtocolType<typeof client>;
-```
-
-The client types are exported both at the package's top level and through the `connect` namespace.
-
-## Requests
-
-`request(name, input, options?)` sends one named operation and resolves with its response.
-Multiple requests may be active concurrently and may settle in any order.
-
-```ts
-const project = await client.request("project", projectID, { signal });
-```
-
-No-input requests omit the input argument:
-
-```ts
-await client.request("ping");
-```
-
-Pass `undefined` when a no-input request also needs options:
-
-```ts
-await client.request("ping", undefined, { signal });
-```
-
-Aborting rejects the local promise and sends cancellation to the server.
-Remote handler failures reject with `RemoteError` while retaining the reported name, message, and stack.
-
-## Subscriptions
-
-`subscribe(name, input, listener, options?)` delivers ordered events until either peer completes, rejects, cancels, or closes the operation.
-
-```ts
-using changes = client.subscribe("changes", projectID, applyChange, {
-	signal,
-	onComplete: () => console.log("complete"),
-	onError: console.error,
-});
-```
-
-The returned subscription is disposable and `unsubscribe()` is idempotent.
-Subscriptions intentionally do not invent flow control over WebSocket delivery; applications producing unbounded streams should batch, sample, or acknowledge events in their own protocol.
-
-## Structured values
-
-Every protocol message is one binary WebSocket message containing one structured value.
-The built-in serializer preserves cycles, repeated references, sparse arrays, special numbers, `BigInt`, dates, regular expressions, maps, sets, boxed primitives, errors, `ArrayBuffer`, `DataView`, typed arrays, and shared backing-buffer identity.
-
-Functions, symbols, weak collections, `SharedArrayBuffer`, and platform-specific host objects are rejected with `DataCloneError`.
-Transfer lists are not exposed because network transport cannot transfer ownership.
-The serializer is fixed and cannot be replaced through client options.
-
-## Connection lifecycle
-
-`connect()` resolves after the native WebSocket opens and accepts an `AbortSignal` for cancelling that opening handshake.
-The client owns the created WebSocket.
-Calling `close()` or disposing the client closes both the messaging protocol and its WebSocket connection.
-`client.closed` resolves after local closure, remote closure, a malformed protocol message, or transport failure.
-
-```ts
-await using client = await connect<ProjectProtocol>(url, {
-	protocols: ["projects"],
-	signal,
+await using client = await connect<ProjectProtocol>("wss://example.com/projects", {
+	protocols: ["projects.v1"],
+	signal: controller.signal,
 });
 
 await client.closed;
 ```
 
-The package does not reconnect, retry, persist, or claim delivery after disconnection.
-Applications requiring session resumption or replay should define those semantics above this connection.
+The `protocols` option selects native WebSocket handshake subprotocols; it does not change this package's binary wire format.
+The connection signal cancels only the opening handshake.
+After connection, cancel individual operations with their own signals and close the client when the session should end.
+
+`client.closed` resolves when the connection has completely closed, including after a transport or protocol failure.
+It never rejects, so observe operation failures separately before awaiting it as a lifecycle barrier.
+
+### Send requests
+
+Call `request()` with an operation name, its input when required, and optional cancellation settings.
+Requests may run concurrently and may settle out of order.
+
+```ts
+const controller = new AbortController();
+
+const project = await client.request("createProject", { title: "Launch" }, {
+	signal: controller.signal,
+});
+
+const serverTime = await client.request("getServerTime", undefined, {
+	signal: controller.signal,
+});
+```
+
+Pass `undefined` before the options object for a zero-input operation.
+Aborting an active request sends a cancellation message when possible and rejects the local promise with the signal's reason.
+A server rejection becomes a `RemoteError` with the remote name, message, and optional stack.
+
+### Subscribe to events
+
+Call `subscribe()` with an operation name, its input when required, an event listener, and optional lifecycle callbacks.
+Events for one subscription arrive in WebSocket order.
+
+```ts
+using subscription = client.subscribe(
+	"projectChanged",
+	{ id: project.id },
+	(event) => {
+		console.log(event.revision);
+	},
+	{
+		signal: controller.signal,
+		onComplete: () => console.log("complete"),
+		onError: (error) => console.error(error),
+	},
+);
+```
+
+The returned `Subscription` exposes `active`, `unsubscribe()`, and `[Symbol.dispose]()`, and cleanup is idempotent.
+Aborting, unsubscribing, or disposing performs local cancellation and does not call `onComplete` or `onError`.
+A server completion calls `onComplete`, while a server, transport, or protocol failure calls `onError` when provided.
+Without `onError`, subscription failures are reported through `reportError()`.
+
+For a zero-input subscription, pass `undefined` before the listener when options are needed.
+
+```ts
+using announcements = client.subscribe("announcements", undefined, console.log, {
+	signal: controller.signal,
+});
+```
+
+The client does not add demand signaling, buffering limits, or backpressure.
+Build application-level flow control into the protocol when producers can outpace consumers.
+
+### Send structured and binary values
+
+Request inputs, responses, and subscription events may contain the following values:
+
+- primitives, `undefined`, `bigint`, and special numeric values;
+- plain objects, arrays, sparse arrays, cycles, and shared references;
+- `Date`, `RegExp`, `Map`, `Set`, boxed primitives, and `Error` values;
+- `ArrayBuffer`, `DataView`, and typed arrays, including shared backing-buffer relationships;
+- resizable `ArrayBuffer` values when the runtime supports them.
+
+This makes binary operations direct and type-safe:
+
+```ts
+interface AssetProtocol {
+	requests: {
+		storeAsset: (input: { name: string; bytes: Uint8Array }) => { id: string };
+	};
+}
+
+await using assets = await connect<AssetProtocol>("wss://example.com/assets");
+const stored = await assets.request("storeAsset", {
+	name: "preview.webp",
+	bytes: new Uint8Array(await file.arrayBuffer()),
+});
+```
+
+Functions, symbols, weak collections, `SharedArrayBuffer`, and unsupported host objects throw `DataCloneError`.
+The codec is fixed and has no transfer-list or custom-serializer extension point.
+WebSocket transmission copies binary data rather than transferring ownership.
+
+### Share an inferred protocol
+
+Use `ProtocolType` when an API should expose the protocol carried by a client without repeating its declaration.
+
+```ts
+import type { ProtocolType } from "@serve-tools/client-websocket";
+
+type PendingProtocol = ProtocolType<ReturnType<typeof connect<ProjectProtocol>>>;
+type ConnectedProtocol = ProtocolType<typeof client | undefined>;
+```
+
+`ProtocolType<T>` distributes through unions and unwraps promise-like client values.
+
+## Errors and lifecycle
+
+- A failed or aborted handshake rejects `connect()` and closes the socket.
+- A request serialization failure rejects that request promise, while a subscription serialization failure throws from `subscribe()`.
+- A remote request rejection becomes `RemoteError`.
+- A malformed or unsupported frame closes the connection with a protocol failure.
+- Closing or disposing the client rejects active requests and silently deactivates active subscriptions.
+- A remote, transport, or protocol close rejects active requests and reports errors to active subscriptions.
+- Exceptions thrown by subscription listeners or lifecycle callbacks are reported through `reportError()` and do not change the subscription lifecycle.
+
+The client does not retry, reconnect, resume subscriptions, replay requests, or persist messages.
+If the application reconnects, create a new client and explicitly decide which idempotent operations are safe to recreate.
+
+## Trust boundary
+
+Protocol declarations are compile-time contracts, not runtime validation.
+Validate untrusted response and event values before using them in security-sensitive code.
+
+Transport security, authentication, authorization, origin policy, and native WebSocket subprotocol negotiation remain application and server responsibilities.
+Use `wss:` for network connections that require transport encryption.
+Do not share the underlying socket with other framing protocols because the client owns it and treats every incoming message as a package protocol frame.
 
 ## Public API
 
-- `connect()` opens an owned WebSocket and returns a typed `Client`.
-- `ProtocolType` extracts the inline protocol retained by a pending or resolved client.
-- `RequestOptions`, `SubscribeOptions`, `ConnectOptions`, and `Subscription` describe operation and lifecycle state.
-- `RemoteError` represents a failure reported by the server.
+- `connect<P>(url, options?)` opens a client-owned WebSocket and resolves to `Client<P>`.
+- `RemoteError` represents a failure returned by the remote endpoint.
+- `Client`, `ConnectOptions`, `Protocol`, `ProtocolType`, `RequestOptions`, `SubscribeOptions`, and `Subscription` are exported types.
+- The `connect` namespace also exposes `Client`, `Options`, `Protocol`, `ProtocolType`, `RequestOptions`, `SubscribeOptions`, and `Subscription` for APIs organized around the entrypoint.
 
 ## Compatibility
 
-The package is an ES module for browser windows and workers with `WebSocket`, `ArrayBuffer`, `TextEncoder`, `TextDecoder`, and explicit resource management support or compatible polyfills.
-Binary WebSocket messages are received as `ArrayBuffer` values.
+The package targets modern browser windows and workers with `WebSocket`, `ArrayBuffer`, `TextEncoder`, `TextDecoder`, and `reportError`.
+Binary messages are received as `ArrayBuffer` values.
+The explicit resource management examples require native or transpiled `using` support and a `Symbol.dispose` implementation.
 
 ## Agent Skill
 
-This package includes `skills/serve-tools-client-websocket/SKILL.md` with version-aligned usage guidance for compatible coding agents.
-Activation is explicit; installing the package does not automatically trust or enable it.
+The package includes an Agent Skill at [`skills/serve-tools-client-websocket`](./skills/serve-tools-client-websocket/SKILL.md).
+Install or link that directory into your agent's skill directory when you want package-specific protocol modeling, cancellation, cleanup, binary-data, failure-handling, and trust-boundary guidance.
 
 ## Development
 
-The default test command runs protocol tests in Node.js and structured-serialization compatibility tests in Chromium, Firefox, and WebKit.
-
 ```shell
-npx playwright install chromium firefox webkit
-npm test --workspace @serve-tools/client-websocket
+npm ci --ignore-scripts
+npm run verify
 ```
 
-Run the opt-in Chromium benchmarks for structured serialization and deterministic client protocol loopbacks with:
+Core usage patterns are compile-checked by the TypeScript recipe fixture in [`test/client-websocket.recipes.ts`](./test/client-websocket.recipes.ts).
+
+Run serialization benchmarks with:
 
 ```shell
 npm run benchmark --workspace @serve-tools/client-websocket
 ```
 
-The loopback cases measure client protocol overhead without claiming to represent network or server latency.
-Benchmark results report warmup-separated mean, median, p95, and operations per second.
-They are descriptive measurements and do not impose environment-sensitive pass/fail thresholds.
+Set `BENCHMARK_JSON=1` for machine-readable output and use `BENCHMARK_DURATION_MS` to change the default `500` ms measurement window.
 
 ## License
 

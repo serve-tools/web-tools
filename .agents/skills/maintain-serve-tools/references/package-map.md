@@ -27,6 +27,7 @@ Load only the Skill for the affected public package.
 | `signals/collections`             | `signals/collections/skills/serve-tools-signal-collections/SKILL.md`                         |
 | `signals/effect`                  | `signals/effect/skills/serve-tools-signal-effect/SKILL.md`                                   |
 | `signals/signal`                  | `signals/signal/skills/serve-tools-signal/SKILL.md`                                          |
+| `suite`                           | `suite/skills/serve-tools-skills/SKILL.md`                                                   |
 | `vite/polyfills`                  | `vite/polyfills/skills/serve-tools-vite-polyfills/SKILL.md`                                  |
 
 The private `demo` workspaces provide examples and build fixtures. They do not publish package Skills.

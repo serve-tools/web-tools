@@ -48,6 +48,7 @@
 		"signals/collections",
 		"signals/effect",
 		"signals/signal",
+		"suite",
 		"vite/polyfills"
 	],
 	"scripts": {
@@ -100,42 +101,45 @@
 		"workspaces": {
 			"client/client": {
 				"entry": [
-					"test/*.types.ts"
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"client/context": {
 				"entry": [
-					"test/*.types.ts"
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"client/input": {
 				"entry": [
-					"test/*.types.ts"
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"client/interaction": {
 				"entry": [
-					"test/*.types.ts"
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"client/keyboard": {
 				"entry": [
-					"test/*.types.ts"
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"client-signals/dom": {
+				"entry": [
+					"test/*.recipes.ts"
+				],
 				"ignoreUnresolved": [
 					"/dom/signal-dom.js"
 				]
 			},
 			"client-signals/event-target": {
 				"entry": [
-					"test/*.types.ts"
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"client-signals/messaging": {
 				"entry": [
-					"test/*.types.ts"
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"client/db": {
@@ -150,7 +154,7 @@
 			},
 			"client/shared-db": {
 				"entry": [
-					"test/*.types.ts"
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"client/storage": {
@@ -172,7 +176,17 @@
 			"lit/signals": {
 				"entry": [
 					"src/{decorators,lit-signals}.ts",
-					"test/*.types.ts"
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"client-signals/shared-db": {
+				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
+			"client-signals/storage": {
+				"entry": [
+					"test/*.recipes.ts"
 				]
 			},
 			"polyfills/request-idle-callback": {
@@ -199,6 +213,21 @@
 			"ponyfills/resource-management": {
 				"entry": [
 					"src/ponyfill-resource-management.ts",
+					"test/*.recipes.ts"
+				]
+			},
+			"signals/collections": {
+				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
+			"signals/effect": {
+				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
+			"signals/signal": {
+				"entry": [
 					"test/*.recipes.ts"
 				]
 			},

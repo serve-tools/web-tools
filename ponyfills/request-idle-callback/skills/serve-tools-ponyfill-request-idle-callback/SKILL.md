@@ -1,27 +1,15 @@
 ---
 name: serve-tools-ponyfill-request-idle-callback
-description: Use @serve-tools/ponyfill-request-idle-callback when implementing, reviewing, or debugging explicit-import requestIdleCallback and cancelIdleCallback behavior without global mutation. Covers scheduling, timeout, cancellation, and browser requirements; do not use when native-aware global installation is required.
+description: Use @serve-tools/ponyfill-request-idle-callback for local idle scheduling without global mutation.
 ---
 
 # Use @serve-tools/ponyfill-request-idle-callback
 
-## Use the local scheduler deliberately
+Treat the installed package README and public declarations as the API source of truth.
+Read only the references needed for the current task.
 
-1. Import `requestIdleCallback` and `cancelIdleCallback` from the package root.
-2. Keep each returned numeric handle paired with this package's `cancelIdleCallback`; root and `lib/*` imports share one cancellation domain.
-3. Break long work into small units and consult `deadline.timeRemaining()` or `didTimeout`.
+## Route by task
 
-## Preserve the ponyfill boundary
-
-- Do not install or replace globals.
-- Do not substitute the native global automatically.
-  The exported functions always use this package's scheduler.
-- Expect callbacks after an animation frame through a `MessageChannel`, with an approximate maximum deadline.
-- Expect hidden documents to delay work and elapsed timeouts to produce `didTimeout: true` with no remaining time.
-- Use only in browsers with `document`, `performance`, `MessageChannel`, and `requestAnimationFrame`.
-
-Use `@serve-tools/polyfill-request-idle-callback` instead when native identity or global installation is required.
-
-## Validate changes
-
-Test scheduling, timeout, cancellation, hidden-document behavior, type fixtures, README examples, declarations, and package shape together.
+- [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.
+- To use the local scheduler deliberately, read [Use the local scheduler deliberately](references/use-the-local-scheduler-deliberately.md).
+- To preserve the ponyfill boundary, read [Preserve the ponyfill boundary](references/preserve-the-ponyfill-boundary.md).

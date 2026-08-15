@@ -1,27 +1,15 @@
 ---
 name: serve-tools-polyfill-request-idle-callback
-description: Use @serve-tools/polyfill-request-idle-callback when adding, reviewing, or debugging global or native-aware requestIdleCallback and cancelIdleCallback support. Covers side-effect imports, selective installers, mutation-free native-or-fallback subpaths, and environment limits; do not use when the always-local ponyfill is intended.
+description: Use @serve-tools/polyfill-request-idle-callback for native-aware global idle-callback support.
 ---
 
 # Use @serve-tools/polyfill-request-idle-callback
 
-## Choose the import boundary
+Treat the installed package README and public declarations as the API source of truth.
+Read only the references needed for the current task.
 
-- Import the package root for side effects when both globals should be installed if missing.
-- Import `./apply/requestIdleCallback` or `./apply/cancelIdleCallback` when only one global should be installed.
-- Import `./requestIdleCallback` or `./cancelIdleCallback` for a bound native implementation when available and the fallback otherwise, without changing globals.
-- Use `@serve-tools/ponyfill-request-idle-callback` when native identity is irrelevant and global mutation is forbidden.
+## Route by task
 
-## Preserve behavior
-
-- Keep side-effect imports intact.
-  The package intentionally declares `sideEffects: true`.
-- Leave native implementations unchanged; every installer is self-guarding.
-- Treat the fallback deadline as an approximation.
-  It cannot observe the browser's internal rendering or input queues.
-- Use only in browser environments that provide `document`, `performance`, `MessageChannel`, and `requestAnimationFrame` for the fallback.
-
-## Validate changes
-
-Test root, selective-global, and mutation-free imports.
-Update public subpaths, declarations, README, type fixtures, runtime tests, and package shape together.
+- [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.
+- To choose the import boundary, read [Choose the import boundary](references/choose-the-import-boundary.md).
+- To preserve behavior, read [Preserve behavior](references/preserve-behavior.md).

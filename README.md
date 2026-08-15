@@ -10,6 +10,7 @@ Client libraries, Lit integrations, polyfills, ponyfills, Signal libraries, and 
 - [`polyfills/`](./polyfills/) contains polyfills that modify the global environment.
 - [`ponyfills/`](./ponyfills/) contains ponyfills imported without global modification.
 - [`signals/`](./signals/) contains a Signals implementation and signal-aware libraries.
+- [`suite/`](./suite/) contains the published package-selection Skill for the full suite.
 - [`vite/`](./vite/) contains Vite plugins.
 
 Each package directory owns its package metadata, source, tests, and documentation.
@@ -53,15 +54,18 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/signal-collections`](./signals/collections/) provides signal-aware native collections.
 - [`@serve-tools/signal-effect`](./signals/effect/) provides microtask-batched effects.
 - [`@serve-tools/signal`](./signals/signal/) implements the TC39 Signals proposal.
+- [`@serve-tools/skills`](./suite/) provides package-selection guidance for the complete suite without runtime JavaScript.
 - [`@serve-tools/vite-polyfills`](./vite/polyfills/) detects and injects polyfills for unsupported JavaScript features in Vite projects.
 
 ## Agent Skills
 
-Every published package includes one version-aligned Agent Skill under `skills/serve-tools-<unscoped-package-name>/SKILL.md`.
-The Skills teach compatible coding agents how to choose APIs, preserve lifecycle and platform semantics, avoid sibling-package confusion, and validate package-specific changes.
+Every published package includes one version-aligned Agent Skill under `skills/serve-tools-<unscoped-package-name>/`.
+Each compact `SKILL.md` routes agents to focused references with API contracts and compile-checked recipes.
+The separate `@serve-tools/skills` package provides suite-wide package selection without adding runtime JavaScript.
 
 Installing an npm package does not automatically trust or activate its Skill.
-Use a compatible Agent Skills installer that recognizes package-root `skills/` directories, restrict discovery to direct dependencies, and allowlist the `@serve-tools/*` scope.
+Use a compatible Agent Skills installer or project sync script that copies the complete Skill directory, including `references/` and `agents/`.
+Restrict discovery to direct dependencies and allowlist the `@serve-tools/*` scope.
 Do not mount instructions from arbitrary transitive dependencies.
 
 Within this repository, Codex discovers the repo-only `maintain-serve-tools` Skill from `.agents/skills/`.

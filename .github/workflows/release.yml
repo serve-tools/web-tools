@@ -27,6 +27,7 @@ on:
           - "@serve-tools/signal-storage"
           - "@serve-tools/signal-shared-db"
           - "@serve-tools/signal-dom"
+          - "@serve-tools/skills"
           - "@serve-tools/ponyfill-request-idle-callback"
           - "@serve-tools/ponyfill-resource-management"
           - "@serve-tools/polyfill-request-idle-callback"

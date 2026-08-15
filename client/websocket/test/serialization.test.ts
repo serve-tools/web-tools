@@ -97,6 +97,17 @@ describe("structured serialization", () => {
 		expect(clone.view).toMatchObject({ byteOffset: 3, byteLength: 5 });
 	});
 
+	it("decodes buffer payloads from offset views", () => {
+		const payload = new Uint8Array(serialize(new Uint8Array([1, 2, 3]).buffer));
+		const framed = new Uint8Array(payload.length + 4);
+
+		framed.set(payload, 2);
+
+		const clone = deserialize(framed.subarray(2, -2)) as ArrayBuffer;
+
+		expect([...new Uint8Array(clone)]).toEqual([1, 2, 3]);
+	});
+
 	it("preserves resizable ArrayBuffers when supported", () => {
 		const input = new ArrayBuffer(4, { maxByteLength: 16 });
 

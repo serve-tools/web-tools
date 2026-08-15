@@ -1,0 +1,27 @@
+{
+	"name": "@serve-tools/skills",
+	"version": "0.0.1",
+	"description": "Package-selection guidance for the @serve-tools web platform utilities",
+	"keywords": [
+		"agent-skills",
+		"serve-tools",
+		"web-platform"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/suite#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/serve-tools/web-tools.git",
+		"directory": "suite"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal",
+	"files": [
+		"skills"
+	],
+	"scripts": {
+		"check:package": "npm pack --dry-run --json"
+	}
+}

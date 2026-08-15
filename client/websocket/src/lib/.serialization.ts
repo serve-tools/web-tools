@@ -15,19 +15,18 @@ const arrayBufferDetached = Object.getOwnPropertyDescriptor(ArrayBuffer.prototyp
 const arrayBufferMaxByteLength = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "maxByteLength")?.get;
 const arrayBufferResizable = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "resizable")?.get;
 const dataViewByteLength = Object.getOwnPropertyDescriptor(DataView.prototype, "byteLength")!.get!;
+const objectPrototype = Object.prototype;
 const regexpSource = Object.getOwnPropertyDescriptor(RegExp.prototype, "source")!.get!;
-const typedArrayPrototype = Object.getPrototypeOf(Uint8Array.prototype) as object;
-const typedArrayName = Object.getOwnPropertyDescriptor(typedArrayPrototype, Symbol.toStringTag)!.get!;
+const typedArrayName = Object.getOwnPropertyDescriptor(
+	Object.getPrototypeOf(Uint8Array.prototype) as object,
+	Symbol.toStringTag,
+)!.get!;
 const textDecoder = new TextDecoder("utf-8", { fatal: true });
 const textEncoder = new TextEncoder();
 
 const die = (): never => {
 	throw new DOMException("The value could not be cloned", "DataCloneError");
 };
-
-const objectTag = (value: object): string => Object.prototype.toString.call(value).slice(8, -1);
-
-const sentinel = (ref: number): unknown => (ref === -1 || (ref <= -3 && ref >= -6) ? sentinels[-ref] : die());
 
 /** Serializes one structured-clone-compatible value into the package's binary wire format. */
 export function serialize(root: unknown): ArrayBuffer {
@@ -114,7 +113,10 @@ export function serialize(root: unknown): ArrayBuffer {
 		}
 
 		const object = value as Record<string, unknown>;
-		const tag = objectTag(object);
+
+		if (Object.getPrototypeOf(object) === objectPrototype) return record(object);
+
+		const tag = objectPrototype.toString.call(object).slice(8, -1);
 
 		switch (tag) {
 			case "Date": {
@@ -272,7 +274,7 @@ export function deserialize(payload: ArrayBuffer | ArrayBufferView): unknown {
 
 		const deref = (ref: unknown): unknown => {
 			if (typeof ref !== "number" || !Number.isSafeInteger(ref)) return die();
-			if (ref < 0) return sentinel(ref);
+			if (ref < 0) return ref === -1 || (ref <= -3 && ref >= -6) ? sentinels[-ref] : die();
 			if (ref >= table.length) return die();
 
 			return ref in output ? output[ref] : hydrate(ref);

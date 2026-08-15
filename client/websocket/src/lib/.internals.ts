@@ -43,26 +43,23 @@ export const errorRecord = (reason: unknown): ErrorRecord => {
 export const remoteError = ({ name, message, stack }: ErrorRecord): RemoteError =>
 	new RemoteError(name, message, stack);
 
-export const connectionClosedError = (reason?: unknown): Error => {
-	const message =
-		reason instanceof Error ? reason.message : reason === undefined ? "The connection is closed" : String(reason);
+const reasonMessage = (reason: unknown, fallback: string): string =>
+	reason instanceof Error ? reason.message : reason === undefined ? fallback : String(reason);
 
-	return Object.assign(new Error(message), { name: "ConnectionClosedError" });
+export const connectionClosedError = (reason?: unknown): Error => {
+	return Object.assign(new Error(reasonMessage(reason, "The connection is closed")), {
+		name: "ConnectionClosedError",
+	});
 };
 
 export const protocolError = (reason?: unknown): Error => {
-	const message =
-		reason instanceof Error ? reason.message : reason === undefined ? "Invalid protocol message" : String(reason);
-
-	return Object.assign(new Error(message), { name: "ProtocolError" });
+	return Object.assign(new Error(reasonMessage(reason, "Invalid protocol message")), { name: "ProtocolError" });
 };
 
 export const callSafely = <Value>(callback: (value: Value) => void, value: Value): void => {
 	try {
 		callback(value);
 	} catch (error) {
-		report(error);
+		reportError(error);
 	}
 };
-
-export const report = (error: unknown): void => reportError(error);
