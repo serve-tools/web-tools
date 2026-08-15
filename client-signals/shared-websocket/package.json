@@ -31,11 +31,11 @@
 	],
 	"scripts": {
 		"build": "npm run clean && tsc --build --force tsconfig.json",
-		"build:dependencies": "npm run build --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/signal-websocket",
+		"build:dependencies": "npm run build:dependencies --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/signal-websocket && npm run build --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/signal-websocket",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
-		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
 		"@serve-tools/client-shared-websocket": "^0.1",
