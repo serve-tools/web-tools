@@ -3,7 +3,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	test: {
-		include: ["test/browser/**/*.test.ts"],
+		include: ["test/connect.test.ts"],
 		testTimeout: 10_000,
 		browser: {
 			enabled: true,

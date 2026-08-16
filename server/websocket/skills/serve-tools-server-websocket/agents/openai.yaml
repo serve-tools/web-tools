@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools WebSocket server"
+  short_description: "Serve typed realtime requests and subscriptions"
+  default_prompt: "Use $serve-tools-server-websocket to implement this typed WebSocket server task."

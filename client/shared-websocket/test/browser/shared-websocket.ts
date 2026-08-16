@@ -1,7 +1,6 @@
 /// <reference lib="webworker" />
 
-import { protocol } from "../../../websocket/src/lib/.internals.js";
-import { deserialize, serialize } from "../../../websocket/src/lib/.serialization.js";
+import { deserialize, protocol, serialize } from "@serve-tools/realtime-protocol";
 import { listen } from "../../src/lib/scope/shared-worker.js";
 
 class LoopbackWebSocket extends EventTarget {

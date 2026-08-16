@@ -1,8 +1,7 @@
+import { deserialize, protocol, serialize } from "@serve-tools/realtime-protocol";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { connect } from "../src/client-websocket.js";
-import { protocol } from "../src/lib/.internals.js";
-import { deserialize, serialize } from "../src/lib/.serialization.js";
 
 interface TestProtocol {
 	requests: {

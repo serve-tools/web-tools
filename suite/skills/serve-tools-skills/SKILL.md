@@ -1,6 +1,6 @@
 ---
 name: serve-tools-skills
-description: Use @serve-tools/skills to choose the smallest package or package combination for browser state, messaging, signals, Lit, polyfills, and Vite. Use when selecting among the suite before loading a package-specific Skill. Do not use as a substitute for the selected package's API recipes.
+description: Use @serve-tools/skills to choose among browser, server, realtime, signals, Lit, polyfill, and Vite packages.
 ---
 
 # Serve Tools package guide

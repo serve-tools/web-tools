@@ -14,6 +14,8 @@ Select the narrowest package that owns the required behavior.
 | IndexedDB coordinated through a SharedWorker    | `@serve-tools/client-shared-db`               | Cross-tab operations and change subscriptions                          |
 | Observable local or session storage             | `@serve-tools/client-storage`                 | Storage reads, writes, and watches                                     |
 | Binary WebSocket requests and subscriptions     | `@serve-tools/client-websocket`               | Typed structured-data protocol over WebSocket                          |
+| WebSocket request and subscription handlers     | `@serve-tools/server-websocket`               | Sans-I/O server core plus runtime adapters                             |
+| Realtime wire format or reliable stream frames  | `@serve-tools/realtime-protocol`              | Shared serializer, message guards, types, and framing                  |
 | Signal-aware DOM templates                      | `@serve-tools/signal-dom`                     | Functional HTML, SVG, and MathML templating                            |
 | EventTarget state as Signals                    | `@serve-tools/signal-event-target`            | Events and media queries exposed as read-only Signals                  |
 | Messaging subscriptions as Signals              | `@serve-tools/signal-messaging`               | Explicit reactive subscription state                                   |
@@ -35,6 +37,8 @@ Select `@serve-tools/signal` separately only when application code imports it di
 ## Selection rules
 
 - Choose a `client-*` package for imperative state or transport APIs.
+- Choose `@serve-tools/server-websocket` for server handlers and an adapter matching the runtime.
+- Choose `@serve-tools/realtime-protocol` directly only for transport integration or protocol infrastructure.
 - Choose its `signal-*` counterpart only when consumers need reactive reads.
 - Choose a ponyfill for explicit imports and a polyfill only when global compatibility is required.
 - Choose `@serve-tools/vite-polyfills` when support should be derived and injected by the build rather than selected in application code.

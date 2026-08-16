@@ -1,42 +1,7 @@
-import type { ErrorRecord, ServerMessage } from "./.types.js";
+import type { ErrorRecord } from "@serve-tools/realtime-protocol";
 import { RemoteError } from "./RemoteError.js";
 
-export const protocol = "@serve-tools/websocket/1";
-
 export function noop(): void {}
-
-export const isErrorRecord = (value: unknown): value is ErrorRecord =>
-	!!value &&
-	typeof value === "object" &&
-	typeof (value as Partial<ErrorRecord>).name === "string" &&
-	typeof (value as Partial<ErrorRecord>).message === "string" &&
-	((value as Partial<ErrorRecord>).stack === undefined || typeof (value as Partial<ErrorRecord>).stack === "string");
-
-export const isServerMessage = (value: unknown): value is ServerMessage => {
-	if (!Array.isArray(value) || value[0] !== protocol) {
-		return false;
-	}
-
-	if (value[1] === "close") {
-		return value.length === 3 && isErrorRecord(value[2]);
-	}
-
-	if (!Number.isSafeInteger(value[2]) || (value[2] as number) < 0) {
-		return false;
-	}
-
-	switch (value[1]) {
-		case "complete":
-			return value.length === 3;
-		case "event":
-		case "resolve":
-			return value.length === 4;
-		case "reject":
-			return value.length === 4 && isErrorRecord(value[3]);
-		default:
-			return false;
-	}
-};
 
 export const errorRecord = (reason: unknown): ErrorRecord => {
 	if (!(reason instanceof Error)) {

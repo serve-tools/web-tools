@@ -50,6 +50,16 @@ const selections = [
 		"@serve-tools/client-websocket",
 	],
 	[
+		"binary-websocket-server",
+		"Serve typed binary WebSocket requests and subscriptions from Node.js, authenticating during the HTTP upgrade and passing identity into cancellable handlers.",
+		"@serve-tools/server-websocket",
+	],
+	[
+		"realtime-stream-wire-format",
+		"Build custom reliable byte-stream transport glue with the shared structured serializer, versioned message guards, and incremental length-prefix framing. Do not own application socket lifecycle.",
+		"@serve-tools/realtime-protocol",
+	],
+	[
 		"functional-signal-dom",
 		"Render HTML, SVG, and MathML directly from Signals without adopting Lit or a component base class.",
 		"@serve-tools/signal-dom",

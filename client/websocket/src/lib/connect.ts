@@ -1,16 +1,7 @@
 /// <reference lib="esnext.disposable" />
 
-import {
-	callSafely,
-	connectionClosedError,
-	errorRecord,
-	isServerMessage,
-	noop,
-	protocol,
-	protocolError,
-	remoteError,
-} from "./.internals.js";
-import { deserialize, serialize } from "./.serialization.js";
+import { deserialize, isServerMessage, protocol, serialize } from "@serve-tools/realtime-protocol";
+import { callSafely, connectionClosedError, errorRecord, noop, protocolError, remoteError } from "./.internals.js";
 import type * as T from "./.types.js";
 import type {
 	Client,

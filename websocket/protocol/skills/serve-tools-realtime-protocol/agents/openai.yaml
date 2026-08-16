@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools realtime protocol"
+  short_description: "Build compatible realtime protocol transports"
+  default_prompt: "Use $serve-tools-realtime-protocol to implement this realtime wire-format task."

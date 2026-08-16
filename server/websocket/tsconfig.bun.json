@@ -1,0 +1,11 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"allowImportingTsExtensions": true,
+		"composite": false,
+		"lib": ["ES2025", "DOM"],
+		"noEmit": true,
+		"types": ["bun"]
+	},
+	"include": ["test/runtime/bun-conformance.ts"]
+}

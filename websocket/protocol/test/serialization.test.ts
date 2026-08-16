@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { deserialize, serialize } from "../src/lib/.serialization.js";
+import { deserialize, serialize } from "../src/realtime-protocol.js";
 
 const roundTrip = <Value>(value: Value): Value => deserialize(serialize(value)) as Value;
 

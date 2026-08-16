@@ -1,5 +1,11 @@
 # Common combinations
 
+## Typed realtime client and server
+
+Use `@serve-tools/client-websocket` for each browser-owned connection and `@serve-tools/server-websocket` for typed handlers and runtime integration.
+Both use `@serve-tools/realtime-protocol`; import it directly only for custom transport adapters or reliable-stream framing.
+Use `@serve-tools/signal-websocket` or `@serve-tools/signal-shared-websocket` when subscription state should be reactive.
+
 ## Reactive cross-tab database state
 
 Use `@serve-tools/client-shared-db` for the worker-owned database connection and `@serve-tools/signal-shared-db` for reactive query state.

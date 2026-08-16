@@ -28,10 +28,12 @@ Load only the Skill for the affected public package.
 | `polyfills/resource-management`   | `polyfills/resource-management/skills/serve-tools-polyfill-resource-management/SKILL.md`     |
 | `ponyfills/request-idle-callback` | `ponyfills/request-idle-callback/skills/serve-tools-ponyfill-request-idle-callback/SKILL.md` |
 | `ponyfills/resource-management`   | `ponyfills/resource-management/skills/serve-tools-ponyfill-resource-management/SKILL.md`     |
+| `server/websocket`                | `server/websocket/skills/serve-tools-server-websocket/SKILL.md`                              |
 | `signals/collections`             | `signals/collections/skills/serve-tools-signal-collections/SKILL.md`                         |
 | `signals/effect`                  | `signals/effect/skills/serve-tools-signal-effect/SKILL.md`                                   |
 | `signals/signal`                  | `signals/signal/skills/serve-tools-signal/SKILL.md`                                          |
 | `suite`                           | `suite/skills/serve-tools-skills/SKILL.md`                                                   |
 | `vite/polyfills`                  | `vite/polyfills/skills/serve-tools-vite-polyfills/SKILL.md`                                  |
+| `websocket/protocol`              | `websocket/protocol/skills/serve-tools-realtime-protocol/SKILL.md`                           |
 
 The private `demo` workspaces provide examples and build fixtures. They do not publish package Skills.

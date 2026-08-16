@@ -1,6 +1,6 @@
 # @serve-tools/web-tools
 
-Client libraries, Lit integrations, polyfills, ponyfills, Signal libraries, and Vite plugins maintained under the `@serve-tools` npm scope.
+Client and server libraries, realtime protocols, Lit integrations, polyfills, ponyfills, Signal libraries, and Vite plugins maintained under the `@serve-tools` npm scope.
 
 ## Workspace layout
 
@@ -9,9 +9,11 @@ Client libraries, Lit integrations, polyfills, ponyfills, Signal libraries, and 
 - [`lit/`](./lit/) contains Lit integrations.
 - [`polyfills/`](./polyfills/) contains polyfills that modify the global environment.
 - [`ponyfills/`](./ponyfills/) contains ponyfills imported without global modification.
+- [`server/`](./server/) contains server runtime libraries and adapters.
 - [`signals/`](./signals/) contains a Signals implementation and signal-aware libraries.
 - [`suite/`](./suite/) contains the published package-selection Skill for the full suite.
 - [`vite/`](./vite/) contains Vite plugins.
+- [`websocket/`](./websocket/) contains transport-neutral realtime protocol infrastructure shared by clients and servers.
 
 Each package directory owns its package metadata, source, tests, and documentation.
 
@@ -42,6 +44,8 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-shared-websocket`](./client/shared-websocket/) shares one typed WebSocket across browser windows through a SharedWorker.
 - [`@serve-tools/client-storage`](./client/storage/) provides observable access to local and session storage.
 - [`@serve-tools/client-websocket`](./client/websocket/) provides typed requests and subscriptions over binary structured-data WebSockets.
+- [`@serve-tools/realtime-protocol`](./websocket/protocol/) provides the shared binary serializer, wire messages, guards, types, and reliable-stream framing.
+- [`@serve-tools/server-websocket`](./server/websocket/) serves typed requests and subscriptions through a sans-I/O core and Node.js, Deno, Bun, or crossws adapters.
 - [`@serve-tools/signal-dom`](./client-signals/dom/) provides functional signal-aware DOM, SVG, and MathML templating.
 - [`@serve-tools/signal-event-target`](./client-signals/event-target/) observes EventTarget state and media-query matches as read-only Signals.
 - [`@serve-tools/signal-messaging`](./client-signals/messaging/) observes typed messaging subscriptions as explicit Signal state.

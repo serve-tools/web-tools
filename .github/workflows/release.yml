@@ -19,6 +19,8 @@ on:
           - "@serve-tools/client-shared-websocket"
           - "@serve-tools/client-storage"
           - "@serve-tools/client-websocket"
+          - "@serve-tools/realtime-protocol"
+          - "@serve-tools/server-websocket"
           - "@serve-tools/client-signals"
           - "@serve-tools/lit-signals"
           - "@serve-tools/signal"

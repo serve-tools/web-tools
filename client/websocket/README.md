@@ -9,8 +9,9 @@ It uses a compact binary protocol with built-in serialization for structured Jav
 npm install @serve-tools/client-websocket
 ```
 
-The server must implement the same version of the binary messaging protocol.
-This package does not include a server implementation or a raw-frame API.
+Use [`@serve-tools/server-websocket`](../../server/websocket/) for the matching server core and runtime adapters.
+Both packages depend on [`@serve-tools/realtime-protocol`](../../websocket/protocol/) for the same versioned binary wire contract.
+This client package does not expose a raw-frame API.
 
 ## Usage: receive live presence
 
@@ -242,13 +243,14 @@ npm run verify
 
 Core usage patterns are compile-checked by the TypeScript recipe fixture in [`test/client-websocket.recipes.ts`](./test/client-websocket.recipes.ts).
 
-Run serialization benchmarks with:
+Run the client loopback benchmark with:
 
 ```shell
 npm run benchmark --workspace @serve-tools/client-websocket
 ```
 
 Set `BENCHMARK_JSON=1` for machine-readable output and use `BENCHMARK_DURATION_MS` to change the default `500` ms measurement window.
+The shared serializer benchmark now belongs to `@serve-tools/realtime-protocol`.
 
 ## License
 

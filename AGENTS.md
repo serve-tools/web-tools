@@ -9,8 +9,10 @@ This repository hosts web platform tooling under the `@serve-tools` npm scope:
 - `lit/` for Lit integrations.
 - `polyfills/` for implementations that modify the global environment.
 - `ponyfills/` for implementations imported without global modification.
+- `server/` for server runtimes and integration adapters.
 - `signals/` for signal runtimes and signal-aware libraries.
 - `vite/` for Vite plugins.
+- `websocket/` for transport-neutral realtime protocols shared across clients and servers.
 
 Each immediate child directory is an independently versioned npm workspace.
 

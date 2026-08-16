@@ -2,7 +2,7 @@
 	"name": "web-tools-workspace",
 	"version": "0.0.0",
 	"private": true,
-	"description": "Client libraries, polyfills, ponyfills, and Vite plugins",
+	"description": "Client and server libraries, realtime protocols, polyfills, ponyfills, and Vite plugins",
 	"homepage": "https://github.com/serve-tools/web-tools#readme",
 	"bugs": {
 		"url": "https://github.com/serve-tools/web-tools/issues"
@@ -49,15 +49,18 @@
 		"polyfills/resource-management",
 		"ponyfills/request-idle-callback",
 		"ponyfills/resource-management",
+		"server/websocket",
 		"signals/collections",
 		"signals/effect",
 		"signals/signal",
 		"suite",
-		"vite/polyfills"
+		"vite/polyfills",
+		"websocket/protocol"
 	],
 	"scripts": {
 		"benchmark": "npm run benchmark --workspaces --if-present",
 		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket --workspace @serve-tools/signal-websocket",
+		"benchmark:realtime": "npm run benchmark --workspace @serve-tools/realtime-protocol --workspace @serve-tools/client-websocket --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/signal-websocket",
 		"benchmark:skills": "node benchmark/skills/run.mjs",
 		"build": "npm run build --workspaces --if-present",
 		"build:pages": "node scripts/build-pages.mjs",
@@ -77,15 +80,19 @@
 		"@arethetypeswrong/cli": "0.18.5",
 		"@biomejs/biome": "2.5.8",
 		"@playwright/test": "1.62.1",
+		"@types/bun": "1.3.14",
 		"@types/node": "26.2.0",
+		"@types/ws": "8.18.1",
 		"@vitest/browser-playwright": "4.1.10",
 		"@vitest/coverage-istanbul": "4.1.10",
+		"crossws": "0.4.10",
 		"dprint": "0.55.2",
 		"playwright": "1.62.1",
 		"publint": "0.3.23",
 		"typescript": "7.0.2",
 		"vite": "8.2.1",
-		"vitest": "4.1.10"
+		"vitest": "4.1.10",
+		"ws": "8.21.3"
 	},
 	"packageManager": "npm@12.0.2",
 	"engines": {
@@ -184,12 +191,18 @@
 				"entry": [
 					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"
-				],
-				"ignoreIssues": {
-					"src/lib/.serialization.ts": [
-						"exports"
-					]
-				}
+				]
+			},
+			"websocket/protocol": {
+				"entry": [
+					"benchmark/*.benchmark.ts",
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"server/websocket": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
 			},
 			"lit/signals": {
 				"entry": [
