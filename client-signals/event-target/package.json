@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-event-target",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "EventTarget state and media queries observed as read-only Signals",
 	"keywords": [
 		"eventtarget",

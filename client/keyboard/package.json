@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-keyboard",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Platform-aware keyboard chords, labels, symbols, and ARIA shortcuts for browser clients",
 	"keywords": [
 		"accessibility",

@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Implements the Stage 1 TC39 Signals proposal without global mutation",
 	"keywords": [
 		"computed",

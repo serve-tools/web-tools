@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-interaction",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "One-shot clipboard, picker, sharing, and eyedropper interactions with explicit outcomes",
 	"keywords": [
 		"clipboard",

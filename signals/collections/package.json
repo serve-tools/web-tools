@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-collections",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Signal-aware native Array, Map, Set, and Object collections",
 	"keywords": [
 		"array",
