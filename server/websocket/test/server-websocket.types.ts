@@ -31,10 +31,11 @@ const handlers = {
 } satisfies Handlers<ChatProtocol, Session>;
 
 const connection = createConnection<ChatProtocol, Session>(handlers, { send() {}, close() {} }, { user: "ada" });
+const fail: (reason?: unknown) => void = connection.fail;
 
 export type InferredProtocol = ProtocolType<typeof connection>;
 
 // @ts-expect-error every declared handler is required
 const incomplete: Handlers<ChatProtocol, Session> = { requests: handlers.requests };
 
-export { connection, handlers, incomplete };
+export { connection, fail, handlers, incomplete };

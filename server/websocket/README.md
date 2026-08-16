@@ -157,10 +157,12 @@ const connection = createConnection<RoomProtocol, Session>(
 );
 
 transport.onMessage((payload) => connection.receive(payload));
+transport.onInvalidMessage((reason) => connection.fail(reason));
 transport.onClose((reason) => connection.disconnect(reason));
 ```
 
 The core expects one complete protocol message per `receive()` call.
+Call `fail()` when transport-level input violates the protocol, such as a text WebSocket frame; it sends the actual failure to the client before closing the transport.
 For reliable byte streams such as WebTransport streams, combine it with `FrameDecoder` and `encodeFrame` from `@serve-tools/realtime-protocol/stream`.
 Datagrams are not a safe substitution because request and subscription settlement depends on reliable ordered delivery.
 
@@ -185,6 +187,7 @@ When producers can outpace clients, make flow control part of the application pr
 ## Public API
 
 The root export provides `createConnection()`, `attach()`, `defaultErrorRecord()`, and their handler, connection, context, transport, protocol, and option types.
+Each connection exposes `receive()`, `fail()`, `close()`, and `disconnect()` so adapters can distinguish valid input, protocol violations, graceful shutdown, and an already-disconnected transport.
 
 Focused exports provide:
 

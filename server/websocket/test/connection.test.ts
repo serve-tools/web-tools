@@ -27,12 +27,22 @@ const setup = (overrides: Record<string, unknown> = {}) => {
 	const sent: ServerMessage[] = [];
 	const closes: Array<[number, string]> = [];
 	const reports: unknown[] = [];
+	const aborted = Promise.withResolvers<unknown>();
 	const add = vi.fn(({ a, b }: { a: number; b: number }) => a + b);
 	const handlers = {
 		requests: {
 			add,
 			hold: (_input: undefined, { signal }: { signal: AbortSignal }) =>
-				new Promise<never>((_resolve, reject) => signal.addEventListener("abort", () => reject(signal.reason))),
+				new Promise<never>((_resolve, reject) =>
+					signal.addEventListener(
+						"abort",
+						() => {
+							aborted.resolve(signal.reason);
+							reject(signal.reason);
+						},
+						{ once: true },
+					),
+				),
 			uncloneable: () => () => undefined,
 		},
 		subscriptions: {
@@ -56,7 +66,7 @@ const setup = (overrides: Record<string, unknown> = {}) => {
 	);
 	const receive = (message: ClientMessage): void => connection.receive(serialize(message));
 
-	return { add, closes, connection, handlers, receive, reports, sent };
+	return { aborted: aborted.promise, add, closes, connection, handlers, receive, reports, sent };
 };
 
 describe("createConnection", () => {
@@ -161,6 +171,36 @@ describe("createConnection", () => {
 		]);
 		expect(closes).toEqual([[1002, "Protocol error"]]);
 		await expect(connection.closed).resolves.toBeUndefined();
+	});
+
+	it("exposes explicit protocol failure with its actual remote diagnostic", async () => {
+		const { closes, connection, sent } = setup();
+
+		connection.fail("Expected a binary WebSocket message");
+
+		expect(sent).toEqual([
+			[
+				protocol,
+				"close",
+				expect.objectContaining({ name: "ProtocolError", message: "Expected a binary WebSocket message" }),
+			],
+		]);
+		expect(closes).toEqual([[1002, "Protocol error"]]);
+		await expect(connection.closed).resolves.toBeUndefined();
+	});
+
+	it("converts a client close record to an Error abort reason", async () => {
+		const { aborted, closes, receive } = setup();
+
+		receive([protocol, "request", 1, "hold", undefined]);
+		await tick();
+		receive([protocol, "close", { name: "ClientClosedError", message: "leaving" }]);
+
+		const reason = await aborted;
+
+		expect(reason).toBeInstanceOf(Error);
+		expect(reason).toMatchObject({ name: "ClientClosedError", message: "leaving" });
+		expect(closes).toEqual([[1000, ""]]);
 	});
 
 	it("redacts stacks and converts uncloneable results into rejections", async () => {

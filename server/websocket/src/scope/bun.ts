@@ -91,7 +91,7 @@ export function createBunAdapter<const P extends Protocol & ProtocolDefinition<P
 			}
 
 			if (typeof message === "string") {
-				connection.receive(new TextEncoder().encode("Invalid non-binary WebSocket message"));
+				connection.fail("Expected a binary WebSocket message");
 			} else {
 				connection.receive(message);
 			}
@@ -126,6 +126,10 @@ export function createBunAdapter<const P extends Protocol & ProtocolDefinition<P
 
 		if (result instanceof Response) {
 			return result;
+		}
+
+		if (isClosed) {
+			return new Response("Service Unavailable", { status: 503 });
 		}
 
 		return server.upgrade(request, { data: { context: result } })

@@ -109,6 +109,9 @@ export interface Connection<P extends Protocol = Protocol, Context = undefined>
 	/** Decodes and handles one complete binary protocol message. */
 	receive(payload: ArrayBuffer | ArrayBufferView): void;
 
+	/** Closes the connection because the transport received invalid protocol input. */
+	fail(reason?: unknown): void;
+
 	/** Gracefully closes the protocol and asks the physical transport to close. */
 	close(reason?: unknown): void;
 

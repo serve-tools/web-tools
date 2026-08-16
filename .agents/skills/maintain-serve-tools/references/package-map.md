@@ -34,6 +34,6 @@ Load only the Skill for the affected public package.
 | `signals/signal`                  | `signals/signal/skills/serve-tools-signal/SKILL.md`                                          |
 | `suite`                           | `suite/skills/serve-tools-skills/SKILL.md`                                                   |
 | `vite/polyfills`                  | `vite/polyfills/skills/serve-tools-vite-polyfills/SKILL.md`                                  |
-| `websocket/protocol`              | `websocket/protocol/skills/serve-tools-realtime-protocol/SKILL.md`                           |
+| `realtime/protocol`               | `realtime/protocol/skills/serve-tools-realtime-protocol/SKILL.md`                            |
 
 The private `demo` workspaces provide examples and build fixtures. They do not publish package Skills.

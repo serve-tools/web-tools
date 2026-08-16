@@ -10,7 +10,7 @@ npm install @serve-tools/client-websocket
 ```
 
 Use [`@serve-tools/server-websocket`](../../server/websocket/) for the matching server core and runtime adapters.
-Both packages depend on [`@serve-tools/realtime-protocol`](../../websocket/protocol/) for the same versioned binary wire contract.
+Both packages depend on [`@serve-tools/realtime-protocol`](../../realtime/protocol/) for the same versioned binary wire contract.
 This client package does not expose a raw-frame API.
 
 ## Usage: receive live presence

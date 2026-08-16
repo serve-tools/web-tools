@@ -12,14 +12,14 @@
 		"structured-clone",
 		"typescript"
 	],
-	"homepage": "https://github.com/serve-tools/web-tools/tree/main/websocket/protocol#readme",
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/realtime/protocol#readme",
 	"bugs": {
 		"url": "https://github.com/serve-tools/web-tools/issues"
 	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/serve-tools/web-tools.git",
-		"directory": "websocket/protocol"
+		"directory": "realtime/protocol"
 	},
 	"license": "MIT-0",
 	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",

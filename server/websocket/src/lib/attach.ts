@@ -28,7 +28,7 @@ export function attach<const P extends Protocol & ProtocolDefinition<P>, Context
 	);
 	const receive = ({ data }: MessageEvent): void => {
 		if (!(data instanceof ArrayBuffer)) {
-			connection.receive(new TextEncoder().encode("Invalid non-binary WebSocket message"));
+			connection.fail("Expected a binary WebSocket message");
 
 			return;
 		}

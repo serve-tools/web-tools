@@ -55,7 +55,7 @@
 		"signals/signal",
 		"suite",
 		"vite/polyfills",
-		"websocket/protocol"
+		"realtime/protocol"
 	],
 	"scripts": {
 		"benchmark": "npm run benchmark --workspaces --if-present",
@@ -193,7 +193,7 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
-			"websocket/protocol": {
+			"realtime/protocol": {
 				"entry": [
 					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"

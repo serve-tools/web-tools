@@ -393,7 +393,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 				settle(message[2], operation);
 			}
 		} else {
-			finish(message[2]);
+			finish(errorFromRecord(message[2]));
 			closeTransport(1000, "");
 		}
 	};
@@ -427,6 +427,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 
 	return {
 		receive,
+		fail: failProtocol,
 		closed: closed.promise,
 		close,
 		disconnect,
@@ -455,6 +456,16 @@ const positiveLimit = (value: number | undefined, fallback: number): number => {
 	}
 
 	return limit;
+};
+
+const errorFromRecord = ({ name, message, stack }: ErrorRecord): Error => {
+	const error = Object.assign(new Error(message), { name });
+
+	if (stack !== undefined) {
+		error.stack = stack;
+	}
+
+	return error;
 };
 
 const defaultReportError = (reason: unknown): void => {

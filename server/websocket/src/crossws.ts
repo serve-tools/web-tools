@@ -43,9 +43,19 @@ export function createHooks<const P extends Protocol & ProtocolDefinition<P>, Co
 				return error instanceof Response ? error : new Response("Internal Server Error", { status: 500 });
 			}
 
+			if (isClosed) {
+				return new Response("Service Unavailable", { status: 503 });
+			}
+
 			return result instanceof Response ? result : { context: { ...request.context, [contextKey]: result } };
 		},
 		open(peer): void {
+			if (isClosed) {
+				peer.close(1001, "Server closing");
+
+				return;
+			}
+
 			const context = peer.context[contextKey] as Context;
 			const connection = createConnection(
 				handlers,
@@ -116,7 +126,12 @@ export type {
 } from "./lib/types.js";
 
 const receiveCrosswsMessage = (
-	connection: { receive(payload: ArrayBuffer | ArrayBufferView): void } | undefined,
+	connection:
+		| {
+				receive(payload: ArrayBuffer | ArrayBufferView): void;
+				fail(reason?: unknown): void;
+		  }
+		| undefined,
 	message: Message,
 ): void => {
 	if (!connection) {
@@ -124,7 +139,7 @@ const receiveCrosswsMessage = (
 	}
 
 	if (typeof message.rawData === "string") {
-		connection.receive(new TextEncoder().encode("Invalid non-binary WebSocket message"));
+		connection.fail("Expected a binary WebSocket message");
 
 		return;
 	}

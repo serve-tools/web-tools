@@ -61,6 +61,13 @@ describe("attach", () => {
 		attach<Protocol>(socket as unknown as WebSocketLike, { requests: { ping: vi.fn() } }, undefined);
 		socket.receive("text");
 
+		expect(socket.sent.map((payload) => deserialize(payload))).toEqual([
+			[
+				protocol,
+				"close",
+				expect.objectContaining({ name: "ProtocolError", message: "Expected a binary WebSocket message" }),
+			],
+		]);
 		expect(socket.closes).toEqual([[1002, "Protocol error"]]);
 	});
 });

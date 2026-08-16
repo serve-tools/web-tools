@@ -122,4 +122,62 @@ describe("Node client/server conformance", () => {
 
 		expect(Buffer.concat(body).toString()).toBe("Unauthorized");
 	});
+
+	it("rejects an upgrade whose authorization finishes after shutdown", async () => {
+		interface Protocol {
+			requests: { ping(): string };
+		}
+
+		const authorization = Promise.withResolvers<undefined>();
+		const authorizationStarted = Promise.withResolvers<void>();
+		const upgrade = handleUpgrade<Protocol>(
+			{ requests: { ping: () => "pong" } },
+			{
+				authorize: () => {
+					authorizationStarted.resolve();
+
+					return authorization.promise;
+				},
+			},
+		);
+		const server = createServer();
+
+		servers.add(server);
+		server.on("upgrade", upgrade);
+		server.listen(0, "127.0.0.1");
+		await once(server, "listening");
+
+		const address = server.address();
+
+		if (!address || typeof address === "string") {
+			throw new Error("Expected a TCP server address");
+		}
+
+		const response = new Promise<import("node:http").IncomingMessage>((resolve, reject) => {
+			request({
+				host: "127.0.0.1",
+				port: address.port,
+				headers: {
+					connection: "Upgrade",
+					"sec-websocket-key": "dGhlIHNhbXBsZSBub25jZQ==",
+					"sec-websocket-version": "13",
+					upgrade: "websocket",
+				},
+			})
+				.once("response", resolve)
+				.once("error", reject)
+				.end();
+		});
+
+		await authorizationStarted.promise;
+		upgrade.close();
+		authorization.resolve(undefined);
+
+		const rejection = await response;
+
+		expect(rejection.statusCode).toBe(503);
+		for await (const _chunk of rejection) {
+			// Consume the response before closing the HTTP server.
+		}
+	});
 });

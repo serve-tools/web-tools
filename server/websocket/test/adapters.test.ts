@@ -65,6 +65,33 @@ describe("runtime adapters", () => {
 		expect(upgrade).not.toHaveBeenCalled();
 	});
 
+	it("reports Bun text messages as explicit protocol failures", () => {
+		interface Protocol {
+			requests: { ping(): string };
+		}
+
+		const adapter = createBunAdapter<Protocol>({ requests: { ping: () => "pong" } });
+		const sent: ArrayBuffer[] = [];
+		const socket = {
+			data: { context: undefined },
+			send: (payload: ArrayBuffer) => void sent.push(payload),
+			getBufferedAmount: () => 0,
+			close: vi.fn(),
+		} satisfies BunWebSocketLike<{ context: undefined }>;
+
+		adapter.websocket.open(socket);
+		adapter.websocket.message(socket, "text");
+
+		expect(sent.map((payload) => deserialize(payload))).toEqual([
+			[
+				protocol,
+				"close",
+				expect.objectContaining({ name: "ProtocolError", message: "Expected a binary WebSocket message" }),
+			],
+		]);
+		expect(socket.close).toHaveBeenCalledWith(1002, "Protocol error");
+	});
+
 	it("maps crossws upgrade context and message hooks", async () => {
 		interface Protocol {
 			requests: { whoami(): string };
@@ -97,5 +124,58 @@ describe("runtime adapters", () => {
 
 		hooks.closeConnections("done");
 		expect(peer.close).toHaveBeenCalledWith(1000, "");
+	});
+
+	it("rejects crossws authorization and open callbacks that finish after shutdown", async () => {
+		interface Protocol {
+			requests: { ping(): string };
+		}
+
+		const authorization = Promise.withResolvers<undefined>();
+		const hooks = createHooks<Protocol>(
+			{ requests: { ping: () => "pong" } },
+			{ authorize: () => authorization.promise },
+		);
+		const upgrade = hooks.upgrade?.(new Request("https://example.test/socket"));
+
+		hooks.closeConnections();
+		authorization.resolve(undefined);
+
+		const rejection = await upgrade;
+
+		expect(rejection).toBeInstanceOf(Response);
+		expect((rejection as Response).status).toBe(503);
+
+		const peer = { context: {}, close: vi.fn() } as unknown as Peer;
+
+		await hooks.open?.(peer);
+		expect(peer.close).toHaveBeenCalledWith(1001, "Server closing");
+	});
+
+	it("reports crossws text messages as explicit protocol failures", async () => {
+		interface Protocol {
+			requests: { ping(): string };
+		}
+
+		const hooks = createHooks<Protocol>({ requests: { ping: () => "pong" } });
+		const upgrade = await hooks.upgrade?.(new Request("https://example.test/socket"));
+		const sent: ArrayBuffer[] = [];
+		const peer = {
+			context: (upgrade as { context: Record<string, unknown> }).context,
+			send: (payload: ArrayBuffer) => void sent.push(payload),
+			close: vi.fn(),
+		} as unknown as Peer;
+
+		await hooks.open?.(peer);
+		await hooks.message?.(peer, { rawData: "text" } as Message);
+
+		expect(sent.map((payload) => deserialize(payload))).toEqual([
+			[
+				protocol,
+				"close",
+				expect.objectContaining({ name: "ProtocolError", message: "Expected a binary WebSocket message" }),
+			],
+		]);
+		expect(peer.close).toHaveBeenCalledWith(1002, "Protocol error");
 	});
 });

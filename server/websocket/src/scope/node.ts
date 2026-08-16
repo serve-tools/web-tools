@@ -35,6 +35,7 @@ export function handleUpgrade<const P extends Protocol & ProtocolDefinition<P>, 
 
 	const websocketServer = new WebSocketServer({
 		noServer: true,
+		clientTracking: false,
 		maxPayload: maximumMessageLength,
 		perMessageDeflate: false,
 	});
@@ -61,6 +62,12 @@ export function handleUpgrade<const P extends Protocol & ProtocolDefinition<P>, 
 
 		if (result instanceof Response) {
 			await rejectUpgrade(socket, result);
+
+			return;
+		}
+
+		if (isClosed) {
+			await rejectUpgrade(socket, new Response("Service Unavailable", { status: 503 }));
 
 			return;
 		}
