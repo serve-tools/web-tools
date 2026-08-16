@@ -4,6 +4,15 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
+- Add `@serve-tools/realtime-protocol@0.1.0` with the shared binary serializer, typed message tuples, runtime guards, error records, and bounded reliable-stream framing for WebSocket and future WebTransport integrations.
+- Establish `@serve-tools/realtime/1` as the initial wire-protocol compatibility identifier.
+- Add `@serve-tools/server-websocket@0.1.0` with a sans-I/O connection core, WHATWG WebSocket attachment, Node.js, Bun, and crossws adapters, authorization context, cancellation, cleanup, error redaction, operation limits, and bounded transport buffering.
+- Refactor `@serve-tools/client-websocket@0.1.0` before its initial release to consume `@serve-tools/realtime-protocol` instead of maintaining private protocol and serialization modules.
+- Add real client/server conformance coverage for Node.js, Bun, and Deno, plus Chromium, Firefox, and WebKit client coverage.
+- Prepare browser-package patch releases for `@serve-tools/client-context@0.1.1`, `@serve-tools/client-db@0.1.2`, `@serve-tools/client-input@0.1.1`, `@serve-tools/client-interaction@0.1.1`, `@serve-tools/client-keyboard@0.1.1`, and `@serve-tools/client-storage@0.1.3`.
+- Prepare Signal and Lit patch releases for `@serve-tools/signal-dom@0.1.2`, `@serve-tools/signal-event-target@0.1.1`, `@serve-tools/signal-storage@0.1.2`, `@serve-tools/lit-signals@0.3.1`, `@serve-tools/signal-collections@0.1.2`, `@serve-tools/signal-effect@0.1.2`, and `@serve-tools/signal@0.1.2`.
+- Prepare platform-tooling patch releases for `@serve-tools/polyfill-request-idle-callback@0.1.2`, `@serve-tools/polyfill-resource-management@0.1.2`, `@serve-tools/ponyfill-request-idle-callback@0.1.2`, `@serve-tools/ponyfill-resource-management@0.1.2`, and `@serve-tools/vite-polyfills@0.1.2`.
+
 ## 0.4.0 - 2026-08-15
 
 - Add `@serve-tools/client-websocket` with typed requests, subscriptions, cancellation, reconnection-safe ownership, and binary structured-value serialization.
