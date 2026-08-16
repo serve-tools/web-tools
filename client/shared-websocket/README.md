@@ -3,39 +3,6 @@
 `@serve-tools/client-shared-websocket` provides typed requests and subscriptions over a shared `WebSocket` owned by a `SharedWorker`.
 It uses a compact binary protocol with built-in serialization for structured JavaScript values, including cyclic graphs and binary data.
 
-```ts
-// project.worker.ts
-import { listen } from "@serve-tools/client-shared-websocket/scope/shared-worker";
-
-export const server = listen<{
-	requests: {
-		openProject: (input: { id: string }) => { id: string; title: string };
-		ping: () => void;
-	};
-	subscriptions: {
-		projectChanged: (input: { id: string }) => { revision: number };
-	};
-}>("wss://example.com/app");
-
-export type ProjectProtocol = listen.ProtocolType<typeof server>;
-```
-
-```ts
-// app.ts
-import { connect } from "@serve-tools/client-shared-websocket/scope/window";
-import type { ProjectProtocol } from "./project.worker.js";
-
-const worker = new SharedWorker(new URL("./project.worker.js", import.meta.url), { type: "module" });
-
-using client = connect<ProjectProtocol>(worker.port);
-
-const project = await client.request("openProject", { id: "project-1" });
-
-using changes = client.subscribe("projectChanged", { id: project.id }, (event) => {
-	console.log(event.revision);
-});
-```
-
 ## Install
 
 ```shell
@@ -45,88 +12,91 @@ npm install @serve-tools/client-shared-websocket
 The WebSocket server must implement the same version of the binary request-and-subscription protocol used by `@serve-tools/client-websocket`.
 This package provides the browser client and shared-worker bridge, not the WebSocket server.
 
-## Usage
+## Usage: share live presence across tabs
 
-### Declare a protocol
+### 1. Open the WebSocket in a shared worker
 
-Declare named request and subscription operations as functions with zero or one input parameter.
-A request function's return type is its response, while a subscription function's return type is each emitted event.
+Call `listen()` once in the shared worker.
+It opens the physical WebSocket and serves the declared protocol to every connected page.
+Export the inferred protocol type so the page client stays in sync without duplicating the declaration.
 
 ```ts
-interface ProjectProtocol {
+// presence.worker.ts
+import { listen } from "@serve-tools/client-shared-websocket/scope/shared-worker";
+
+export const presenceServer = listen<{
 	requests: {
-		openProject(input: { id: string }): { id: string; title: string };
-		ping(): void;
+		getRoom(input: { room: string }): { title: string };
 	};
 	subscriptions: {
-		projectChanged(input: { id: string }): { revision: number };
+		presence(input: { room: string }): { online: number };
+		announcements(): string;
 	};
-}
+}>("wss://example.com/presence");
+
+export type PresenceProtocol = listen.ProtocolType<typeof presenceServer>;
 ```
 
-Either `requests` or `subscriptions` may be omitted.
-Promise return types are unwrapped for requests, while subscription return types are used as written for emitted events.
-The declaration provides compile-time checking only and does not validate values received from the server.
+Request return types describe responses; subscription return types describe emitted values.
+These types are compile-time only, so validate server data at runtime.
 
-### Own the WebSocket in a shared worker
+### 2. Subscribe to presence in each page
 
-Import `listen()` from the shared-worker entrypoint.
-It opens one physical WebSocket and serves its typed operations to every page connected to that `SharedWorker`.
+Each page connects to the worker, handles each presence event, and releases its own resources on `pagehide`.
 
-```ts
-// project.worker.ts
-import { listen } from "@serve-tools/client-shared-websocket/scope/shared-worker";
-import type { ProjectProtocol } from "./project-protocol.js";
-
-export const server = listen<ProjectProtocol>("wss://example.com/app");
+```html
+<output id="presence">Connecting…</output>
+<script type="module" src="./presence.js"></script>
 ```
 
-`listen()` returns immediately while `server.websocket` represents the opening physical connection.
-`server.closed` resolves after the shared server and physical WebSocket close.
-Handshake subprotocols and cancellation may be passed through the optional `protocols` and `signal` options.
-
-### Connect from each page
-
-Import `connect()` from the window entrypoint and pass the page-owned `SharedWorker.port`.
-
 ```ts
-// app.ts
+// presence.ts
 import { connect } from "@serve-tools/client-shared-websocket/scope/window";
-import type { ProjectProtocol } from "./project-protocol.js";
+import type { PresenceProtocol } from "./presence.worker.js";
 
-const worker = new SharedWorker(new URL("./project.worker.js", import.meta.url), {
-	name: "projects",
+const worker = new SharedWorker(new URL("./presence.worker.js", import.meta.url), {
+	name: "presence",
 	type: "module",
 });
-const client = connect<ProjectProtocol>(worker.port);
-```
+const client = connect<PresenceProtocol>(worker.port);
+const output = document.querySelector<HTMLOutputElement>("#presence");
 
-Opening the same named `SharedWorker` from another same-origin page reuses the worker and its physical WebSocket.
-Each call to `connect()` still creates a separate logical protocol connection owned by that page.
+if (!output) {
+	throw new Error("Missing #presence output");
+}
 
-### Send requests and subscribe
+const presence = client.subscribe("presence", { room: "lobby" }, (event) => {
+	output.value = `${event.online} online`;
+});
 
-The page client has the same typed request and subscription shape as `@serve-tools/client-websocket`.
-
-```ts
-const controller = new AbortController();
-const project = await client.request("openProject", { id: "project-1" }, { signal: controller.signal });
-
-using changes = client.subscribe(
-	"projectChanged",
-	{ id: project.id },
-	(event) => console.log(event.revision),
-	{
-		signal: controller.signal,
-		onComplete: () => console.log("complete"),
-		onError: (error) => console.error(error),
+addEventListener(
+	"pagehide",
+	() => {
+		presence.unsubscribe();
+		client.close();
+		worker.port.close();
 	},
+	{ once: true },
 );
 ```
 
+Same-origin pages that open the same worker URL and name share one worker and one physical WebSocket.
+Each page still owns its client, subscription, and port.
+
+The page client supports the same typed requests, subscriptions, and operation-level cancellation as `@serve-tools/client-websocket`.
+
+## Protocol and operations
+
+Either `requests` or `subscriptions` may be omitted from a protocol.
+Promise return types are unwrapped for requests, while subscription return types describe each emitted value as written.
+
 Requests may run concurrently and return Promises.
-Subscriptions return handles with `active`, `unsubscribe()`, and `[Symbol.dispose]()`, and the listener receives each delivered event.
+Subscriptions return handles with `active`, `unsubscribe()`, and `[Symbol.dispose]()`, and the listener receives every delivered event.
 Use operation-level `AbortSignal` values to cancel work without closing the page client.
+
+`listen()` returns immediately while `presenceServer.websocket` represents the opening physical connection.
+Its optional `protocols` and `signal` options configure or cancel the WebSocket handshake.
+`presenceServer.closed` resolves after the shared server and physical WebSocket close.
 
 ## Ownership and lifecycle
 
@@ -137,7 +107,7 @@ Closing a page client closes only its logical protocol connection to the worker.
 It does not close the page's `MessagePort`; call `worker.port.close()` separately when the page no longer needs the port.
 Other pages may continue using the worker's physical WebSocket.
 
-Call `server.close()` inside the worker only when the application intends to stop all page connections and close the physical WebSocket.
+Call `presenceServer.close()` inside the worker only when the application intends to stop all page connections and close the physical WebSocket.
 The worker also closes its server when the WebSocket closes, and worker termination ends the entire shared resource.
 
 Values cross the page-worker boundary through structured clone before the WebSocket package serializes them.

@@ -17,19 +17,19 @@ npm install @serve-tools/client-shared-websocket @serve-tools/signal-effect @ser
 The WebSocket server must implement the binary request-and-subscription protocol used by `@serve-tools/client-websocket`.
 These packages provide the browser client and shared-worker bridge, not the server.
 
-## Complete a task: show live presence shared across tabs
+## Usage: share live presence across tabs
 
-The task has three pieces:
+### 1. Open the WebSocket in a shared worker
 
-1. Declare the protocol shared by the worker and page.
-2. Open the physical WebSocket in a shared worker.
-3. Observe one subscription in the page and render its latest state.
-
-### 1. Declare the protocol
+Call `listen()` once in the shared worker.
+It opens the physical WebSocket and serves the declared protocol to every connected page.
+Export the inferred protocol type so the page client stays in sync without duplicating the declaration.
 
 ```ts
-// presence-protocol.ts
-export interface PresenceProtocol {
+// presence.worker.ts
+import { listen } from "@serve-tools/client-shared-websocket/scope/shared-worker";
+
+export const presenceServer = listen<{
 	requests: {
 		getRoom(input: { room: string }): { title: string };
 	};
@@ -37,27 +37,17 @@ export interface PresenceProtocol {
 		presence(input: { room: string }): { online: number };
 		announcements(): string;
 	};
-}
+}>("wss://example.com/presence");
+
+export type PresenceProtocol = listen.ProtocolType<typeof presenceServer>;
 ```
 
-Request return types describe one response.
-Subscription return types describe each emitted event.
-The declaration provides compile-time checking only; validate untrusted server values at runtime.
+Request return types describe responses; subscription return types describe emitted values.
+These types are compile-time only, so validate server data at runtime.
 
-### 2. Own the WebSocket in a shared worker
+### 2. Observe and render presence in the page
 
-```ts
-// presence.worker.ts
-import { listen } from "@serve-tools/client-shared-websocket/scope/shared-worker";
-import type { PresenceProtocol } from "./presence-protocol.js";
-
-export const presenceServer = listen<PresenceProtocol>("wss://example.com/presence");
-```
-
-`listen()` opens one physical WebSocket and accepts every page connection delivered to this `SharedWorker`.
-Do not call it in the page.
-
-### 3. Observe and render presence in the page
+Each page connects to the worker, observes the latest presence value, and releases its own resources on `pagehide`.
 
 ```html
 <output id="presence">Connecting…</output>
@@ -69,7 +59,7 @@ Do not call it in the page.
 import { connect } from "@serve-tools/client-shared-websocket/scope/window";
 import { effect } from "@serve-tools/signal-effect";
 import { observe } from "@serve-tools/signal-shared-websocket";
-import type { PresenceProtocol } from "./presence-protocol.js";
+import type { PresenceProtocol } from "./presence.worker.js";
 
 const worker = new SharedWorker(new URL("./presence.worker.js", import.meta.url), {
 	name: "presence",
@@ -114,11 +104,10 @@ addEventListener(
 );
 ```
 
-Opening the same named `SharedWorker` from another same-origin page reuses that worker and its physical WebSocket.
-Each call to `connect()` still creates a page-owned logical client, and each call to `observe()` creates a page-owned subscription observation.
+Same-origin pages that open the same worker URL and name share one worker and one physical WebSocket.
+Each page still owns its client, observation, and port.
 
-The `effect()` is only one way to consume the Signal.
-A Signal-aware UI may read `presence.get()` in its own tracked render computation instead.
+`effect()` is illustrative; a Signal-aware renderer can read `presence.get()` directly.
 
 ## Observation state
 

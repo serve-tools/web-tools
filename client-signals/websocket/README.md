@@ -3,32 +3,78 @@
 `@serve-tools/signal-websocket` observes a typed `@serve-tools/client-websocket` subscription as explicit Signal state.
 It reuses the signal messaging observation engine, so the adapter adds no independent subscription runtime.
 
-```ts
-import { connect } from "@serve-tools/client-websocket";
-import { observe } from "@serve-tools/signal-websocket";
-
-await using client = await connect<{
-	subscriptions: {
-		presence(room: string): { online: number };
-	};
-}>("wss://example.com/presence");
-
-using presence = observe(client, "presence", { input: "lobby" });
-
-const state = presence.get();
-
-if (state.status === "ready") {
-	console.log(`${state.value.online} online`);
-}
-```
-
-Finite requests remain Promise-based and are sent through `client.request()`.
-
 ## Install
 
 ```shell
-npm install @serve-tools/client-websocket @serve-tools/signal-websocket
+npm install @serve-tools/client-websocket @serve-tools/signal-effect @serve-tools/signal-websocket
 ```
+
+This example imports all three packages directly.
+The WebSocket server must implement the binary request-and-subscription protocol used by `@serve-tools/client-websocket`.
+
+## Usage: render live presence
+
+The page opens its own WebSocket, observes the latest presence value, and releases its resources on `pagehide`.
+
+```html
+<output id="presence">Connecting…</output>
+<script type="module" src="./presence.js"></script>
+```
+
+```ts
+// presence.ts
+import { connect } from "@serve-tools/client-websocket";
+import { effect } from "@serve-tools/signal-effect";
+import { observe } from "@serve-tools/signal-websocket";
+
+const client = await connect<{
+	subscriptions: {
+		presence(input: { room: string }): { online: number };
+		announcements(): string;
+	};
+}>("wss://example.com/presence");
+const presence = observe(client, "presence", { input: { room: "lobby" } });
+const output = document.querySelector<HTMLOutputElement>("#presence");
+
+if (!output) {
+	throw new Error("Missing #presence output");
+}
+
+const stopRendering = effect(() => {
+	const state = presence.get();
+
+	switch (state.status) {
+		case "pending":
+			output.value = "Connecting…";
+			break;
+		case "ready":
+			output.value = `${state.value.online} online`;
+			break;
+		case "complete":
+			output.value = "Presence ended";
+			break;
+		case "error":
+			output.value = `Presence failed: ${String(state.error)}`;
+			break;
+	}
+});
+
+addEventListener(
+	"pagehide",
+	() => {
+		stopRendering();
+		presence.dispose();
+		client.close();
+	},
+	{ once: true },
+);
+```
+
+Each page that runs this code owns a separate physical WebSocket.
+Use `@serve-tools/signal-shared-websocket` when pages should share one connection through a `SharedWorker`.
+
+`effect()` is illustrative; a Signal-aware renderer can read `presence.get()` directly.
+Finite requests remain Promise-based and are sent through `client.request()`.
 
 ## Observation state
 
@@ -58,7 +104,7 @@ For a subscription with one input, put the typed input in the required `input` o
 ```ts
 const controller = new AbortController();
 const presence = observe(client, "presence", {
-	input: "lobby",
+	input: { room: "lobby" },
 	signal: controller.signal,
 });
 ```

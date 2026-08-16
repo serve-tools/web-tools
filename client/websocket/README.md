@@ -3,31 +3,6 @@
 `@serve-tools/client-websocket` provides typed requests and subscriptions over a client-owned browser `WebSocket`.
 It uses a compact binary protocol with built-in serialization for structured JavaScript values, including cyclic graphs and binary data.
 
-```ts
-import { connect } from "@serve-tools/client-websocket";
-
-await using client = await connect<{
-	requests: {
-		joinBoard: (input: { boardID: string }) => { title: string; updatedAt: Date };
-		saveSnapshot: (input: { boardID: string; png: Uint8Array }) => { revision: number };
-	};
-	subscriptions: {
-		strokes: (input: { boardID: string }) => { points: Float32Array; color: string };
-	};
-}>("wss://example.com/whiteboard");
-
-// values cross the wire as real types — Date stays a Date, binary stays binary
-const board = await client.request("joinBoard", { boardID: "sprint-review" });
-
-console.log(board.title, board.updatedAt.toLocaleString());
-
-using strokes = client.subscribe("strokes", { boardID: board.title }, (stroke) => {
-	canvas.draw(stroke.points, stroke.color);
-});
-
-await client.request("saveSnapshot", { boardID: "sprint-review", png: canvas.toPNGBytes() });
-```
-
 ## Install
 
 ```shell
@@ -37,7 +12,36 @@ npm install @serve-tools/client-websocket
 The server must implement the same version of the binary messaging protocol.
 This package does not include a server implementation or a raw-frame API.
 
-## Usage
+## Usage: receive live presence
+
+`connect()` opens a page-owned WebSocket and returns a typed client after the connection is ready.
+
+```ts
+import { connect } from "@serve-tools/client-websocket";
+
+await using client = await connect<{
+	requests: {
+		getRoom(input: { room: string }): { title: string };
+	};
+	subscriptions: {
+		presence(input: { room: string }): { online: number };
+	};
+}>("wss://example.com/presence");
+
+const room = await client.request("getRoom", { room: "lobby" });
+
+using presence = client.subscribe("presence", { room: "lobby" }, (event) => {
+	console.log(`${room.title}: ${event.online} online`);
+});
+```
+
+Request return types describe responses; subscription return types describe emitted values.
+These types are compile-time only, so validate server data at runtime.
+
+The client owns the physical WebSocket.
+Disposing it closes the connection and releases every active request and subscription.
+
+## Protocol and operation details
 
 ### Declare a protocol
 
