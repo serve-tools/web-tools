@@ -9,7 +9,6 @@ import type * as messagingWorkerModule from "@serve-tools/client-messaging/scope
 import type * as sharedDatabaseWorkerModule from "@serve-tools/client-shared-db/scope/shared-worker";
 import type * as sharedDatabaseWindowModule from "@serve-tools/client-shared-db/scope/window";
 import type * as sharedWebSocketWorkerModule from "@serve-tools/client-shared-websocket/scope/shared-worker";
-import type * as sharedWebSocketWindowModule from "@serve-tools/client-shared-websocket/scope/window";
 
 import {
 	context,
@@ -39,7 +38,6 @@ import * as messagingWindow from "../src/lib/messaging/scope/window.js";
 import * as messagingWorker from "../src/lib/messaging/scope/worker.js";
 import type * as messagingModule from "../src/lib/messaging.js";
 import * as sharedWebSocketWorker from "../src/lib/shared-websocket/scope/shared-worker.js";
-import * as sharedWebSocketWindow from "../src/lib/shared-websocket/scope/window.js";
 import type * as sharedWebsocketModule from "../src/lib/shared-websocket.js";
 import type * as storageModule from "../src/lib/storage.js";
 import type * as websocketModule from "../src/lib/websocket.js";
@@ -183,7 +181,6 @@ const sharedDatabaseWorkerNamespace: typeof sharedDatabaseWorkerModule = sharedD
 const sharedDatabaseWindowNamespace: typeof sharedDatabaseWindowModule = sharedDatabaseWindow;
 const sharedWebsocketNamespace: typeof sharedWebsocketModule = sharedWebsocket;
 const sharedWebSocketWorkerNamespace: typeof sharedWebSocketWorkerModule = sharedWebSocketWorker;
-const sharedWebSocketWindowNamespace: typeof sharedWebSocketWindowModule = sharedWebSocketWindow;
 const storageNamespace: typeof storageModule = storage;
 const websocketNamespace: typeof websocketModule = websocket;
 
@@ -206,7 +203,6 @@ void [
 	sharedDatabaseWindowNamespace,
 	sharedWebsocketNamespace,
 	sharedWebSocketWorkerNamespace,
-	sharedWebSocketWindowNamespace,
 	storageNamespace,
 	websocketNamespace,
 ];

@@ -92,7 +92,9 @@ Typed WebSocket requests and subscriptions are available through the `websocket`
 import { websocket } from "@serve-tools/client";
 
 const pendingClient = websocket.connect<{
-	requests: { status(): Status };
+	requests: {
+		status(): Status;
+	};
 }>(url);
 
 export type PendingStatusProtocol = websocket.ProtocolType<typeof pendingClient>;
@@ -102,17 +104,37 @@ export type StatusProtocol = websocket.connect.ProtocolType<Awaited<typeof pendi
 WebSocket `ProtocolType` accepts both pending and resolved clients through either the top-level type or `connect.ProtocolType` alias.
 The focused `@serve-tools/client/websocket` re-export exposes the same contract.
 
-Use `sharedWebsocket` when several browser windows should share one worker-owned physical connection:
+Use a `SharedWorker` when several browser windows should share one physical WebSocket.
+Import the window client from `@serve-tools/client` and the worker server from its owning package:
 
 ```ts
-import { sharedWebsocket } from "@serve-tools/client";
-import { listen } from "@serve-tools/client/shared-websocket/scope/shared-worker";
+// presence.worker.ts
+import { listen } from "@serve-tools/client-shared-websocket/scope/shared-worker";
 
-const client = sharedWebsocket.connect<AppProtocol>(worker.port);
-const server = listen<AppProtocol>(url);
+export interface AppProtocol {
+	subscriptions: {
+		presence(room: string): { online: number };
+	};
+}
+
+export const server = listen<AppProtocol>("wss://example.com/presence");
+```
+
+```ts
+// presence.ts
+import { connect } from "@serve-tools/client/shared-websocket";
+import type { AppProtocol } from "./presence.worker.js";
+
+const worker = new SharedWorker(new URL("./presence.worker.js", import.meta.url), {
+	name: "presence",
+	type: "module",
+});
+
+const client = connect<AppProtocol>(worker.port);
 ```
 
 The window client retains the direct WebSocket request and subscription shape, while closing it leaves the worker's physical socket available to other pages.
+Declare `@serve-tools/client-shared-websocket` as a direct dependency when importing its worker entrypoint.
 
 ## Compatibility
 
