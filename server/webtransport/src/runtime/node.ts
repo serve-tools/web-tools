@@ -48,6 +48,7 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 ): NodeAdapter {
 	const sessions = new Map<NodeWebTransportSessionLike, State<P, Context>>();
 	const streams = new Map<NodeWebTransportStreamLike, { readonly state: State<P, Context>; role?: number }>();
+
 	let isClosed = false;
 
 	const adapter: NodeAdapter = {
@@ -78,6 +79,7 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 			}
 
 			let state!: State<P, Context>;
+
 			const session = createSession(
 				handlers,
 				{
@@ -103,7 +105,9 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 			);
 
 			state = { session };
+
 			sessions.set(nativeSession, state);
+
 			void session.closed.then(() => sessions.delete(nativeSession));
 
 			return new Response(null, {
@@ -140,6 +144,7 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 				}
 
 				streamState.role = data[0];
+
 				chunk = data.subarray(1);
 
 				if (streamState.role === operationsRole && !streamState.state.operations) {
@@ -167,6 +172,7 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 			const streamState = streams.get(stream);
 
 			streams.delete(stream);
+
 			if (!streamState) {
 				return;
 			}
@@ -191,11 +197,13 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 			if (isClosed) {
 				return;
 			}
+
 			isClosed = true;
 
 			for (const state of sessions.values()) {
 				state.session.close(reason);
 			}
+
 			sessions.clear();
 			streams.clear();
 		},
