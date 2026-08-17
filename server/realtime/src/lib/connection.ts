@@ -156,6 +156,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		}
 
 		delete operation.cleanup;
+
 		Promise.resolve().then(cleanup).catch(report);
 	};
 
