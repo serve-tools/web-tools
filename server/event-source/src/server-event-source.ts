@@ -23,12 +23,14 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 	options: HandlerOptions<Events, Context> = {},
 ): EventSourceHandler<Events> => {
 	const connections = new Set<OpenConnection<Events, Context>>();
+
 	let isClosed = false;
 
 	const handle = async (request: Request): Promise<Response> => {
 		if (isClosed) {
 			return new Response("Service Unavailable", { status: 503 });
 		}
+
 		if (request.method !== "GET") {
 			return new Response("Method Not Allowed", { status: 405, headers: { Allow: "GET" } });
 		}
@@ -46,11 +48,13 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 		if (context instanceof Response) {
 			return context;
 		}
+
 		if (isClosed) {
 			return new Response("Service Unavailable", { status: 503 });
 		}
 
 		const controller = new AbortController();
+
 		let streamController: ReadableStreamDefaultController<Uint8Array>;
 		let cleanup = (): void => {};
 		let active = true;
@@ -60,14 +64,18 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 				streamController.enqueue(encoder.encode(value));
 			}
 		};
+
 		const close = (): void => {
 			if (!active) {
 				return;
 			}
 
 			active = false;
+
 			request.signal.removeEventListener("abort", close);
+
 			connections.delete(connection);
+
 			controller.abort();
 
 			try {
@@ -80,6 +88,7 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 				streamController.close();
 			} catch {}
 		};
+
 		const connection: OpenConnection<Events, Context> = {
 			context,
 			request,
@@ -92,6 +101,7 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 			close,
 			[Symbol.dispose]: close,
 		};
+
 		const body = new ReadableStream<Uint8Array>({
 			start(value) {
 				streamController = value;
@@ -100,6 +110,7 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 		});
 
 		connections.add(connection);
+
 		request.signal.addEventListener("abort", close, { once: true });
 
 		try {
@@ -112,6 +123,7 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 			}
 		} catch (error) {
 			reportError(error);
+
 			close();
 
 			return new Response("Internal Server Error", { status: 500 });
@@ -125,10 +137,13 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 			},
 		});
 	};
+
 	const handler = handle as EventSourceHandler<Events>;
 
 	Object.defineProperties(handler, {
-		size: { get: () => connections.size },
+		size: {
+			get: () => connections.size,
+		},
 		send: {
 			value: (name: string, data: JSONValue, sendOptions?: SendOptions) => {
 				const value = encodeEvent(name, data, sendOptions);
@@ -176,18 +191,31 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 
 /** Types used by {@link createHandler}. */
 export namespace createHandler {
+	/** Represents one open Server-Sent Events response. */
 	export type Connection<Events extends T.EventMap = T.EventMap, Context = undefined> = T.EventConnection<
 		Events,
 		Context
 	>;
+
+	/** Represents a compile-time map from Server-Sent Event names to JSON values. */
 	export type EventMap = T.EventMap;
+
+	/** Represents the extracted event map retained by an EventSource handler or connection. */
 	export type EventMapType<Value> = T.EventMapType<Value>;
+
+	/** Represents a fetch handler that broadcasts typed JSON events to its open connections. */
 	export type Handler<Events extends T.EventMap = T.EventMap> = T.EventSourceHandler<Events>;
+
+	/** Represents a value represented without loss by JSON. */
 	export type JSONValue = T.JSONValue;
+
+	/** Represents the configuration for a Fetch-compatible Server-Sent Events handler. */
 	export type Options<Events extends T.EventMap = T.EventMap, Context = undefined> = T.HandlerOptions<
 		Events,
 		Context
 	>;
+
+	/** Represents the optional spec fields attached to one Server-Sent Event. */
 	export type SendOptions = T.SendOptions;
 }
 
@@ -206,18 +234,21 @@ const encodeEvent = (name: string, data: JSONValue, options?: SendOptions): stri
 
 	if (options?.id !== undefined) {
 		validateField("Event ID", options.id, true);
+
 		output += `id: ${options.id}\n`;
 	}
 
 	return `${output}data: ${json}\n\n`;
 };
 
+/** Returns a comment message for the given value, or throws if the value contains line breaks. */
 const encodeComment = (value = ""): string => {
 	validateField("Comment", value, false);
 
 	return `: ${value}\n\n`;
 };
 
+/** Returns a `retry` message for the given delay in milliseconds, or throws if the delay is invalid. */
 const encodeRetry = (milliseconds: number): string => {
 	if (!Number.isSafeInteger(milliseconds) || milliseconds < 0) {
 		throw new RangeError("Retry delay must be a non-negative safe integer");
@@ -226,6 +257,7 @@ const encodeRetry = (milliseconds: number): string => {
 	return `retry: ${milliseconds}\n\n`;
 };
 
+/** Throws if the value contains line breaks or null bytes. */
 const validateField = (label: string, value: string, forbidNull: boolean): void => {
 	if (value.includes("\r") || value.includes("\n") || (forbidNull && value.includes("\0"))) {
 		throw new TypeError(`${label} cannot contain ${forbidNull ? "null or " : ""}line breaks`);
