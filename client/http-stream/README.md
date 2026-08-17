@@ -43,7 +43,9 @@ Ending a subscription response before a protocol `complete`, `reject`, or `close
 
 ## Negotiation and deployment
 
-The client sends and accepts `application/octet-stream;protocol=serve-tools.realtime.v1` and requires the server to select the same protocol parameter.
+Request bodies and finite responses use `application/vnd.serve-tools.realtime.v1`.
+Subscription responses use `application/vnd.serve-tools.realtime.v1;framing=length-prefixed` so the representation declares its record framing once while each four-byte prefix delimits one message.
+The client sends an operation-specific `Accept` field and requires the server to select that exact representation.
 
 Cross-origin auth headers normally trigger a CORS preflight.
 Configure CORS, credentials, cookies, caching, compression, proxy buffering, and idle timeouts in the application and deployment layer.

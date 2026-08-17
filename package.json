@@ -31,7 +31,9 @@
 		"client/messaging/demo",
 		"client/shared-db",
 		"client/shared-db/demo",
+		"client/shared-http-stream",
 		"client/shared-websocket",
+		"client/shared-webtransport",
 		"client/storage",
 		"client/websocket",
 		"client/webtransport",
@@ -40,11 +42,16 @@
 		"client-signals/dom",
 		"client-signals/dom/demo",
 		"client-signals/event-target",
+		"client-signals/db",
+		"client-signals/http-stream",
 		"client-signals/messaging",
 		"client-signals/shared-db",
+		"client-signals/shared-http-stream",
 		"client-signals/shared-websocket",
+		"client-signals/shared-webtransport",
 		"client-signals/storage",
 		"client-signals/websocket",
+		"client-signals/webtransport",
 		"client-signals/client-signals",
 		"lit/signals",
 		"lit/signals/demo",
@@ -164,6 +171,16 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
+			"client-signals/db": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"client-signals/http-stream": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"client-signals/messaging": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
@@ -195,9 +212,19 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
+			"client/shared-http-stream": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"client/shared-websocket": {
 				"entry": [
 					"benchmark/*.benchmark.ts",
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"client/shared-webtransport": {
+				"entry": [
 					"test/*.{recipes,types}.ts"
 				]
 			},
@@ -254,7 +281,17 @@
 					"test/*.recipes.ts"
 				]
 			},
+			"client-signals/shared-http-stream": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"client-signals/shared-websocket": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"client-signals/shared-webtransport": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
 				]
@@ -267,6 +304,11 @@
 			"client-signals/websocket": {
 				"entry": [
 					"benchmark/*.benchmark.ts",
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"client-signals/webtransport": {
+				"entry": [
 					"test/*.{recipes,types}.ts"
 				]
 			},

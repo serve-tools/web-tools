@@ -46,7 +46,7 @@ using realtime = createHandler(handlers, {
 export default { fetch: realtime };
 ```
 
-The handler accepts `POST` only and verifies the protocol parameter in both `Content-Type` and `Accept`.
+The handler accepts `POST` only and requires the Serve Tools vendor media type in both `Content-Type` and `Accept`.
 Requests produce one negotiated binary response.
 Subscriptions produce a response stream of four-byte-length-prefixed binary protocol messages.
 Aborting the HTTP request aborts its handler and runs subscription cleanup.
@@ -55,6 +55,10 @@ Subscription responses include no-buffering/no-transform guidance.
 Authorization runs before decoding the operation body, and its non-`Response` result becomes the handler connection context.
 `maximumMessageLength` defaults to 16 MiB and is enforced while streaming the request body when the runtime exposes it, and always before protocol decoding or handler dispatch.
 Call `close()` or dispose the handler during shutdown to reject new exchanges and close active operations.
+
+Finite operation messages use `application/vnd.serve-tools.realtime.v1`.
+Subscription responses use `application/vnd.serve-tools.realtime.v1;framing=length-prefixed`.
+An `Accept` entry with `q=0` does not permit either representation.
 
 ## Deployment responsibilities
 

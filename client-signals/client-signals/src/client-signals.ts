@@ -1,7 +1,12 @@
+export * as db from "./lib/db.js";
 export * as dom from "./lib/dom.js";
 export * as eventTarget from "./lib/event-target.js";
+export * as httpStream from "./lib/http-stream.js";
 export * as messaging from "./lib/messaging.js";
 export * as sharedDb from "./lib/shared-db.js";
+export * as sharedHttpStream from "./lib/shared-http-stream.js";
 export * as sharedWebsocket from "./lib/shared-websocket.js";
+export * as sharedWebtransport from "./lib/shared-webtransport.js";
 export * as storage from "./lib/storage.js";
 export * as websocket from "./lib/websocket.js";
+export * as webtransport from "./lib/webtransport.js";

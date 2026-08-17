@@ -2,7 +2,12 @@
 
 import { RemoteError } from "@serve-tools/client-realtime";
 import { deserialize, isServerMessage, protocol, serialize } from "@serve-tools/realtime-protocol";
-import { contentType, isNegotiatedContentType } from "@serve-tools/realtime-protocol/http-stream";
+import {
+	contentType,
+	isContentType,
+	isStreamContentType,
+	streamContentType,
+} from "@serve-tools/realtime-protocol/http-stream";
 import { FrameDecoder } from "@serve-tools/realtime-protocol/stream";
 import type * as T from "./lib/types.js";
 import type {
@@ -86,7 +91,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 				: options.headers;
 		const result = new Headers(supplied);
 
-		result.set("Accept", contentType);
+		result.set("Accept", operation.kind === "subscription" ? streamContentType : contentType);
 		result.set("Content-Type", contentType);
 
 		return fetcher(url, {
@@ -117,7 +122,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 					controller,
 				);
 
-				validateResponse(response);
+				validateResponse(response, false);
 
 				const message = deserialize(await response.arrayBuffer());
 
@@ -186,7 +191,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 						controller,
 					);
 
-					validateResponse(response);
+					validateResponse(response, true);
 
 					if (!response.body) {
 						throw new TypeError("The binary stream response has no body");
@@ -280,7 +285,7 @@ export namespace connect {
 export { RemoteError } from "@serve-tools/client-realtime";
 export type * from "./lib/types.js";
 
-const validateResponse = (response: Response): void => {
+const validateResponse = (response: Response, stream: boolean): void => {
 	if (!response.ok) {
 		throw Object.assign(new Error(`HTTP ${response.status} ${response.statusText}`), {
 			name: "HTTPError",
@@ -288,7 +293,7 @@ const validateResponse = (response: Response): void => {
 		});
 	}
 
-	if (!isNegotiatedContentType(response.headers.get("content-type"))) {
+	if (!(stream ? isStreamContentType : isContentType)(response.headers.get("content-type"))) {
 		throw protocolError("The response did not select the Serve Tools protocol");
 	}
 };

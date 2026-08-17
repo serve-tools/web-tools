@@ -45,9 +45,19 @@ const selections = [
 		"@serve-tools/client-shared-db",
 	],
 	[
+		"shared-worker-http-stream",
+		"Share typed HTTP requests and streaming subscriptions across browser tabs while keeping fetch authorization and cancellation worker-owned.",
+		"@serve-tools/client-shared-http-stream",
+	],
+	[
 		"shared-worker-websocket",
 		"Share one typed WebSocket connection across several browser tabs while keeping requests, subscriptions, cancellation, and per-tab cleanup explicit.",
 		"@serve-tools/client-shared-websocket",
+	],
+	[
+		"shared-worker-webtransport",
+		"Share one WebTransport session across browser tabs, including reliable operations and named datagrams, with the native transport owned by a SharedWorker.",
+		"@serve-tools/client-shared-webtransport",
 	],
 	[
 		"observable-web-storage",
@@ -95,6 +105,11 @@ const selections = [
 		"@serve-tools/signal-dom",
 	],
 	[
+		"indexeddb-query-signal",
+		"Expose typed IndexedDB reads as disposable pending, ready, or error Signal state and refresh them after committed writes through the same connection.",
+		"@serve-tools/signal-db",
+	],
+	[
 		"media-query-signal",
 		"Expose MediaQueryList.matches and other EventTarget-backed current state as read-only Signals with explicit disposal.",
 		"@serve-tools/signal-event-target",
@@ -105,9 +120,19 @@ const selections = [
 		"@serve-tools/signal-messaging",
 	],
 	[
+		"http-stream-subscription-signal",
+		"A typed HTTP streaming subscription should be consumed by UI code as current pending, ready, complete, or error Signal state.",
+		"@serve-tools/signal-http-stream",
+	],
+	[
 		"shared-query-signal",
 		"A SharedWorker owns IndexedDB. UI code needs a query that reactively refreshes when relevant records change and exposes explicit loading/error/ready states.",
 		"@serve-tools/signal-shared-db",
+	],
+	[
+		"shared-http-stream-subscription-signal",
+		"A SharedWorker-owned HTTP streaming subscription should be exposed to each page as disposable current Signal state.",
+		"@serve-tools/signal-shared-http-stream",
 	],
 	[
 		"websocket-subscription-signal",
@@ -120,9 +145,19 @@ const selections = [
 		"@serve-tools/signal-shared-websocket",
 	],
 	[
+		"shared-webtransport-subscription-signal",
+		"A SharedWorker-owned reliable WebTransport subscription should be exposed to each page as disposable current Signal state while datagrams remain occurrences.",
+		"@serve-tools/signal-shared-webtransport",
+	],
+	[
 		"storage-value-signal",
 		"Expose one typed localStorage preference as disposable Signal state and update the document when that preference changes.",
 		"@serve-tools/signal-storage",
+	],
+	[
+		"webtransport-subscription-signal",
+		"A reliable typed WebTransport subscription should be consumed as current Signal state while datagrams remain occurrence streams.",
+		"@serve-tools/signal-webtransport",
 	],
 	[
 		"lit-signal-binding",

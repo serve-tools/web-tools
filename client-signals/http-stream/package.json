@@ -1,0 +1,45 @@
+{
+	"name": "@serve-tools/signal-http-stream",
+	"version": "0.1.0",
+	"description": "HTTP streaming subscriptions observed as explicit Signal state",
+	"keywords": [
+		"fetch",
+		"http",
+		"reactive",
+		"signal",
+		"subscription",
+		"typescript"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/http-stream#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "client-signals/http-stream"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/signal-http-stream.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build:dependencies": "npm run build:dependencies --workspace @serve-tools/signal-messaging && npm run build --workspace @serve-tools/client-http-stream --workspace @serve-tools/signal-messaging",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/client-http-stream": "^0.1",
+		"@serve-tools/signal-messaging": "^0.2"
+	}
+}

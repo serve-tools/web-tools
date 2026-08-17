@@ -24,19 +24,21 @@ npm install @serve-tools/client
 
 ## Namespaces
 
-| Namespace         | Focused subpath                        | Underlying package                     |
-| ----------------- | -------------------------------------- | -------------------------------------- |
-| `context`         | `@serve-tools/client/context`          | `@serve-tools/client-context`          |
-| `db`              | `@serve-tools/client/db`               | `@serve-tools/client-db`               |
-| `httpStream`      | `@serve-tools/client/http-stream`      | `@serve-tools/client-http-stream`      |
-| `input`           | `@serve-tools/client/input`            | `@serve-tools/client-input`            |
-| `interaction`     | `@serve-tools/client/interaction`      | `@serve-tools/client-interaction`      |
-| `keyboard`        | `@serve-tools/client/keyboard`         | `@serve-tools/client-keyboard`         |
-| `messaging`       | `@serve-tools/client/messaging`        | `@serve-tools/client-messaging`        |
-| `sharedWebsocket` | `@serve-tools/client/shared-websocket` | `@serve-tools/client-shared-websocket` |
-| `storage`         | `@serve-tools/client/storage`          | `@serve-tools/client-storage`          |
-| `websocket`       | `@serve-tools/client/websocket`        | `@serve-tools/client-websocket`        |
-| `webtransport`    | `@serve-tools/client/webtransport`     | `@serve-tools/client-webtransport`     |
+| Namespace            | Focused subpath                           | Underlying package                        |
+| -------------------- | ----------------------------------------- | ----------------------------------------- |
+| `context`            | `@serve-tools/client/context`             | `@serve-tools/client-context`             |
+| `db`                 | `@serve-tools/client/db`                  | `@serve-tools/client-db`                  |
+| `httpStream`         | `@serve-tools/client/http-stream`         | `@serve-tools/client-http-stream`         |
+| `input`              | `@serve-tools/client/input`               | `@serve-tools/client-input`               |
+| `interaction`        | `@serve-tools/client/interaction`         | `@serve-tools/client-interaction`         |
+| `keyboard`           | `@serve-tools/client/keyboard`            | `@serve-tools/client-keyboard`            |
+| `messaging`          | `@serve-tools/client/messaging`           | `@serve-tools/client-messaging`           |
+| `sharedWebsocket`    | `@serve-tools/client/shared-websocket`    | `@serve-tools/client-shared-websocket`    |
+| `sharedHttpStream`   | `@serve-tools/client/shared-http-stream`  | `@serve-tools/client-shared-http-stream`  |
+| `sharedWebtransport` | `@serve-tools/client/shared-webtransport` | `@serve-tools/client-shared-webtransport` |
+| `storage`            | `@serve-tools/client/storage`             | `@serve-tools/client-storage`             |
+| `websocket`          | `@serve-tools/client/websocket`           | `@serve-tools/client-websocket`           |
+| `webtransport`       | `@serve-tools/client/webtransport`        | `@serve-tools/client-webtransport`        |
 
 The root entrypoint exports namespaces rather than flattening their members, so similarly named operations retain their owning capability.
 Use a focused subpath when only one capability is needed.
@@ -106,7 +108,7 @@ export type StatusProtocol = websocket.connect.ProtocolType<Awaited<typeof pendi
 WebSocket `ProtocolType` accepts both pending and resolved clients through either the top-level type or `connect.ProtocolType` alias.
 The focused `@serve-tools/client/websocket` re-export exposes the same contract.
 
-The matching `httpStream` and `webtransport` namespaces retain the same callable request and subscription declaration shape.
+The matching `httpStream`, `sharedHttpStream`, `webtransport`, and `sharedWebtransport` namespaces retain the same callable request and subscription declaration shape.
 Use HTTP streaming for separate binary Fetch exchanges, WebSocket for a widely supported bidirectional session, and WebTransport when the application also needs typed best-effort datagrams.
 
 Use a `SharedWorker` when several browser windows should share one physical WebSocket.

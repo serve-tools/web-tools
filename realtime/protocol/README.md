@@ -74,7 +74,7 @@ It is not an unreliable wire protocol by itself and must run over a framed relia
 
 ## Negotiate binary HTTP streams
 
-The `http-stream` export provides the protocol-qualified binary media type and its negotiation guard.
+The `http-stream` export provides distinct media constants and guards for unframed HTTP messages and length-prefixed subscription streams, together with weighted `Accept` negotiation.
 The paired HTTP stream packages send one unframed message for a finite response and use the reliable-stream framing API for subscription responses.
 
 ## Wire contract

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Shared HTTP Stream"
+  short_description: "Share typed HTTP streams through a worker"
+  default_prompt: "Use $serve-tools-client-shared-http-stream to coordinate this typed HTTP request and subscription client through a SharedWorker."

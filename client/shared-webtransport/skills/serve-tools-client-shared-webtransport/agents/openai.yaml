@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Shared WebTransport"
+  short_description: "Share WebTransport through a worker"
+  default_prompt: "Use $serve-tools-client-shared-webtransport to share this typed WebTransport protocol through a SharedWorker."

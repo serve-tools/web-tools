@@ -1,0 +1,9 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": { "composite": false, "noEmit": true, "types": ["vitest"] },
+	"references": [
+		{ "path": "../../client/shared-http-stream/tsconfig.json" },
+		{ "path": "../http-stream/tsconfig.json" }
+	],
+	"include": ["src/**/*.ts", "test/**/*.ts", "vitest.config.ts"]
+}

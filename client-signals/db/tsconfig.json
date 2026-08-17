@@ -1,0 +1,10 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": { "lib": ["ES2025", "DOM"], "outDir": "dist", "rootDir": "src" },
+	"references": [
+		{ "path": "../../client/db/tsconfig.json" },
+		{ "path": "../../signals/signal/tsconfig.json" },
+		{ "path": "../../signals/effect/tsconfig.json" }
+	],
+	"include": ["src/**/*.ts"]
+}

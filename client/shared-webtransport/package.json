@@ -1,0 +1,47 @@
+{
+	"name": "@serve-tools/client-shared-webtransport",
+	"version": "0.1.0",
+	"description": "SharedWorker-owned typed WebTransport operations and datagrams",
+	"keywords": [
+		"browser",
+		"datagram",
+		"quic",
+		"sharedworker",
+		"subscription",
+		"webtransport"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/shared-webtransport#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "client/shared-webtransport"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/client-shared-webtransport.js",
+		"./scope/*": "./dist/lib/scope/*.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build:dependencies": "npm run build:dependencies --workspace @serve-tools/client-webtransport && npm run build --workspace @serve-tools/client-messaging --workspace @serve-tools/client-webtransport",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/client-messaging": "^0.2",
+		"@serve-tools/client-webtransport": "^0.1",
+		"@serve-tools/realtime-protocol": "^0.1"
+	}
+}

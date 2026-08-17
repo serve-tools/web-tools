@@ -1,6 +1,11 @@
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
 import { deserialize, isClientMessage } from "@serve-tools/realtime-protocol";
-import { contentType, isNegotiatedContentType } from "@serve-tools/realtime-protocol/http-stream";
+import {
+	acceptsContentType,
+	contentType,
+	isContentType,
+	streamContentType,
+} from "@serve-tools/realtime-protocol/http-stream";
 import { encodeFrame } from "@serve-tools/realtime-protocol/stream";
 import { createConnection } from "@serve-tools/server-realtime";
 import type * as T from "./lib/types.js";
@@ -30,11 +35,8 @@ export function createHandler<const P extends Protocol & ProtocolDefinition<P>, 
 		if (request.method !== "POST") {
 			return new Response("Method Not Allowed", { status: 405, headers: { Allow: "POST" } });
 		}
-		if (!isNegotiatedContentType(request.headers.get("content-type"))) {
+		if (!isContentType(request.headers.get("content-type"))) {
 			return new Response("Unsupported Media Type", { status: 415 });
-		}
-		if (!isNegotiatedContentType(request.headers.get("accept"))) {
-			return new Response("Not Acceptable", { status: 406 });
 		}
 
 		let context: Context | Response;
@@ -70,6 +72,9 @@ export function createHandler<const P extends Protocol & ProtocolDefinition<P>, 
 
 		if (!isClientMessage(message) || (message[1] !== "request" && message[1] !== "subscribe")) {
 			return new Response("Bad Request", { status: 400 });
+		}
+		if (!acceptsContentType(request.headers.get("accept"), message[1] === "subscribe")) {
+			return new Response("Not Acceptable", { status: 406 });
 		}
 
 		return message[1] === "request"
@@ -271,7 +276,7 @@ const serveSubscription = <P extends Protocol & ProtocolDefinition<P>, Context>(
 	return new Response(body, {
 		headers: {
 			"Cache-Control": "no-cache, no-transform",
-			"Content-Type": contentType,
+			"Content-Type": streamContentType,
 			"X-Accel-Buffering": "no",
 		},
 	});

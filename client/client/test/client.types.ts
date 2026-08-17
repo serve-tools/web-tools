@@ -8,7 +8,9 @@ import type * as messagingWindowModule from "@serve-tools/client-messaging/scope
 import type * as messagingWorkerModule from "@serve-tools/client-messaging/scope/worker";
 import type * as sharedDatabaseWorkerModule from "@serve-tools/client-shared-db/scope/shared-worker";
 import type * as sharedDatabaseWindowModule from "@serve-tools/client-shared-db/scope/window";
+import type * as sharedHTTPStreamWorkerModule from "@serve-tools/client-shared-http-stream/scope/shared-worker";
 import type * as sharedWebSocketWorkerModule from "@serve-tools/client-shared-websocket/scope/shared-worker";
+import type * as sharedWebTransportWorkerModule from "@serve-tools/client-shared-webtransport/scope/shared-worker";
 
 import {
 	context,
@@ -18,7 +20,9 @@ import {
 	interaction,
 	keyboard,
 	messaging,
+	sharedHttpStream,
 	sharedWebsocket,
+	sharedWebtransport,
 	storage,
 	websocket,
 	webtransport,
@@ -40,8 +44,12 @@ import type * as keyboardModule from "../src/lib/keyboard.js";
 import * as messagingWindow from "../src/lib/messaging/scope/window.js";
 import * as messagingWorker from "../src/lib/messaging/scope/worker.js";
 import type * as messagingModule from "../src/lib/messaging.js";
+import * as sharedHTTPStreamWorker from "../src/lib/shared-http-stream/scope/shared-worker.js";
+import type * as sharedHttpStreamModule from "../src/lib/shared-http-stream.js";
 import * as sharedWebSocketWorker from "../src/lib/shared-websocket/scope/shared-worker.js";
 import type * as sharedWebsocketModule from "../src/lib/shared-websocket.js";
+import * as sharedWebTransportWorker from "../src/lib/shared-webtransport/scope/shared-worker.js";
+import type * as sharedWebtransportModule from "../src/lib/shared-webtransport.js";
 import type * as storageModule from "../src/lib/storage.js";
 import type * as websocketModule from "../src/lib/websocket.js";
 import type * as webtransportModule from "../src/lib/webtransport.js";
@@ -184,8 +192,12 @@ const messagingWindowNamespace: typeof messagingWindowModule = messagingWindow;
 const messagingWorkerNamespace: typeof messagingWorkerModule = messagingWorker;
 const sharedDatabaseWorkerNamespace: typeof sharedDatabaseWorkerModule = sharedDatabaseWorker;
 const sharedDatabaseWindowNamespace: typeof sharedDatabaseWindowModule = sharedDatabaseWindow;
+const sharedHttpStreamNamespace: typeof sharedHttpStreamModule = sharedHttpStream;
+const sharedHTTPStreamWorkerNamespace: typeof sharedHTTPStreamWorkerModule = sharedHTTPStreamWorker;
 const sharedWebsocketNamespace: typeof sharedWebsocketModule = sharedWebsocket;
 const sharedWebSocketWorkerNamespace: typeof sharedWebSocketWorkerModule = sharedWebSocketWorker;
+const sharedWebtransportNamespace: typeof sharedWebtransportModule = sharedWebtransport;
+const sharedWebTransportWorkerNamespace: typeof sharedWebTransportWorkerModule = sharedWebTransportWorker;
 const storageNamespace: typeof storageModule = storage;
 const websocketNamespace: typeof websocketModule = websocket;
 const webtransportNamespace: typeof webtransportModule = webtransport;
@@ -208,8 +220,12 @@ void [
 	messagingWorkerNamespace,
 	sharedDatabaseWorkerNamespace,
 	sharedDatabaseWindowNamespace,
+	sharedHttpStreamNamespace,
+	sharedHTTPStreamWorkerNamespace,
 	sharedWebsocketNamespace,
 	sharedWebSocketWorkerNamespace,
+	sharedWebtransportNamespace,
+	sharedWebTransportWorkerNamespace,
 	storageNamespace,
 	websocketNamespace,
 	webtransportNamespace,

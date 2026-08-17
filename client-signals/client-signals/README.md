@@ -24,21 +24,24 @@ npm install @serve-tools/client-signals
 
 ## Namespaces
 
-| Namespace         | Focused subpath                                | Underlying package                     |
-| ----------------- | ---------------------------------------------- | -------------------------------------- |
-| `dom`             | `@serve-tools/client-signals/dom`              | `@serve-tools/signal-dom`              |
-| `eventTarget`     | `@serve-tools/client-signals/event-target`     | `@serve-tools/signal-event-target`     |
-| `messaging`       | `@serve-tools/client-signals/messaging`        | `@serve-tools/signal-messaging`        |
-| `sharedDb`        | `@serve-tools/client-signals/shared-db`        | `@serve-tools/signal-shared-db`        |
-| `sharedWebsocket` | `@serve-tools/client-signals/shared-websocket` | `@serve-tools/signal-shared-websocket` |
-| `storage`         | `@serve-tools/client-signals/storage`          | `@serve-tools/signal-storage`          |
-| `websocket`       | `@serve-tools/client-signals/websocket`        | `@serve-tools/signal-websocket`        |
+| Namespace            | Focused subpath                                   | Underlying package                        |
+| -------------------- | ------------------------------------------------- | ----------------------------------------- |
+| `dom`                | `@serve-tools/client-signals/dom`                 | `@serve-tools/signal-dom`                 |
+| `eventTarget`        | `@serve-tools/client-signals/event-target`        | `@serve-tools/signal-event-target`        |
+| `messaging`          | `@serve-tools/client-signals/messaging`           | `@serve-tools/signal-messaging`           |
+| `sharedDb`           | `@serve-tools/client-signals/shared-db`           | `@serve-tools/signal-shared-db`           |
+| `sharedHttpStream`   | `@serve-tools/client-signals/shared-http-stream`  | `@serve-tools/signal-shared-http-stream`  |
+| `sharedWebsocket`    | `@serve-tools/client-signals/shared-websocket`    | `@serve-tools/signal-shared-websocket`    |
+| `sharedWebtransport` | `@serve-tools/client-signals/shared-webtransport` | `@serve-tools/signal-shared-webtransport` |
+| `storage`            | `@serve-tools/client-signals/storage`             | `@serve-tools/signal-storage`             |
+| `websocket`          | `@serve-tools/client-signals/websocket`           | `@serve-tools/signal-websocket`           |
+| `webtransport`       | `@serve-tools/client-signals/webtransport`        | `@serve-tools/signal-webtransport`        |
 
 The root entrypoint exports namespaces rather than flattening their members, so similarly named operations retain their owning capability.
 Use a focused subpath when only one adapter is needed.
 The namespace and focused-subpath exports are direct re-exports of the underlying packages and add no wrapper runtime.
 
-Signal-aware messaging, direct WebSocket, and shared WebSocket packages all expose an `observe()` operation for subscription state.
+Signal-aware messaging and direct or shared realtime transports expose an `observe()` operation for subscription state.
 Their client types, transport ownership, and lifecycle rules remain distinct, so select the adapter that matches the client being observed.
 
 ```ts
@@ -77,3 +80,5 @@ The namespace and focused-import shapes are compile-checked by [`test/client-sig
 ## License
 
 [MIT-0](./LICENSE.md)
+| `db` | `@serve-tools/client-signals/db` | `@serve-tools/signal-db` |
+| `httpStream` | `@serve-tools/client-signals/http-stream` | `@serve-tools/signal-http-stream` |

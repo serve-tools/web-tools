@@ -1,0 +1,9 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": { "outDir": "dist", "rootDir": "src" },
+	"references": [
+		{ "path": "../../client/shared-http-stream/tsconfig.json" },
+		{ "path": "../http-stream/tsconfig.json" }
+	],
+	"include": ["src/**/*.ts"]
+}

@@ -2,13 +2,18 @@
 	"extends": "../../tsconfig.json",
 	"compilerOptions": { "outDir": "dist", "rootDir": "src" },
 	"references": [
+		{ "path": "../db/tsconfig.json" },
 		{ "path": "../dom/tsconfig.json" },
 		{ "path": "../event-target/tsconfig.json" },
+		{ "path": "../http-stream/tsconfig.json" },
 		{ "path": "../messaging/tsconfig.json" },
 		{ "path": "../shared-db/tsconfig.json" },
+		{ "path": "../shared-http-stream/tsconfig.json" },
 		{ "path": "../shared-websocket/tsconfig.json" },
+		{ "path": "../shared-webtransport/tsconfig.json" },
 		{ "path": "../storage/tsconfig.json" },
-		{ "path": "../websocket/tsconfig.json" }
+		{ "path": "../websocket/tsconfig.json" },
+		{ "path": "../webtransport/tsconfig.json" }
 	],
 	"include": ["src/**/*.ts"]
 }

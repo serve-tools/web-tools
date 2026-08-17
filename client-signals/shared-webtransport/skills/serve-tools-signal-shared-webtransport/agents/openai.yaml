@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal Shared WebTransport"
+  short_description: "Observe shared WebTransport"
+  default_prompt: "Use $serve-tools-signal-shared-webtransport to observe this SharedWorker WebTransport subscription as Signal state."

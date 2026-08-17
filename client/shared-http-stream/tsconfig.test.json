@@ -1,0 +1,6 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": { "composite": false, "noEmit": true, "types": ["vitest"] },
+	"references": [{ "path": "../http-stream/tsconfig.json" }, { "path": "../messaging/tsconfig.json" }],
+	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "vitest.config.ts"]
+}

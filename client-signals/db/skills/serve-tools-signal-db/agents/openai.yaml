@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal DB"
+  short_description: "Watch IndexedDB queries as Signals"
+  default_prompt: "Use $serve-tools-signal-db to model these typed IndexedDB queries as explicit Signal state."

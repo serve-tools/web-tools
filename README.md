@@ -43,7 +43,9 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-realtime`](./client/realtime/) provides the sans-I/O operation core for custom client transports.
 - [`@serve-tools/client-http-stream`](./client/http-stream/) provides typed binary HTTP requests and streaming subscriptions with author headers.
 - [`@serve-tools/client-shared-db`](./client/shared-db/) coordinates IndexedDB operations and change subscriptions through a SharedWorker.
+- [`@serve-tools/client-shared-http-stream`](./client/shared-http-stream/) coordinates typed HTTP requests and streaming subscriptions through a SharedWorker.
 - [`@serve-tools/client-shared-websocket`](./client/shared-websocket/) shares one typed WebSocket across browser windows through a SharedWorker.
+- [`@serve-tools/client-shared-webtransport`](./client/shared-webtransport/) shares typed WebTransport operations and datagrams through a SharedWorker.
 - [`@serve-tools/client-storage`](./client/storage/) provides observable access to local and session storage.
 - [`@serve-tools/client-websocket`](./client/websocket/) provides typed requests and subscriptions over binary structured-data WebSockets.
 - [`@serve-tools/client-webtransport`](./client/webtransport/) combines reliable typed operations with typed best-effort WebTransport datagrams.
@@ -55,9 +57,14 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/signal-dom`](./client-signals/dom/) provides functional signal-aware DOM, SVG, and MathML templating.
 - [`@serve-tools/signal-event-target`](./client-signals/event-target/) observes EventTarget state and media-query matches as read-only Signals.
 - [`@serve-tools/signal-messaging`](./client-signals/messaging/) observes typed messaging subscriptions as explicit Signal state.
+- [`@serve-tools/signal-db`](./client-signals/db/) adds reactive queries to one typed IndexedDB connection.
+- [`@serve-tools/signal-http-stream`](./client-signals/http-stream/) observes HTTP streaming subscriptions as explicit Signal state.
 - [`@serve-tools/signal-shared-db`](./client-signals/shared-db/) adds reactive queries to the shared IndexedDB client.
+- [`@serve-tools/signal-shared-http-stream`](./client-signals/shared-http-stream/) observes shared HTTP streaming subscriptions as explicit Signal state.
 - [`@serve-tools/signal-websocket`](./client-signals/websocket/) observes typed WebSocket subscriptions as explicit Signal state.
 - [`@serve-tools/signal-shared-websocket`](./client-signals/shared-websocket/) observes shared WebSocket subscriptions as explicit Signal state.
+- [`@serve-tools/signal-webtransport`](./client-signals/webtransport/) observes reliable WebTransport subscriptions as explicit Signal state.
+- [`@serve-tools/signal-shared-webtransport`](./client-signals/shared-webtransport/) observes shared reliable WebTransport subscriptions as explicit Signal state.
 - [`@serve-tools/client-signals`](./client-signals/client-signals/) provides namespace-oriented access to signal-aware client libraries.
 - [`@serve-tools/signal-storage`](./client-signals/storage/) adds reactive watches to the Web Storage client.
 - [`@serve-tools/lit-signals`](./lit/signals/) provides signal-native Lit templates, reactive host styles, lifecycle tracking, directives, and decorators.

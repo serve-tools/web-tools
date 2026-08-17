@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal Shared HTTP Stream"
+  short_description: "Observe shared HTTP streams"
+  default_prompt: "Use $serve-tools-signal-shared-http-stream to observe this SharedWorker HTTP subscription as Signal state."

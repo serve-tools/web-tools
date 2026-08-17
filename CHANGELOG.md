@@ -7,10 +7,13 @@ All notable changes to this package collection are documented here.
 - Add Node.js runtimes for `@serve-tools/ponyfill-arraybuffer-base64@0.1.0` and `@serve-tools/polyfill-arraybuffer-base64@0.1.0` with the `Uint8Array.prototype.toBase64()` contract.
 - Add `@serve-tools/realtime-protocol@0.1.0` with the shared binary serializer, typed message tuples, runtime guards, error records, and bounded reliable-stream framing for WebSocket and future WebTransport integrations.
 - Establish `@serve-tools/realtime/1` as the initial wire-protocol compatibility identifier.
-- Establish `serve-tools.realtime.v1` as the native WebSocket and WebTransport subprotocol identifier and the HTTP stream media-type protocol parameter.
+- Establish `serve-tools.realtime.v1` as the native WebSocket and WebTransport subprotocol identifier.
+- Use `application/vnd.serve-tools.realtime.v1` for finite HTTP protocol messages and its `framing=length-prefixed` representation for streaming subscriptions, with distinct `Content-Type` and weighted `Accept` validation.
 - Add `@serve-tools/client-realtime@0.1.0` and `@serve-tools/server-realtime@0.1.0` as shared sans-I/O operation cores for transport adapters.
 - Add `@serve-tools/client-webtransport@0.1.0` and `@serve-tools/server-webtransport@0.1.0` with reliable framed operations, a reliable datagram-name registry, typed best-effort datagrams, native binary bypass, and a Node.js `@http3-server/server` adapter.
 - Add `@serve-tools/client-http-stream@0.1.0` and `@serve-tools/server-http-stream@0.1.0` with Fetch-based authenticated binary requests, abortable framed subscription streams, and explicit HTTP media negotiation.
+- Add `@serve-tools/client-shared-http-stream@0.1.0` and `@serve-tools/client-shared-webtransport@0.1.0` for SharedWorker-owned transports with per-page logical clients.
+- Add `@serve-tools/signal-db@0.1.0`, `@serve-tools/signal-http-stream@0.1.0`, `@serve-tools/signal-shared-http-stream@0.1.0`, `@serve-tools/signal-webtransport@0.1.0`, and `@serve-tools/signal-shared-webtransport@0.1.0` for package-complete reactive client parity.
 - Add `httpStream` and `webtransport` namespaces and focused subpaths to the pending `@serve-tools/client@0.2.0` umbrella.
 - Add `@serve-tools/server-websocket@0.1.0` with a sans-I/O connection core, WHATWG WebSocket attachment, Node.js, Bun, and crossws adapters, authorization context, cancellation, cleanup, error redaction, operation limits, and bounded transport buffering.
 - Refactor `@serve-tools/client-websocket@0.1.0` before its initial release to consume the shared realtime core and protocol, and require native WebSocket subprotocol negotiation.

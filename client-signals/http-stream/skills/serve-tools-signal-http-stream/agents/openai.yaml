@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal HTTP Stream"
+  short_description: "Observe HTTP streams as Signals"
+  default_prompt: "Use $serve-tools-signal-http-stream to observe this typed HTTP streaming subscription as explicit Signal state."

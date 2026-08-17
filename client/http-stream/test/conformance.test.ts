@@ -1,5 +1,5 @@
 import { protocol, serialize } from "@serve-tools/realtime-protocol";
-import { contentType } from "@serve-tools/realtime-protocol/http-stream";
+import { contentType, streamContentType } from "@serve-tools/realtime-protocol/http-stream";
 import { encodeFrame } from "@serve-tools/realtime-protocol/stream";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -66,7 +66,7 @@ describe("HTTP stream conformance", () => {
 		client.close();
 	});
 
-	it("selects the protocol when Accept lists multiple representations", async () => {
+	it("selects a finite representation when Accept lists multiple representations", async () => {
 		const server = createHandler<TestProtocol, { user: string }>(handlers, {
 			authorize: () => ({ user: "test" }),
 		});
@@ -83,6 +83,21 @@ describe("HTTP stream conformance", () => {
 
 		expect(response.status).toBe(200);
 		expect(response.headers.get("content-type")).toBe(contentType);
+	});
+
+	it("rejects a representation excluded with q=0", async () => {
+		const server = createHandler<TestProtocol, { user: string }>(handlers, {
+			authorize: () => ({ user: "test" }),
+		});
+		const response = await server(
+			new Request("https://example.test/realtime", {
+				method: "POST",
+				headers: { Accept: `${contentType};q=0`, "Content-Type": contentType },
+				body: serialize([protocol, "request", 1, "identity", undefined]),
+			}),
+		);
+
+		expect(response.status).toBe(406);
 	});
 
 	it("settles an aborted finite server request", async () => {
@@ -141,7 +156,7 @@ describe("HTTP stream conformance", () => {
 		const subscriptionClient = connect<TestProtocol>("https://example.test/realtime", {
 			fetch: async () =>
 				new Response(encodeFrame(serialize([protocol, "close", record])), {
-					headers: { "Content-Type": contentType },
+					headers: { "Content-Type": streamContentType },
 				}),
 		});
 		const failed = Promise.withResolvers<Error>();
@@ -170,7 +185,7 @@ describe("HTTP stream conformance", () => {
 							controller.close();
 						},
 					}),
-					{ headers: { "Content-Type": contentType } },
+					{ headers: { "Content-Type": streamContentType } },
 				),
 		});
 		const completed = Promise.withResolvers<void>();
@@ -188,7 +203,7 @@ describe("HTTP stream conformance", () => {
 
 	it("reports a subscription stream that ends without protocol settlement", async () => {
 		const client = connect<TestProtocol>("https://example.test/realtime", {
-			fetch: async () => new Response(new Uint8Array(), { headers: { "Content-Type": contentType } }),
+			fetch: async () => new Response(new Uint8Array(), { headers: { "Content-Type": streamContentType } }),
 		});
 		const failed = Promise.withResolvers<Error>();
 

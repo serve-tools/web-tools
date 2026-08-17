@@ -8,12 +8,13 @@ Use `@serve-tools/signal-websocket` or `@serve-tools/signal-shared-websocket` wh
 
 Use `@serve-tools/client-webtransport` with `@serve-tools/server-webtransport` when the same session also needs typed best-effort datagrams for replaceable recent state.
 Use `@serve-tools/client-http-stream` with `@serve-tools/server-http-stream` when client operations can be separate Fetch exchanges and only server-to-client subscriptions stream.
+Add the corresponding `client-shared-*` package when a `SharedWorker` should own the transport for several pages, and the corresponding `signal-*` package when subscription values should be consumed as latest state.
 Use the client and server realtime cores directly only to implement another adapter.
 
 ## Reactive cross-tab database state
 
 Use `@serve-tools/client-shared-db` for the worker-owned database connection and `@serve-tools/signal-shared-db` for reactive query state.
-Use `@serve-tools/client-db` alone when coordination and reactive observation are unnecessary.
+Use `@serve-tools/signal-db` for reactive queries local to one typed connection, `@serve-tools/client-db` alone when reactive observation is unnecessary, and the shared pair when writes must coordinate across tabs.
 
 ## Reactive worker messaging
 

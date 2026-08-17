@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal WebTransport"
+  short_description: "Observe WebTransport as Signals"
+  default_prompt: "Use $serve-tools-signal-webtransport to observe this reliable typed WebTransport subscription as explicit Signal state."
