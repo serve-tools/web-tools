@@ -115,6 +115,7 @@ const serveRequest = async <P extends Protocol & ProtocolDefinition<P>, Context>
 	connections: Set<Connection<P, Context>>,
 ): Promise<Response> => {
 	const delivered = Promise.withResolvers<ArrayBuffer>();
+
 	let connection!: Connection<P, Context>;
 
 	connection = createConnection<P, Context>(
@@ -127,6 +128,7 @@ const serveRequest = async <P extends Protocol & ProtocolDefinition<P>, Context>
 		options,
 	);
 	connections.add(connection);
+
 	const abort = (): void => connection.disconnect(signal.reason);
 
 	signal.addEventListener("abort", abort, { once: true });
@@ -154,6 +156,7 @@ const serveSubscription = <P extends Protocol & ProtocolDefinition<P>, Context>(
 	let connection!: Connection<P, Context>;
 	let finished = false;
 	let stopKeepAlive = (): void => {};
+
 	const body = new ReadableStream<Uint8Array>({
 		start(controller) {
 			const finish = (): void => {
@@ -189,12 +192,16 @@ const serveSubscription = <P extends Protocol & ProtocolDefinition<P>, Context>(
 				context,
 				options,
 			);
+
 			connections.add(connection);
+
 			void connection.closed.then(() => {
 				connections.delete(connection);
 				finish();
 			});
+
 			signal.addEventListener("abort", () => connection.disconnect(signal.reason), { once: true });
+
 			connection.receive(payload);
 		},
 		cancel(reason) {
