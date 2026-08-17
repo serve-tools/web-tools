@@ -176,6 +176,7 @@ jobs:
           path: ${{ runner.temp }}/release
       - name: Verify and publish artifact
         env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           cd "$RUNNER_TEMP/release"

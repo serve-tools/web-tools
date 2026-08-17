@@ -7,7 +7,7 @@
 	"include": ["src/**/*.ts", "src/**/.*.ts"],
 	"references": [
 		{
-			"path": "../../ponyfills/resource-management/tsconfig.json"
+			"path": "../../ponyfills/resource-management/tsconfig.build.json"
 		}
 	]
 }
