@@ -147,6 +147,7 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 		if (!controller.signal.aborted) {
 			controller.abort(reason);
 		}
+
 		registry.fail(reason);
 		connection.disconnect(reason);
 	};

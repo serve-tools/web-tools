@@ -45,6 +45,7 @@ describe("Node client/server conformance", () => {
 		servers.add(server);
 		server.on("upgrade", upgrade);
 		server.listen(0, "127.0.0.1");
+
 		await once(server, "listening");
 
 		const address = server.address();
@@ -62,6 +63,7 @@ describe("Node client/server conformance", () => {
 		const completed = Promise.withResolvers<void>();
 
 		client.subscribe("numbers", 4, (event) => events.push(event), { onComplete: completed.resolve });
+
 		await completed.promise;
 
 		expect(events).toEqual([4, 5]);
@@ -88,6 +90,7 @@ describe("Node client/server conformance", () => {
 			),
 		);
 		server.listen(0, "127.0.0.1");
+
 		await once(server, "listening");
 
 		const address = server.address();
@@ -146,6 +149,7 @@ describe("Node client/server conformance", () => {
 		servers.add(server);
 		server.on("upgrade", upgrade);
 		server.listen(0, "127.0.0.1");
+
 		await once(server, "listening");
 
 		const address = server.address();
@@ -172,12 +176,14 @@ describe("Node client/server conformance", () => {
 		});
 
 		await authorizationStarted.promise;
+
 		upgrade.close();
 		authorization.resolve(undefined);
 
 		const rejection = await response;
 
 		expect(rejection.statusCode).toBe(503);
+
 		for await (const _chunk of rejection) {
 			// Consume the response before closing the HTTP server.
 		}

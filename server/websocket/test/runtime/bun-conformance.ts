@@ -45,6 +45,7 @@ try {
 		const completed = Promise.withResolvers<void>();
 
 		client.subscribe("numbers", 3, (event) => events.push(event), { onComplete: completed.resolve });
+
 		await completed.promise;
 
 		assert.deepEqual(events, [3, 4]);
