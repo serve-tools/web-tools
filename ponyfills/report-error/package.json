@@ -1,0 +1,38 @@
+{
+	"name": "@serve-tools/ponyfill-report-error",
+	"version": "0.1.0",
+	"description": "Provides a console-backed reportError implementation without global mutation",
+	"keywords": [
+		"error",
+		"ponyfill",
+		"report-error",
+		"reporterror"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/report-error#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "ponyfills/report-error"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/ponyfill-report-error.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build --force tsconfig.build.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "vitest run --config vitest.config.ts",
+		"typecheck": "tsc --project tsconfig.json --noEmit"
+	}
+}

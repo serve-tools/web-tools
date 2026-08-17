@@ -2,6 +2,7 @@ import type { Client, Protocol, RequestOptions } from "@serve-tools/client-http-
 import type { Observation } from "@serve-tools/signal-messaging";
 import { observe as observeMessaging } from "@serve-tools/signal-messaging";
 
+export * from "@serve-tools/client-http-stream";
 export type { Observation, ObservationState } from "@serve-tools/signal-messaging";
 
 /** Eagerly observes one typed HTTP streaming subscription as a read-only Signal. */

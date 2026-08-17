@@ -1,9 +1,15 @@
 import type { Client } from "@serve-tools/client-websocket";
+import { connect as connectClient } from "@serve-tools/client-websocket";
 import { expect, test, vi } from "vitest";
-import { observe } from "../src/signal-websocket.js";
+import { connect, observe } from "../src/signal-websocket.js";
+
+test("re-exports the WebSocket client", () => {
+	expect(connect).toBe(connectClient);
+});
 
 test("observes a WebSocket subscription without adding runtime machinery", () => {
 	let next = (_value: number): void => {};
+
 	const unsubscribe = vi.fn();
 	const client = {
 		subscribe(_name: string, listener: (value: number) => void) {
@@ -15,8 +21,12 @@ test("observes a WebSocket subscription without adding runtime machinery", () =>
 	const observation = observe(client, "count");
 
 	expect(observation.get()).toEqual({ status: "pending" });
+
 	next(3);
+
 	expect(observation.get()).toEqual({ status: "ready", value: 3 });
+
 	observation.dispose();
+
 	expect(unsubscribe).toHaveBeenCalledOnce();
 });

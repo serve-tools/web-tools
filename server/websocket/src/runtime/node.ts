@@ -1,5 +1,6 @@
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
+import { reportError } from "@serve-tools/polyfill-report-error";
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
 import { offersWebSocketSubprotocol, subprotocol } from "@serve-tools/realtime-protocol";
 import { WebSocketServer } from "ws";
@@ -65,7 +66,7 @@ export function handleUpgrade<const P extends Protocol & ProtocolDefinition<P>, 
 		} catch (error) {
 			result = error instanceof Response ? error : new Response("Internal Server Error", { status: 500 });
 
-			options.reportError?.(error);
+			reportError(error);
 		}
 
 		if (result instanceof Response) {
@@ -89,7 +90,7 @@ export function handleUpgrade<const P extends Protocol & ProtocolDefinition<P>, 
 	};
 	const listener = ((request, socket, head): void => {
 		void upgrade(request, socket, head).catch((error) => {
-			options.reportError?.(error);
+			reportError(error);
 
 			if (!socket.destroyed) {
 				socket.destroy(error instanceof Error ? error : new Error(String(error)));

@@ -177,7 +177,7 @@ WHATWG, Bun, and crossws adapters observe their send queues and close a connecti
 
 Handler failures are returned as stack-redacted `{ name, message }` records by default.
 Use `formatError()` only to expose errors intentionally, and never leak credentials, internal paths, or sensitive database details.
-Use `reportError()` to observe cleanup, formatter, or transport failures that can no longer be sent to the client.
+Cleanup, formatter, transport, and authorization failures that cannot be sent to the client use the runtime's native `reportError()` or `console.error()` when that web API is unavailable.
 
 Protocol types do not validate untrusted request inputs.
 Authenticate during the upgrade, authorize every operation that needs finer access control, validate inputs at runtime, enforce origin policy where appropriate, and use TLS in production.

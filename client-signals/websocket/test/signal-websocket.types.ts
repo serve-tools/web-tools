@@ -1,4 +1,4 @@
-import type { Client } from "@serve-tools/client-websocket";
+import type { Client } from "../src/signal-websocket.js";
 import { observe } from "../src/signal-websocket.js";
 
 declare const client: Client<{

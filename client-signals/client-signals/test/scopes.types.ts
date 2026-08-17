@@ -1,0 +1,22 @@
+import { connect as connectMessaging, SharedWorker } from "@serve-tools/client-signals/messaging/scope/window";
+import { listen as listenMessaging } from "@serve-tools/client-signals/messaging/scope/worker";
+import { listen as listenEventSource } from "@serve-tools/client-signals/shared-event-source/scope/shared-worker";
+import { connect as connectEventSource } from "@serve-tools/client-signals/shared-event-source/scope/window";
+import { listen as listenHTTPStream } from "@serve-tools/client-signals/shared-http-stream/scope/shared-worker";
+import { connect as connectHTTPStream } from "@serve-tools/client-signals/shared-http-stream/scope/window";
+import { listen as listenWebSocket } from "@serve-tools/client-signals/shared-websocket/scope/shared-worker";
+import { connect as connectWebSocket } from "@serve-tools/client-signals/shared-websocket/scope/window";
+import { listen as listenWebTransport } from "@serve-tools/client-signals/shared-webtransport/scope/shared-worker";
+import { connect as connectWebTransport } from "@serve-tools/client-signals/shared-webtransport/scope/window";
+
+void connectEventSource;
+void connectHTTPStream;
+void connectMessaging;
+void connectWebSocket;
+void connectWebTransport;
+void listenEventSource;
+void listenHTTPStream;
+void listenMessaging;
+void listenWebSocket;
+void listenWebTransport;
+void SharedWorker;

@@ -1,10 +1,12 @@
 export * as context from "./lib/context.js";
 export * as db from "./lib/db.js";
+export * as eventSource from "./lib/event-source.js";
 export * as httpStream from "./lib/http-stream.js";
 export * as input from "./lib/input.js";
 export * as interaction from "./lib/interaction.js";
 export * as keyboard from "./lib/keyboard.js";
 export * as messaging from "./lib/messaging.js";
+export * as sharedEventSource from "./lib/shared-event-source.js";
 export * as sharedHttpStream from "./lib/shared-http-stream.js";
 export * as sharedWebsocket from "./lib/shared-websocket.js";
 export * as sharedWebtransport from "./lib/shared-webtransport.js";

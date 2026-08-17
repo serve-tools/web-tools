@@ -1,6 +1,6 @@
 ---
 name: serve-tools-client
-description: Use @serve-tools/client to choose and import namespaced browser utilities.
+description: Use @serve-tools/client browser utilities.
 ---
 
 # Use @serve-tools/client
@@ -14,6 +14,7 @@ Read only the references needed for the current task.
 - To choose the import shape, read [Choose the import shape](references/choose-the-import-shape.md).
 - To keep capability semantics intact, read [Keep capability semantics intact](references/keep-capability-semantics-intact.md).
 - To use scope-specific entrypoints directly, read [Use scope-specific entrypoints directly](references/use-scope-specific-entrypoints-directly.md).
+- Use `eventSource` for typed JSON SSE events and `sharedEventSource` when one worker should own reconnection for several pages; preserve `lastEventId` in either form.
 - To share one WebSocket across windows, read [Share a WebSocket across windows](references/share-a-websocket-across-windows.md).
 - Use the matching shared HTTP stream or shared WebTransport focused subpath when those transports are worker-owned.
 - To declare messaging and network realtime protocols, read [Declare realtime protocols](references/declare-messaging-and-websocket-protocols.md).

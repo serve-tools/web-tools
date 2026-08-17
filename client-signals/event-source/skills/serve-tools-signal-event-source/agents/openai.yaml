@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal EventSource"
+  short_description: "Connect and observe JSON SSE Signals"
+  default_prompt: "Use $serve-tools-signal-event-source to connect to typed JSON Server-Sent Events and observe the latest event and ID as Signal state."

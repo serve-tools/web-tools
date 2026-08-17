@@ -33,6 +33,9 @@ const handlers = {
 const connection = createConnection<ChatProtocol, Session>(handlers, { send() {}, close() {} }, { user: "ada" });
 const fail: (reason?: unknown) => void = connection.fail;
 
+// @ts-expect-error server failures are reported automatically, not through connection options
+createConnection(handlers, { send() {}, close() {} }, { user: "ada" }, { reportError: () => undefined });
+
 export type InferredProtocol = ProtocolType<typeof connection>;
 
 // @ts-expect-error every declared handler is required

@@ -1,0 +1,11 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"composite": false,
+		"lib": ["ES2025", "DOM"],
+		"noEmit": true,
+		"rootDir": ".",
+		"types": ["vitest"]
+	},
+	"include": ["src/**/*.ts", "test/**/*.ts"]
+}

@@ -1,7 +1,7 @@
 {
 	"name": "@serve-tools/signal-messaging",
 	"version": "0.2.0",
-	"description": "Typed messaging subscriptions observed as explicit Signal state",
+	"description": "Typed messaging clients and servers with subscription Signal state",
 	"keywords": [
 		"messageport",
 		"messaging",
@@ -25,7 +25,8 @@
 	"sideEffects": false,
 	"type": "module",
 	"exports": {
-		".": "./dist/signal-messaging.js"
+		".": "./dist/signal-messaging.js",
+		"./scope/*": "./dist/scope/*.js"
 	},
 	"files": [
 		"dist",

@@ -1,17 +1,15 @@
 # @serve-tools/signal-shared-websocket
 
-`@serve-tools/signal-shared-websocket` turns one typed subscription from a shared WebSocket page client into explicit, read-only Signal state.
-Use it when several tabs or windows share one physical WebSocket through `@serve-tools/client-shared-websocket`, while each UI owns its own reactive view of a subscription.
+`@serve-tools/signal-shared-websocket` provides the shared WebSocket client together with explicit, read-only subscription Signal state.
+Use it when several tabs or windows share one physical WebSocket while each UI owns its own reactive view of a subscription.
 
-The package re-exports the `observe()` adapter from `@serve-tools/signal-websocket` with types specialized for `SharedWebSocketClient`.
+The package re-exports the shared client runtime and the `observe()` adapter from `@serve-tools/signal-websocket` with types specialized for `SharedWebSocketClient`.
 It adds no independent subscription runtime.
 
 ## Install
 
-This example imports all three packages directly:
-
 ```shell
-npm install @serve-tools/client-shared-websocket @serve-tools/signal-effect @serve-tools/signal-shared-websocket
+npm install @serve-tools/signal-effect @serve-tools/signal-shared-websocket
 ```
 
 The WebSocket server must implement the binary request-and-subscription protocol used by `@serve-tools/client-websocket`.
@@ -27,7 +25,7 @@ Export the inferred protocol type so the page client stays in sync without dupli
 
 ```ts
 // presence.worker.ts
-import { listen } from "@serve-tools/client-shared-websocket/scope/shared-worker";
+import { listen } from "@serve-tools/signal-shared-websocket/scope/shared-worker";
 
 export const presenceServer = listen<{
 	requests: {
@@ -56,9 +54,8 @@ Each page connects to the worker, observes the latest presence value, and releas
 
 ```ts
 // presence.ts
-import { connect } from "@serve-tools/client-shared-websocket/scope/window";
 import { effect } from "@serve-tools/signal-effect";
-import { observe } from "@serve-tools/signal-shared-websocket";
+import { connect, observe } from "@serve-tools/signal-shared-websocket";
 import type { PresenceProtocol } from "./presence.worker.js";
 
 const worker = new SharedWorker(new URL("./presence.worker.js", import.meta.url), {
@@ -172,6 +169,8 @@ Those policies belong in the application protocol.
 
 ## Public API
 
+- `connect(port)` creates the page client; `/scope/window` exposes the same client-and-observation surface.
+- `/scope/shared-worker` re-exports `listen()` and its worker-owned server types.
 - `observe(client, name, options?)` eagerly observes one typed shared WebSocket subscription.
 - `Observation<Value>` describes the read-only computed Signal and its disposal lifecycle.
 - `ObservationState<Value>` describes the `pending`, `ready`, `complete`, and `error` states.

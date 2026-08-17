@@ -1,3 +1,4 @@
+import { reportError } from "@serve-tools/polyfill-report-error";
 import type {
 	ClientMessage,
 	ErrorRecord,
@@ -76,14 +77,6 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		readonly requests?: Record<string, AnyHandler | undefined>;
 		readonly subscriptions?: Record<string, AnyHandler | undefined>;
 	};
-	const report = (reason: unknown): void => {
-		try {
-			(options.reportError ?? defaultReportError)(reason);
-		} catch (error) {
-			defaultReportError(error);
-		}
-	};
-
 	let isClosed = false;
 
 	const formatError = (reason: unknown): ErrorRecord => {
@@ -100,9 +93,9 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 					: { name: record.name, message: record.message };
 			}
 
-			report(new TypeError("formatError() returned an invalid ErrorRecord"));
+			reportError(new TypeError("formatError() returned an invalid ErrorRecord"));
 		} catch (error) {
-			report(error);
+			reportError(error);
 		}
 
 		return defaultErrorRecord(reason);
@@ -140,7 +133,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		try {
 			transport.close(code, reason);
 		} catch (error) {
-			report(error);
+			reportError(error);
 		}
 	};
 
@@ -153,7 +146,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 
 		delete operation.cleanup;
 
-		Promise.resolve().then(cleanup).catch(report);
+		Promise.resolve().then(cleanup).catch(reportError);
 	};
 
 	const finish = (reason: unknown): void => {
@@ -203,13 +196,13 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 						if (fallback.phase === "transport") {
 							transportFailed(fallback.error);
 						} else {
-							report(fallback.error);
+							reportError(fallback.error);
 						}
 					}
 				} else if (failure.phase === "transport") {
 					transportFailed(failure.error);
 				} else {
-					report(failure.error);
+					reportError(failure.error);
 				}
 			}
 		}
@@ -232,7 +225,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		const failure = deliver([protocol, "close", formatError(error)]);
 
 		if (failure?.phase === "transport") {
-			report(failure.error);
+			reportError(failure.error);
 		}
 
 		finish(error);
@@ -246,7 +239,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 			if (failure.phase === "transport") {
 				transportFailed(failure.error);
 			} else {
-				report(failure.error);
+				reportError(failure.error);
 			}
 		}
 	};
@@ -325,7 +318,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 							if (failure?.phase === "transport") {
 								transportFailed(failure.error);
 							} else if (failure) {
-								report(failure.error);
+								reportError(failure.error);
 							}
 
 							runCleanup(operation);
@@ -412,7 +405,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		const failure = deliver([protocol, "close", formatError(error)]);
 
 		if (failure?.phase === "transport") {
-			report(failure.error);
+			reportError(failure.error);
 		}
 
 		finish(error);
@@ -462,12 +455,4 @@ const errorFromRecord = ({ name, message, stack }: ErrorRecord): Error => {
 	}
 
 	return error;
-};
-
-const defaultReportError = (reason: unknown): void => {
-	if (typeof globalThis.reportError === "function") {
-		globalThis.reportError(reason);
-	} else {
-		console.error(reason);
-	}
 };

@@ -33,13 +33,14 @@
 	],
 	"scripts": {
 		"build": "tsc --build --force tsconfig.json",
-		"build:dependencies": "npm run build --workspace @serve-tools/realtime-protocol --workspace @serve-tools/server-realtime",
+		"build:dependencies": "npm run build --workspace @serve-tools/polyfill-report-error --workspace @serve-tools/realtime-protocol --workspace @serve-tools/server-realtime",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
+		"@serve-tools/polyfill-report-error": "^0.1",
 		"@serve-tools/realtime-protocol": "^0.1",
 		"@serve-tools/server-realtime": "^0.1"
 	}

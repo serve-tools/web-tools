@@ -63,7 +63,8 @@ The message-length limit also clamps declared resizable `ArrayBuffer` capacity d
 Exceeding observable backpressure closes the connection rather than dropping ordered protocol messages.
 
 Handler errors are stack-redacted by default.
-Use `formatError()` only for information intentionally exposed to a client and `reportError()` for failures that cannot be delivered remotely.
+Use `formatError()` only for information intentionally exposed to a client.
+Cleanup, formatter, and transport failures that cannot be delivered remotely use the runtime's native `reportError()` or `console.error()` when that web API is unavailable.
 
 ## Boundaries
 

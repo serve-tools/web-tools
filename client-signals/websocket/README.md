@@ -1,15 +1,15 @@
 # @serve-tools/signal-websocket
 
-`@serve-tools/signal-websocket` observes a typed `@serve-tools/client-websocket` subscription as explicit Signal state.
+`@serve-tools/signal-websocket` provides the typed WebSocket client together with explicit subscription Signal state.
 It reuses the signal messaging observation engine, so the adapter adds no independent subscription runtime.
 
 ## Install
 
 ```shell
-npm install @serve-tools/client-websocket @serve-tools/signal-effect @serve-tools/signal-websocket
+npm install @serve-tools/signal-effect @serve-tools/signal-websocket
 ```
 
-This example imports all three packages directly.
+The signal package re-exports the complete `@serve-tools/client-websocket` API unchanged.
 The WebSocket server must implement the binary request-and-subscription protocol used by `@serve-tools/client-websocket`.
 
 ## Usage: render live presence
@@ -23,9 +23,8 @@ The page opens its own WebSocket, observes the latest presence value, and releas
 
 ```ts
 // presence.ts
-import { connect } from "@serve-tools/client-websocket";
 import { effect } from "@serve-tools/signal-effect";
-import { observe } from "@serve-tools/signal-websocket";
+import { connect, observe } from "@serve-tools/signal-websocket";
 
 const client = await connect<{
 	subscriptions: {
@@ -132,6 +131,7 @@ Dispose observations before closing the client that created them.
 
 ## Public API
 
+- The complete `@serve-tools/client-websocket` API is re-exported, including `connect()`.
 - `observe(client, name, options?)` eagerly observes one typed WebSocket subscription.
 - `Observation<Value>` describes the read-only computed Signal and its disposal lifecycle.
 - `ObservationState<Value>` describes the `pending`, `ready`, `complete`, and `error` states.

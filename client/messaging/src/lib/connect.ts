@@ -10,7 +10,6 @@ import {
 	protocol,
 	protocolError,
 	remoteError,
-	report,
 } from "./.internals.js";
 import type * as T from "./.types.js";
 import type {
@@ -102,7 +101,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 			try {
 				operation.next(data[MessagePart.Data]);
 			} catch (error) {
-				report(error);
+				reportError(error);
 			}
 		} else {
 			operations.delete(id);
@@ -152,6 +151,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 		const off = signal ? (): void => signal.removeEventListener("abort", abort) : noop;
 
 		signal?.addEventListener("abort", abort, { once: true });
+
 		operations.set(id, { kind, next, settle, cancel: onAbort, off });
 
 		try {
@@ -311,7 +311,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 					} else if (options?.onError) {
 						callSafely(options.onError, value instanceof Error ? value : remoteError(errorRecord(value)));
 					} else {
-						report(value);
+						reportError(value);
 					}
 				},
 				() => {

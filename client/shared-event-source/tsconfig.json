@@ -1,0 +1,16 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"outDir": "dist",
+		"rootDir": "src"
+	},
+	"include": ["src/**/*.ts", "src/**/.*.ts"],
+	"references": [
+		{
+			"path": "../event-source/tsconfig.json"
+		},
+		{
+			"path": "../messaging/tsconfig.json"
+		}
+	]
+}

@@ -1,9 +1,17 @@
 {
 	"extends": "../../tsconfig.json",
-	"compilerOptions": { "composite": false, "noEmit": true, "types": ["vitest"] },
+	"compilerOptions": {
+		"composite": false,
+		"noEmit": true,
+		"types": ["vitest"]
+	},
+	"include": ["src/**/*.ts", "test/**/*.ts", "vitest.config.ts"],
 	"references": [
-		{ "path": "../../client/shared-webtransport/tsconfig.json" },
-		{ "path": "../messaging/tsconfig.json" }
-	],
-	"include": ["src/**/*.ts", "test/**/*.ts", "vitest.config.ts"]
+		{
+			"path": "../../client/shared-webtransport/tsconfig.json"
+		},
+		{
+			"path": "../messaging/tsconfig.json"
+		}
+	]
 }

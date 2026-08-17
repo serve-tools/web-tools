@@ -1,6 +1,6 @@
 ---
 name: serve-tools-client-signals
-description: Use @serve-tools/client-signals for namespaced access to Serve Tools signal-aware browser client libraries.
+description: Use @serve-tools/client-signals browser Signals.
 ---
 
 # Use @serve-tools/client-signals
@@ -16,6 +16,9 @@ Treat the installed package README and focused package declarations as the API s
 
 - Prefer a focused subpath when only one adapter is needed.
 - Use the root package when several signal-aware clients share an application boundary.
+- Create realtime clients and their Signal observations from the same capability namespace or focused subpath.
+- Use matching scope subpaths for messaging and SharedWorker-owned transports.
 - Follow the selected focused package Skill for lifecycle and semantic guidance.
 - Use `db` for one-connection query invalidation and `sharedDb` for coordinated cross-tab changes.
 - Pair direct or shared HTTP, WebSocket, and WebTransport clients with the identically scoped Signal namespace.
+- Pair direct or shared EventSource clients with `eventSource` or `sharedEventSource`, and retain `lastEventId` with the latest event state.

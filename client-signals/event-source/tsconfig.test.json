@@ -1,0 +1,18 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"composite": false,
+		"noEmit": true,
+		"rootDir": ".",
+		"types": ["vitest"]
+	},
+	"include": ["src/**/*.ts", "test/**/*.ts"],
+	"references": [
+		{
+			"path": "../../client/event-source/tsconfig.json"
+		},
+		{
+			"path": "../../signals/signal/tsconfig.json"
+		}
+	]
+}

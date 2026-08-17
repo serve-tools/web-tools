@@ -10,4 +10,5 @@ Negotiate the base Serve Tools media type for finite operations and its `framing
 Treat `Content-Type` as a singleton and honor `Accept` quality weights, including `q=0` exclusions.
 
 Abort handlers when the request signal aborts and close the handler during shutdown.
+Expect failures that cannot be returned to the client to use native `reportError()` or `console.error()` when that web API is unavailable.
 Do not claim replay, reconnection, resumption, persistence, Server-Sent Events, or bidirectional session semantics.

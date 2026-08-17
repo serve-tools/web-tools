@@ -81,8 +81,8 @@ await client.closed;
 
 The client always offers and requires the `serve-tools.realtime.v1` native WebSocket subprotocol.
 This socket is protocol-owned, so application code cannot add another subprotocol or mix unrelated frames.
-The connection signal cancels only the opening handshake.
-After connection, cancel individual operations with their own signals and close the client when the session should end.
+The connection signal cancels the opening handshake and closes the established client if it aborts later.
+Use operation-level signals to cancel individual requests and subscriptions without closing the client.
 
 `client.closed` resolves when the connection has completely closed, including after a transport or protocol failure.
 It never rejects, so observe operation failures separately before awaiting it as a lifecycle barrier.
@@ -193,7 +193,7 @@ type ConnectedProtocol = ProtocolType<typeof client>;
 
 ## Errors and lifecycle
 
-- A failed or aborted handshake rejects `connect()` and closes the socket.
+- A failed or aborted handshake rejects `connect()` and closes the socket; aborting the connection signal later closes the established client.
 - A request serialization failure rejects that request promise, while a subscription serialization failure throws from `subscribe()`.
 - A remote request rejection becomes `RemoteError`.
 - A malformed or unsupported frame closes the connection with a protocol failure.

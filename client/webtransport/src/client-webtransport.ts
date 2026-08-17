@@ -141,6 +141,7 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	const lifetimeAbort = (): void => client.close(options.signal?.reason);
 
 	options.signal?.addEventListener("abort", lifetimeAbort, { once: true });
+
 	void client.closed.then(() => options.signal?.removeEventListener("abort", lifetimeAbort));
 
 	const datagrams = {
@@ -172,14 +173,18 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 			if (!current) {
 				listeners.set(name, (current = new Set()));
 			}
+
 			current.add(listener);
 
 			const unsubscribe = (): void => {
 				if (!active) {
 					return;
 				}
+
 				active = false;
+
 				current?.delete(listener);
+
 				if (current?.size === 0) {
 					listeners.delete(name);
 				}
@@ -200,15 +205,21 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 			return new Promise((resolve, reject) => {
 				let subscription: Subscription;
+
 				const abort = (): void => {
 					subscription.unsubscribe();
+
 					reject(readOptions.signal?.reason);
 				};
+
 				subscription = datagrams.subscribe(name, (value) => {
 					subscription.unsubscribe();
+
 					readOptions.signal?.removeEventListener("abort", abort);
+
 					resolve(value);
 				});
+
 				readOptions.signal?.addEventListener("abort", abort, { once: true });
 			});
 		},
@@ -241,11 +252,14 @@ const pump = async (
 	try {
 		while (true) {
 			const result = await reader.read();
+
 			if (result.done) {
 				break;
 			}
+
 			receive(result.value);
 		}
+
 		finish?.();
 	} finally {
 		reader.releaseLock();
@@ -260,6 +274,7 @@ const abortable = async <Value>(
 	if (!signal) {
 		return promise;
 	}
+
 	if (signal.aborted) {
 		abort();
 
@@ -269,10 +284,12 @@ const abortable = async <Value>(
 	return new Promise<Value>((resolve, reject) => {
 		const cancelled = (): void => {
 			abort();
+
 			reject(signal.reason);
 		};
 
 		signal.addEventListener("abort", cancelled, { once: true });
+
 		promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", cancelled));
 	});
 };

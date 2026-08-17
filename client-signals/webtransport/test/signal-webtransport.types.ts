@@ -1,4 +1,4 @@
-import type { Client } from "@serve-tools/client-webtransport";
+import type { Client } from "../src/signal-webtransport.js";
 import { observe } from "../src/signal-webtransport.js";
 
 declare const client: Client<{ subscriptions: { presence(room: string): boolean } }>;

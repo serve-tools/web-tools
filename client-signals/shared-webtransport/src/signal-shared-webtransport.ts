@@ -6,13 +6,7 @@ import type {
 import type { Observation } from "@serve-tools/signal-messaging";
 import { observe as observeMessaging } from "@serve-tools/signal-messaging";
 
-export type {
-	Protocol,
-	ProtocolType,
-	SharedWebTransportClient,
-	SubscribeOptions,
-	Subscription,
-} from "@serve-tools/client-shared-webtransport/scope/window";
+export * from "@serve-tools/client-shared-webtransport/scope/window";
 export type { Observation, ObservationState } from "@serve-tools/signal-messaging";
 
 export const observe = observeMessaging as unknown as Observe;

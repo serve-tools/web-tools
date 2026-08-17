@@ -1,4 +1,4 @@
-import type { Client } from "@serve-tools/client-http-stream";
+import type { Client } from "../src/signal-http-stream.js";
 import { observe } from "../src/signal-http-stream.js";
 
 declare const client: Client<{ subscriptions: { presence(room: string): boolean } }>;

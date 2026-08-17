@@ -44,9 +44,6 @@ export interface ConnectionOptions {
 
 	/** Converts handler failures to records safe to expose to the remote client. */
 	readonly formatError?: (reason: unknown) => ErrorRecord;
-
-	/** Observes cleanup, formatter, or transport failures that cannot be returned to the client. */
-	readonly reportError?: (reason: unknown) => void;
 }
 
 /** State supplied to a request handler. */

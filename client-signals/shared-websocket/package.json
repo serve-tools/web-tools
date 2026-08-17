@@ -1,7 +1,7 @@
 {
 	"name": "@serve-tools/signal-shared-websocket",
 	"version": "0.1.0",
-	"description": "SharedWorker WebSocket subscriptions observed as explicit Signal state",
+	"description": "SharedWorker WebSocket clients with subscription Signal state",
 	"keywords": [
 		"reactive",
 		"sharedworker",
@@ -23,7 +23,8 @@
 	"sideEffects": false,
 	"type": "module",
 	"exports": {
-		".": "./dist/signal-shared-websocket.js"
+		".": "./dist/signal-shared-websocket.js",
+		"./scope/*": "./dist/scope/*.js"
 	},
 	"files": [
 		"dist",

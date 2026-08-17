@@ -1,4 +1,4 @@
-import type { SharedWebSocketClient } from "@serve-tools/client-shared-websocket/scope/window";
+import type { SharedWebSocketClient } from "../src/signal-shared-websocket.js";
 import { observe } from "../src/signal-shared-websocket.js";
 
 declare const client: SharedWebSocketClient<{ subscriptions: { presence(room: string): boolean } }>;

@@ -1,12 +1,13 @@
 {
 	"name": "@serve-tools/client-signals",
 	"version": "0.1.0",
-	"description": "Namespaced access to Serve Tools signal-aware client libraries",
+	"description": "Namespaced access to capability-complete Signal clients",
 	"keywords": [
 		"browser",
 		"client",
 		"database",
 		"http",
+		"eventsource",
 		"reactive",
 		"sharedworker",
 		"signal",
@@ -37,7 +38,7 @@
 	],
 	"scripts": {
 		"build": "tsc --build --force tsconfig.json",
-		"build:dependencies": "npm run build:dependencies --workspace @serve-tools/signal-db --workspace @serve-tools/signal-dom --workspace @serve-tools/signal-event-target --workspace @serve-tools/signal-http-stream --workspace @serve-tools/signal-messaging --workspace @serve-tools/signal-shared-db --workspace @serve-tools/signal-shared-http-stream --workspace @serve-tools/signal-shared-websocket --workspace @serve-tools/signal-shared-webtransport --workspace @serve-tools/signal-storage --workspace @serve-tools/signal-websocket --workspace @serve-tools/signal-webtransport && npm run build --workspace @serve-tools/signal-db --workspace @serve-tools/signal-dom --workspace @serve-tools/signal-event-target --workspace @serve-tools/signal-http-stream --workspace @serve-tools/signal-messaging --workspace @serve-tools/signal-shared-db --workspace @serve-tools/signal-shared-http-stream --workspace @serve-tools/signal-shared-websocket --workspace @serve-tools/signal-shared-webtransport --workspace @serve-tools/signal-storage --workspace @serve-tools/signal-websocket --workspace @serve-tools/signal-webtransport",
+		"build:dependencies": "npm run build:dependencies --workspace @serve-tools/signal-db --workspace @serve-tools/signal-dom --workspace @serve-tools/signal-event-source --workspace @serve-tools/signal-event-target --workspace @serve-tools/signal-http-stream --workspace @serve-tools/signal-messaging --workspace @serve-tools/signal-shared-db --workspace @serve-tools/signal-shared-event-source --workspace @serve-tools/signal-shared-http-stream --workspace @serve-tools/signal-shared-websocket --workspace @serve-tools/signal-shared-webtransport --workspace @serve-tools/signal-storage --workspace @serve-tools/signal-websocket --workspace @serve-tools/signal-webtransport && npm run build --workspace @serve-tools/signal-db --workspace @serve-tools/signal-dom --workspace @serve-tools/signal-event-source --workspace @serve-tools/signal-event-target --workspace @serve-tools/signal-http-stream --workspace @serve-tools/signal-messaging --workspace @serve-tools/signal-shared-db --workspace @serve-tools/signal-shared-event-source --workspace @serve-tools/signal-shared-http-stream --workspace @serve-tools/signal-shared-websocket --workspace @serve-tools/signal-shared-webtransport --workspace @serve-tools/signal-storage --workspace @serve-tools/signal-websocket --workspace @serve-tools/signal-webtransport",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
@@ -46,10 +47,12 @@
 	"dependencies": {
 		"@serve-tools/signal-db": "^0.1",
 		"@serve-tools/signal-dom": "^0.1",
+		"@serve-tools/signal-event-source": "^0.1",
 		"@serve-tools/signal-event-target": "^0.1",
 		"@serve-tools/signal-http-stream": "^0.1",
 		"@serve-tools/signal-messaging": "^0.2",
 		"@serve-tools/signal-shared-db": "^0.2",
+		"@serve-tools/signal-shared-event-source": "^0.1",
 		"@serve-tools/signal-shared-http-stream": "^0.1",
 		"@serve-tools/signal-shared-websocket": "^0.1",
 		"@serve-tools/signal-shared-webtransport": "^0.1",

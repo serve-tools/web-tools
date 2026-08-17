@@ -269,4 +269,19 @@ describe("connect", () => {
 		await expect(pending).rejects.toMatchObject({ name: "AbortError" });
 		expect(socket.readyState).toBe(FakeWebSocket.CLOSED);
 	});
+
+	it("closes an established client when its lifetime signal aborts", async () => {
+		const controller = new AbortController();
+		const pending = connect<TestProtocol>("wss://example.test/socket", { signal: controller.signal });
+		const socket = FakeWebSocket.instances.at(-1)!;
+
+		socket.open();
+
+		const client = await pending;
+
+		controller.abort(new Error("session stopped"));
+
+		expect(socket.readyState).toBe(FakeWebSocket.CLOSED);
+		await expect(client.closed).resolves.toBeUndefined();
+	});
 });

@@ -3,6 +3,8 @@
 import type { Client, Protocol, RequestOptions, SubscribeOptions, Subscription } from "@serve-tools/client-messaging";
 import { Signal } from "@serve-tools/signal";
 
+export * from "@serve-tools/client-messaging";
+
 const pending = { status: "pending" } as const;
 const complete = { status: "complete" } as const;
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Server EventSource"
+  short_description: "Serve typed JSON SSE responses"
+  default_prompt: "Use $serve-tools-server-event-source to serve typed JSON Server-Sent Events with IDs, replay cursors, retry fields, and keepalives."

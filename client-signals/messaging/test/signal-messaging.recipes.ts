@@ -1,7 +1,6 @@
 /// <reference lib="esnext.disposable" />
 
-import type { Client } from "@serve-tools/client-messaging";
-import { observe } from "../src/signal-messaging.js";
+import { connect, observe } from "../src/signal-messaging.js";
 
 interface Protocol {
 	requests: Record<never, never>;
@@ -10,8 +9,9 @@ interface Protocol {
 	};
 }
 
-declare const client: Client<Protocol>;
+declare const port: MessagePort;
 
+const client = connect<Protocol>(port);
 const progress = observe(client, "progress", { input: { job: "build" } });
 const state = progress.get();
 

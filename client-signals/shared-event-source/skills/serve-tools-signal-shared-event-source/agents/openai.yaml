@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signal Shared EventSource"
+  short_description: "Serve, connect, and observe shared SSE"
+  default_prompt: "Use $serve-tools-signal-shared-event-source to serve and connect typed shared JSON events and retain the latest event and ID as Signal state."

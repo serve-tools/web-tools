@@ -1,7 +1,7 @@
 {
 	"name": "@serve-tools/signal-shared-http-stream",
 	"version": "0.1.0",
-	"description": "SharedWorker HTTP streaming subscriptions observed as explicit Signal state",
+	"description": "SharedWorker HTTP stream clients with subscription Signal state",
 	"keywords": [
 		"http",
 		"reactive",
@@ -23,7 +23,8 @@
 	"sideEffects": false,
 	"type": "module",
 	"exports": {
-		".": "./dist/signal-shared-http-stream.js"
+		".": "./dist/signal-shared-http-stream.js",
+		"./scope/*": "./dist/scope/*.js"
 	},
 	"files": [
 		"dist",

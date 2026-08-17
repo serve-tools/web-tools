@@ -35,6 +35,11 @@ const selections = [
 		"@serve-tools/client-realtime",
 	],
 	[
+		"event-source-client",
+		"Consume named server-sent events as typed JSON values through the native EventSource lifecycle, including event IDs and AbortSignal cancellation.",
+		"@serve-tools/client-event-source",
+	],
+	[
 		"http-stream-client",
 		"Call typed finite operations and consume framed binary subscription streams through Fetch, including authorization headers and AbortSignal cancellation.",
 		"@serve-tools/client-http-stream",
@@ -43,6 +48,11 @@ const selections = [
 		"shared-worker-indexeddb",
 		"Coordinate typed IndexedDB writes and change subscriptions across browser tabs through one SharedWorker. Promise results are sufficient.",
 		"@serve-tools/client-shared-db",
+	],
+	[
+		"shared-worker-event-source",
+		"Share one native EventSource across browser tabs through a SharedWorker while preserving typed JSON event names, IDs, and per-page cleanup.",
+		"@serve-tools/client-shared-event-source",
 	],
 	[
 		"shared-worker-http-stream",
@@ -80,6 +90,11 @@ const selections = [
 		"@serve-tools/server-realtime",
 	],
 	[
+		"event-source-server",
+		"Serve named JSON server-sent events from a Fetch handler, including event IDs, Last-Event-ID resume state, retry directives, comments, authorization, and cleanup.",
+		"@serve-tools/server-event-source",
+	],
+	[
 		"http-stream-server",
 		"Serve typed finite responses and framed binary subscriptions from WHATWG Request objects, authorizing before decoding and returning negotiated Fetch responses.",
 		"@serve-tools/server-http-stream",
@@ -115,13 +130,18 @@ const selections = [
 		"@serve-tools/signal-event-target",
 	],
 	[
+		"event-source-signal",
+		"Connect a typed EventSource and expose its latest JSON event as disposable pending or ready Signal state while retaining its event ID.",
+		"@serve-tools/signal-event-source",
+	],
+	[
 		"worker-subscription-signal",
-		"A worker subscription already uses the typed messaging protocol. Present its current pending, ready, and error state as a Signal to UI consumers.",
+		"Connect a typed worker messaging client and present a subscription's pending, ready, and error state as a Signal to UI consumers.",
 		"@serve-tools/signal-messaging",
 	],
 	[
 		"http-stream-subscription-signal",
-		"A typed HTTP streaming subscription should be consumed by UI code as current pending, ready, complete, or error Signal state.",
+		"Connect a typed HTTP streaming client and consume a subscription as current pending, ready, complete, or error Signal state.",
 		"@serve-tools/signal-http-stream",
 	],
 	[
@@ -130,23 +150,28 @@ const selections = [
 		"@serve-tools/signal-shared-db",
 	],
 	[
+		"shared-event-source-signal",
+		"Serve and connect a typed SharedWorker-owned EventSource, then expose the latest event as disposable Signal state while retaining its event ID.",
+		"@serve-tools/signal-shared-event-source",
+	],
+	[
 		"shared-http-stream-subscription-signal",
-		"A SharedWorker-owned HTTP streaming subscription should be exposed to each page as disposable current Signal state.",
+		"Serve and connect a SharedWorker-owned HTTP stream, then expose a subscription to each page as disposable current Signal state.",
 		"@serve-tools/signal-shared-http-stream",
 	],
 	[
 		"websocket-subscription-signal",
-		"A typed WebSocket subscription should be consumed by UI code as current pending, ready, complete, or error Signal state.",
+		"Connect a typed WebSocket and consume a subscription as current pending, ready, complete, or error Signal state.",
 		"@serve-tools/signal-websocket",
 	],
 	[
 		"shared-websocket-subscription-signal",
-		"A SharedWorker-owned WebSocket subscription should be exposed to each page as disposable current Signal state.",
+		"Serve and connect a SharedWorker-owned WebSocket, then expose a subscription to each page as disposable current Signal state.",
 		"@serve-tools/signal-shared-websocket",
 	],
 	[
 		"shared-webtransport-subscription-signal",
-		"A SharedWorker-owned reliable WebTransport subscription should be exposed to each page as disposable current Signal state while datagrams remain occurrences.",
+		"Serve and connect a SharedWorker-owned WebTransport, then expose a reliable subscription to each page as disposable current Signal state while datagrams remain occurrences.",
 		"@serve-tools/signal-shared-webtransport",
 	],
 	[
@@ -156,7 +181,7 @@ const selections = [
 	],
 	[
 		"webtransport-subscription-signal",
-		"A reliable typed WebTransport subscription should be consumed as current Signal state while datagrams remain occurrence streams.",
+		"Connect a typed WebTransport and consume a reliable subscription as current Signal state while datagrams remain occurrence streams.",
 		"@serve-tools/signal-webtransport",
 	],
 	[
@@ -193,6 +218,16 @@ const selections = [
 		"idle-callback-import",
 		"Schedule optional work with imported requestIdleCallback functions while guaranteeing that no globals are modified.",
 		"@serve-tools/ponyfill-request-idle-callback",
+	],
+	[
+		"cross-runtime-report-error",
+		"Report otherwise-unobservable failures from shared web and server code while preserving native reportError behavior where available, working in Node.js, and avoiding injected callbacks or global mutation.",
+		"@serve-tools/polyfill-report-error",
+	],
+	[
+		"console-report-error-fallback",
+		"Import the console-backed reportError fallback itself without consulting or modifying a native global implementation.",
+		"@serve-tools/ponyfill-report-error",
 	],
 	[
 		"arraybuffer-base64-import",

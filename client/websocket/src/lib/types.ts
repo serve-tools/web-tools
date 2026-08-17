@@ -22,7 +22,7 @@ export type {
 
 /** Represents options for opening a WebSocket protocol client. */
 export interface ConnectOptions {
-	/** Aborts the opening handshake. */
+	/** Aborts the opening handshake or closes the established client. */
 	readonly signal?: AbortSignal;
 }
 

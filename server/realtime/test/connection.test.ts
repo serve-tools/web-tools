@@ -27,7 +27,6 @@ const setup = (overrides: Record<string, unknown> = {}) => {
 	const sent: ServerMessage[] = [];
 	const envelopes: ServerMessage[] = [];
 	const closes: Array<[number, string]> = [];
-	const reports: unknown[] = [];
 	const aborted = Promise.withResolvers<unknown>();
 	const add = vi.fn(({ a, b }: { a: number; b: number }) => a + b);
 	const handlers = {
@@ -64,11 +63,10 @@ const setup = (overrides: Record<string, unknown> = {}) => {
 			},
 		},
 		{ user: "ada" },
-		{ reportError: (error) => reports.push(error) },
 	);
 	const receive = (message: ClientMessage): void => connection.receive(serialize(message));
 
-	return { aborted: aborted.promise, add, closes, connection, envelopes, handlers, receive, reports, sent };
+	return { aborted: aborted.promise, add, closes, connection, envelopes, handlers, receive, sent };
 };
 
 describe("createConnection", () => {
@@ -161,6 +159,28 @@ describe("createConnection", () => {
 		await tick();
 
 		expect(cleanup).toHaveBeenCalledOnce();
+	});
+
+	it("reports otherwise-unobservable failures through the server console", async () => {
+		const error = new Error("cleanup failed");
+		const report = vi.spyOn(console, "error").mockImplementation(() => undefined);
+		const { receive } = setup({
+			subscriptions: {
+				numbers: () => () => {
+					throw error;
+				},
+				lateCleanup: vi.fn(),
+			},
+		});
+
+		receive([protocol, "subscribe", 1, "numbers", 3]);
+		await tick();
+		receive([protocol, "cancel", 1]);
+		await tick();
+
+		expect(report).toHaveBeenCalledExactlyOnceWith(error);
+
+		report.mockRestore();
 	});
 
 	it("rejects unknown operations and closes on duplicate active IDs", async () => {

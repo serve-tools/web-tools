@@ -66,6 +66,7 @@ const server = new HTTPServer().handle(realtime);
 
 The adapter requires `serve-tools.realtime.v1` in `WT-Available-Protocols` and selects it through `WT-Protocol` before accepting application data.
 Authorization runs during session establishment and its value becomes the typed connection context.
+Authorization, datagram callback, cleanup, formatter, and transport failures that cannot be returned to the client use the runtime's native `reportError()` or `console.error()` when that web API is unavailable.
 Call `realtime.close()` during shutdown.
 The current `@http3-server/server` session API does not expose an application close-code method, so this adapter closes its owned reliable streams but cannot forward the core close code to the native session.
 

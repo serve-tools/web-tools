@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools reportError Polyfill"
+  short_description: "Select or install reportError safely"
+  default_prompt: "Use $serve-tools-polyfill-report-error with the correct non-mutating or apply boundary."

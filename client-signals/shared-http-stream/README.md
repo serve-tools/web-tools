@@ -1,12 +1,12 @@
 # @serve-tools/signal-shared-http-stream
 
-`@serve-tools/signal-shared-http-stream` observes subscriptions from a SharedWorker-coordinated HTTP stream client as explicit Signal state.
+`@serve-tools/signal-shared-http-stream` provides the SharedWorker HTTP stream client together with subscription Signal state.
 
 ```shell
-npm install @serve-tools/client-shared-http-stream @serve-tools/signal-shared-http-stream
+npm install @serve-tools/signal-shared-http-stream
 ```
 
-Use `listen()` from the shared client package in the worker, `connect()` in each page, and `observe()` here for latest-state UI consumption.
+Use `listen()` from `/scope/shared-worker`, then import `connect()` and `observe()` together from the package root or `/scope/window`.
 Dispose each observation before closing its page client.
 
 ## Agent Skill

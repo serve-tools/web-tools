@@ -1,9 +1,9 @@
 /// <reference lib="esnext.disposable" />
 
 import type { Client, Server, SubscriptionContext } from "@serve-tools/client-messaging";
-import { connect, serve } from "@serve-tools/client-messaging";
+import { connect as connectClient, serve as serveClient } from "@serve-tools/client-messaging";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { observe } from "../src/signal-messaging.js";
+import { connect, observe, serve } from "../src/signal-messaging.js";
 
 type TestProtocol = {
 	subscriptions: {
@@ -120,4 +120,9 @@ describe("observe", () => {
 		expect(observation.get()).toEqual({ status: "ready", value: 1 });
 		expect(observation.active).toBe(false);
 	});
+});
+
+it("re-exports the messaging client and server", () => {
+	expect(connect).toBe(connectClient);
+	expect(serve).toBe(serveClient);
 });

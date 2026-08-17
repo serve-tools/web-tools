@@ -1,7 +1,7 @@
 {
 	"name": "@serve-tools/signal-websocket",
 	"version": "0.1.0",
-	"description": "Typed WebSocket subscriptions observed as explicit Signal state",
+	"description": "Typed WebSocket clients with subscription Signal state",
 	"keywords": [
 		"reactive",
 		"signal",

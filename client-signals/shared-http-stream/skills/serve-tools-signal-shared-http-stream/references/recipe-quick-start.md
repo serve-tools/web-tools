@@ -3,12 +3,16 @@
 This public-import example is generated from the compile-checked `test/signal-shared-http-stream.recipes.ts` fixture in the package source.
 
 ```ts
-import type { SharedHTTPStreamClient } from "@serve-tools/client-shared-http-stream/scope/window";
-import { observe } from "@serve-tools/signal-shared-http-stream";
+import { listen } from "@serve-tools/signal-shared-http-stream/scope/shared-worker";
+import { connect, observe } from "@serve-tools/signal-shared-http-stream";
 
-declare const client: SharedHTTPStreamClient<{
+interface Protocol {
 	subscriptions: { presence(room: string): { online: boolean } };
-}>;
+}
 
+declare const port: Parameters<typeof connect>[0];
+
+export const server = listen<Protocol>("https://example.com/realtime");
+export const client = connect<Protocol>(port);
 export const presence = observe(client, "presence", { input: "lobby" });
 ```

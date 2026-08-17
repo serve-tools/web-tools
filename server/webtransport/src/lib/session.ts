@@ -1,3 +1,4 @@
+import { reportError } from "@serve-tools/polyfill-report-error";
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
 import { decodeDatagram, encodeDatagram } from "@serve-tools/realtime-protocol/datagram";
 import { DatagramRegistry } from "@serve-tools/realtime-protocol/datagram-registry";
@@ -55,6 +56,7 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 			return new WritableStream({
 				async write(value) {
 					const accepted = await transport.sendDatagram(encodeDatagram(await kind, value), writableOptions);
+
 					if (accepted === false) {
 						throw new Error("The WebTransport server rejected the datagram send");
 					}
@@ -68,14 +70,18 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 			if (!current) {
 				listeners.set(name, (current = new Set()));
 			}
+
 			current.add(listener);
 
 			const unsubscribe = (): void => {
 				if (!active) {
 					return;
 				}
+
 				active = false;
+
 				current?.delete(listener);
+
 				if (current?.size === 0) {
 					listeners.delete(name);
 				}
@@ -96,17 +102,23 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 
 			return new Promise((resolve, reject) => {
 				let subscription: DatagramSubscription;
+
 				const abort = (): void => {
 					subscription.unsubscribe();
+
 					reject(readOptions.signal?.reason);
 				};
+
 				subscription = (
 					datagrams.subscribe as (name: string, listener: (value: unknown) => void) => DatagramSubscription
 				)(name, (value) => {
 					subscription.unsubscribe();
+
 					readOptions.signal?.removeEventListener("abort", abort);
+
 					resolve(value);
 				});
+
 				readOptions.signal?.addEventListener("abort", abort, { once: true });
 			});
 		},
@@ -127,7 +139,7 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 				try {
 					listener(value);
 				} catch (error) {
-					(options.reportError ?? reportError)(error);
+					reportError(error);
 				}
 			}
 
@@ -136,7 +148,7 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 
 			if (handler) {
 				Promise.resolve(handler(value, { signal: controller.signal, connection: context, datagrams })).catch(
-					options.reportError ?? reportError,
+					reportError,
 				);
 			}
 		} catch (error) {
@@ -149,6 +161,7 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 		}
 
 		registry.fail(reason);
+
 		connection.disconnect(reason);
 	};
 
@@ -171,6 +184,7 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 			} catch (error) {
 				connection.fail(error);
 			}
+
 			finish();
 		},
 		receiveRegistry(chunk: ArrayBuffer | ArrayBufferView) {

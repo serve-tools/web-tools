@@ -1,4 +1,4 @@
 interface:
   display_name: "Serve Tools Signal WebSocket"
-  short_description: "Observe typed WebSocket subscriptions as Signals"
-  default_prompt: "Use $serve-tools-signal-websocket to expose this typed WebSocket subscription as explicit disposable Signal state."
+  short_description: "Connect and observe WebSocket Signals"
+  default_prompt: "Use $serve-tools-signal-websocket to connect this typed WebSocket and observe its subscription as explicit disposable Signal state."

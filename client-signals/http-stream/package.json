@@ -1,7 +1,7 @@
 {
 	"name": "@serve-tools/signal-http-stream",
 	"version": "0.1.0",
-	"description": "HTTP streaming subscriptions observed as explicit Signal state",
+	"description": "Typed HTTP streaming clients with subscription Signal state",
 	"keywords": [
 		"fetch",
 		"http",

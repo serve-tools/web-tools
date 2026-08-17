@@ -11,3 +11,4 @@ Use the original envelope passed as the second `send(payload, message)` argument
 Retain the core's operation, message, and buffering guards unless the application deliberately chooses other values.
 The message limit bounds both incoming bytes and any resizable `ArrayBuffer` capacity declared by those bytes.
 Treat `formatError()` as a disclosure boundary and validate untrusted handler inputs.
+Expect failures that cannot be delivered remotely to use native `reportError()` or `console.error()` when that web API is unavailable.

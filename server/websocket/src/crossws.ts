@@ -1,3 +1,4 @@
+import { reportError } from "@serve-tools/polyfill-report-error";
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
 import { offersWebSocketSubprotocol, subprotocol } from "@serve-tools/realtime-protocol";
 import { createConnection } from "@serve-tools/server-realtime";
@@ -43,7 +44,7 @@ export function createHooks<const P extends Protocol & ProtocolDefinition<P>, Co
 			try {
 				result = options.authorize ? await options.authorize(request) : (undefined as Context);
 			} catch (error) {
-				options.reportError?.(error);
+				reportError(error);
 
 				return error instanceof Response ? error : new Response("Internal Server Error", { status: 500 });
 			}

@@ -28,11 +28,13 @@ npm install @serve-tools/client
 | -------------------- | ----------------------------------------- | ----------------------------------------- |
 | `context`            | `@serve-tools/client/context`             | `@serve-tools/client-context`             |
 | `db`                 | `@serve-tools/client/db`                  | `@serve-tools/client-db`                  |
+| `eventSource`        | `@serve-tools/client/event-source`        | `@serve-tools/client-event-source`        |
 | `httpStream`         | `@serve-tools/client/http-stream`         | `@serve-tools/client-http-stream`         |
 | `input`              | `@serve-tools/client/input`               | `@serve-tools/client-input`               |
 | `interaction`        | `@serve-tools/client/interaction`         | `@serve-tools/client-interaction`         |
 | `keyboard`           | `@serve-tools/client/keyboard`            | `@serve-tools/client-keyboard`            |
 | `messaging`          | `@serve-tools/client/messaging`           | `@serve-tools/client-messaging`           |
+| `sharedEventSource`  | `@serve-tools/client/shared-event-source` | `@serve-tools/client-shared-event-source` |
 | `sharedWebsocket`    | `@serve-tools/client/shared-websocket`    | `@serve-tools/client-shared-websocket`    |
 | `sharedHttpStream`   | `@serve-tools/client/shared-http-stream`  | `@serve-tools/client-shared-http-stream`  |
 | `sharedWebtransport` | `@serve-tools/client/shared-webtransport` | `@serve-tools/client-shared-webtransport` |
@@ -42,6 +44,9 @@ npm install @serve-tools/client
 
 The root entrypoint exports namespaces rather than flattening their members, so similarly named operations retain their owning capability.
 Use a focused subpath when only one capability is needed.
+
+`eventSource` provides typed JSON named events over the native EventSource API, including each event's `lastEventId`.
+Use `sharedEventSource` when one SharedWorker should own the physical EventSource and its native reconnection lifecycle for several pages.
 
 Input and interaction utilities retain their owning package's focused entrypoints:
 

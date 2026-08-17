@@ -34,5 +34,3 @@ export const getContextProvider = (event: Event): Element | undefined => {
 };
 
 export const isInvalidContext = Number.isNaN;
-
-export const reportContextError = (error: unknown): void => reportError(error);

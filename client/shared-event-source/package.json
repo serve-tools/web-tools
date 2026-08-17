@@ -1,0 +1,47 @@
+{
+	"name": "@serve-tools/client-shared-event-source",
+	"version": "0.1.0",
+	"description": "SharedWorker-coordinated typed JSON EventSource events",
+	"keywords": [
+		"eventsource",
+		"json",
+		"server-sent-events",
+		"sharedworker",
+		"sse",
+		"typescript"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/shared-event-source#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "client/shared-event-source"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/client-shared-event-source.js",
+		"./scope/window": "./dist/lib/scope/window.js",
+		"./scope/shared-worker": "./dist/lib/scope/shared-worker.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build --force tsconfig.json",
+		"build:dependencies": "npm run build --workspace @serve-tools/client-event-source --workspace @serve-tools/client-messaging",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/client-event-source": "^0.1",
+		"@serve-tools/client-messaging": "^0.2"
+	}
+}

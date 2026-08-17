@@ -1,11 +1,11 @@
 # @serve-tools/signal-messaging
 
-The `@serve-tools/signal-messaging` package observes typed `@serve-tools/client-messaging` subscriptions as explicit, read-only Signal state.
+The `@serve-tools/signal-messaging` package provides typed messaging clients and servers together with explicit, read-only subscription Signal state.
 
 ```ts
-import { SharedWorker, type Client } from "@serve-tools/client-messaging/scope/window";
 import { Signal } from "@serve-tools/signal";
 import { observe } from "@serve-tools/signal-messaging";
+import { SharedWorker, type Client } from "@serve-tools/signal-messaging/scope/window";
 
 type CounterProtocol = {
 	subscriptions: {
@@ -49,8 +49,11 @@ Finite requests remain Promise-based.
 ## Install
 
 ```shell
-npm install @serve-tools/client-messaging @serve-tools/signal @serve-tools/signal-messaging
+npm install @serve-tools/signal @serve-tools/signal-messaging
 ```
+
+The root re-exports the complete generic `@serve-tools/client-messaging` API.
+The `/scope/window` and `/scope/worker` entrypoints likewise combine their client APIs with the compatible Signal package.
 
 ## Observation state
 
@@ -115,6 +118,7 @@ The observation does not own or close its messaging client, worker, or message p
 
 ## Public API
 
+- The complete `@serve-tools/client-messaging` root and scope APIs are re-exported unchanged.
 - `observe(client, name, options?)` eagerly observes one typed messaging subscription.
 - `Observation<Value>` describes the read-only computed Signal and its disposal lifecycle.
 - `ObservationState<Value>` describes `pending`, `ready`, `complete`, and `error` states.
@@ -122,8 +126,8 @@ The observation does not own or close its messaging client, worker, or message p
 
 ## Compatibility
 
-The package is an ES module for runtimes supported by the root `@serve-tools/client-messaging` entrypoint and a compatible `@serve-tools/signal` installation.
-Browser-specific worker helpers remain in the messaging client's scope entrypoints.
+The package is an ES module for runtimes supported by `@serve-tools/client-messaging` and a compatible `@serve-tools/signal` installation.
+Browser-specific worker helpers remain isolated in the matching signal package scope entrypoints.
 Explicit resource management requires `Symbol.dispose` support or a compatible polyfill; `dispose()` is always available.
 
 ## Agent Skill

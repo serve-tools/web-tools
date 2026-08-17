@@ -5,8 +5,7 @@ This public-import example is generated from the compile-checked `test/signal-me
 ```ts
 /// <reference lib="esnext.disposable" />
 
-import type { Client } from "@serve-tools/client-messaging";
-import { observe } from "@serve-tools/signal-messaging";
+import { connect, observe } from "@serve-tools/signal-messaging";
 
 interface Protocol {
 	requests: Record<never, never>;
@@ -15,8 +14,9 @@ interface Protocol {
 	};
 }
 
-declare const client: Client<Protocol>;
+declare const port: MessagePort;
 
+const client = connect<Protocol>(port);
 const progress = observe(client, "progress", { input: { job: "build" } });
 const state = progress.get();
 

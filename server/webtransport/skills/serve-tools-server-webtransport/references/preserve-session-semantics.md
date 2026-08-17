@@ -12,4 +12,5 @@ Do not impose an additional datagram size cap or promise delivery.
 Expose the native maximum when available.
 
 Close the adapter during shutdown and keep certificates, HTTP/3 configuration, origin policy, limits, and MoQ on their owning layers.
+Expect failures that cannot be returned to the client to use native `reportError()` or `console.error()` when that web API is unavailable.
 The current `@http3-server/server` peer cannot transmit the core's application close code at session level; document this if an adapter uses that peer.

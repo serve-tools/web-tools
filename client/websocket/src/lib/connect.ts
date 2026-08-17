@@ -16,6 +16,12 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 	await opened(socket, options.signal);
 
+	if (options.signal?.aborted) {
+		socket.close();
+
+		throw options.signal.reason;
+	}
+
 	if (socket.protocol !== subprotocol) {
 		socket.close(1002, "Subprotocol required");
 
@@ -45,15 +51,24 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	const failed = (): void => {
 		client.disconnect(Object.assign(new Error("The WebSocket transport failed"), { name: "WebSocketError" }));
 	};
+	const lifetimeAbort = (): void => client.close(options.signal?.reason);
 	const cleanup = (): void => {
 		socket.removeEventListener("message", receive);
 		socket.removeEventListener("close", disconnected);
 		socket.removeEventListener("error", failed);
+
+		options.signal?.removeEventListener("abort", lifetimeAbort);
 	};
 
 	socket.addEventListener("message", receive);
 	socket.addEventListener("close", disconnected, { once: true });
 	socket.addEventListener("error", failed, { once: true });
+
+	options.signal?.addEventListener("abort", lifetimeAbort, { once: true });
+
+	if (options.signal?.aborted) {
+		lifetimeAbort();
+	}
 
 	void client.closed.then(cleanup);
 
@@ -103,13 +118,16 @@ const opened = (socket: WebSocket, signal?: AbortSignal): Promise<void> => {
 		};
 		const abort = (): void => {
 			cleanup();
+
 			socket.close();
+
 			reject(signal?.reason);
 		};
 
 		socket.addEventListener("open", open, { once: true });
 		socket.addEventListener("error", error, { once: true });
 		socket.addEventListener("close", close, { once: true });
+
 		signal?.addEventListener("abort", abort, { once: true });
 	});
 };

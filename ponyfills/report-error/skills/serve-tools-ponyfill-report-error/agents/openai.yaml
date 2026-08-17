@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools reportError Ponyfill"
+  short_description: "Use a console-backed reportError fallback"
+  default_prompt: "Use $serve-tools-ponyfill-report-error as an explicit fallback without reading or mutating globals."

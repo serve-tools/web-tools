@@ -2,6 +2,7 @@ import type { Client, Protocol, RequestOptions } from "@serve-tools/client-webtr
 import type { Observation } from "@serve-tools/signal-messaging";
 import { observe as observeMessaging } from "@serve-tools/signal-messaging";
 
+export * from "@serve-tools/client-webtransport";
 export type { Observation, ObservationState } from "@serve-tools/signal-messaging";
 
 /** Eagerly observes one typed reliable WebTransport subscription as a read-only Signal. */

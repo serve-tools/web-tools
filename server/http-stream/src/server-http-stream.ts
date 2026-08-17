@@ -1,3 +1,4 @@
+import { reportError } from "@serve-tools/polyfill-report-error";
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
 import { deserialize, isClientMessage } from "@serve-tools/realtime-protocol";
 import {
@@ -44,7 +45,7 @@ export function createHandler<const P extends Protocol & ProtocolDefinition<P>, 
 		try {
 			context = options.authorize ? await options.authorize(request) : (undefined as Context);
 		} catch (error) {
-			options.reportError?.(error);
+			reportError(error);
 
 			return error instanceof Response ? error : new Response("Internal Server Error", { status: 500 });
 		}

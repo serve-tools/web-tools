@@ -1,7 +1,7 @@
 {
 	"name": "@serve-tools/signal-webtransport",
 	"version": "0.1.0",
-	"description": "WebTransport subscriptions observed as explicit Signal state",
+	"description": "Typed WebTransport clients with subscription Signal state",
 	"keywords": [
 		"reactive",
 		"signal",

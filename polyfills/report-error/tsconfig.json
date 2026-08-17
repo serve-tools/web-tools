@@ -1,0 +1,14 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"lib": ["ES2025", "DOM"],
+		"outDir": "dist",
+		"rootDir": "src"
+	},
+	"include": ["src/**/*.ts"],
+	"references": [
+		{
+			"path": "../../ponyfills/report-error/tsconfig.build.json"
+		}
+	]
+}

@@ -1,3 +1,4 @@
+import { reportError } from "@serve-tools/polyfill-report-error";
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
 import {
 	offersWebTransportSubprotocol,
@@ -68,7 +69,7 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 			try {
 				result = options.authorize ? await options.authorize(nativeSession) : (undefined as Context);
 			} catch (error) {
-				options.reportError?.(error);
+				reportError(error);
 
 				return error instanceof Response ? error : new Response("Internal Server Error", { status: 500 });
 			}

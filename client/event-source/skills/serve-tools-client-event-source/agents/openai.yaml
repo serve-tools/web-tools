@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client EventSource"
+  short_description: "Consume typed JSON SSE events"
+  default_prompt: "Use $serve-tools-client-event-source to consume these typed JSON Server-Sent Events while preserving native reconnection and event IDs."

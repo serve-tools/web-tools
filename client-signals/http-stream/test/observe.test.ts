@@ -1,6 +1,11 @@
 import type { Client } from "@serve-tools/client-http-stream";
+import { connect as connectClient } from "@serve-tools/client-http-stream";
 import { expect, test } from "vitest";
-import { observe } from "../src/signal-http-stream.js";
+import { connect, observe } from "../src/signal-http-stream.js";
+
+test("re-exports the HTTP stream client", () => {
+	expect(connect).toBe(connectClient);
+});
 
 test("observes an HTTP streaming subscription through the common adapter", () => {
 	let emit = (_value: number): void => {};

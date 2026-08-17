@@ -71,7 +71,7 @@ Subscriptions return handles with `active`, `unsubscribe()`, and `[Symbol.dispos
 Use operation-level `AbortSignal` values to cancel work without closing the page client.
 
 `listen()` returns immediately while `presenceServer.websocket` represents the opening physical connection.
-Its optional `protocols` and `signal` options configure or cancel the WebSocket handshake.
+Its optional signal cancels the handshake or closes the established shared server and physical WebSocket if it aborts later.
 `presenceServer.closed` resolves after the shared server and physical WebSocket close.
 
 ## Ownership and lifecycle

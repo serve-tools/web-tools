@@ -14,6 +14,9 @@
 			"path": "../db/tsconfig.json"
 		},
 		{
+			"path": "../event-source/tsconfig.json"
+		},
+		{
 			"path": "../http-stream/tsconfig.json"
 		},
 		{
@@ -30,6 +33,9 @@
 		},
 		{
 			"path": "../shared-db/tsconfig.json"
+		},
+		{
+			"path": "../shared-event-source/tsconfig.json"
 		},
 		{
 			"path": "../shared-http-stream/tsconfig.json"

@@ -1,8 +1,12 @@
-import type { SharedWebTransportClient } from "@serve-tools/client-shared-webtransport/scope/window";
-import { observe } from "../src/signal-shared-webtransport.js";
+import { listen } from "@serve-tools/signal-shared-webtransport/scope/shared-worker";
+import { connect, observe } from "../src/signal-shared-webtransport.js";
 
-declare const client: SharedWebTransportClient<{
+interface Protocol {
 	subscriptions: { presence(room: string): { online: boolean } };
-}>;
+}
 
+declare const port: Parameters<typeof connect>[0];
+
+export const server = listen<Protocol>("https://example.com/realtime");
+export const client = connect<Protocol>(port);
 export const presence = observe(client, "presence", { input: "lobby" });

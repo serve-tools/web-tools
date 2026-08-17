@@ -5,3 +5,4 @@
 - Replace the current subscription before releasing the previous provider.
 - Keep cancellation idempotent and remove pending misses when owned consumers disconnect.
 - Expect one-time misses to end synchronously; only subscribing misses are retained by `ContextRoot`.
+- Expect callback and cleanup failures to reach the platform `reportError()` global.

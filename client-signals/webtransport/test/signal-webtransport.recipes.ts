@@ -1,6 +1,6 @@
-import type { Client } from "@serve-tools/client-webtransport";
-import { observe } from "../src/signal-webtransport.js";
+import { connect, observe } from "../src/signal-webtransport.js";
 
-declare const client: Client<{ subscriptions: { presence(room: string): { online: boolean } } }>;
-
+export const client = await connect<{
+	subscriptions: { presence(room: string): { online: boolean } };
+}>("https://example.com/realtime");
 export const presence = observe(client, "presence", { input: "lobby" });

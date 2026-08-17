@@ -1,6 +1,6 @@
-import type { Client } from "@serve-tools/client-http-stream";
-import { observe } from "../src/signal-http-stream.js";
+import { connect, observe } from "../src/signal-http-stream.js";
 
-declare const client: Client<{ subscriptions: { presence(room: string): { online: boolean } } }>;
-
+export const client = connect<{ subscriptions: { presence(room: string): { online: boolean } } }>(
+	"https://example.com/realtime",
+);
 export const presence = observe(client, "presence", { input: "lobby" });

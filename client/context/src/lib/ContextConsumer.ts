@@ -1,4 +1,3 @@
-import { reportContextError } from "./.internals.js";
 import type { ContextRoot } from "./ContextRoot.js";
 import { getContextRoot } from "./ContextRoot.js";
 import type { Context, ContextCallback, ContextType } from "./context.js";
@@ -84,7 +83,7 @@ export class ContextConsumer<RequestedContext extends Context<unknown, unknown>>
 				try {
 					unsubscribe();
 				} catch (error) {
-					reportContextError(error);
+					reportError(error);
 				}
 			}
 
@@ -104,7 +103,7 @@ export class ContextConsumer<RequestedContext extends Context<unknown, unknown>>
 		try {
 			previous?.();
 		} catch (error) {
-			reportContextError(error);
+			reportError(error);
 		}
 
 		try {
@@ -127,7 +126,7 @@ export class ContextConsumer<RequestedContext extends Context<unknown, unknown>>
 		try {
 			unsubscribe?.();
 		} catch (error) {
-			reportContextError(error);
+			reportError(error);
 		}
 	}
 

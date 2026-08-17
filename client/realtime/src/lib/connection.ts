@@ -188,6 +188,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 		const off = signal ? (): void => signal.removeEventListener("abort", abort) : noop;
 
 		signal?.addEventListener("abort", abort, { once: true });
+
 		operations.set(id, { kind, next, settle, cancel: onAbort, off });
 
 		try {

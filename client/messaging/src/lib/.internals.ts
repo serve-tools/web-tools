@@ -96,11 +96,9 @@ export const callSafely = <Value>(callback: (value: Value) => void, value: Value
 	try {
 		callback(value);
 	} catch (error) {
-		report(error);
+		reportError(error);
 	}
 };
-
-export const report = (error: unknown): void => reportError(error);
 
 export const enum MessagePart {
 	Protocol = 0,

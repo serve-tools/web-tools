@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Shared EventSource"
+  short_description: "Share SSE through a worker"
+  default_prompt: "Use $serve-tools-client-shared-event-source to share one typed JSON EventSource and its event IDs across pages through a SharedWorker."

@@ -8,7 +8,6 @@ import {
 	post,
 	protocol,
 	protocolError,
-	report,
 } from "./.internals.js";
 import type * as T from "./.types.js";
 import type {
@@ -91,7 +90,9 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 		}
 
 		delete operation.cleanup;
-		Promise.resolve().then(cleanup).catch(report);
+		Promise.resolve()
+			.then(cleanup)
+			.catch((error) => reportError(error));
 	};
 
 	const settle = (
@@ -118,10 +119,10 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 					const fallback = send([protocol, "reject", id, errorRecord(result.error)]);
 
 					if (!fallback.ok) {
-						report(fallback.error);
+						reportError(fallback.error);
 					}
 				} else {
-					report(result.error);
+					reportError(result.error);
 				}
 			}
 		}
@@ -145,7 +146,7 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 			]);
 
 			if (!result.ok) {
-				report(result.error);
+				reportError(result.error);
 			}
 
 			return;
@@ -242,7 +243,7 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 			const result = send([protocol, "welcome"]);
 
 			if (!result.ok) {
-				report(result.error);
+				reportError(result.error);
 				finish();
 			}
 
@@ -291,7 +292,7 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 		const result = send([protocol, "close", errorRecord(connectionClosedError(reason))]);
 
 		if (!result.ok) {
-			report(result.error);
+			reportError(result.error);
 		}
 
 		finish();

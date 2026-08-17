@@ -9,5 +9,5 @@ await using client = await connect<WorkspaceProtocol>("wss://example.com/workspa
 ```
 
 The package offers and requires the `serve-tools.realtime.v1` native subprotocol.
-`signal` cancels only the opening handshake.
+`signal` cancels the opening handshake and remains the established client's lifetime signal.
 Await `client.closed` as a terminal cleanup barrier, not as evidence that operations succeeded.

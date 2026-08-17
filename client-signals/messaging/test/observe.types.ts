@@ -1,7 +1,6 @@
 /// <reference lib="esnext.disposable" />
 
-import type { Client } from "@serve-tools/client-messaging";
-import type { Observation, ObservationState } from "../src/signal-messaging.js";
+import type { Client, Observation, ObservationState } from "../src/signal-messaging.js";
 import { observe } from "../src/signal-messaging.js";
 
 type Protocol = {

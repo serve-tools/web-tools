@@ -78,8 +78,8 @@ if (maintainerSkill !== undefined) {
 
 await validateReleasePackages(publicPackageNames, errors);
 
-if (publicPackages !== 46) {
-	errors.push(`expected 46 public workspaces, found ${publicPackages}`);
+if (publicPackages !== 53) {
+	errors.push(`expected 53 public workspaces, found ${publicPackages}`);
 }
 
 if (publishedMetadataCharacters > 6_300) {
@@ -273,6 +273,7 @@ function createRecipeReference(source, recipeFile, packageName) {
 		.replace(/(["'])\.\.\/src\/lib\/scope\/([^"']+)\.js\1/g, `$1${packageName}/scope/$2$1`)
 		.replace(/(["'])\.\.\/src\/exports\/Symbol\/([^"']+)\.js\1/g, `$1${packageName}/Symbol/$2$1`)
 		.replace(/(["'])\.\.\/src\/exports\/([^"']+)\.js\1/g, `$1${packageName}/$2$1`)
+		.replace(/(["'])\.\.\/src\/apply\/index\.js\1/g, `$1${packageName}/apply$1`)
 		.replace(/(["'])\.\.\/src\/stream\.js\1/g, `$1${packageName}/stream$1`)
 		.replace(/(["'])\.\.\/src\/[^"']+\.js\1/g, `$1${packageName}$1`);
 

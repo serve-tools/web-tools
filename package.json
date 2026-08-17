@@ -19,6 +19,7 @@
 		"client/context/demo",
 		"client/db",
 		"client/db/demo",
+		"client/event-source",
 		"client/input",
 		"client/input/demo",
 		"client/interaction",
@@ -31,6 +32,7 @@
 		"client/messaging/demo",
 		"client/shared-db",
 		"client/shared-db/demo",
+		"client/shared-event-source",
 		"client/shared-http-stream",
 		"client/shared-websocket",
 		"client/shared-webtransport",
@@ -42,10 +44,12 @@
 		"client-signals/dom",
 		"client-signals/dom/demo",
 		"client-signals/event-target",
+		"client-signals/event-source",
 		"client-signals/db",
 		"client-signals/http-stream",
 		"client-signals/messaging",
 		"client-signals/shared-db",
+		"client-signals/shared-event-source",
 		"client-signals/shared-http-stream",
 		"client-signals/shared-websocket",
 		"client-signals/shared-webtransport",
@@ -57,12 +61,15 @@
 		"lit/signals/demo",
 		"polyfills/arraybuffer-base64",
 		"polyfills/request-idle-callback",
+		"polyfills/report-error",
 		"polyfills/resource-management",
 		"ponyfills/arraybuffer-base64",
 		"ponyfills/request-idle-callback",
+		"ponyfills/report-error",
 		"ponyfills/resource-management",
 		"server/websocket",
 		"server/realtime",
+		"server/event-source",
 		"server/http-stream",
 		"server/webtransport",
 		"signals/collections",
@@ -211,6 +218,16 @@
 				"entry": [
 					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"
+				]
+			},
+			"ponyfills/report-error": {
+				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
+			"polyfills/report-error": {
+				"entry": [
+					"test/*.recipes.ts"
 				]
 			},
 			"client/shared-db": {

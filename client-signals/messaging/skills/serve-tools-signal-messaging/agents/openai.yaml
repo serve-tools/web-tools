@@ -1,4 +1,4 @@
 interface:
   display_name: "Serve Tools Signal Messaging"
-  short_description: "Observe messaging subscriptions with Signals"
-  default_prompt: "Use $serve-tools-signal-messaging to implement this reactive messaging flow correctly."
+  short_description: "Connect and observe messaging Signals"
+  default_prompt: "Use $serve-tools-signal-messaging to connect this typed messaging flow and observe its subscriptions as Signal state."

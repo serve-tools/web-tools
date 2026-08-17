@@ -2,6 +2,7 @@ import type { Client, Protocol, RequestOptions } from "@serve-tools/client-webso
 import type { Observation } from "@serve-tools/signal-messaging";
 import { observe as observeMessaging } from "@serve-tools/signal-messaging";
 
+export * from "@serve-tools/client-websocket";
 export type { Observation, ObservationState } from "@serve-tools/signal-messaging";
 
 /** Eagerly observes one typed WebSocket subscription as a read-only Signal. */

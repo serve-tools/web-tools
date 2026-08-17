@@ -53,6 +53,7 @@ Aborting the HTTP request aborts its handler and runs subscription cleanup.
 Subscription responses include no-buffering/no-transform guidance.
 
 Authorization runs before decoding the operation body, and its non-`Response` result becomes the handler connection context.
+Authorization, cleanup, formatter, and transport failures that cannot be returned to the client use the runtime's native `reportError()` or `console.error()` when that web API is unavailable.
 `maximumMessageLength` defaults to 16 MiB and is enforced while streaming the request body when the runtime exposes it, and always before protocol decoding or handler dispatch.
 Call `close()` or dispose the handler during shutdown to reject new exchanges and close active operations.
 

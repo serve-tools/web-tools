@@ -4,6 +4,13 @@
 		"outDir": "dist",
 		"rootDir": "src"
 	},
-	"references": [{ "path": "../db/tsconfig.json" }, { "path": "../messaging/tsconfig.json" }],
-	"include": ["src/**/*.ts", "src/**/.*.ts"]
+	"include": ["src/**/*.ts", "src/**/.*.ts"],
+	"references": [
+		{
+			"path": "../db/tsconfig.json"
+		},
+		{
+			"path": "../messaging/tsconfig.json"
+		}
+	]
 }

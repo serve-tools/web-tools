@@ -5,7 +5,6 @@
 		"noEmit": true,
 		"types": ["vitest"]
 	},
-	"references": [{ "path": "../db/tsconfig.json" }, { "path": "../messaging/tsconfig.json" }],
 	"include": [
 		"benchmark/**/*.ts",
 		"src/**/*.ts",
@@ -13,5 +12,13 @@
 		"test/**/*.ts",
 		"test/**/.*.ts",
 		"vitest*.config.ts"
+	],
+	"references": [
+		{
+			"path": "../db/tsconfig.json"
+		},
+		{
+			"path": "../messaging/tsconfig.json"
+		}
 	]
 }

@@ -1,0 +1,47 @@
+{
+	"name": "@serve-tools/polyfill-report-error",
+	"version": "0.1.0",
+	"description": "Provides native-aware reportError imports and opt-in global installation",
+	"keywords": [
+		"browser",
+		"error",
+		"node",
+		"polyfill",
+		"report-error",
+		"reporterror",
+		"worker"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/polyfills/report-error#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "polyfills/report-error"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": [
+		"./dist/apply/*.js"
+	],
+	"type": "module",
+	"exports": {
+		".": "./dist/polyfill-report-error.js",
+		"./apply": "./dist/apply/index.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build --force tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build --workspace @serve-tools/ponyfill-report-error && vitest run",
+		"typecheck": "npm run build --workspace @serve-tools/ponyfill-report-error && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/ponyfill-report-error": "^0.1"
+	}
+}

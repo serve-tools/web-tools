@@ -27,15 +27,21 @@ export const connect = <const P extends Protocol & ProtocolDefinition<P>>(
 
 			return new Promise((resolve, reject) => {
 				let subscription: Subscription;
+
 				const abort = (): void => {
 					subscription.unsubscribe();
+
 					reject(options.signal?.reason);
 				};
+
 				subscription = datagrams.subscribe(name, (value) => {
 					subscription.unsubscribe();
+
 					options.signal?.removeEventListener("abort", abort);
+
 					resolve(value);
 				});
+
 				options.signal?.addEventListener("abort", abort, { once: true });
 			});
 		},

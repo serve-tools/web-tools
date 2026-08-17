@@ -3,10 +3,16 @@
 This public-import example is generated from the compile-checked `test/signal-shared-websocket.recipes.ts` fixture in the package source.
 
 ```ts
-import type { SharedWebSocketClient } from "@serve-tools/client-shared-websocket/scope/window";
-import { observe } from "@serve-tools/signal-shared-websocket";
+import { listen } from "@serve-tools/signal-shared-websocket/scope/shared-worker";
+import { connect, observe } from "@serve-tools/signal-shared-websocket";
 
-declare const client: SharedWebSocketClient<{ subscriptions: { updates(): string } }>;
+interface Protocol {
+	subscriptions: { updates(): string };
+}
 
+declare const port: Parameters<typeof connect>[0];
+
+export const server = listen<Protocol>("wss://example.com/realtime");
+export const client = connect<Protocol>(port);
 export const updates = observe(client, "updates");
 ```

@@ -1,4 +1,4 @@
-import { getContextConsumer, getContextProvider, isInvalidContext, reportContextError } from "./.internals.js";
+import { getContextConsumer, getContextProvider, isInvalidContext } from "./.internals.js";
 import type { Context, ContextCallback, ContextType } from "./context.js";
 import { ContextProviderEvent, ContextRequestEvent } from "./context.js";
 
@@ -104,7 +104,7 @@ export class ContextProvider<ProvidedContext extends Context<unknown, unknown>> 
 			try {
 				subscription.callback.call(subscription.consumer, value, subscription.unsubscribe);
 			} catch (error) {
-				reportContextError(error);
+				reportError(error);
 			}
 		}
 	}
@@ -174,7 +174,7 @@ export class ContextProvider<ProvidedContext extends Context<unknown, unknown>> 
 			request.callback.call(consumer, this.#value, subscription.unsubscribe);
 		} catch (error) {
 			subscription.unsubscribe();
-			reportContextError(error);
+			reportError(error);
 		}
 	};
 

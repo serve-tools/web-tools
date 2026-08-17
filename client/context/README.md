@@ -92,6 +92,7 @@ class ThemeConsumer extends HTMLElement {
 `disconnect()` deterministically removes either the pending miss or current subscription.
 `refresh()` cancels and reissues the request after a state-preserving move or another topology change that does not run ordinary connection callbacks.
 The consumer records a replacement unsubscribe function before releasing its previous provider, so reentrant cleanup cannot overwrite the new subscription.
+Errors thrown by subscription callbacks or cleanup functions are reported through the platform `reportError()` global.
 
 ## Coordinate independent implementations
 
