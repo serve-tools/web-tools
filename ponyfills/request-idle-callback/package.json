@@ -5,6 +5,8 @@
 	"keywords": [
 		"request-idle-callback",
 		"cancel-idle-callback",
+		"bun",
+		"deno",
 		"idle-deadline",
 		"background-tasks",
 		"cooperative-scheduling",
@@ -12,6 +14,7 @@
 		"idle-period",
 		"low-priority",
 		"main-thread",
+		"node",
 		"event-loop",
 		"ponyfill"
 	],
@@ -30,17 +33,25 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/ponyfill-request-idle-callback.js",
-		"./lib/*": "./dist/lib/*.js"
+		"./lib/*": "./dist/lib/*.js",
+		"./runtime/node": "./runtime/node.js",
+		"./runtime/bun": "./runtime/bun.js",
+		"./runtime/deno": "./runtime/deno.js"
 	},
 	"files": [
 		"dist",
+		"runtime",
 		"skills"
 	],
 	"scripts": {
 		"build": "npm run clean && tsc --build --force tsconfig.build.json",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
-		"test": "vitest run --config vitest.browser.config.ts",
+		"test": "npm run test:browser && npm run test:node",
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"test:bun": "bun test/runtime/bun-conformance.js",
+		"test:deno": "deno run test/runtime/deno-conformance.js",
+		"test:node": "node --test test/runtime/node.test.js",
 		"typecheck": "tsc --project tsconfig.json --noEmit"
 	}
 }
