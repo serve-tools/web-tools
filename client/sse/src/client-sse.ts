@@ -42,18 +42,25 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		if (isClosed) {
 			return;
 		}
+
 		isClosed = true;
+
 		lifetime.abort(reason);
+
 		for (const controller of active) {
 			controller.abort(reason);
 		}
+
 		active.clear();
+
 		options.signal?.removeEventListener("abort", lifetimeAbort);
+
 		closed.resolve();
 	};
 	const lifetimeAbort = (): void => close(options.signal?.reason);
 
 	options.signal?.addEventListener("abort", lifetimeAbort, { once: true });
+
 	if (options.signal?.aborted) {
 		close(options.signal.reason);
 	}
@@ -71,6 +78,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		} else {
 			signal?.addEventListener("abort", abort, { once: true });
 		}
+
 		lifetime.signal.addEventListener("abort", () => controller.abort(lifetime.signal.reason), { once: true });
 		active.add(controller);
 
@@ -175,12 +183,16 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 			const id = nextOperationId();
 			const controller = begin(subscribeOptions?.signal);
+
 			let isActive = true;
+
 			const unsubscribe = (): void => {
 				if (!isActive) {
 					return;
 				}
+
 				isActive = false;
+
 				controller.abort();
 				active.delete(controller);
 			};
@@ -195,6 +207,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 					);
 
 					validateResponse(response, "text/event-stream");
+
 					if (!response.body) {
 						throw new TypeError("The event-stream response has no body");
 					}
@@ -205,15 +218,18 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 					try {
 						while (isActive) {
 							const result = await reader.read();
+
 							if (result.done) {
 								break;
 							}
+
 							for (const event of decoder.push(result.value)) {
 								const message = deserialize(decodeBase64(event.data));
 
 								if (!isServerMessage(message) || message[1] === "resolve" || message[2] !== id) {
 									throw protocolError();
 								}
+
 								if (message[1] === "event") {
 									callSafely(listener, message[3]);
 								} else if (message[1] === "complete") {
@@ -228,6 +244,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 								}
 							}
 						}
+
 						decoder.finish();
 					} finally {
 						reader.releaseLock();
@@ -242,6 +259,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 					}
 				} finally {
 					isActive = false;
+
 					active.delete(controller);
 				}
 			})();
@@ -280,6 +298,7 @@ const validateResponse = (response: Response, essence: string): void => {
 			status: response.status,
 		});
 	}
+
 	if (!isNegotiatedMediaType(response.headers.get("content-type"), essence)) {
 		throw protocolError("The response did not select the Serve Tools protocol");
 	}

@@ -28,7 +28,9 @@ export function encodeDatagram(kind: number, value: unknown): Uint8Array {
 	const output = new Uint8Array(headerLength + payload.byteLength);
 
 	new DataView(output.buffer).setUint32(0, kind);
+
 	output[4] = binary ? binaryEncoding : structuredEncoding;
+
 	output.set(payload, headerLength);
 
 	return output;
