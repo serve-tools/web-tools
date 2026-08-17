@@ -28,7 +28,9 @@ describe("runtime adapters", () => {
 			},
 			{ authorize: () => ({ user: "ada" }) },
 		);
+
 		let data: Parameters<typeof adapter.websocket.open>[0]["data"] | undefined;
+
 		const response = await adapter.upgrade(upgradeRequest(), {
 			upgrade(_request, options) {
 				data = options.data;
@@ -45,8 +47,10 @@ describe("runtime adapters", () => {
 		} satisfies BunWebSocketLike<typeof data> as never;
 
 		expect(response).toBeUndefined();
+
 		adapter.websocket.open(socket);
 		adapter.websocket.message(socket, serialize([protocol, "request", 1, "whoami", undefined]));
+
 		await tick();
 
 		expect(sent.map((payload) => deserialize(payload))).toEqual([[protocol, "resolve", 1, "ada"]]);
@@ -126,6 +130,7 @@ describe("runtime adapters", () => {
 		expect(sent.map((payload) => deserialize(payload))).toEqual([[protocol, "resolve", 1, "grace"]]);
 
 		hooks.closeConnections("done");
+
 		expect(peer.close).toHaveBeenCalledWith(1000, "");
 	});
 
@@ -152,6 +157,7 @@ describe("runtime adapters", () => {
 		const peer = { context: {}, close: vi.fn() } as unknown as Peer;
 
 		await hooks.open?.(peer);
+
 		expect(peer.close).toHaveBeenCalledWith(1001, "Server closing");
 	});
 

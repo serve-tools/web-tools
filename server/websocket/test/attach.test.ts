@@ -42,6 +42,7 @@ describe("attach", () => {
 		expect(socket.binaryType).toBe("arraybuffer");
 
 		socket.receive(serialize([protocol, "request", 1, "ping", undefined]));
+
 		await Promise.resolve();
 		await Promise.resolve();
 
@@ -49,6 +50,7 @@ describe("attach", () => {
 		expect(connection.context).toEqual({ user: "ada" });
 
 		socket.dispatchEvent(Object.assign(new Event("close"), { code: 1006, reason: "lost" }));
+
 		await expect(connection.closed).resolves.toBeUndefined();
 	});
 
@@ -60,6 +62,7 @@ describe("attach", () => {
 		const socket = new FakeWebSocket();
 
 		attach<Protocol>(socket as unknown as WebSocketLike, { requests: { ping: vi.fn() } }, undefined);
+
 		socket.receive("text");
 
 		expect(socket.sent.map((payload) => deserialize(payload))).toEqual([
