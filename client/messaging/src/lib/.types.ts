@@ -79,6 +79,9 @@ export interface Subscription extends Disposable {
 
 /** A typed, disposable connection used to request and subscribe to remote operations. */
 export interface Client<P extends Protocol = Protocol> extends Disposable {
+	/** Resolves after the serving peer confirms the messaging protocol. */
+	readonly ready: Promise<void>;
+
 	/** Sends a named request and resolves with its remote result. */
 	request<Name extends RequestName<P>>(
 		name: Name,
@@ -212,6 +215,8 @@ export type OpenMessage =
 	| readonly [protocol: string, type: "subscription", id: number, name: string, data: unknown];
 
 export type WireMessage =
+	| readonly [protocol: string, type: "hello"]
+	| readonly [protocol: string, type: "welcome"]
 	| OpenMessage
 	| readonly [protocol: string, type: "next", id: number, data: unknown]
 	| readonly [protocol: string, type: "resolve", id: number, data: unknown]

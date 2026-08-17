@@ -26,12 +26,15 @@
 		"client/keyboard",
 		"client/keyboard/demo",
 		"client/messaging",
+		"client/realtime",
+		"client/sse",
 		"client/messaging/demo",
 		"client/shared-db",
 		"client/shared-db/demo",
 		"client/shared-websocket",
 		"client/storage",
 		"client/websocket",
+		"client/webtransport",
 		"client/client",
 		"client/storage/demo",
 		"client-signals/dom",
@@ -50,6 +53,9 @@
 		"ponyfills/request-idle-callback",
 		"ponyfills/resource-management",
 		"server/websocket",
+		"server/realtime",
+		"server/sse",
+		"server/webtransport",
 		"signals/collections",
 		"signals/effect",
 		"signals/signal",
@@ -171,6 +177,16 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
+			"client/realtime": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"client/sse": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"client/shared-db": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
@@ -193,6 +209,11 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
+			"client/webtransport": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"realtime/protocol": {
 				"entry": [
 					"benchmark/*.benchmark.ts",
@@ -200,6 +221,21 @@
 				]
 			},
 			"server/websocket": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"server/realtime": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"server/sse": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"server/webtransport": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
 				]

@@ -1,9 +1,10 @@
 declare const protocolBrand: unique symbol;
 
-/** A compile-time collection of named request and subscription signatures. */
+/** A compile-time collection of named request, subscription, and datagram signatures. */
 export type Protocol = {
 	readonly requests?: object;
 	readonly subscriptions?: object;
+	readonly datagrams?: object;
 };
 
 /** A resource retaining a protocol type for later extraction. */
@@ -20,7 +21,11 @@ export type ProtocolDefinition<P> = {
 		? P[Section] extends object
 			? OperationDefinitions<P[Section]>
 			: never
-		: never;
+		: Section extends "datagrams"
+			? P[Section] extends object
+				? DatagramDefinitions<P[Section]>
+				: never
+			: never;
 };
 
 /** Restricts an operation table to functions accepting zero or one input parameter. */
@@ -28,6 +33,18 @@ export type OperationDefinitions<Operations> = {
 	readonly [Name in keyof Operations]: Operations[Name] extends (...arguments_: infer Arguments) => infer Output
 		? Arguments extends [] | [unknown]
 			? (...arguments_: Arguments) => Output
+			: never
+		: never;
+};
+
+/** Restricts datagram declarations to client and server directional values. */
+export type DatagramDefinitions<Datagrams> = {
+	readonly [Name in keyof Datagrams]: Datagrams[Name] extends {
+		readonly client?: unknown;
+		readonly server?: unknown;
+	}
+		? keyof Datagrams[Name] extends "client" | "server"
+			? Datagrams[Name]
 			: never
 		: never;
 };
@@ -42,6 +59,39 @@ export type Requests<P> = P extends { readonly requests: infer Operations } ? Op
 export type Subscriptions<P> = P extends { readonly subscriptions: infer Operations }
 	? Operations
 	: Record<never, never>;
+
+/** The directional datagrams declared by a protocol. */
+export type Datagrams<P> = P extends { readonly datagrams: infer Values } ? Values : Record<never, never>;
+
+/** A declared datagram name. */
+export type DatagramName<P> = Extract<keyof Datagrams<P>, string>;
+
+/** A client-to-server datagram name. */
+export type ClientDatagramName<P> = {
+	readonly [Name in DatagramName<P>]: Datagrams<P>[Name] extends { readonly client: unknown } ? Name : never;
+}[DatagramName<P>];
+
+/** A server-to-client datagram name. */
+export type ServerDatagramName<P> = {
+	readonly [Name in DatagramName<P>]: Datagrams<P>[Name] extends { readonly server: unknown } ? Name : never;
+}[DatagramName<P>];
+
+/** The value written by a client for one datagram name. */
+export type ClientDatagramValue<P, Name extends ClientDatagramName<P>> = Datagrams<P>[Name] extends {
+	readonly client: infer Value;
+}
+	? Value
+	: never;
+
+/** The value written by a server for one datagram name. */
+export type ServerDatagramValue<P, Name extends ServerDatagramName<P>> = Datagrams<P>[Name] extends {
+	readonly server: infer Value;
+}
+	? Value
+	: never;
+
+/** The receive-side form of a datagram value. Native binary input is normalized to `Uint8Array`. */
+export type ReceivedDatagramValue<Value> = Value extends ArrayBuffer | ArrayBufferView ? Uint8Array : Value;
 
 /** A request name declared by a protocol. */
 export type RequestName<P> = Extract<keyof Requests<P>, string>;

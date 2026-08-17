@@ -15,4 +15,4 @@ Read only the references needed for the current task.
 - To keep capability semantics intact, read [Keep capability semantics intact](references/keep-capability-semantics-intact.md).
 - To use scope-specific entrypoints directly, read [Use scope-specific entrypoints directly](references/use-scope-specific-entrypoints-directly.md).
 - To share one WebSocket across windows, read [Share a WebSocket across windows](references/share-a-websocket-across-windows.md).
-- To declare direct or shared messaging and WebSocket protocols, read [Declare messaging and WebSocket protocols](references/declare-messaging-and-websocket-protocols.md).
+- To declare messaging and network realtime protocols, read [Declare realtime protocols](references/declare-messaging-and-websocket-protocols.md).

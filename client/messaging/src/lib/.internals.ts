@@ -1,7 +1,7 @@
 import type { ErrorRecord, MessageEndpoint, Subscription, TransferResult, WireMessage } from "./.types.js";
 import { RemoteError } from "./RemoteError.js";
 
-export const protocol = "@serve-tools/client-messaging/2";
+export const protocol = "@serve-tools/client-messaging/3";
 
 export const transferBrand: unique symbol = Symbol("Transferred value");
 
@@ -19,7 +19,11 @@ export const isWireMessage = (value: unknown): value is WireMessage => {
 	}
 
 	if (value[1] === "close") {
-		return isErrorRecord(value[2]);
+		return value.length === 3 && isErrorRecord(value[2]);
+	}
+
+	if (value[1] === "hello" || value[1] === "welcome") {
+		return value.length === 2;
 	}
 
 	if (value[1] === "lease") {
@@ -82,6 +86,11 @@ export const connectionClosedError = (reason?: unknown): Error => {
 
 	return Object.assign(new Error(message), { name: "ConnectionClosedError" });
 };
+
+export const protocolError = (reason?: unknown): Error =>
+	Object.assign(new Error(reason instanceof Error ? reason.message : String(reason ?? "Invalid protocol message")), {
+		name: "ProtocolError",
+	});
 
 export const callSafely = <Value>(callback: (value: Value) => void, value: Value): void => {
 	try {

@@ -3,6 +3,9 @@ import type { ClientMessage, ErrorRecord, ServerMessage } from "./types.js";
 /** The current request and subscription envelope version. */
 export const protocol = "@serve-tools/realtime/1";
 
+/** The application protocol identifier negotiated by supported network transports. */
+export const subprotocol = "serve-tools.realtime.v1";
+
 /** Returns whether a value is a serialized protocol error. */
 export const isErrorRecord = (value: unknown): value is ErrorRecord =>
 	!!value &&

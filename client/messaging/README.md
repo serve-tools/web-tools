@@ -21,6 +21,8 @@ using server = serve<GreetingProtocol>(port1, {
 
 using client = connect<GreetingProtocol>(port2);
 
+await client.ready;
+
 console.log(await client.request("greet", "Ada")); // "Hello, Ada!"
 ```
 
@@ -82,6 +84,8 @@ const client = connect<ServedProtocol>(clientEndpoint);
 ```
 
 Once connected or served, an endpoint is protocol-owned and must not also carry unrelated application messages.
+Because `MessagePort` has no native subprotocol negotiation, the client sends an explicit `HELLO` and the server replies with `WELCOME` before operation messages are accepted.
+`client.ready` resolves after that application handshake.
 
 ### Requests
 
@@ -223,7 +227,7 @@ The protocol does not retry, persist, or claim delivery after a worker or docume
   Its `listen` namespace exposes `Handlers`, `Listener`, `MessageEndpoint`, `Protocol`, `ProtocolType`, `RequestContext`, `Server`, `SubscriptionContext`, and `TransferResult`.
 
 The protocol and resource declarations are compile-time only and emit no runtime values.
-The `@serve-tools/client-messaging/2` protocol constant did not change; the added liveness lease frame is safely ignored by peers that predate it.
+The wire protocol identifier is `@serve-tools/client-messaging/3`; peers must complete its explicit `HELLO`/`WELCOME` handshake.
 
 ## Trust boundary
 

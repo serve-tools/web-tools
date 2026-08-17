@@ -29,7 +29,7 @@
 	"exports": {
 		".": "./dist/server-websocket.js",
 		"./crossws": "./dist/crossws.js",
-		"./scope/*": "./dist/scope/*.js"
+		"./runtime/*": "./dist/runtime/*.js"
 	},
 	"files": [
 		"dist",
@@ -37,7 +37,7 @@
 	],
 	"scripts": {
 		"build": "npm run clean && tsc --build --force tsconfig.json",
-		"build:dependencies": "npm run build --workspace @serve-tools/realtime-protocol",
+		"build:dependencies": "npm run build --workspace @serve-tools/realtime-protocol --workspace @serve-tools/server-realtime",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
@@ -46,7 +46,8 @@
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/realtime-protocol": "^0.1"
+		"@serve-tools/realtime-protocol": "^0.1",
+		"@serve-tools/server-realtime": "^0.1"
 	},
 	"peerDependencies": {
 		"crossws": "^0.4",

@@ -59,25 +59,6 @@ const handlers = {
 The operation `signal` aborts when the client cancels or when the operation or connection finishes.
 Subscription cleanup runs at most once, including when cancellation arrives before an asynchronous handler returns its cleanup.
 
-## Accept a WHATWG WebSocket
-
-Use `attach()` after the runtime accepts an upgrade.
-For Deno:
-
-```ts
-import { attach } from "@serve-tools/server-websocket";
-
-Deno.serve((request) => {
-	const { socket, response } = Deno.upgradeWebSocket(request);
-	attach<RoomProtocol, Session>(socket, handlers, { userID: "verified-user" });
-
-	return response;
-});
-```
-
-The supplied WebSocket is owned by the connection until it closes.
-Do not send unrelated frames over it.
-
 ## Accept Node.js upgrades
 
 The Node.js adapter is a `node:http` upgrade listener backed by the optional `ws` peer.
@@ -85,7 +66,7 @@ Authorization runs before the WebSocket handshake, and its successful return val
 
 ```ts
 import { createServer } from "node:http";
-import { handleUpgrade } from "@serve-tools/server-websocket/scope/node";
+import { handleUpgrade } from "@serve-tools/server-websocket/runtime/node";
 
 const server = createServer();
 const upgrades = handleUpgrade<RoomProtocol, Session>(handlers, {
@@ -99,18 +80,39 @@ const upgrades = handleUpgrade<RoomProtocol, Session>(handlers, {
 });
 
 server.on("upgrade", upgrades);
+
 server.listen(8080);
 ```
 
 Call `upgrades.close()` during shutdown to close accepted protocol connections and reject new upgrades.
 Remove the listener and close the HTTP server according to the surrounding server's ownership model.
 
+## Accept a WHATWG WebSocket
+
+Use `attach()` after the runtime accepts an upgrade.
+For Deno:
+
+```ts
+import { attach, subprotocol } from "@serve-tools/server-websocket";
+
+Deno.serve((request) => {
+	const { socket, response } = Deno.upgradeWebSocket(request, { protocol: subprotocol });
+	attach<RoomProtocol, Session>(socket, handlers, { userID: "verified-user" });
+
+	return response;
+});
+```
+
+The supplied WebSocket is owned by the connection until it closes.
+Do not send unrelated frames over it.
+`attach()` assumes the runtime has already selected `serve-tools.realtime.v1`; the real client rejects the connection otherwise.
+
 ## Serve with Bun
 
 `createBunAdapter()` returns the `fetch` upgrade function and WebSocket callbacks expected by `Bun.serve()`.
 
 ```ts
-import { createBunAdapter } from "@serve-tools/server-websocket/scope/bun";
+import { createBunAdapter } from "@serve-tools/server-websocket/runtime/bun";
 
 const adapter = createBunAdapter<RoomProtocol, Session>(handlers, {
 	authorize: () => ({ userID: "verified-user" }),
@@ -179,6 +181,8 @@ Use `reportError()` to observe cleanup, formatter, or transport failures that ca
 
 Protocol types do not validate untrusted request inputs.
 Authenticate during the upgrade, authorize every operation that needs finer access control, validate inputs at runtime, enforce origin policy where appropriate, and use TLS in production.
+The Node, Bun, and crossws adapters reject upgrades that do not offer `serve-tools.realtime.v1` and select that exact native WebSocket subprotocol.
+For WHATWG attachment, select it in the runtime upgrade call as shown in the Deno example.
 
 The package bounds observable transport buffering but does not add demand signaling or pause and resume application producers.
 It does not implement retry, session resumption, or persisted delivery.
@@ -191,8 +195,8 @@ Each connection exposes `receive()`, `fail()`, `close()`, and `disconnect()` so 
 
 Focused exports provide:
 
-- `@serve-tools/server-websocket/scope/node`: `handleUpgrade()` and Node adapter types;
-- `@serve-tools/server-websocket/scope/bun`: `createBunAdapter()` and Bun adapter types;
+- `@serve-tools/server-websocket/runtime/node`: `handleUpgrade()` and Node adapter types;
+- `@serve-tools/server-websocket/runtime/bun`: `createBunAdapter()` and Bun adapter types;
 - `@serve-tools/server-websocket/crossws`: `createHooks()` and crossws adapter types.
 
 ## Compatibility

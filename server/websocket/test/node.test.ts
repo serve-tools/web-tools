@@ -1,9 +1,9 @@
 import { once } from "node:events";
 import { createServer, request } from "node:http";
+import { subprotocol } from "@serve-tools/realtime-protocol";
 import { afterEach, describe, expect, it } from "vitest";
-
 import { connect } from "../../../client/websocket/src/client-websocket.js";
-import { handleUpgrade } from "../src/scope/node.js";
+import { handleUpgrade } from "../src/runtime/node.js";
 
 const servers = new Set<ReturnType<typeof createServer>>();
 
@@ -103,6 +103,7 @@ describe("Node client/server conformance", () => {
 				headers: {
 					connection: "Upgrade",
 					"sec-websocket-key": "dGhlIHNhbXBsZSBub25jZQ==",
+					"sec-websocket-protocol": subprotocol,
 					"sec-websocket-version": "13",
 					upgrade: "websocket",
 				},
@@ -160,6 +161,7 @@ describe("Node client/server conformance", () => {
 				headers: {
 					connection: "Upgrade",
 					"sec-websocket-key": "dGhlIHNhbXBsZSBub25jZQ==",
+					"sec-websocket-protocol": subprotocol,
 					"sec-websocket-version": "13",
 					upgrade: "websocket",
 				},

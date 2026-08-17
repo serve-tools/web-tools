@@ -1,0 +1,35 @@
+import { describe, expect, it } from "vitest";
+
+import {
+	binaryContentType,
+	decodeBase64,
+	EventStreamDecoder,
+	encodeBase64,
+	encodeServerSentEvent,
+	eventStreamContentType,
+	isNegotiatedMediaType,
+} from "../src/sse.js";
+
+describe("SSE protocol utilities", () => {
+	it("parses split standard event-stream fields", () => {
+		const decoder = new EventStreamDecoder();
+		const bytes = encodeServerSentEvent("first\nsecond", "update", "4");
+
+		expect(decoder.push(bytes.subarray(0, 7))).toEqual([]);
+		expect(decoder.push(bytes.subarray(7))).toEqual([{ data: "first\nsecond", event: "update", id: "4" }]);
+		expect(decoder.finish()).toEqual([]);
+	});
+
+	it("round-trips binary event data without platform base64 globals", () => {
+		const bytes = Uint8Array.of(0, 1, 2, 253, 254, 255);
+
+		expect(decodeBase64(encodeBase64(bytes))).toEqual(bytes);
+		expect(() => decodeBase64("not base64")).toThrow(TypeError);
+	});
+
+	it("requires the protocol parameter during HTTP media negotiation", () => {
+		expect(isNegotiatedMediaType(eventStreamContentType, "text/event-stream")).toBe(true);
+		expect(isNegotiatedMediaType(binaryContentType, "application/octet-stream")).toBe(true);
+		expect(isNegotiatedMediaType("text/event-stream", "text/event-stream")).toBe(false);
+	});
+});

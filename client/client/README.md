@@ -33,8 +33,10 @@ npm install @serve-tools/client
 | `keyboard`        | `@serve-tools/client/keyboard`         | `@serve-tools/client-keyboard`         |
 | `messaging`       | `@serve-tools/client/messaging`        | `@serve-tools/client-messaging`        |
 | `sharedWebsocket` | `@serve-tools/client/shared-websocket` | `@serve-tools/client-shared-websocket` |
+| `sse`             | `@serve-tools/client/sse`              | `@serve-tools/client-sse`              |
 | `storage`         | `@serve-tools/client/storage`          | `@serve-tools/client-storage`          |
 | `websocket`       | `@serve-tools/client/websocket`        | `@serve-tools/client-websocket`        |
+| `webtransport`    | `@serve-tools/client/webtransport`     | `@serve-tools/client-webtransport`     |
 
 The root entrypoint exports namespaces rather than flattening their members, so similarly named operations retain their owning capability.
 Use a focused subpath when only one capability is needed.
@@ -103,6 +105,9 @@ export type StatusProtocol = websocket.connect.ProtocolType<Awaited<typeof pendi
 
 WebSocket `ProtocolType` accepts both pending and resolved clients through either the top-level type or `connect.ProtocolType` alias.
 The focused `@serve-tools/client/websocket` re-export exposes the same contract.
+
+The matching `sse` and `webtransport` namespaces retain the same callable request and subscription declaration shape.
+Use SSE for Fetch operations and server-to-client streaming, WebSocket for a widely supported bidirectional session, and WebTransport when the application also needs typed best-effort datagrams.
 
 Use a `SharedWorker` when several browser windows should share one physical WebSocket.
 Import the window client from `@serve-tools/client` and the worker server from its owning package:

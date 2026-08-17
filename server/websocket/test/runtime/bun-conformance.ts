@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 
 import { connect } from "../../../../client/websocket/src/client-websocket.ts";
-import { createBunAdapter } from "../../src/scope/bun.ts";
+import { createBunAdapter } from "../../src/runtime/bun.ts";
 
 interface Protocol {
 	requests: {

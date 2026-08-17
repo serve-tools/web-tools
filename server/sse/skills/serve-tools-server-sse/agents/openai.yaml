@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Server SSE"
+  short_description: "Build typed Fetch and SSE handlers"
+  default_prompt: "Use $serve-tools-server-sse to implement this typed Fetch handler for requests and server-sent subscriptions with authorization and cleanup."

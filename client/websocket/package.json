@@ -34,7 +34,7 @@
 	"scripts": {
 		"benchmark": "npm run build:dependencies && vitest run --config vitest.benchmark.config.ts",
 		"build": "npm run clean && tsc --build --force tsconfig.json",
-		"build:dependencies": "npm run build --workspace @serve-tools/realtime-protocol",
+		"build:dependencies": "npm run build --workspace @serve-tools/realtime-protocol --workspace @serve-tools/client-realtime",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build:dependencies && npm run test:node && npm run test:browser",
@@ -43,6 +43,7 @@
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
+		"@serve-tools/client-realtime": "^0.1",
 		"@serve-tools/realtime-protocol": "^0.1"
 	}
 }

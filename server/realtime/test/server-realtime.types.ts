@@ -1,6 +1,6 @@
 import type { ProtocolType } from "@serve-tools/realtime-protocol";
-import type { Handlers } from "../src/server-websocket.js";
-import { createConnection } from "../src/server-websocket.js";
+import type { Handlers } from "../src/server-realtime.js";
+import { createConnection } from "../src/server-realtime.js";
 
 interface ChatProtocol {
 	requests: {

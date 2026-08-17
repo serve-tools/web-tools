@@ -6,6 +6,7 @@ import {
 	noop,
 	post,
 	protocol,
+	protocolError,
 	report,
 } from "./.internals.js";
 import type * as T from "./.types.js";
@@ -69,6 +70,7 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 	};
 
 	let isClosed = false;
+	let isReady = false;
 	let leaseController: AbortController | undefined;
 
 	const send = (message: WireMessage, transfer?: readonly Transferable[]): SendResult => {
@@ -217,7 +219,43 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 	};
 
 	const receive = ({ data }: MessageEventLike): void => {
-		if (isClosed || !isWireMessage(data)) {
+		if (isClosed) {
+			return;
+		}
+
+		if (!isWireMessage(data)) {
+			close(protocolError());
+
+			return;
+		}
+
+		if (data[1] === "hello") {
+			if (isReady) {
+				close(protocolError("The client sent more than one hello"));
+
+				return;
+			}
+
+			isReady = true;
+			const result = send([protocol, "welcome"]);
+
+			if (!result.ok) {
+				report(result.error);
+				finish();
+			}
+
+			return;
+		}
+
+		if (data[1] === "welcome") {
+			close(protocolError("The client sent a server welcome"));
+
+			return;
+		}
+
+		if (!isReady && data[1] !== "close") {
+			close(protocolError("The client sent a message before its hello"));
+
 			return;
 		}
 

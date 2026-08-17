@@ -1,4 +1,4 @@
-import { deserialize, protocol, serialize } from "@serve-tools/realtime-protocol";
+import { deserialize, protocol, serialize, subprotocol } from "@serve-tools/realtime-protocol";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { connect } from "../src/client-websocket.js";
@@ -25,6 +25,7 @@ class FakeWebSocket extends EventTarget {
 	readonly sent: ArrayBuffer[] = [];
 	readonly url: string;
 	readonly protocols: string | string[] | undefined;
+	readonly protocol: string;
 	binaryType: BinaryType = "blob";
 	readyState = FakeWebSocket.CONNECTING;
 
@@ -33,6 +34,7 @@ class FakeWebSocket extends EventTarget {
 
 		this.url = String(url);
 		this.protocols = protocols;
+		this.protocol = typeof protocols === "string" ? protocols : (protocols?.[0] ?? "");
 		FakeWebSocket.instances.push(this);
 	}
 
@@ -68,7 +70,7 @@ class FakeWebSocket extends EventTarget {
 }
 
 const openClient = async () => {
-	const pending = connect<TestProtocol>("wss://example.test/socket", { protocols: ["chat", "fallback"] });
+	const pending = connect<TestProtocol>("wss://example.test/socket");
 	const socket = FakeWebSocket.instances.at(-1)!;
 
 	socket.open();
@@ -91,14 +93,26 @@ afterEach(() => {
 });
 
 describe("connect", () => {
-	it("opens an ArrayBuffer WebSocket with native handshake options", async () => {
+	it("opens an ArrayBuffer WebSocket with the required native subprotocol", async () => {
 		const { client, socket } = await openClient();
 
 		expect(socket.url).toBe("wss://example.test/socket");
-		expect(socket.protocols).toEqual(["chat", "fallback"]);
+		expect(socket.protocols).toBe(subprotocol);
+		expect(socket.protocol).toBe(subprotocol);
 		expect(socket.binaryType).toBe("arraybuffer");
 
 		client.close();
+	});
+
+	it("rejects a server that does not select the required subprotocol", async () => {
+		const pending = connect<TestProtocol>("wss://example.test/socket");
+		const socket = FakeWebSocket.instances.at(-1)!;
+
+		Object.defineProperty(socket, "protocol", { value: "" });
+		socket.open();
+
+		await expect(pending).rejects.toMatchObject({ name: "ProtocolError" });
+		expect(socket.readyState).toBe(FakeWebSocket.CLOSED);
 	});
 
 	it("correlates concurrent requests and reconstructs remote errors", async () => {

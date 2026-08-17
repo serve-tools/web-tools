@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client Realtime"
+  short_description: "Build custom typed realtime client adapters"
+  default_prompt: "Use $serve-tools-client-realtime to implement this custom typed realtime client adapter with correct message, failure, and lifecycle boundaries."

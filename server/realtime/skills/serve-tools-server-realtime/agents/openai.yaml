@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Server Realtime"
+  short_description: "Build sans-I/O typed realtime servers"
+  default_prompt: "Use $serve-tools-server-realtime to implement this sans-I/O typed realtime server adapter with correct handler, failure, and lifecycle boundaries."

@@ -38,6 +38,7 @@ export async function messagePortRecipe(
 ): Promise<ArrayBuffer> {
 	using _server = serve<FilesProtocol>(serverEndpoint, handlers);
 	using client = connect<FilesProtocol>(clientEndpoint);
+	await client.ready;
 	using _progress = client.subscribe("progress", "report.pdf", console.log, { signal });
 
 	return client.request("bytes", "report.pdf", { signal });

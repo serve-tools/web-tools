@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Server WebTransport"
+  short_description: "Build typed WebTransport servers"
+  default_prompt: "Use $serve-tools-server-webtransport to implement reliable typed handlers and typed best-effort datagrams over WebTransport."

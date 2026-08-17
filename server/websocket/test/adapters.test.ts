@@ -1,15 +1,18 @@
-import { deserialize, protocol, serialize } from "@serve-tools/realtime-protocol";
+import { deserialize, protocol, serialize, subprotocol } from "@serve-tools/realtime-protocol";
 import type { Message, Peer } from "crossws";
 import { describe, expect, it, vi } from "vitest";
 
 import { createHooks } from "../src/crossws.js";
-import type { BunWebSocketLike } from "../src/scope/bun.js";
-import { createBunAdapter } from "../src/scope/bun.js";
+import type { BunWebSocketLike } from "../src/runtime/bun.js";
+import { createBunAdapter } from "../src/runtime/bun.js";
 
 const tick = async (): Promise<void> => {
 	await Promise.resolve();
 	await Promise.resolve();
 };
+
+const upgradeRequest = (): Request =>
+	new Request("https://example.test/socket", { headers: { "Sec-WebSocket-Protocol": subprotocol } });
 
 describe("runtime adapters", () => {
 	it("authorizes and maps Bun callbacks", async () => {
@@ -26,7 +29,7 @@ describe("runtime adapters", () => {
 			{ authorize: () => ({ user: "ada" }) },
 		);
 		let data: Parameters<typeof adapter.websocket.open>[0]["data"] | undefined;
-		const response = await adapter.upgrade(new Request("https://example.test/socket"), {
+		const response = await adapter.upgrade(upgradeRequest(), {
 			upgrade(_request, options) {
 				data = options.data;
 
@@ -59,7 +62,7 @@ describe("runtime adapters", () => {
 			{ requests: { ping: () => "pong" } },
 			{ authorize: () => new Response("Forbidden", { status: 403 }) },
 		);
-		const response = await adapter.upgrade(new Request("https://example.test/socket"), { upgrade });
+		const response = await adapter.upgrade(upgradeRequest(), { upgrade });
 
 		expect(response?.status).toBe(403);
 		expect(upgrade).not.toHaveBeenCalled();
@@ -105,7 +108,7 @@ describe("runtime adapters", () => {
 			},
 			{ authorize: () => ({ user: "grace" }) },
 		);
-		const upgrade = await hooks.upgrade?.(new Request("https://example.test/socket"));
+		const upgrade = await hooks.upgrade?.(upgradeRequest());
 		const sent: ArrayBuffer[] = [];
 		const peer = {
 			context: (upgrade as { context: Record<string, unknown> }).context,
@@ -136,7 +139,7 @@ describe("runtime adapters", () => {
 			{ requests: { ping: () => "pong" } },
 			{ authorize: () => authorization.promise },
 		);
-		const upgrade = hooks.upgrade?.(new Request("https://example.test/socket"));
+		const upgrade = hooks.upgrade?.(upgradeRequest());
 
 		hooks.closeConnections();
 		authorization.resolve(undefined);
@@ -158,7 +161,7 @@ describe("runtime adapters", () => {
 		}
 
 		const hooks = createHooks<Protocol>({ requests: { ping: () => "pong" } });
-		const upgrade = await hooks.upgrade?.(new Request("https://example.test/socket"));
+		const upgrade = await hooks.upgrade?.(upgradeRequest());
 		const sent: ArrayBuffer[] = [];
 		const peer = {
 			context: (upgrade as { context: Record<string, unknown> }).context,

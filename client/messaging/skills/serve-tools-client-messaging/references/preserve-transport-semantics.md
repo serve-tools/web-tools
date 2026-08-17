@@ -2,6 +2,7 @@
 
 - Give a connected or served endpoint exclusively to this protocol.
   Do not mix unrelated application messages onto it.
+- Await `client.ready` when later setup must follow the explicit `HELLO`/`WELCOME` application handshake.
 - Keep transferred values structured-clone compatible.
   Use request transfer options for inputs and `transfer(value, list)` for handler results or subscription events.
 - Pass `AbortSignal` through operation options.
@@ -12,4 +13,4 @@
   Protocol declarations are compile-time only and are not runtime validation.
 
 The declaration names emit no runtime values.
-The wire frames and the `@serve-tools/client-messaging/2` protocol constant did not change.
+The wire protocol identifier is `@serve-tools/client-messaging/3`.

@@ -76,14 +76,14 @@ Dispose or close the client to close the socket and release every active operati
 const controller = new AbortController();
 
 await using client = await connect<BoardProtocol>("wss://example.com/whiteboard", {
-	protocols: ["whiteboard.v1"],
 	signal: controller.signal,
 });
 
 await client.closed;
 ```
 
-The `protocols` option selects native WebSocket handshake subprotocols; it does not change this package's binary wire format.
+The client always offers and requires the `serve-tools.realtime.v1` native WebSocket subprotocol.
+This socket is protocol-owned, so application code cannot add another subprotocol or mix unrelated frames.
 The connection signal cancels only the opening handshake.
 After connection, cancel individual operations with their own signals and close the client when the session should end.
 
@@ -212,7 +212,8 @@ If the application reconnects, create a new client and explicitly decide which i
 Protocol declarations are compile-time contracts, not runtime validation.
 Validate untrusted response and event values before using them in security-sensitive code.
 
-Transport security, authentication, authorization, origin policy, and native WebSocket subprotocol negotiation remain application and server responsibilities.
+Transport security, authentication, authorization, and origin policy remain application and server responsibilities.
+The package performs native WebSocket subprotocol negotiation and rejects a server that does not select `serve-tools.realtime.v1`.
 Use `wss:` for network connections that require transport encryption.
 Do not share the underlying socket with other framing protocols because the client owns it and treats every incoming message as a package protocol frame.
 

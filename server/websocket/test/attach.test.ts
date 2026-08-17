@@ -1,4 +1,4 @@
-import { deserialize, protocol, serialize } from "@serve-tools/realtime-protocol";
+import { deserialize, protocol, serialize, subprotocol } from "@serve-tools/realtime-protocol";
 import { describe, expect, it, vi } from "vitest";
 
 import { attach } from "../src/lib/attach.js";
@@ -7,6 +7,7 @@ import type { WebSocketLike } from "../src/lib/types.js";
 class FakeWebSocket extends EventTarget {
 	readonly sent: ArrayBuffer[] = [];
 	readonly closes: Array<[number | undefined, string | undefined]> = [];
+	readonly protocol = subprotocol;
 	binaryType: BinaryType = "blob";
 	bufferedAmount = 0;
 	readyState = 1;

@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import { deserialize, protocol, serialize } from "@serve-tools/realtime-protocol";
+import { deserialize, protocol, serialize, subprotocol } from "@serve-tools/realtime-protocol";
 import { listen } from "../../src/lib/scope/shared-worker.js";
 
 class LoopbackWebSocket extends EventTarget {
@@ -12,6 +12,7 @@ class LoopbackWebSocket extends EventTarget {
 
 	readonly subscriptions = new Set<number>();
 	binaryType: BinaryType = "blob";
+	readonly protocol = subprotocol;
 	readyState = LoopbackWebSocket.CONNECTING;
 
 	constructor() {

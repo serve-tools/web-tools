@@ -1,0 +1,46 @@
+{
+	"name": "@serve-tools/server-sse",
+	"version": "0.1.0",
+	"description": "Typed Fetch handlers for requests and server-sent subscriptions",
+	"keywords": [
+		"fetch",
+		"realtime",
+		"rpc",
+		"server",
+		"server-sent-events",
+		"sse",
+		"subscription"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/server/sse#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "server/sse"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/server-sse.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build:dependencies": "npm run build --workspace @serve-tools/realtime-protocol --workspace @serve-tools/server-realtime",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/realtime-protocol": "^0.1",
+		"@serve-tools/server-realtime": "^0.1"
+	}
+}

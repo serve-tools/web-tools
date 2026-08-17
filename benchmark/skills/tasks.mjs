@@ -30,6 +30,16 @@ const selections = [
 		"@serve-tools/client-messaging",
 	],
 	[
+		"custom-realtime-client-core",
+		"Adapt a custom full-duplex transport to typed realtime requests and subscriptions without owning a WebSocket, WebTransport session, or SSE exchange.",
+		"@serve-tools/client-realtime",
+	],
+	[
+		"fetch-sse-client",
+		"Call typed finite operations and consume typed server-sent subscriptions through Fetch, including authorization headers and AbortSignal cancellation without EventSource.",
+		"@serve-tools/client-sse",
+	],
+	[
 		"shared-worker-indexeddb",
 		"Coordinate typed IndexedDB writes and change subscriptions across browser tabs through one SharedWorker. Promise results are sufficient.",
 		"@serve-tools/client-shared-db",
@@ -50,9 +60,29 @@ const selections = [
 		"@serve-tools/client-websocket",
 	],
 	[
+		"webtransport-realtime-client",
+		"Own a WebTransport session with typed reliable requests and subscriptions plus named typed datagrams for transient state.",
+		"@serve-tools/client-webtransport",
+	],
+	[
+		"custom-realtime-server-core",
+		"Adapt a custom transport to typed realtime handlers, cancellation, backpressure, and connection cleanup without owning a network runtime.",
+		"@serve-tools/server-realtime",
+	],
+	[
+		"fetch-sse-server",
+		"Serve typed finite responses and server-sent subscriptions from WHATWG Request objects, authorizing before decoding and returning negotiated Fetch responses.",
+		"@serve-tools/server-sse",
+	],
+	[
 		"binary-websocket-server",
 		"Serve typed binary WebSocket requests and subscriptions from Node.js, authenticating during the HTTP upgrade and passing identity into cancellable handlers.",
 		"@serve-tools/server-websocket",
+	],
+	[
+		"webtransport-realtime-server",
+		"Serve typed WebTransport sessions with reliable operations and named typed datagrams through a sans-I/O core or the Node HTTP/3 adapter.",
+		"@serve-tools/server-webtransport",
 	],
 	[
 		"realtime-stream-wire-format",

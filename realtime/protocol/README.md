@@ -3,8 +3,8 @@
 `@serve-tools/realtime-protocol` defines the shared binary wire contract used by the Serve Tools realtime clients and servers.
 It provides structured-value serialization, versioned request and subscription message guards, protocol types, and optional framing for reliable byte streams.
 
-Most applications should use [`@serve-tools/client-websocket`](../../client/websocket/) and [`@serve-tools/server-websocket`](../../server/websocket/) instead.
-Use this package directly when implementing a transport adapter, protocol diagnostic, or future WebTransport integration.
+Most applications should use the paired WebSocket, WebTransport, or SSE client and server packages instead.
+Use this package directly when implementing a transport adapter or protocol diagnostic.
 
 ## Install
 
@@ -53,8 +53,28 @@ for (const payload of decoder.push(outgoing)) {
 Call `finish()` at stream EOF to reject a truncated final frame.
 Its default maximum frame length is 16 MiB; set an explicit lower limit at trust boundaries when possible.
 
-This framing is the common foundation prepared for WebTransport packages.
+This framing is the common foundation used by the WebTransport packages.
 It does not select streams, define session authentication, add retransmission, or turn unreliable datagrams into reliable protocol messages.
+
+## Encode typed datagrams
+
+The `datagram` export encodes a compact connection-local kind, an encoding byte, and a payload.
+Structured values use the shared serializer, while `ArrayBuffer` and view inputs bypass serialization and decode as `Uint8Array`.
+
+```ts
+import { decodeDatagram, encodeDatagram } from "@serve-tools/realtime-protocol/datagram";
+
+const payload = encodeDatagram(4, Uint8Array.of(1, 2, 3));
+const { kind, value } = decodeDatagram(payload);
+```
+
+`datagram-registry` provides the reliable per-session name-to-kind handshake used by the WebTransport packages.
+It is not an unreliable wire protocol by itself and must run over a framed reliable stream.
+
+## Encode SSE protocol events
+
+The `sse` export provides protocol-qualified media types, a streaming standards-compatible event decoder, event encoding, and runtime-neutral base64 helpers.
+It is used by the paired SSE packages so binary protocol messages can travel in event `data` fields while HTTP performs the application handshake.
 
 ## Wire contract
 
@@ -75,9 +95,11 @@ The root export provides:
 
 - `serialize(value)` and `deserialize(payload)` for structured binary values;
 - `protocol`, `isClientMessage()`, `isServerMessage()`, and `isErrorRecord()` for the versioned envelope;
+- `subprotocol`, the header-safe `serve-tools.realtime.v1` application protocol identifier;
 - protocol, operation, message, and error record types shared by clients and servers.
 
 The `@serve-tools/realtime-protocol/stream` export provides `encodeFrame()`, `FrameDecoder`, and `defaultMaximumFrameLength`.
+The `datagram`, `datagram-registry`, and `sse` exports provide the transport-specific shared codecs described above.
 
 ## Compatibility
 

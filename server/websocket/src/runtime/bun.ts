@@ -1,4 +1,5 @@
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
+import { subprotocol } from "@serve-tools/realtime-protocol";
 import { createConnection } from "../lib/connection.js";
 import type * as T from "../lib/types.js";
 import type { Awaitable, Connection, ConnectionOptions, Handlers } from "../lib/types.js";
@@ -10,7 +11,7 @@ interface SocketData<P extends Protocol, Context> {
 
 /** The Bun server methods required to accept a WebSocket. */
 export interface BunServerLike<Data> {
-	upgrade(request: Request, options: { readonly data: Data }): boolean;
+	upgrade(request: Request, options: { readonly data: Data; readonly headers?: HeadersInit }): boolean;
 }
 
 /** The Bun server WebSocket methods required by the adapter. */
@@ -114,6 +115,10 @@ export function createBunAdapter<const P extends Protocol & ProtocolDefinition<P
 			return new Response("Service Unavailable", { status: 503 });
 		}
 
+		if (!offeredProtocols(request.headers.get("sec-websocket-protocol")).includes(subprotocol)) {
+			return new Response("WebSocket Subprotocol Required", { status: 426 });
+		}
+
 		let result: Context | Response;
 
 		try {
@@ -132,7 +137,10 @@ export function createBunAdapter<const P extends Protocol & ProtocolDefinition<P
 			return new Response("Service Unavailable", { status: 503 });
 		}
 
-		return server.upgrade(request, { data: { context: result } })
+		return server.upgrade(request, {
+			data: { context: result },
+			headers: { "Sec-WebSocket-Protocol": subprotocol },
+		})
 			? undefined
 			: new Response("WebSocket Upgrade Failed", { status: 400 });
 	};
@@ -153,6 +161,12 @@ export function createBunAdapter<const P extends Protocol & ProtocolDefinition<P
 
 	return { websocket, upgrade, close, [Symbol.dispose]: close };
 }
+
+const offeredProtocols = (value: string | null): string[] =>
+	(value ?? "")
+		.split(",")
+		.map((entry) => entry.trim())
+		.filter(Boolean);
 
 /** Types used by {@link createBunAdapter}. */
 export namespace createBunAdapter {

@@ -1,6 +1,7 @@
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
+import { subprotocol } from "@serve-tools/realtime-protocol";
 import { WebSocketServer } from "ws";
 import { attach } from "../lib/attach.js";
 import type * as T from "../lib/types.js";
@@ -36,6 +37,7 @@ export function handleUpgrade<const P extends Protocol & ProtocolDefinition<P>, 
 	const websocketServer = new WebSocketServer({
 		noServer: true,
 		clientTracking: false,
+		handleProtocols: (protocols) => (protocols.has(subprotocol) ? subprotocol : false),
 		maxPayload: maximumMessageLength,
 		perMessageDeflate: false,
 	});
@@ -46,6 +48,12 @@ export function handleUpgrade<const P extends Protocol & ProtocolDefinition<P>, 
 	const upgrade = async (request: IncomingMessage, socket: Duplex, head: Buffer): Promise<void> => {
 		if (isClosed) {
 			await rejectUpgrade(socket, new Response("Service Unavailable", { status: 503 }));
+
+			return;
+		}
+
+		if (!offeredProtocols(request.headers["sec-websocket-protocol"]).includes(subprotocol)) {
+			await rejectUpgrade(socket, new Response("WebSocket Subprotocol Required", { status: 426 }));
 
 			return;
 		}
@@ -151,8 +159,16 @@ const defaultStatusText = (status: number): string =>
 		? "Unauthorized"
 		: status === 403
 			? "Forbidden"
-			: status === 503
-				? "Service Unavailable"
-				: status >= 500
-					? "Internal Server Error"
-					: "Upgrade Rejected";
+			: status === 426
+				? "Upgrade Required"
+				: status === 503
+					? "Service Unavailable"
+					: status >= 500
+						? "Internal Server Error"
+						: "Upgrade Rejected";
+
+const offeredProtocols = (value: string | string[] | undefined): string[] =>
+	(Array.isArray(value) ? value.join(",") : (value ?? ""))
+		.split(",")
+		.map((entry) => entry.trim())
+		.filter(Boolean);

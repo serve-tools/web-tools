@@ -6,8 +6,14 @@ All notable changes to this package collection are documented here.
 
 - Add `@serve-tools/realtime-protocol@0.1.0` with the shared binary serializer, typed message tuples, runtime guards, error records, and bounded reliable-stream framing for WebSocket and future WebTransport integrations.
 - Establish `@serve-tools/realtime/1` as the initial wire-protocol compatibility identifier.
+- Establish `serve-tools.realtime.v1` as the native WebSocket and WebTransport subprotocol identifier and the HTTP media-type protocol parameter used by SSE.
+- Add `@serve-tools/client-realtime@0.1.0` and `@serve-tools/server-realtime@0.1.0` as shared sans-I/O operation cores for transport adapters.
+- Add `@serve-tools/client-webtransport@0.1.0` and `@serve-tools/server-webtransport@0.1.0` with reliable framed operations, a reliable datagram-name registry, typed best-effort datagrams, native binary bypass, and a Node.js `@http3-server/server` adapter.
+- Add `@serve-tools/client-sse@0.1.0` and `@serve-tools/server-sse@0.1.0` with Fetch-based authenticated requests, abortable streaming subscriptions, and explicit HTTP media negotiation without relying on native `EventSource`.
+- Add `sse` and `webtransport` namespaces and focused subpaths to the pending `@serve-tools/client@0.2.0` umbrella.
 - Add `@serve-tools/server-websocket@0.1.0` with a sans-I/O connection core, WHATWG WebSocket attachment, Node.js, Bun, and crossws adapters, authorization context, cancellation, cleanup, error redaction, operation limits, and bounded transport buffering.
-- Refactor `@serve-tools/client-websocket@0.1.0` before its initial release to consume `@serve-tools/realtime-protocol` instead of maintaining private protocol and serialization modules.
+- Refactor `@serve-tools/client-websocket@0.1.0` before its initial release to consume the shared realtime core and protocol, and require native WebSocket subprotocol negotiation.
+- Add the explicit `HELLO`/`WELCOME` application handshake to `@serve-tools/client-messaging@0.2.0`, where the underlying `MessagePort` API has no native subprotocol negotiation.
 - Add real client/server conformance coverage for Node.js, Bun, and Deno, plus Chromium, Firefox, and WebKit client coverage.
 - Prepare browser-package patch releases for `@serve-tools/client-context@0.1.1`, `@serve-tools/client-db@0.1.2`, `@serve-tools/client-input@0.1.1`, `@serve-tools/client-interaction@0.1.1`, `@serve-tools/client-keyboard@0.1.1`, and `@serve-tools/client-storage@0.1.3`.
 - Prepare Signal and Lit patch releases for `@serve-tools/signal-dom@0.1.2`, `@serve-tools/signal-event-target@0.1.1`, `@serve-tools/signal-storage@0.1.2`, `@serve-tools/lit-signals@0.3.1`, `@serve-tools/signal-collections@0.1.2`, `@serve-tools/signal-effect@0.1.2`, and `@serve-tools/signal@0.1.2`.

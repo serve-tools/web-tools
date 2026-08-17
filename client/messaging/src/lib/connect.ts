@@ -7,6 +7,7 @@ import {
 	noop,
 	post,
 	protocol,
+	protocolError,
 	remoteError,
 	report,
 } from "./.internals.js";
@@ -36,13 +37,42 @@ import type {
 export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoint: MessageEndpoint): Client<P> {
 	const operations = new Map<number, ClientOperation>();
 	const closed = Promise.withResolvers<void>();
+	const ready = Promise.withResolvers<void>();
 
 	let nextId = 0;
 	let isClosed = false;
+	let isReady = false;
 	let releaseLease: (() => void) | undefined;
 
 	const receive = ({ data }: MessageEventLike): void => {
 		if (!isWireMessage(data)) {
+			closeProtocol(protocolError());
+
+			return;
+		}
+
+		if (data[1] === "welcome") {
+			if (isReady) {
+				closeProtocol(protocolError("The serving peer sent more than one welcome"));
+
+				return;
+			}
+
+			isReady = true;
+			ready.resolve();
+
+			return;
+		}
+
+		if (data[1] === "hello") {
+			closeProtocol(protocolError("The serving peer sent a client hello"));
+
+			return;
+		}
+
+		if (!isReady && data[1] !== "close") {
+			closeProtocol(protocolError("The serving peer sent a message before welcoming the client"));
+
 			return;
 		}
 
@@ -134,6 +164,10 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 
 		isClosed = true;
 
+		if (!isReady) {
+			ready.reject(error);
+		}
+
 		endpoint.removeEventListener("message", receive);
 
 		releaseLease?.();
@@ -150,6 +184,13 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 		}
 
 		closed.resolve();
+	};
+	const closeProtocol = (error: Error): void => {
+		try {
+			post(endpoint, [protocol, "close", errorRecord(error)]);
+		} catch {}
+
+		finish(error, true);
 	};
 
 	const close = (reason?: unknown): void => {
@@ -168,6 +209,14 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 
 	endpoint.addEventListener("message", receive);
 	endpoint.start?.();
+
+	void ready.promise.catch(noop);
+
+	try {
+		post(endpoint, [protocol, "hello"]);
+	} catch (error) {
+		finish(error, true);
+	}
 
 	const { locks } = navigator;
 
@@ -195,6 +244,8 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 	}
 
 	return {
+		ready: ready.promise,
+
 		request(name: string, input?: unknown, options: RequestOptions = {}): Promise<unknown> {
 			if (isClosed) {
 				return Promise.reject(connectionClosedError());

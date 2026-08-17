@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-
 import { connect } from "../../../../client/websocket/src/client-websocket.ts";
+import { subprotocol } from "../../../../realtime/protocol/src/realtime-protocol.ts";
 import { attach } from "../../src/server-websocket.ts";
 
 interface Protocol {
@@ -25,7 +25,7 @@ const handlers = {
 	},
 };
 const server = Deno.serve({ hostname: "127.0.0.1", port: 0, onListen() {} }, (request) => {
-	const upgrade = Deno.upgradeWebSocket(request);
+	const upgrade = Deno.upgradeWebSocket(request, { protocol: subprotocol });
 
 	attach<Protocol, { user: string }>(upgrade.socket, handlers, { user: "grace" });
 

@@ -420,6 +420,17 @@ describe("subscriptions", () => {
 });
 
 describe("protocol and lifecycle", () => {
+	it("confirms the explicit application protocol handshake", async () => {
+		const connection = open<{ requests: { ping(): string } }>({ requests: { ping: () => "pong" } });
+
+		try {
+			await expect(connection.client.ready).resolves.toBeUndefined();
+			await expect(connection.client.request("ping")).resolves.toBe("pong");
+		} finally {
+			connection.close();
+		}
+	});
+
 	it("reports unknown and inherited operation names instead of hanging", async () => {
 		type P = {
 			requests: { missing(): never };
@@ -561,7 +572,7 @@ describe("protocol and lifecycle", () => {
 		connection.close();
 	});
 
-	it("ignores malformed frames without consuming a pending request", async () => {
+	it("closes when the peer sends a malformed protocol frame", async () => {
 		const { port1, port2 } = new MessageChannel();
 
 		type P = { requests: { manual(): string } };
@@ -585,10 +596,9 @@ describe("protocol and lifecycle", () => {
 
 		port2.postMessage([message[0], "settle", message[2], "malformed"]);
 		port2.postMessage([message[0], "reject", message[2], { name: "Error", message: "malformed", stack: 42 }]);
-		port2.postMessage([message[0], "resolve", message[2], "valid"]);
 
 		try {
-			expect(await request).toBe("valid");
+			await expect(request).rejects.toMatchObject({ name: "ProtocolError" });
 		} finally {
 			client.close();
 			port1.close();
@@ -616,7 +626,7 @@ describe("liveness", () => {
 			});
 			const request = client.request("ping");
 
-			expect(messages.map((message) => message[1])).toEqual(["lease", "request"]);
+			expect(messages.map((message) => message[1])).toEqual(["hello", "lease", "request"]);
 
 			client.close();
 

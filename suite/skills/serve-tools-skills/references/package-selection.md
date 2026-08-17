@@ -11,10 +11,16 @@ Select the narrowest package that owns the required behavior.
 | Clipboard, picker, share, or eyedropper actions | `@serve-tools/client-interaction`             | One-shot browser interactions with explicit outcomes                   |
 | Keyboard chords and accessible labels           | `@serve-tools/client-keyboard`                | Platform-aware matching, symbols, and ARIA shortcuts                   |
 | Worker or port requests and subscriptions       | `@serve-tools/client-messaging`               | Typed finite requests and streaming subscriptions                      |
+| Custom realtime client adapter                  | `@serve-tools/client-realtime`                | Sans-I/O client operation state machine                                |
+| Fetch requests and server-sent subscriptions    | `@serve-tools/client-sse`                     | Author headers, abort signals, and streaming responses                 |
 | IndexedDB coordinated through a SharedWorker    | `@serve-tools/client-shared-db`               | Cross-tab operations and change subscriptions                          |
 | Observable local or session storage             | `@serve-tools/client-storage`                 | Storage reads, writes, and watches                                     |
 | Binary WebSocket requests and subscriptions     | `@serve-tools/client-websocket`               | Typed structured-data protocol over WebSocket                          |
+| Reliable operations plus lossy datagrams        | `@serve-tools/client-webtransport`            | WebTransport streams and typed best-effort datagrams                   |
+| Custom realtime server adapter                  | `@serve-tools/server-realtime`                | Sans-I/O handler and operation core                                    |
+| Fetch request and SSE subscription handlers     | `@serve-tools/server-sse`                     | WHATWG Fetch handler with HTTP media negotiation                       |
 | WebSocket request and subscription handlers     | `@serve-tools/server-websocket`               | Sans-I/O server core plus runtime adapters                             |
+| WebTransport operation and datagram handlers    | `@serve-tools/server-webtransport`            | Runtime-neutral session core plus Node HTTP/3 adapter                  |
 | Realtime wire format or reliable stream frames  | `@serve-tools/realtime-protocol`              | Shared serializer, message guards, types, and framing                  |
 | Signal-aware DOM templates                      | `@serve-tools/signal-dom`                     | Functional HTML, SVG, and MathML templating                            |
 | EventTarget state as Signals                    | `@serve-tools/signal-event-target`            | Events and media queries exposed as read-only Signals                  |
@@ -37,7 +43,8 @@ Select `@serve-tools/signal` separately only when application code imports it di
 ## Selection rules
 
 - Choose a `client-*` package for imperative state or transport APIs.
-- Choose `@serve-tools/server-websocket` for server handlers and an adapter matching the runtime.
+- Pair each realtime client with its matching server package.
+- Choose the `client-realtime` or `server-realtime` core only when building another transport adapter.
 - Choose `@serve-tools/realtime-protocol` directly only for transport integration or protocol infrastructure.
 - Choose its `signal-*` counterpart only when consumers need reactive reads.
 - Choose a ponyfill for explicit imports and a polyfill only when global compatibility is required.

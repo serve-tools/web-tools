@@ -27,6 +27,9 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/realtime-protocol.js",
+		"./datagram": "./dist/datagram.js",
+		"./datagram-registry": "./dist/datagram-registry.js",
+		"./sse": "./dist/sse.js",
 		"./stream": "./dist/stream.js"
 	},
 	"files": [
