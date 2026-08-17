@@ -57,6 +57,10 @@ npm ci --ignore-scripts
 npm run verify
 ```
 
+Browser tests and benchmarks start a loopback server, which the macOS workspace sandbox cannot bind.
+On the first attempt, run `npm test`, `npm run test:browser`, `npm run benchmark`, and `npm run verify` with local-server sandbox escalation instead of waiting for a `listen EPERM` failure.
+The trusted project rules in `.codex/rules/web-tools.rules` allow only those npm script prefixes to run outside the sandbox without a repeated approval prompt.
+
 Update JavaScript or TypeScript behavior, declarations, tests, and package documentation together.
 When a public contract changes, update that package's consumer Skill under `skills/` as part of the same change.
 Run `npm run check:skills` for Skill or package metadata changes.

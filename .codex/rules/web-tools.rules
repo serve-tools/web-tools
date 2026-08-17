@@ -1,0 +1,25 @@
+prefix_rule(
+    pattern = ["npm", "test"],
+    decision = "allow",
+    justification = "web-tools tests use loopback browser servers that cannot bind inside the macOS workspace sandbox",
+    match = [
+        "npm test",
+        "npm test --workspace @serve-tools/client-websocket",
+    ],
+)
+
+prefix_rule(
+    pattern = ["npm", "run", ["test", "test:browser", "benchmark", "verify"]],
+    decision = "allow",
+    justification = "web-tools browser validation uses loopback servers that cannot bind inside the macOS workspace sandbox",
+    match = [
+        "npm run test --workspace @serve-tools/client-websocket",
+        "npm run test:browser --workspace @serve-tools/client-websocket",
+        "npm run benchmark --workspace @serve-tools/client-websocket",
+        "npm run verify",
+    ],
+    not_match = [
+        "npm run build",
+        "npm run dev",
+    ],
+)
