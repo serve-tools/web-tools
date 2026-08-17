@@ -288,20 +288,19 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 
 		operations.set(id, operation);
 
-		const requestContext: RequestContext<Context> = {
-			get signal() {
-				return operation.signal;
-			},
-			connection: context,
-		};
 		const handlerContext: RequestContext<Context> | SubscriptionContext<unknown, Context> =
 			kind === "request"
-				? requestContext
-				: {
-						...requestContext,
+				? {
 						get signal() {
 							return operation.signal;
 						},
+						connection: context,
+					}
+				: {
+						get signal() {
+							return operation.signal;
+						},
+						connection: context,
 						emit(value): void {
 							if (operations.get(id) !== operation) {
 								return;

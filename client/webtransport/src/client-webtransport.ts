@@ -56,12 +56,12 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	const operationStream = await transport.createBidirectionalStream();
 	const operationWriter = operationStream.writable.getWriter();
 	const operationDecoder = new FrameDecoder();
-	let operationWrites = operationWriter.write(nativeBytes(Uint8Array.of(operationsRole)));
+	let operationWrites = operationWriter.write(Uint8Array.of(operationsRole));
 	let client!: ReturnType<typeof createClient<P>>;
 
 	client = createClient<P>({
 		send(payload) {
-			operationWrites = operationWrites.then(() => operationWriter.write(nativeBytes(encodeFrame(payload))));
+			operationWrites = operationWrites.then(() => operationWriter.write(encodeFrame(payload)));
 			void operationWrites.catch((error) => client.disconnect(error));
 		},
 		close(reason) {
@@ -88,9 +88,9 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 	const registryStream = await transport.createBidirectionalStream();
 	const registryWriter = registryStream.writable.getWriter();
-	let registryWrites = registryWriter.write(nativeBytes(Uint8Array.of(datagramsRole)));
+	let registryWrites = registryWriter.write(Uint8Array.of(datagramsRole));
 	const registry = new DatagramRegistry((payload) => {
-		registryWrites = registryWrites.then(() => registryWriter.write(nativeBytes(payload)));
+		registryWrites = registryWrites.then(() => registryWriter.write(payload));
 		void registryWrites.catch((error) => registry.fail(error));
 	});
 
@@ -141,7 +141,7 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		async write(name: string, value: unknown): Promise<void> {
 			const kind = await registry.register(name);
 
-			await sharedDatagramWriter.write(nativeBytes(encodeDatagram(kind, value)));
+			await sharedDatagramWriter.write(encodeDatagram(kind, value));
 		},
 		createWritable(name: string, writableOptions?: DatagramWritableOptions): WritableStream<unknown> {
 			const writable = transport.datagrams.createWritable(writableOptions);
@@ -150,7 +150,7 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 			return new WritableStream({
 				async write(value) {
-					await writer.write(nativeBytes(encodeDatagram(await kind, value)));
+					await writer.write(encodeDatagram(await kind, value));
 				},
 				close: () => writer.close(),
 				abort: (reason) => writer.abort(reason),
@@ -262,5 +262,3 @@ const abortable = async <Value>(
 		promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", cancelled));
 	});
 };
-
-const nativeBytes = (value: Uint8Array): Uint8Array<ArrayBuffer> => new Uint8Array(value);

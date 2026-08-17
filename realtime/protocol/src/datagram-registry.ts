@@ -6,7 +6,7 @@ type RegisteredMessage = readonly [protocol: string, type: "registered", request
 type RegistryMessage = RegisterMessage | RegisteredMessage;
 
 export class DatagramRegistry {
-	readonly #send: (payload: Uint8Array) => void;
+	readonly #send: (payload: Uint8Array<ArrayBuffer>) => void;
 	readonly #decoder = new FrameDecoder();
 	readonly #incomingNames = new Map<number, string>();
 	readonly #incomingKinds = new Map<string, number>();
@@ -15,7 +15,7 @@ export class DatagramRegistry {
 	#nextKind = 0;
 	#nextRequest = 0;
 
-	constructor(send: (payload: Uint8Array) => void) {
+	constructor(send: (payload: Uint8Array<ArrayBuffer>) => void) {
 		this.#send = send;
 	}
 

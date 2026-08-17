@@ -1,4 +1,4 @@
-import { deserialize, protocol, serialize } from "@serve-tools/realtime-protocol";
+import { deserialize, protocol, serialize, subprotocol } from "@serve-tools/realtime-protocol";
 import { afterEach, expect, test, vi } from "vitest";
 
 import { benchmark } from "../../benchmark.js";
@@ -23,6 +23,7 @@ class LoopbackWebSocket extends EventTarget {
 	static instance: LoopbackWebSocket | undefined;
 
 	binaryType: BinaryType = "blob";
+	readonly protocol = subprotocol;
 	readyState = LoopbackWebSocket.CONNECTING;
 	subscriptionId?: number;
 

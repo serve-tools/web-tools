@@ -1,12 +1,5 @@
 import { subprotocol } from "./realtime-protocol.js";
 
-const base64Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-const base64Values = new Int16Array(128).fill(-1);
-
-for (let index = 0; index < base64Alphabet.length; ++index) {
-	base64Values[base64Alphabet.charCodeAt(index)] = index;
-}
-
 /** The negotiated media type for a Serve Tools event stream. */
 export const eventStreamContentType = `text/event-stream;protocol=${subprotocol}`;
 
@@ -204,51 +197,46 @@ export function encodeBase64(payload: ArrayBuffer | ArrayBufferView): string {
 	const bytes = ArrayBuffer.isView(payload)
 		? new Uint8Array(payload.buffer, payload.byteOffset, payload.byteLength)
 		: new Uint8Array(payload);
+	const toBase64 = (bytes as Uint8Array & { toBase64?(): string }).toBase64;
 
-	let output = "";
-
-	for (let index = 0; index < bytes.length; index += 3) {
-		const first = bytes[index]!;
-		const second = bytes[index + 1];
-		const third = bytes[index + 2];
-
-		output += base64Alphabet[first >> 2];
-		output += base64Alphabet[((first & 3) << 4) | ((second ?? 0) >> 4)];
-		output += second === undefined ? "=" : base64Alphabet[((second & 15) << 2) | ((third ?? 0) >> 6)];
-		output += third === undefined ? "=" : base64Alphabet[third & 63];
+	if (toBase64) {
+		return toBase64.call(bytes);
 	}
 
-	return output;
+	let binary = "";
+
+	for (const byte of bytes) {
+		binary += String.fromCharCode(byte);
+	}
+
+	return btoa(binary);
 }
 
 /** Decodes canonical padded base64 from an SSE `data` field. */
 export function decodeBase64(value: string): Uint8Array {
-	if (value.length % 4 !== 0 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) {
-		throw new TypeError("Invalid base64 event data");
+	try {
+		const fromBase64 = (Uint8Array as Uint8ArrayConstructor & { fromBase64?(value: string): Uint8Array })
+			.fromBase64;
+		let output: Uint8Array;
+
+		if (fromBase64) {
+			output = fromBase64(value);
+		} else {
+			const binary = atob(value);
+
+			output = new Uint8Array(binary.length);
+
+			for (let index = 0; index < binary.length; ++index) {
+				output[index] = binary.charCodeAt(index);
+			}
+		}
+
+		if (encodeBase64(output) === value) {
+			return output;
+		}
+	} catch {
+		// Normalize native decoder failures below.
 	}
 
-	const padding = value.endsWith("==") ? 2 : value.endsWith("=") ? 1 : 0;
-	const output = new Uint8Array((value.length / 4) * 3 - padding);
-
-	let offset = 0;
-
-	for (let index = 0; index < value.length; index += 4) {
-		const first = base64Values[value.charCodeAt(index)]!;
-		const second = base64Values[value.charCodeAt(index + 1)]!;
-		const third = value[index + 2] === "=" ? 0 : base64Values[value.charCodeAt(index + 2)]!;
-		const fourth = value[index + 3] === "=" ? 0 : base64Values[value.charCodeAt(index + 3)]!;
-		const bits = (first << 18) | (second << 12) | (third << 6) | fourth;
-
-		if (offset < output.length) {
-			output[offset++] = bits >> 16;
-		}
-		if (offset < output.length) {
-			output[offset++] = bits >> 8;
-		}
-		if (offset < output.length) {
-			output[offset++] = bits;
-		}
-	}
-
-	return output;
+	throw new TypeError("Invalid base64 event data");
 }

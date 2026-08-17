@@ -66,7 +66,7 @@
 	"scripts": {
 		"benchmark": "npm run benchmark --workspaces --if-present",
 		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket --workspace @serve-tools/signal-websocket",
-		"benchmark:realtime": "npm run benchmark --workspace @serve-tools/realtime-protocol --workspace @serve-tools/client-websocket --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/signal-websocket",
+		"benchmark:realtime": "npm run benchmark --workspace @serve-tools/realtime-protocol --workspace @serve-tools/client-messaging --workspace @serve-tools/client-websocket --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-sse --workspace @serve-tools/signal-websocket",
 		"benchmark:skills": "node benchmark/skills/run.mjs",
 		"build": "npm run build --workspaces --if-present",
 		"build:pages": "node scripts/build-pages.mjs",
@@ -184,6 +184,7 @@
 			},
 			"client/sse": {
 				"entry": [
+					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"
 				]
 			},

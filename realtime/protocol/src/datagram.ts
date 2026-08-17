@@ -14,7 +14,7 @@ export interface DecodedDatagram {
 }
 
 /** Encodes one typed datagram with a compact kind and payload-encoding prefix. */
-export function encodeDatagram(kind: number, value: unknown): Uint8Array {
+export function encodeDatagram(kind: number, value: unknown): Uint8Array<ArrayBuffer> {
 	if (!Number.isSafeInteger(kind) || kind < 0 || kind > 0xffff_ffff) {
 		throw new RangeError("The datagram kind must be a 32-bit unsigned integer");
 	}

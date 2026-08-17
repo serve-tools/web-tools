@@ -4,7 +4,7 @@ const maximumUnsignedInteger = 0xffff_ffff;
 export const defaultMaximumFrameLength = 16 * 1024 * 1024;
 
 /** Encodes one payload with a four-byte, unsigned, big-endian length prefix. */
-export const encodeFrame = (payload: ArrayBuffer | ArrayBufferView): Uint8Array => {
+export const encodeFrame = (payload: ArrayBuffer | ArrayBufferView): Uint8Array<ArrayBuffer> => {
 	const bytes = ArrayBuffer.isView(payload)
 		? new Uint8Array(payload.buffer, payload.byteOffset, payload.byteLength)
 		: new Uint8Array(payload);

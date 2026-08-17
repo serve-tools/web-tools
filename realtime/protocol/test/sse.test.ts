@@ -20,11 +20,12 @@ describe("SSE protocol utilities", () => {
 		expect(decoder.finish()).toEqual([]);
 	});
 
-	it("round-trips binary event data without platform base64 globals", () => {
+	it("round-trips canonical binary event data", () => {
 		const bytes = Uint8Array.of(0, 1, 2, 253, 254, 255);
 
 		expect(decodeBase64(encodeBase64(bytes))).toEqual(bytes);
 		expect(() => decodeBase64("not base64")).toThrow(TypeError);
+		expect(() => decodeBase64("Zh==")).toThrow(TypeError);
 	});
 
 	it("requires the protocol parameter during HTTP media negotiation", () => {

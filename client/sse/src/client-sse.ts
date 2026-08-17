@@ -32,7 +32,6 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 ): Client<P> {
 	const fetcher = options.fetch ?? globalThis.fetch;
 	const { fetch: _fetch, headers: _headers, signal: _signal, ...requestInit } = options;
-	const lifetime = new AbortController();
 	const closed = Promise.withResolvers<void>();
 	const active = new Set<AbortController>();
 	let nextId = 0;
@@ -44,8 +43,6 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		}
 
 		isClosed = true;
-
-		lifetime.abort(reason);
 
 		for (const controller of active) {
 			controller.abort(reason);
@@ -79,7 +76,6 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 			signal?.addEventListener("abort", abort, { once: true });
 		}
 
-		lifetime.signal.addEventListener("abort", () => controller.abort(lifetime.signal.reason), { once: true });
 		active.add(controller);
 
 		return controller;
@@ -102,19 +98,13 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		controller: AbortController,
 		accept: string,
 	): Promise<Response> => {
-		try {
-			return await fetcher(url, {
-				...requestInit,
-				headers: await headers(operation, accept),
-				method: "POST",
-				body: serialize(message),
-				signal: controller.signal,
-			});
-		} finally {
-			if (controller.signal.aborted) {
-				active.delete(controller);
-			}
-		}
+		return fetcher(url, {
+			...requestInit,
+			headers: await headers(operation, accept),
+			method: "POST",
+			body: serialize(message),
+			signal: controller.signal,
+		});
 	};
 	const nextOperationId = (): number => {
 		if (nextId >= Number.MAX_SAFE_INTEGER) {

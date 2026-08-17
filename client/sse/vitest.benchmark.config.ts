@@ -5,7 +5,7 @@ export default defineConfig({
 	test: {
 		include: ["benchmark/**/*.benchmark.ts"],
 		fileParallelism: false,
-		reporters: ["../../client/benchmark-reporter.ts"],
+		reporters: ["../benchmark-reporter.ts"],
 		testTimeout: 120_000,
 		browser: {
 			enabled: true,
