@@ -25,6 +25,7 @@ const tick = async (): Promise<void> => {
 
 const setup = (overrides: Record<string, unknown> = {}) => {
 	const sent: ServerMessage[] = [];
+	const envelopes: ServerMessage[] = [];
 	const closes: Array<[number, string]> = [];
 	const reports: unknown[] = [];
 	const aborted = Promise.withResolvers<unknown>();
@@ -54,8 +55,9 @@ const setup = (overrides: Record<string, unknown> = {}) => {
 	const connection = createConnection<TestProtocol, { user: string }>(
 		handlers as never,
 		{
-			send(payload) {
+			send(payload, message) {
 				sent.push(deserialize(payload) as ServerMessage);
+				envelopes.push(message);
 			},
 			close(code, reason) {
 				closes.push([code, reason]);
@@ -66,12 +68,12 @@ const setup = (overrides: Record<string, unknown> = {}) => {
 	);
 	const receive = (message: ClientMessage): void => connection.receive(serialize(message));
 
-	return { aborted: aborted.promise, add, closes, connection, handlers, receive, reports, sent };
+	return { aborted: aborted.promise, add, closes, connection, envelopes, handlers, receive, reports, sent };
 };
 
 describe("createConnection", () => {
 	it("dispatches concurrent requests with typed connection state", async () => {
-		const { add, connection, receive, sent } = setup();
+		const { add, connection, envelopes, receive, sent } = setup();
 
 		receive([protocol, "request", 1, "add", { a: 1, b: 2 }]);
 		receive([protocol, "request", 2, "add", { a: 10, b: 5 }]);
@@ -84,6 +86,7 @@ describe("createConnection", () => {
 			[protocol, "resolve", 1, 3],
 			[protocol, "resolve", 2, 15],
 		]);
+		expect(envelopes).toEqual(sent);
 	});
 
 	it("emits, completes, and cleans up subscriptions exactly once", async () => {

@@ -59,13 +59,13 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	);
 	const operationWriter = operationStream.writable.getWriter();
 	const operationDecoder = new FrameDecoder();
-	let operationWrites = operationWriter.write(Uint8Array.of(webTransportOperationsRole));
 	let client!: ReturnType<typeof createClient<P>>;
+
+	void operationWriter.write(Uint8Array.of(webTransportOperationsRole)).catch((error) => client.disconnect(error));
 
 	client = createClient<P>({
 		send(payload) {
-			operationWrites = operationWrites.then(() => operationWriter.write(encodeFrame(payload)));
-			void operationWrites.catch((error) => client.disconnect(error));
+			void operationWriter.write(encodeFrame(payload)).catch((error) => client.disconnect(error));
 		},
 		close(reason) {
 			transport.close({
@@ -87,16 +87,18 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		() => client.fail("The reliable operation stream ended"),
 		(error) => client.disconnect(error),
 	);
-	void operationWrites.catch((error) => client.disconnect(error));
 
 	const registryStream = await abortable(transport.createBidirectionalStream(), options.signal, () =>
 		transport.close({ reason: "Connection aborted" }),
 	);
 	const registryWriter = registryStream.writable.getWriter();
-	let registryWrites = registryWriter.write(Uint8Array.of(webTransportDatagramRegistryRole));
+
+	void registryWriter
+		.write(Uint8Array.of(webTransportDatagramRegistryRole))
+		.catch((error) => client.disconnect(error));
+
 	const registry = new DatagramRegistry((payload) => {
-		registryWrites = registryWrites.then(() => registryWriter.write(payload));
-		void registryWrites.catch((error) => registry.fail(error));
+		void registryWriter.write(payload).catch((error) => registry.fail(error));
 	});
 
 	void pump(
@@ -110,7 +112,6 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 			client.disconnect(error);
 		},
 	);
-	void registryWrites.catch((error) => client.disconnect(error));
 
 	const listeners = new Map<string, Set<(value: unknown) => void>>();
 	const sharedDatagramWriter = transport.datagrams.createWritable().getWriter();

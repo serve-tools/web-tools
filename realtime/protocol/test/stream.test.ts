@@ -55,6 +55,7 @@ describe("stream framing", () => {
 		const decoder = new FrameDecoder(2);
 
 		expect(() => decoder.push(encodeFrame(bytes(1, 2, 3)))).toThrow(RangeError);
+		expect(() => decoder.push(bytes(255, 255, 255, 255))).toThrow(RangeError);
 		expect(decoder.push(encodeFrame(bytes(4, 5))).map((payload) => [...new Uint8Array(payload)])).toEqual([[4, 5]]);
 	});
 });

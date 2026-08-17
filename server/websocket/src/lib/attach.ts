@@ -1,5 +1,5 @@
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
-import { createConnection } from "./connection.js";
+import { createConnection } from "@serve-tools/server-realtime";
 import type * as T from "./types.js";
 import type { Connection, ConnectionOptions, Handlers, WebSocketLike } from "./types.js";
 

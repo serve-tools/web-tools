@@ -22,13 +22,10 @@ const defaultMaximumBufferedAmount = 16 * 1024 * 1024;
 const defaultMaximumOperations = 1_024;
 const cancelled = Object.assign(new Error("The operation was cancelled"), { name: "AbortError" });
 
-type Delivery =
-	| { readonly ok: true }
-	| {
-			readonly ok: false;
-			readonly phase: "serialize" | "transport";
-			readonly error: unknown;
-	  };
+interface DeliveryFailure {
+	readonly phase: "serialize" | "transport";
+	readonly error: unknown;
+}
 
 class ServerOperation {
 	#controller?: AbortController;
@@ -111,13 +108,13 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		return defaultErrorRecord(reason);
 	};
 
-	const deliver = (message: ServerMessage): Delivery => {
+	const deliver = (message: ServerMessage): DeliveryFailure | undefined => {
 		let payload: ArrayBuffer;
 
 		try {
 			payload = serialize(message);
 		} catch (error) {
-			return { ok: false, phase: "serialize", error };
+			return { phase: "serialize", error };
 		}
 
 		try {
@@ -133,10 +130,9 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 				});
 			}
 
-			transport.send(payload);
-			return { ok: true };
+			transport.send(payload, message);
 		} catch (error) {
-			return { ok: false, phase: "transport", error };
+			return { phase: "transport", error };
 		}
 	};
 
@@ -197,23 +193,23 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 			const message: ServerMessage = outcome.ok
 				? [protocol, "resolve", id, outcome.value]
 				: [protocol, "reject", id, formatError(outcome.reason)];
-			const delivery = deliver(message);
+			const failure = deliver(message);
 
-			if (!delivery.ok) {
-				if (delivery.phase === "serialize" && outcome.ok) {
-					const fallback = deliver([protocol, "reject", id, formatError(delivery.error)]);
+			if (failure) {
+				if (failure.phase === "serialize" && outcome.ok) {
+					const fallback = deliver([protocol, "reject", id, formatError(failure.error)]);
 
-					if (!fallback.ok) {
+					if (fallback) {
 						if (fallback.phase === "transport") {
 							transportFailed(fallback.error);
 						} else {
 							report(fallback.error);
 						}
 					}
-				} else if (delivery.phase === "transport") {
-					transportFailed(delivery.error);
+				} else if (failure.phase === "transport") {
+					transportFailed(failure.error);
 				} else {
-					report(delivery.error);
+					report(failure.error);
 				}
 			}
 		}
@@ -233,10 +229,10 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 			{ name: code === 1009 ? "MessageTooLargeError" : "ProtocolError" },
 		);
 
-		const delivery = deliver([protocol, "close", formatError(error)]);
+		const failure = deliver([protocol, "close", formatError(error)]);
 
-		if (!delivery.ok && delivery.phase === "transport") {
-			report(delivery.error);
+		if (failure?.phase === "transport") {
+			report(failure.error);
 		}
 
 		finish(error);
@@ -244,13 +240,13 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 	};
 
 	const reject = (id: number, reason: unknown): void => {
-		const delivery = deliver([protocol, "reject", id, formatError(reason)]);
+		const failure = deliver([protocol, "reject", id, formatError(reason)]);
 
-		if (!delivery.ok) {
-			if (delivery.phase === "transport") {
-				transportFailed(delivery.error);
+		if (failure) {
+			if (failure.phase === "transport") {
+				transportFailed(failure.error);
 			} else {
-				report(delivery.error);
+				report(failure.error);
 			}
 		}
 	};
@@ -306,13 +302,13 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 								return;
 							}
 
-							const delivery = deliver([protocol, "event", id, value]);
+							const failure = deliver([protocol, "event", id, value]);
 
-							if (!delivery.ok) {
-								if (delivery.phase === "serialize") {
-									settle(id, operation, { ok: false, reason: delivery.error });
+							if (failure) {
+								if (failure.phase === "serialize") {
+									settle(id, operation, { ok: false, reason: failure.error });
 								} else {
-									transportFailed(delivery.error);
+									transportFailed(failure.error);
 								}
 							}
 						},
@@ -324,12 +320,12 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 							operations.delete(id);
 							operation.abort(cancelled);
 
-							const delivery = deliver([protocol, "complete", id]);
+							const failure = deliver([protocol, "complete", id]);
 
-							if (!delivery.ok && delivery.phase === "transport") {
-								transportFailed(delivery.error);
-							} else if (!delivery.ok) {
-								report(delivery.error);
+							if (failure?.phase === "transport") {
+								transportFailed(failure.error);
+							} else if (failure) {
+								report(failure.error);
 							}
 
 							runCleanup(operation);
@@ -413,10 +409,10 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 			),
 			{ name: "ConnectionClosedError" },
 		);
-		const delivery = deliver([protocol, "close", formatError(error)]);
+		const failure = deliver([protocol, "close", formatError(error)]);
 
-		if (!delivery.ok && delivery.phase === "transport") {
-			report(delivery.error);
+		if (failure?.phase === "transport") {
+			report(failure.error);
 		}
 
 		finish(error);

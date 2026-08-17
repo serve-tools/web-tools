@@ -6,6 +6,10 @@ import { DatagramRegistry } from "../src/datagram-registry.js";
 describe("typed datagrams", () => {
 	it("preserves structured values and normalizes binary values to Uint8Array", () => {
 		expect(decodeDatagram(encodeDatagram(7, { x: 4 }))).toEqual({ kind: 7, value: { x: 4 } });
+		expect(decodeDatagram(encodeDatagram(0xffff_ffff, new Uint8Array()))).toEqual({
+			kind: 0xffff_ffff,
+			value: new Uint8Array(),
+		});
 		expect(decodeDatagram(encodeDatagram(9, new Uint16Array([258])))).toEqual({
 			kind: 9,
 			value: new Uint8Array(new Uint16Array([258]).buffer),

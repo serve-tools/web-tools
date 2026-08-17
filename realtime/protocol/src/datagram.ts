@@ -27,8 +27,10 @@ export function encodeDatagram(kind: number, value: unknown): Uint8Array<ArrayBu
 		: new Uint8Array(serialize(value));
 	const output = new Uint8Array(headerLength + payload.byteLength);
 
-	new DataView(output.buffer).setUint32(0, kind);
-
+	output[0] = kind >>> 24;
+	output[1] = kind >>> 16;
+	output[2] = kind >>> 8;
+	output[3] = kind;
 	output[4] = binary ? binaryEncoding : structuredEncoding;
 
 	output.set(payload, headerLength);
@@ -46,7 +48,7 @@ export function decodeDatagram(payload: ArrayBuffer | ArrayBufferView): DecodedD
 		throw new TypeError("The typed datagram is missing its envelope");
 	}
 
-	const kind = new DataView(bytes.buffer, bytes.byteOffset, 4).getUint32(0);
+	const kind = bytes[0] * 0x100_0000 + (bytes[1] << 16) + (bytes[2] << 8) + bytes[3];
 	const encoding = bytes[4];
 	const data = bytes.subarray(headerLength);
 

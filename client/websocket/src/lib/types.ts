@@ -1,9 +1,30 @@
+import type { Protocol, Client as RealtimeClient } from "@serve-tools/client-realtime";
+
 export type {
-	Client,
-	ConnectOptions,
+	Operation,
+	OperationInput,
 	Protocol,
+	ProtocolDefinition,
+	ProtocolResource,
 	ProtocolType,
+	RequestArguments,
+	RequestName,
+	RequestOperation,
 	RequestOptions,
+	RequestOutput,
+	SubscribeArguments,
 	SubscribeOptions,
 	Subscription,
-} from "./.types.js";
+	SubscriptionEvent,
+	SubscriptionName,
+	SubscriptionOperation,
+} from "@serve-tools/client-realtime";
+
+/** Options for opening a WebSocket protocol client. */
+export interface ConnectOptions {
+	/** Aborts the opening handshake. */
+	readonly signal?: AbortSignal;
+}
+
+/** A typed, disposable WebSocket protocol client. */
+export interface Client<P extends Protocol = Protocol> extends RealtimeClient<P> {}

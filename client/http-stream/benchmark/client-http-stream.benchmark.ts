@@ -6,12 +6,18 @@ import { connect } from "../src/client-http-stream.js";
 
 interface Protocol {
 	requests: { echo(value: number): number };
-	subscriptions: { ready(value: number): number };
+	subscriptions: { events(count: number): number; ready(value: number): number };
 }
 
 const server = createHandler<Protocol>({
 	requests: { echo: (value) => value },
 	subscriptions: {
+		events: (count, { emit, complete }) => {
+			for (let value = 0; value < count; ++value) {
+				emit(value);
+			}
+			complete();
+		},
 		ready: (value, { emit, complete }) => {
 			emit(value);
 			complete();
@@ -40,6 +46,14 @@ test("HTTP request and binary-stream subscription loopback", async () => {
 				client.subscribe("ready", 42, () => undefined, { onComplete: resolve, onError: reject });
 			}),
 		{ iterations: 1_000 },
+	);
+	await benchmark(
+		"client-http-stream/subscription-100-events-loopback",
+		() =>
+			new Promise<void>((resolve, reject) => {
+				client.subscribe("events", 100, () => undefined, { onComplete: resolve, onError: reject });
+			}),
+		{ iterations: 100 },
 	);
 
 	client.close();

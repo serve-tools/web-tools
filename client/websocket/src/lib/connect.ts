@@ -2,8 +2,8 @@
 
 import { createClient } from "@serve-tools/client-realtime";
 import { subprotocol } from "@serve-tools/realtime-protocol";
-import type * as T from "./.types.js";
-import type { Client, ConnectOptions, Protocol, ProtocolDefinition } from "./.types.js";
+import type * as T from "./types.js";
+import type { Client, ConnectOptions, Protocol, ProtocolDefinition } from "./types.js";
 
 /** Opens a typed request and subscription client over one WebSocket connection. */
 export async function connect<const P extends Protocol & ProtocolDefinition<P>>(

@@ -6,6 +6,7 @@ Use the successful handshake result as the typed connection context.
 Forward one complete protocol message to `receive()`.
 Call `fail()` for invalid peer input and `disconnect()` only after the physical transport is gone.
 Expose observable queued bytes through `bufferedAmount()` when the transport supports it.
+Use the original envelope passed as the second `send(payload, message)` argument when framing or lifecycle decisions need message metadata.
 
 Retain the core's operation, message, and buffering guards unless the application deliberately chooses other values.
 The message limit bounds both incoming bytes and any resizable `ArrayBuffer` capacity declared by those bytes.

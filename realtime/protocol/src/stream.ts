@@ -15,7 +15,10 @@ export const encodeFrame = (payload: ArrayBuffer | ArrayBufferView): Uint8Array<
 
 	const frame = new Uint8Array(bytes.byteLength + 4);
 
-	new DataView(frame.buffer).setUint32(0, bytes.byteLength);
+	frame[0] = bytes.byteLength >>> 24;
+	frame[1] = bytes.byteLength >>> 16;
+	frame[2] = bytes.byteLength >>> 8;
+	frame[3] = bytes.byteLength;
 	frame.set(bytes, 4);
 
 	return frame;
@@ -57,7 +60,11 @@ export class FrameDecoder {
 					break;
 				}
 
-				this.#expectedLength = new DataView(this.#buffer.buffer, this.#start, 4).getUint32(0);
+				this.#expectedLength =
+					this.#buffer[this.#start] * 0x100_0000 +
+					(this.#buffer[this.#start + 1] << 16) +
+					(this.#buffer[this.#start + 2] << 8) +
+					this.#buffer[this.#start + 3];
 				this.#start += 4;
 
 				if (this.#expectedLength > this.#maximumFrameLength) {

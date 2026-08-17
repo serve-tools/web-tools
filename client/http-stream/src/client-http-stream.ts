@@ -75,7 +75,11 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 		return controller;
 	};
-	const headers = async (operation: OperationRequest): Promise<Headers> => {
+	const post = async (
+		operation: OperationRequest,
+		message: import("@serve-tools/realtime-protocol").ClientMessage,
+		controller: AbortController,
+	): Promise<Response> => {
 		const supplied =
 			typeof options.headers === "function"
 				? await (options.headers as HeaderProvider)(operation)
@@ -85,16 +89,9 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		result.set("Accept", contentType);
 		result.set("Content-Type", contentType);
 
-		return result;
-	};
-	const post = async (
-		operation: OperationRequest,
-		message: import("@serve-tools/realtime-protocol").ClientMessage,
-		controller: AbortController,
-	): Promise<Response> => {
 		return fetcher(url, {
 			...requestInit,
-			headers: await headers(operation),
+			headers: result,
 			method: "POST",
 			body: serialize(message),
 			signal: controller.signal,

@@ -1,5 +1,5 @@
-import { deserialize, protocol, serialize } from "@serve-tools/realtime-protocol";
-import { encodeFrame, FrameDecoder } from "@serve-tools/realtime-protocol/stream";
+import { deserialize, protocol, serialize } from "./realtime-protocol.js";
+import { encodeFrame, FrameDecoder } from "./stream.js";
 
 type RegisterMessage = readonly [protocol: string, type: "register", request: number, name: string];
 type RegisteredMessage = readonly [protocol: string, type: "registered", request: number, kind: number];

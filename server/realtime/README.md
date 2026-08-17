@@ -68,6 +68,7 @@ Use `formatError()` only for information intentionally exposed to a client and `
 ## Boundaries
 
 The adapter owns native protocol negotiation, authentication, authorization context creation, framing, origin policy, and physical transport shutdown.
+Its `send(payload, message)` callback receives both the serialized bytes and the original server envelope so adapters can inspect delivery metadata without decoding their own output.
 The core does not retry, resume, persist, or provide demand signaling.
 Protocol declarations are compile-time contracts, so validate untrusted inputs.
 

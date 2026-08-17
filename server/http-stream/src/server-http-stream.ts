@@ -1,4 +1,4 @@
-import type { Protocol, ProtocolDefinition, ServerMessage } from "@serve-tools/realtime-protocol";
+import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
 import { deserialize, isClientMessage } from "@serve-tools/realtime-protocol";
 import { contentType, isNegotiatedContentType } from "@serve-tools/realtime-protocol/http-stream";
 import { encodeFrame } from "@serve-tools/realtime-protocol/stream";
@@ -231,11 +231,10 @@ const serveSubscription = <P extends Protocol & ProtocolDefinition<P>, Context>(
 			connection = createConnection<P, Context>(
 				handlers,
 				{
-					send(message) {
-						controller.enqueue(encodeFrame(message));
+					send(payload, message) {
+						controller.enqueue(encodeFrame(payload));
 
-						const decoded = deserialize(message) as ServerMessage;
-						if (decoded[1] === "complete" || decoded[1] === "reject" || decoded[1] === "close") {
+						if (message[1] === "complete" || message[1] === "reject" || message[1] === "close") {
 							finish();
 						}
 					},

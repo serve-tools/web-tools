@@ -5,6 +5,7 @@ import type {
 	Protocol,
 	ProtocolResource,
 	RequestOutput,
+	ServerMessage,
 	SubscriptionEvent,
 } from "@serve-tools/realtime-protocol";
 
@@ -20,8 +21,8 @@ export type Awaitable<Value> = Value | PromiseLike<Value>;
 
 /** Byte-oriented output and physical-close operations supplied to the sans-I/O core. */
 export interface ConnectionTransport {
-	/** Sends one complete serialized protocol message. */
-	send(payload: ArrayBuffer): void;
+	/** Sends one complete serialized protocol message and its original envelope. */
+	send(payload: ArrayBuffer, message: ServerMessage): void;
 
 	/** Closes the physical transport with a WebSocket-compatible status code and reason. */
 	close(code: number, reason: string): void;

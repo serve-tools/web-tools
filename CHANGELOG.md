@@ -16,7 +16,7 @@ All notable changes to this package collection are documented here.
 - Refactor `@serve-tools/client-websocket@0.1.0` before its initial release to consume the shared realtime core and protocol, and require native WebSocket subprotocol negotiation.
 - Add the explicit `HELLO`/`WELCOME` application handshake to `@serve-tools/client-messaging@0.2.0`, where the underlying `MessagePort` API has no native subprotocol negotiation.
 - Add real client/server conformance coverage for Node.js, Bun, and Deno, plus Chromium, Firefox, and WebKit client coverage.
-- Add realtime codec and HTTP stream loopback benchmarks, and remove avoidable transport lifecycle and WebTransport buffer-copy overhead.
+- Add realtime codec, HTTP stream, and WebTransport loopback benchmarks, and remove redundant WebSocket modules, HTTP stream re-decoding, server delivery allocations, and WebTransport writer queues.
 - Harden the pending realtime packages for aborted HTTP requests, bounded streaming bodies and resizable buffers, exact remote errors, Bun backpressure, datagram registration races, and WebTransport lifetime aborts.
 - Centralize native WebSocket and WebTransport offer parsing and reliable WebTransport stream roles, and keep receive-side adapter controls out of public network client types.
 - Prepare browser-package patch releases for `@serve-tools/client-context@0.1.1`, `@serve-tools/client-db@0.1.2`, `@serve-tools/client-input@0.1.1`, `@serve-tools/client-interaction@0.1.1`, `@serve-tools/client-keyboard@0.1.1`, and `@serve-tools/client-storage@0.1.3`.
