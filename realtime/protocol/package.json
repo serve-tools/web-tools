@@ -29,7 +29,7 @@
 		".": "./dist/realtime-protocol.js",
 		"./datagram": "./dist/datagram.js",
 		"./datagram-registry": "./dist/datagram-registry.js",
-		"./sse": "./dist/sse.js",
+		"./http-stream": "./dist/http-stream.js",
 		"./stream": "./dist/stream.js"
 	},
 	"files": [

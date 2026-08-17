@@ -9,7 +9,7 @@ It provides typed requests and subscriptions over a complete-message byte callba
 npm install @serve-tools/client-realtime
 ```
 
-Most applications should use `@serve-tools/client-websocket`, `@serve-tools/client-webtransport`, or `@serve-tools/client-sse`.
+Most applications should use `@serve-tools/client-websocket`, `@serve-tools/client-webtransport`, or `@serve-tools/client-http-stream`.
 Use this package when building another transport adapter.
 
 ## Build an adapter

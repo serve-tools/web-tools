@@ -15,4 +15,4 @@ Read only the references needed for the current task.
 - To preserve compatibility and trust boundaries, read [Preserve the wire contract](references/preserve-the-wire-contract.md).
 - For WebTransport groundwork, read [Frame reliable streams](references/frame-reliable-streams.md).
 - For typed WebTransport datagrams and the reliable registry, read [Encode typed datagrams](references/encode-typed-datagrams.md).
-- For Fetch/SSE media negotiation and events, read [Encode SSE messages](references/encode-sse-messages.md).
+- For binary HTTP media negotiation and subscription framing, read [Frame HTTP streams](references/frame-http-streams.md).

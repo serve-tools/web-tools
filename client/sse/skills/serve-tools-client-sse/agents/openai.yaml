@@ -1,4 +1,0 @@
-interface:
-  display_name: "Serve Tools Client SSE"
-  short_description: "Build typed Fetch and SSE clients"
-  default_prompt: "Use $serve-tools-client-sse to implement this typed Fetch request and server-sent subscription client with authentication and cancellation."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools ArrayBuffer Base64 Polyfill"
+  short_description: "Install Uint8Array toBase64 in Node.js"
+  default_prompt: "Use $serve-tools-polyfill-arraybuffer-base64 to install Uint8Array.prototype.toBase64 in Node.js."

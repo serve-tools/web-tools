@@ -7,18 +7,18 @@ Select the narrowest package that owns the required behavior.
 | Several browser utilities through namespaces    | `@serve-tools/client`                         | Facade with focused capability subpaths                                |
 | DOM context propagation                         | `@serve-tools/client-context`                 | Provider and consumer lifecycle with late-registration replay          |
 | Direct IndexedDB operations                     | `@serve-tools/client-db`                      | Promise-based databases, transactions, and scans                       |
+| Binary HTTP requests and subscriptions          | `@serve-tools/client-http-stream`             | Author headers, abort signals, and framed streaming responses          |
 | Pointer or drag-and-drop sessions               | `@serve-tools/client-input`                   | Explicitly owned input-session lifecycles                              |
 | Clipboard, picker, share, or eyedropper actions | `@serve-tools/client-interaction`             | One-shot browser interactions with explicit outcomes                   |
 | Keyboard chords and accessible labels           | `@serve-tools/client-keyboard`                | Platform-aware matching, symbols, and ARIA shortcuts                   |
 | Worker or port requests and subscriptions       | `@serve-tools/client-messaging`               | Typed finite requests and streaming subscriptions                      |
 | Custom realtime client adapter                  | `@serve-tools/client-realtime`                | Sans-I/O client operation state machine                                |
-| Fetch requests and server-sent subscriptions    | `@serve-tools/client-sse`                     | Author headers, abort signals, and streaming responses                 |
 | IndexedDB coordinated through a SharedWorker    | `@serve-tools/client-shared-db`               | Cross-tab operations and change subscriptions                          |
 | Observable local or session storage             | `@serve-tools/client-storage`                 | Storage reads, writes, and watches                                     |
 | Binary WebSocket requests and subscriptions     | `@serve-tools/client-websocket`               | Typed structured-data protocol over WebSocket                          |
 | Reliable operations plus lossy datagrams        | `@serve-tools/client-webtransport`            | WebTransport streams and typed best-effort datagrams                   |
+| Binary HTTP request and stream handlers         | `@serve-tools/server-http-stream`             | WHATWG Fetch handler with HTTP media negotiation                       |
 | Custom realtime server adapter                  | `@serve-tools/server-realtime`                | Sans-I/O handler and operation core                                    |
-| Fetch request and SSE subscription handlers     | `@serve-tools/server-sse`                     | WHATWG Fetch handler with HTTP media negotiation                       |
 | WebSocket request and subscription handlers     | `@serve-tools/server-websocket`               | Sans-I/O server core plus runtime adapters                             |
 | WebTransport operation and datagram handlers    | `@serve-tools/server-webtransport`            | Runtime-neutral session core plus Node HTTP/3 adapter                  |
 | Realtime wire format or reliable stream frames  | `@serve-tools/realtime-protocol`              | Shared serializer, message guards, types, and framing                  |

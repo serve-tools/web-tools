@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools ArrayBuffer Base64 Ponyfill"
+  short_description: "Encode Uint8Array values in Node.js"
+  default_prompt: "Use $serve-tools-ponyfill-arraybuffer-base64 to encode Uint8Array values as base64 without global mutation."

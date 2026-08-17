@@ -37,7 +37,7 @@
 	],
 	"scripts": {
 		"build": "npm run clean && tsc --build --force tsconfig.json",
-		"build:dependencies": "npm run build --workspace @serve-tools/client-context --workspace @serve-tools/client-db --workspace @serve-tools/client-input --workspace @serve-tools/client-interaction --workspace @serve-tools/client-keyboard --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-sse --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket --workspace @serve-tools/client-webtransport",
+		"build:dependencies": "npm run build --workspace @serve-tools/client-context --workspace @serve-tools/client-db --workspace @serve-tools/client-http-stream --workspace @serve-tools/client-input --workspace @serve-tools/client-interaction --workspace @serve-tools/client-keyboard --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket --workspace @serve-tools/client-webtransport",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build:dependencies && vitest run --config vitest.browser.config.ts",
@@ -46,13 +46,13 @@
 	"dependencies": {
 		"@serve-tools/client-context": "^0.1",
 		"@serve-tools/client-db": "^0.1",
+		"@serve-tools/client-http-stream": "^0.1",
 		"@serve-tools/client-input": "^0.1",
 		"@serve-tools/client-interaction": "^0.1",
 		"@serve-tools/client-keyboard": "^0.1",
 		"@serve-tools/client-messaging": "^0.2",
 		"@serve-tools/client-shared-db": "^0.2",
 		"@serve-tools/client-shared-websocket": "^0.1",
-		"@serve-tools/client-sse": "^0.1",
 		"@serve-tools/client-storage": "^0.1",
 		"@serve-tools/client-websocket": "^0.1",
 		"@serve-tools/client-webtransport": "^0.1"

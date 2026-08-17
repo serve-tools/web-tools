@@ -41,7 +41,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-keyboard`](./client/keyboard/) provides platform-aware keyboard chords, labels, symbols, and ARIA shortcuts.
 - [`@serve-tools/client-messaging`](./client/messaging/) provides requests and subscriptions across workers and message ports.
 - [`@serve-tools/client-realtime`](./client/realtime/) provides the sans-I/O operation core for custom client transports.
-- [`@serve-tools/client-sse`](./client/sse/) provides typed Fetch requests and server-sent subscriptions with author headers.
+- [`@serve-tools/client-http-stream`](./client/http-stream/) provides typed binary HTTP requests and streaming subscriptions with author headers.
 - [`@serve-tools/client-shared-db`](./client/shared-db/) coordinates IndexedDB operations and change subscriptions through a SharedWorker.
 - [`@serve-tools/client-shared-websocket`](./client/shared-websocket/) shares one typed WebSocket across browser windows through a SharedWorker.
 - [`@serve-tools/client-storage`](./client/storage/) provides observable access to local and session storage.
@@ -49,7 +49,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-webtransport`](./client/webtransport/) combines reliable typed operations with typed best-effort WebTransport datagrams.
 - [`@serve-tools/realtime-protocol`](./realtime/protocol/) provides the shared binary serializer, wire messages, guards, types, and reliable-stream framing.
 - [`@serve-tools/server-realtime`](./server/realtime/) provides the sans-I/O operation server for custom transport adapters.
-- [`@serve-tools/server-sse`](./server/sse/) provides typed WHATWG Fetch handlers for requests and server-sent subscriptions.
+- [`@serve-tools/server-http-stream`](./server/http-stream/) provides typed WHATWG Fetch handlers for binary requests and streaming subscriptions.
 - [`@serve-tools/server-websocket`](./server/websocket/) serves typed requests and subscriptions through a sans-I/O core and Node.js, Deno, Bun, or crossws adapters.
 - [`@serve-tools/server-webtransport`](./server/webtransport/) serves reliable typed operations and typed best-effort datagrams over WebTransport.
 - [`@serve-tools/signal-dom`](./client-signals/dom/) provides functional signal-aware DOM, SVG, and MathML templating.

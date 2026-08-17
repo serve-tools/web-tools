@@ -4,20 +4,20 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
+- Add Node.js runtimes for `@serve-tools/ponyfill-arraybuffer-base64@0.1.0` and `@serve-tools/polyfill-arraybuffer-base64@0.1.0` with the `Uint8Array.prototype.toBase64()` contract.
 - Add `@serve-tools/realtime-protocol@0.1.0` with the shared binary serializer, typed message tuples, runtime guards, error records, and bounded reliable-stream framing for WebSocket and future WebTransport integrations.
 - Establish `@serve-tools/realtime/1` as the initial wire-protocol compatibility identifier.
-- Establish `serve-tools.realtime.v1` as the native WebSocket and WebTransport subprotocol identifier and the HTTP media-type protocol parameter used by SSE.
+- Establish `serve-tools.realtime.v1` as the native WebSocket and WebTransport subprotocol identifier and the HTTP stream media-type protocol parameter.
 - Add `@serve-tools/client-realtime@0.1.0` and `@serve-tools/server-realtime@0.1.0` as shared sans-I/O operation cores for transport adapters.
 - Add `@serve-tools/client-webtransport@0.1.0` and `@serve-tools/server-webtransport@0.1.0` with reliable framed operations, a reliable datagram-name registry, typed best-effort datagrams, native binary bypass, and a Node.js `@http3-server/server` adapter.
-- Add `@serve-tools/client-sse@0.1.0` and `@serve-tools/server-sse@0.1.0` with Fetch-based authenticated requests, abortable streaming subscriptions, and explicit HTTP media negotiation without relying on native `EventSource`.
-- Add `sse` and `webtransport` namespaces and focused subpaths to the pending `@serve-tools/client@0.2.0` umbrella.
+- Add `@serve-tools/client-http-stream@0.1.0` and `@serve-tools/server-http-stream@0.1.0` with Fetch-based authenticated binary requests, abortable framed subscription streams, and explicit HTTP media negotiation.
+- Add `httpStream` and `webtransport` namespaces and focused subpaths to the pending `@serve-tools/client@0.2.0` umbrella.
 - Add `@serve-tools/server-websocket@0.1.0` with a sans-I/O connection core, WHATWG WebSocket attachment, Node.js, Bun, and crossws adapters, authorization context, cancellation, cleanup, error redaction, operation limits, and bounded transport buffering.
 - Refactor `@serve-tools/client-websocket@0.1.0` before its initial release to consume the shared realtime core and protocol, and require native WebSocket subprotocol negotiation.
 - Add the explicit `HELLO`/`WELCOME` application handshake to `@serve-tools/client-messaging@0.2.0`, where the underlying `MessagePort` API has no native subprotocol negotiation.
 - Add real client/server conformance coverage for Node.js, Bun, and Deno, plus Chromium, Firefox, and WebKit client coverage.
-- Add realtime codec and SSE loopback benchmarks, use native-backed base64 where available, and remove avoidable SSE lifecycle and WebTransport buffer-copy overhead.
-- Assume native `Uint8Array.prototype.toBase64()` in client-facing SSE decoding while retaining portable server-side event encoding.
-- Harden the pending realtime packages for aborted SSE requests, dual HTTP negotiation, bounded streaming bodies and resizable buffers, exact remote errors, Bun backpressure, datagram registration races, WebTransport lifetime aborts, and immediate SSE retry-field processing.
+- Add realtime codec and HTTP stream loopback benchmarks, and remove avoidable transport lifecycle and WebTransport buffer-copy overhead.
+- Harden the pending realtime packages for aborted HTTP requests, bounded streaming bodies and resizable buffers, exact remote errors, Bun backpressure, datagram registration races, and WebTransport lifetime aborts.
 - Centralize native WebSocket and WebTransport offer parsing and reliable WebTransport stream roles, and keep receive-side adapter controls out of public network client types.
 - Prepare browser-package patch releases for `@serve-tools/client-context@0.1.1`, `@serve-tools/client-db@0.1.2`, `@serve-tools/client-input@0.1.1`, `@serve-tools/client-interaction@0.1.1`, `@serve-tools/client-keyboard@0.1.1`, and `@serve-tools/client-storage@0.1.3`.
 - Prepare Signal and Lit patch releases for `@serve-tools/signal-dom@0.1.2`, `@serve-tools/signal-event-target@0.1.1`, `@serve-tools/signal-storage@0.1.2`, `@serve-tools/lit-signals@0.3.1`, `@serve-tools/signal-collections@0.1.2`, `@serve-tools/signal-effect@0.1.2`, and `@serve-tools/signal@0.1.2`.

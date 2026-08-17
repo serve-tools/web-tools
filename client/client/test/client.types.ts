@@ -13,12 +13,12 @@ import type * as sharedWebSocketWorkerModule from "@serve-tools/client-shared-we
 import {
 	context,
 	db,
+	httpStream,
 	input,
 	interaction,
 	keyboard,
 	messaging,
 	sharedWebsocket,
-	sse,
 	storage,
 	websocket,
 	webtransport,
@@ -27,6 +27,7 @@ import type * as contextModule from "../src/lib/context.js";
 import * as sharedDatabaseWorker from "../src/lib/db/scope/shared-worker.js";
 import * as sharedDatabaseWindow from "../src/lib/db/scope/window.js";
 import type * as dbModule from "../src/lib/db.js";
+import type * as httpStreamModule from "../src/lib/http-stream.js";
 import * as inputDrop from "../src/lib/input/drop.js";
 import * as inputPointer from "../src/lib/input/pointer.js";
 import type * as inputModule from "../src/lib/input.js";
@@ -41,7 +42,6 @@ import * as messagingWorker from "../src/lib/messaging/scope/worker.js";
 import type * as messagingModule from "../src/lib/messaging.js";
 import * as sharedWebSocketWorker from "../src/lib/shared-websocket/scope/shared-worker.js";
 import type * as sharedWebsocketModule from "../src/lib/shared-websocket.js";
-import type * as sseModule from "../src/lib/sse.js";
 import type * as storageModule from "../src/lib/storage.js";
 import type * as websocketModule from "../src/lib/websocket.js";
 import type * as webtransportModule from "../src/lib/webtransport.js";
@@ -169,6 +169,7 @@ export type WebSocketPublicTypes = [
 
 const contextNamespace: typeof contextModule = context;
 const databaseNamespace: typeof dbModule = db;
+const httpStreamNamespace: typeof httpStreamModule = httpStream;
 const inputDropNamespace: typeof inputDropModule = inputDrop;
 const inputNamespace: typeof inputModule = input;
 const inputPointerNamespace: typeof inputPointerModule = inputPointer;
@@ -185,7 +186,6 @@ const sharedDatabaseWorkerNamespace: typeof sharedDatabaseWorkerModule = sharedD
 const sharedDatabaseWindowNamespace: typeof sharedDatabaseWindowModule = sharedDatabaseWindow;
 const sharedWebsocketNamespace: typeof sharedWebsocketModule = sharedWebsocket;
 const sharedWebSocketWorkerNamespace: typeof sharedWebSocketWorkerModule = sharedWebSocketWorker;
-const sseNamespace: typeof sseModule = sse;
 const storageNamespace: typeof storageModule = storage;
 const websocketNamespace: typeof websocketModule = websocket;
 const webtransportNamespace: typeof webtransportModule = webtransport;
@@ -193,6 +193,7 @@ const webtransportNamespace: typeof webtransportModule = webtransport;
 void [
 	contextNamespace,
 	databaseNamespace,
+	httpStreamNamespace,
 	inputDropNamespace,
 	inputNamespace,
 	inputPointerNamespace,
@@ -209,7 +210,6 @@ void [
 	sharedDatabaseWindowNamespace,
 	sharedWebsocketNamespace,
 	sharedWebSocketWorkerNamespace,
-	sseNamespace,
 	storageNamespace,
 	websocketNamespace,
 	webtransportNamespace,

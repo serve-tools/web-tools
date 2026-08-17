@@ -27,7 +27,7 @@
 		"client/keyboard/demo",
 		"client/messaging",
 		"client/realtime",
-		"client/sse",
+		"client/http-stream",
 		"client/messaging/demo",
 		"client/shared-db",
 		"client/shared-db/demo",
@@ -48,13 +48,15 @@
 		"client-signals/client-signals",
 		"lit/signals",
 		"lit/signals/demo",
+		"polyfills/arraybuffer-base64",
 		"polyfills/request-idle-callback",
 		"polyfills/resource-management",
+		"ponyfills/arraybuffer-base64",
 		"ponyfills/request-idle-callback",
 		"ponyfills/resource-management",
 		"server/websocket",
 		"server/realtime",
-		"server/sse",
+		"server/http-stream",
 		"server/webtransport",
 		"signals/collections",
 		"signals/effect",
@@ -66,7 +68,7 @@
 	"scripts": {
 		"benchmark": "npm run benchmark --workspaces --if-present",
 		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket --workspace @serve-tools/signal-websocket",
-		"benchmark:realtime": "npm run benchmark --workspace @serve-tools/realtime-protocol --workspace @serve-tools/client-messaging --workspace @serve-tools/client-websocket --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-sse --workspace @serve-tools/signal-websocket",
+		"benchmark:realtime": "npm run benchmark --workspace @serve-tools/realtime-protocol --workspace @serve-tools/client-messaging --workspace @serve-tools/client-websocket --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-http-stream --workspace @serve-tools/signal-websocket",
 		"benchmark:skills": "node benchmark/skills/run.mjs",
 		"build": "npm run build --workspaces --if-present",
 		"build:pages": "node scripts/build-pages.mjs",
@@ -182,7 +184,7 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
-			"client/sse": {
+			"client/http-stream": {
 				"entry": [
 					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"
@@ -231,7 +233,7 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
-			"server/sse": {
+			"server/http-stream": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
 				]
@@ -268,6 +270,12 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
+			"polyfills/arraybuffer-base64": {
+				"entry": [
+					"runtime/node.js",
+					"test/*.recipes.ts"
+				]
+			},
 			"polyfills/request-idle-callback": {
 				"entry": [
 					"test/*.recipes.ts"
@@ -275,6 +283,12 @@
 			},
 			"polyfills/resource-management": {
 				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
+			"ponyfills/arraybuffer-base64": {
+				"entry": [
+					"runtime/node.js",
 					"test/*.recipes.ts"
 				]
 			},

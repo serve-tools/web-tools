@@ -3,7 +3,7 @@
 `@serve-tools/realtime-protocol` defines the shared binary wire contract used by the Serve Tools realtime clients and servers.
 It provides structured-value serialization, versioned request and subscription message guards, protocol types, and optional framing for reliable byte streams.
 
-Most applications should use the paired WebSocket, WebTransport, or SSE client and server packages instead.
+Most applications should use the paired WebSocket, WebTransport, or HTTP stream client and server packages instead.
 Use this package directly when implementing a transport adapter or protocol diagnostic.
 
 ## Install
@@ -72,12 +72,10 @@ const { kind, value } = decodeDatagram(payload);
 `datagram-registry` provides the reliable per-session name-to-kind handshake used by the WebTransport packages.
 It is not an unreliable wire protocol by itself and must run over a framed reliable stream.
 
-## Encode SSE protocol events
+## Negotiate binary HTTP streams
 
-The `sse` export provides protocol-qualified media types, a streaming standards-compatible event decoder, event encoding, and base64 helpers for server encoding and client decoding.
-`EventStreamDecoder.reconnectionTime` reflects the latest valid `retry` field immediately; retry-only blocks do not dispatch events.
-It is used by the paired SSE packages so binary protocol messages can travel in event `data` fields while HTTP performs the application handshake.
-Canonical SSE base64 decoding assumes `Uint8Array.prototype.toBase64()` in the consuming client runtime; encoding remains portable across the supported server runtimes.
+The `http-stream` export provides the protocol-qualified binary media type and its negotiation guard.
+The paired HTTP stream packages send one unframed message for a finite response and use the reliable-stream framing API for subscription responses.
 
 ## Wire contract
 
@@ -103,7 +101,7 @@ The root export provides:
 - protocol, operation, message, and error record types shared by clients and servers.
 
 The `@serve-tools/realtime-protocol/stream` export provides `encodeFrame()`, `FrameDecoder`, and `defaultMaximumFrameLength`.
-The `datagram`, `datagram-registry`, and `sse` exports provide the transport-specific shared codecs described above.
+The `datagram`, `datagram-registry`, and `http-stream` exports provide the transport-specific shared contracts described above.
 
 ## Compatibility
 

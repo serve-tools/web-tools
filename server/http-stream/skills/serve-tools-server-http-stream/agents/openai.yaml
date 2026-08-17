@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Server HTTP Stream"
+  short_description: "Build typed binary HTTP stream handlers"
+  default_prompt: "Use $serve-tools-server-http-stream to implement this typed binary HTTP request and streaming subscription handler with authorization and cleanup."

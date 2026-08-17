@@ -31,13 +31,13 @@ const selections = [
 	],
 	[
 		"custom-realtime-client-core",
-		"Adapt a custom full-duplex transport to typed realtime requests and subscriptions without owning a WebSocket, WebTransport session, or SSE exchange.",
+		"Adapt a custom full-duplex transport to typed realtime requests and subscriptions without owning a WebSocket, WebTransport session, or HTTP stream exchange.",
 		"@serve-tools/client-realtime",
 	],
 	[
-		"fetch-sse-client",
-		"Call typed finite operations and consume typed server-sent subscriptions through Fetch, including authorization headers and AbortSignal cancellation without EventSource.",
-		"@serve-tools/client-sse",
+		"http-stream-client",
+		"Call typed finite operations and consume framed binary subscription streams through Fetch, including authorization headers and AbortSignal cancellation.",
+		"@serve-tools/client-http-stream",
 	],
 	[
 		"shared-worker-indexeddb",
@@ -70,9 +70,9 @@ const selections = [
 		"@serve-tools/server-realtime",
 	],
 	[
-		"fetch-sse-server",
-		"Serve typed finite responses and server-sent subscriptions from WHATWG Request objects, authorizing before decoding and returning negotiated Fetch responses.",
-		"@serve-tools/server-sse",
+		"http-stream-server",
+		"Serve typed finite responses and framed binary subscriptions from WHATWG Request objects, authorizing before decoding and returning negotiated Fetch responses.",
+		"@serve-tools/server-http-stream",
 	],
 	[
 		"binary-websocket-server",
@@ -150,9 +150,19 @@ const selections = [
 		"@serve-tools/polyfill-request-idle-callback",
 	],
 	[
+		"arraybuffer-base64-global",
+		"Server-side code expects Uint8Array.prototype.toBase64. Install the proposal-compatible method in Node.js without changing browser bundles.",
+		"@serve-tools/polyfill-arraybuffer-base64",
+	],
+	[
 		"idle-callback-import",
 		"Schedule optional work with imported requestIdleCallback functions while guaranteeing that no globals are modified.",
 		"@serve-tools/ponyfill-request-idle-callback",
+	],
+	[
+		"arraybuffer-base64-import",
+		"Encode Uint8Array values as base64 or base64url in Node.js through an explicit import without modifying Uint8Array.prototype.",
+		"@serve-tools/ponyfill-arraybuffer-base64",
 	],
 	[
 		"resource-management-global",

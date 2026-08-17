@@ -1,0 +1,43 @@
+{
+	"name": "@serve-tools/ponyfill-arraybuffer-base64",
+	"version": "0.1.0",
+	"description": "Encodes Uint8Array values as base64 in Node.js without global mutation",
+	"keywords": [
+		"arraybuffer",
+		"base64",
+		"base64url",
+		"node",
+		"ponyfill",
+		"to-base64",
+		"typed-array",
+		"uint8array"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/arraybuffer-base64#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "ponyfills/arraybuffer-base64"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		"./runtime/node": "./runtime/node.js"
+	},
+	"files": [
+		"runtime",
+		"skills"
+	],
+	"scripts": {
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"test": "node --test test/*.test.js",
+		"typecheck": "tsc --project tsconfig.json --noEmit"
+	},
+	"engines": {
+		"node": ">=22.14.0"
+	}
+}

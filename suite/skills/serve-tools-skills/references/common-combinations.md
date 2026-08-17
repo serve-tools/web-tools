@@ -7,7 +7,7 @@ Both use `@serve-tools/realtime-protocol`; import it directly only for custom tr
 Use `@serve-tools/signal-websocket` or `@serve-tools/signal-shared-websocket` when subscription state should be reactive.
 
 Use `@serve-tools/client-webtransport` with `@serve-tools/server-webtransport` when the same session also needs typed best-effort datagrams for replaceable recent state.
-Use `@serve-tools/client-sse` with `@serve-tools/server-sse` when client operations can be separate Fetch exchanges and only server-to-client subscriptions stream.
+Use `@serve-tools/client-http-stream` with `@serve-tools/server-http-stream` when client operations can be separate Fetch exchanges and only server-to-client subscriptions stream.
 Use the client and server realtime cores directly only to implement another adapter.
 
 ## Reactive cross-tab database state

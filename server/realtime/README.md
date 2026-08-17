@@ -9,7 +9,7 @@ It maps complete binary messages to typed handlers without owning a socket, stre
 npm install @serve-tools/server-realtime
 ```
 
-Most servers should use `@serve-tools/server-websocket`, `@serve-tools/server-webtransport`, or `@serve-tools/server-sse`.
+Most servers should use `@serve-tools/server-http-stream`, `@serve-tools/server-websocket`, or `@serve-tools/server-webtransport`.
 Use this package to implement another adapter.
 
 ## Build an adapter
