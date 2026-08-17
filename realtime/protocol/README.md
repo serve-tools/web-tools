@@ -74,9 +74,10 @@ It is not an unreliable wire protocol by itself and must run over a framed relia
 
 ## Encode SSE protocol events
 
-The `sse` export provides protocol-qualified media types, a streaming standards-compatible event decoder, event encoding, and runtime-neutral base64 helpers.
+The `sse` export provides protocol-qualified media types, a streaming standards-compatible event decoder, event encoding, and base64 helpers for server encoding and client decoding.
 `EventStreamDecoder.reconnectionTime` reflects the latest valid `retry` field immediately; retry-only blocks do not dispatch events.
 It is used by the paired SSE packages so binary protocol messages can travel in event `data` fields while HTTP performs the application handshake.
+Canonical SSE base64 decoding assumes `Uint8Array.prototype.toBase64()` in the consuming client runtime; encoding remains portable across the supported server runtimes.
 
 ## Wire contract
 

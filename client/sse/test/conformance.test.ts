@@ -10,6 +10,21 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createHandler } from "../../../server/sse/src/server-sse.js";
 import { connect } from "../src/client-sse.js";
 
+if (!("toBase64" in Uint8Array.prototype)) {
+	Object.defineProperty(Uint8Array.prototype, "toBase64", {
+		configurable: true,
+		value(this: Uint8Array): string {
+			let binary = "";
+
+			for (const byte of this) {
+				binary += String.fromCharCode(byte);
+			}
+
+			return btoa(binary);
+		},
+	});
+}
+
 interface TestProtocol {
 	requests: {
 		add(input: { a: number; b: number }): number;

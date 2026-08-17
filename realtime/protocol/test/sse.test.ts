@@ -10,6 +10,21 @@ import {
 	isNegotiatedMediaType,
 } from "../src/sse.js";
 
+if (!("toBase64" in Uint8Array.prototype)) {
+	Object.defineProperty(Uint8Array.prototype, "toBase64", {
+		configurable: true,
+		value(this: Uint8Array): string {
+			let binary = "";
+
+			for (const byte of this) {
+				binary += String.fromCharCode(byte);
+			}
+
+			return btoa(binary);
+		},
+	});
+}
+
 describe("SSE protocol utilities", () => {
 	it("parses split standard event-stream fields", () => {
 		const decoder = new EventStreamDecoder();

@@ -55,6 +55,7 @@ Subscriptions use `text/event-stream;protocol=serve-tools.realtime.v1` in `Accep
 Cross-origin auth headers normally trigger a CORS preflight.
 Configure CORS, credentials, cookies, caching, compression, proxy buffering, and idle timeouts in the application and deployment layer.
 Unlike native `EventSource`, this client can send `Authorization` and any other CORS-permitted author header.
+The client assumes `Uint8Array.prototype.toBase64()` is available when validating binary event data.
 
 SSE is server-to-client streaming, not a bidirectional session.
 Client operations are separate POST bodies, and this package does not reconnect, replay `Last-Event-ID`, resume subscriptions, or persist events.

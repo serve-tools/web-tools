@@ -16,6 +16,7 @@ All notable changes to this package collection are documented here.
 - Add the explicit `HELLO`/`WELCOME` application handshake to `@serve-tools/client-messaging@0.2.0`, where the underlying `MessagePort` API has no native subprotocol negotiation.
 - Add real client/server conformance coverage for Node.js, Bun, and Deno, plus Chromium, Firefox, and WebKit client coverage.
 - Add realtime codec and SSE loopback benchmarks, use native-backed base64 where available, and remove avoidable SSE lifecycle and WebTransport buffer-copy overhead.
+- Assume native `Uint8Array.prototype.toBase64()` in client-facing SSE decoding while retaining portable server-side event encoding.
 - Harden the pending realtime packages for aborted SSE requests, dual HTTP negotiation, bounded streaming bodies and resizable buffers, exact remote errors, Bun backpressure, datagram registration races, WebTransport lifetime aborts, and immediate SSE retry-field processing.
 - Centralize native WebSocket and WebTransport offer parsing and reliable WebTransport stream roles, and keep receive-side adapter controls out of public network client types.
 - Prepare browser-package patch releases for `@serve-tools/client-context@0.1.1`, `@serve-tools/client-db@0.1.2`, `@serve-tools/client-input@0.1.1`, `@serve-tools/client-interaction@0.1.1`, `@serve-tools/client-keyboard@0.1.1`, and `@serve-tools/client-storage@0.1.3`.

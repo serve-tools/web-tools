@@ -232,7 +232,7 @@ export function decodeBase64(value: string): Uint8Array {
 			}
 		}
 
-		if (encodeBase64(output) === value) {
+		if ((output as Uint8Array & { toBase64(): string }).toBase64() === value) {
 			return output;
 		}
 	} catch {
