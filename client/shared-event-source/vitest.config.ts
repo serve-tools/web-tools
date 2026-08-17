@@ -1,3 +1,1 @@
-import { defineConfig } from "vitest/config";
-
-export default defineConfig({});
+export { emptyConfig as default } from "../../vitest.node.config.js";

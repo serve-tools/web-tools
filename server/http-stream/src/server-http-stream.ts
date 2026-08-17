@@ -199,6 +199,12 @@ const readBody = async (request: Request, maximumLength: number): Promise<ArrayB
 		reader.releaseLock();
 	}
 
+	const [chunk] = chunks;
+
+	if (chunks.length === 1 && chunk!.buffer instanceof ArrayBuffer && chunk!.byteLength === chunk!.buffer.byteLength) {
+		return chunk!.buffer;
+	}
+
 	const output = new Uint8Array(length);
 	let offset = 0;
 
