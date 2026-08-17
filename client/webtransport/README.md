@@ -3,6 +3,37 @@
 `@serve-tools/client-webtransport` combines reliable typed requests and subscriptions with typed best-effort datagrams on one protocol-owned WebTransport session.
 It uses WebTransport directly and does not implement or share a session with Media over QUIC.
 
+```ts
+import { connect } from "@serve-tools/client-webtransport";
+
+await using client = await connect<{
+	requests: {
+		getRoom(input: { room: string }): { title: string };
+	};
+	subscriptions: {
+		presence(input: { room: string }): { online: number };
+	};
+	datagrams: {
+		cursor: {
+			client: { x: number; y: number };
+			server: { x: number; y: number };
+		};
+	};
+}>("https://example.com/realtime");
+
+const room = await client.request("getRoom", { room: "lobby" });
+
+using presence = client.subscribe("presence", { room: "lobby" }, (event) => {
+	console.log(`${room.title}: ${event.online} online`);
+});
+
+using cursors = client.datagrams.subscribe("cursor", (cursor) => {
+	console.log(cursor.x, cursor.y);
+});
+
+await client.datagrams.write("cursor", { x: 20, y: 40 });
+```
+
 ## Install
 
 ```shell
@@ -10,44 +41,6 @@ npm install @serve-tools/client-webtransport
 ```
 
 Use `@serve-tools/server-webtransport` for the matching server.
-
-## Use reliable operations and datagrams
-
-```ts
-import { connect } from "@serve-tools/client-webtransport";
-
-interface BoardProtocol {
-	requests: {
-		loadBoard(id: string): { title: string };
-	};
-	subscriptions: {
-		changes(id: string): { revision: number };
-	};
-	datagrams: {
-		cursor: {
-			client: { x: number; y: number; userID: string };
-			server: { x: number; y: number; userID: string };
-		};
-		inputPacket: { client: Uint8Array };
-		presence: { server: { userID: string; active: boolean } };
-	};
-}
-
-await using client = await connect<BoardProtocol>("https://example.com/realtime");
-
-const board = await client.request("loadBoard", "lobby");
-using changes = client.subscribe("changes", "lobby", renderChange);
-
-await client.datagrams.write("cursor", { x: 20, y: 40, userID: "ada" });
-await client.datagrams.write("inputPacket", nativePacket);
-
-using presence = client.datagrams.subscribe("presence", renderPresence);
-const nextCursor = await client.datagrams.read("cursor", { signal });
-
-const cursor = client.datagrams.createWritable("cursor", { sendOrder: 10 });
-const cursorWriter = cursor.getWriter();
-await cursorWriter.write({ x: 24, y: 42, userID: "ada" });
-```
 
 `write()` reuses a shared native writer.
 `createWritable(name)` provides an independently scheduled writable for applications that need separate send groups or ordering.

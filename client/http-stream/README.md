@@ -2,6 +2,28 @@
 
 `@serve-tools/client-http-stream` provides typed binary requests and streaming subscriptions over HTTP, with support for abort signals, author headers, and precise response validation.
 
+```ts
+import { connect } from "@serve-tools/client-http-stream";
+
+using client = connect<{
+	requests: {
+		getRoom(input: { room: string }): { title: string };
+	};
+	subscriptions: {
+		presence(input: { room: string }): { online: number };
+	};
+}>("https://example.com/realtime");
+
+const room = await client.request("getRoom", { room: "lobby" });
+//    ^? { title: string }
+
+using presence = client.subscribe("presence", { room: "lobby" }, (event) => {
+	console.log(room.title, event.online);
+	//          ^? { title: string }
+	//                      ^? { online: number }
+});
+```
+
 ## Install
 
 ```shell
@@ -10,39 +32,11 @@ npm install @serve-tools/client-http-stream
 
 Use `@serve-tools/server-http-stream` for the matching Fetch handler.
 
-## Connect
-
-```ts
-import { connect } from "@serve-tools/client-http-stream";
-
-interface Protocol {
-	requests: {
-		getRoom(input: { room: string }): { title: string };
-	};
-	subscriptions: {
-		presence(input: { room: string }): { online: number };
-	};
-}
-
-using client = connect<Protocol>("https://example.com/realtime", {
-	headers: async ({ kind, name }) => ({
-		Authorization: `Bearer ${await accessToken()}`,
-		"X-Operation": `${kind}:${name}`,
-	}),
-});
-
-const room = await client.request("getRoom", { room: "lobby" });
-
-using presence = client.subscribe("presence", { room: "lobby" }, (event) => {
-	console.log(room.title, event.online);
-});
-```
-
 Each request or subscription is one `POST` exchange.
 Finite requests receive one binary protocol message; subscriptions consume a response stream of length-prefixed binary messages.
 The package sets its required `Accept` and `Content-Type` fields after author headers so the application protocol cannot be accidentally disabled.
 
-`headers` may be a `HeadersInit` value or an async provider called for each operation.
+Optional `headers` may be a `HeadersInit` value or an async provider called for each operation.
 Other standard `RequestInit` fields pass through to Fetch.
 The connection signal closes all exchanges, while operation signals cancel one request or subscription.
 Ending a subscription response before a protocol `complete`, `reject`, or `close` settlement reports a protocol error.

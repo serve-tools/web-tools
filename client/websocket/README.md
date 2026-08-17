@@ -3,20 +3,6 @@
 `@serve-tools/client-websocket` provides typed requests and subscriptions over a client-owned browser `WebSocket`.
 It uses a compact binary protocol with built-in serialization for structured JavaScript values, including cyclic graphs and binary data.
 
-## Install
-
-```shell
-npm install @serve-tools/client-websocket
-```
-
-Use [`@serve-tools/server-websocket`](../../server/websocket/) for the matching server core and runtime adapters.
-Both packages depend on [`@serve-tools/realtime-protocol`](../../realtime/protocol/) for the same versioned binary wire contract.
-This client package does not expose a raw-frame API.
-
-## Usage: receive live presence
-
-`connect()` opens a page-owned WebSocket and returns a typed client after the connection is ready.
-
 ```ts
 import { connect } from "@serve-tools/client-websocket";
 
@@ -36,6 +22,17 @@ using presence = client.subscribe("presence", { room: "lobby" }, (event) => {
 });
 ```
 
+## Install
+
+```shell
+npm install @serve-tools/client-websocket
+```
+
+Use [`@serve-tools/server-websocket`](../../server/websocket/) for the matching server core and runtime adapters.
+Both packages depend on [`@serve-tools/realtime-protocol`](../../realtime/protocol/) for the same versioned binary wire contract.
+This client package does not expose a raw-frame API.
+
+`connect()` opens a page-owned WebSocket and returns a typed client after the connection is ready.
 Request return types describe responses; subscription return types describe emitted values.
 These types are compile-time only, so validate server data at runtime.
 
