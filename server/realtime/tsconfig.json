@@ -10,6 +10,9 @@
 	"references": [
 		{
 			"path": "../../realtime/protocol/tsconfig.json"
+		},
+		{
+			"path": "../../polyfills/report-error/tsconfig.json"
 		}
 	]
 }
