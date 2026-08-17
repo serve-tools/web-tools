@@ -88,7 +88,9 @@ describe("createConnection", () => {
 
 	it("emits, completes, and cleans up subscriptions exactly once", async () => {
 		const cleanup = vi.fn();
+
 		let subscription: SubscriptionContext<number, { user: string }> | undefined;
+
 		const { receive, sent } = setup({
 			subscriptions: {
 				numbers: (_input: number, context: SubscriptionContext<number, { user: string }>) => {
@@ -101,13 +103,16 @@ describe("createConnection", () => {
 		});
 
 		receive([protocol, "subscribe", 1, "numbers", 3]);
+
 		await tick();
 
 		expect(subscription?.connection).toEqual({ user: "ada" });
+
 		subscription?.emit(3);
 		subscription?.emit(4);
 		subscription?.complete();
 		subscription?.complete();
+
 		await tick();
 
 		expect(sent).toEqual([
@@ -121,8 +126,10 @@ describe("createConnection", () => {
 
 	it("aborts cancellation and runs cleanup registered after cancellation", async () => {
 		const cleanup = vi.fn();
+
 		let release: ((cleanup: () => void) => void) | undefined;
 		let signal: AbortSignal | undefined;
+
 		const pendingCleanup = new Promise<() => void>((resolve) => {
 			release = resolve;
 		});
@@ -138,13 +145,16 @@ describe("createConnection", () => {
 		});
 
 		receive([protocol, "subscribe", 1, "lateCleanup", undefined]);
+
 		await tick();
+
 		receive([protocol, "cancel", 1]);
 
 		expect(signal?.aborted).toBe(true);
 		expect(sent).toEqual([]);
 
 		release?.(cleanup);
+
 		await tick();
 
 		expect(cleanup).toHaveBeenCalledOnce();
@@ -155,7 +165,9 @@ describe("createConnection", () => {
 
 		receive([protocol, "request", 1, "missing", undefined]);
 		receive([protocol, "request", 2, "hold", undefined]);
+
 		await tick();
+
 		receive([protocol, "request", 2, "add", { a: 1, b: 1 }]);
 
 		expect(sent[0]).toEqual([
@@ -170,6 +182,7 @@ describe("createConnection", () => {
 			expect.objectContaining({ name: "ProtocolError", message: "Duplicate operation ID" }),
 		]);
 		expect(closes).toEqual([[1002, "Protocol error"]]);
+
 		await expect(connection.closed).resolves.toBeUndefined();
 	});
 
@@ -186,6 +199,7 @@ describe("createConnection", () => {
 			],
 		]);
 		expect(closes).toEqual([[1002, "Protocol error"]]);
+
 		await expect(connection.closed).resolves.toBeUndefined();
 	});
 
@@ -193,7 +207,9 @@ describe("createConnection", () => {
 		const { aborted, closes, receive } = setup();
 
 		receive([protocol, "request", 1, "hold", undefined]);
+
 		await tick();
+
 		receive([protocol, "close", { name: "ClientClosedError", message: "leaving" }]);
 
 		const reason = await aborted;
@@ -207,6 +223,7 @@ describe("createConnection", () => {
 		const { receive, sent } = setup();
 
 		receive([protocol, "request", 1, "uncloneable", undefined]);
+
 		await tick();
 
 		expect(sent).toEqual([[protocol, "reject", 1, expect.objectContaining({ name: "DataCloneError" })]]);
@@ -237,6 +254,7 @@ describe("createConnection", () => {
 		);
 
 		connection.receive(serialize([protocol, "request", 1, "add", { a: 1, b: 2 }]));
+
 		await tick();
 
 		expect(sent).toEqual([[protocol, "reject", 1, { name: "PublicError", message: "safe" }]]);
@@ -264,6 +282,7 @@ describe("createConnection", () => {
 
 		connection.receive(serialize([protocol, "request", 1, "hold", undefined]));
 		connection.receive(serialize([protocol, "request", 2, "hold", undefined]));
+
 		await tick();
 
 		expect(sent[0]).toEqual([protocol, "reject", 2, expect.objectContaining({ name: "OperationLimitError" })]);
@@ -294,9 +313,11 @@ describe("createConnection", () => {
 		);
 
 		connection.receive(serialize([protocol, "request", 1, "add", { a: 1, b: 2 }]));
+
 		await tick();
 
 		expect(closes).toEqual([[1011, "Transport failure"]]);
+
 		await expect(connection.closed).resolves.toBeUndefined();
 	});
 
@@ -316,6 +337,7 @@ describe("createConnection", () => {
 
 		expect(remote.sent).toEqual([]);
 		expect(remote.closes).toEqual([]);
+
 		await expect(remote.connection.closed).resolves.toBeUndefined();
 	});
 });
