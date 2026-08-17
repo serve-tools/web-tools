@@ -35,7 +35,7 @@
 	],
 	"scripts": {
 		"benchmark": "vitest run --config vitest.benchmark.config.ts",
-		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build": "tsc --build --force tsconfig.json",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"dev": "cd demo && vite",

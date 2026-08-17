@@ -33,7 +33,7 @@
 	],
 	"scripts": {
 		"benchmark": "npm run build:dependencies && vitest run --config vitest.benchmark.config.ts",
-		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build": "tsc --build --force tsconfig.json",
 		"build:dependencies": "npm run build --workspace @serve-tools/realtime-protocol --workspace @serve-tools/client-realtime --workspace @serve-tools/server-realtime",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",

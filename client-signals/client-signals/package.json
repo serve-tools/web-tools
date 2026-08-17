@@ -36,7 +36,7 @@
 		"skills"
 	],
 	"scripts": {
-		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build": "tsc --build --force tsconfig.json",
 		"build:dependencies": "npm run build:dependencies --workspace @serve-tools/signal-db --workspace @serve-tools/signal-dom --workspace @serve-tools/signal-event-target --workspace @serve-tools/signal-http-stream --workspace @serve-tools/signal-messaging --workspace @serve-tools/signal-shared-db --workspace @serve-tools/signal-shared-http-stream --workspace @serve-tools/signal-shared-websocket --workspace @serve-tools/signal-shared-webtransport --workspace @serve-tools/signal-storage --workspace @serve-tools/signal-websocket --workspace @serve-tools/signal-webtransport && npm run build --workspace @serve-tools/signal-db --workspace @serve-tools/signal-dom --workspace @serve-tools/signal-event-target --workspace @serve-tools/signal-http-stream --workspace @serve-tools/signal-messaging --workspace @serve-tools/signal-shared-db --workspace @serve-tools/signal-shared-http-stream --workspace @serve-tools/signal-shared-websocket --workspace @serve-tools/signal-shared-webtransport --workspace @serve-tools/signal-storage --workspace @serve-tools/signal-websocket --workspace @serve-tools/signal-webtransport",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",

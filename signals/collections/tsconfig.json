@@ -4,5 +4,10 @@
 		"outDir": "dist",
 		"rootDir": "src"
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts"]
+	"include": ["src/**/*.ts", "src/**/.*.ts"],
+	"references": [
+		{
+			"path": "../signal/tsconfig.json"
+		}
+	]
 }

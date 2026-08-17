@@ -128,6 +128,12 @@
 	"knip": {
 		"ignoreExportsUsedInFile": true,
 		"workspaces": {
+			".": {
+				"ignoreDependencies": [
+					"crossws",
+					"ws"
+				]
+			},
 			"client-signals/client-signals": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
@@ -221,7 +227,12 @@
 				"entry": [
 					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"
-				]
+				],
+				"ignoreIssues": {
+					"test/browser/shared-websocket.ts": [
+						"unlisted"
+					]
+				}
 			},
 			"client/shared-webtransport": {
 				"entry": [
@@ -314,7 +325,6 @@
 			},
 			"polyfills/arraybuffer-base64": {
 				"entry": [
-					"runtime/node.js",
 					"test/*.recipes.ts"
 				]
 			},
@@ -330,7 +340,6 @@
 			},
 			"ponyfills/arraybuffer-base64": {
 				"entry": [
-					"runtime/node.js",
 					"test/*.recipes.ts"
 				]
 			},

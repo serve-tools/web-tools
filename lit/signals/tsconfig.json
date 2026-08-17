@@ -8,7 +8,13 @@
 	"include": ["src/**/*.ts", "src/**/.*.ts"],
 	"references": [
 		{
+			"path": "../../client-signals/event-target/tsconfig.json"
+		},
+		{
 			"path": "../../client/context/tsconfig.json"
+		},
+		{
+			"path": "../../signals/collections/tsconfig.json"
 		},
 		{
 			"path": "../../signals/signal/tsconfig.json"

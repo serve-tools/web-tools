@@ -1,6 +1,16 @@
 {
 	"extends": "../../tsconfig.json",
 	"compilerOptions": { "outDir": "dist", "rootDir": "src" },
-	"references": [{ "path": "../messaging/tsconfig.json" }, { "path": "../webtransport/tsconfig.json" }],
+	"references": [
+		{
+			"path": "../../realtime/protocol/tsconfig.json"
+		},
+		{
+			"path": "../messaging/tsconfig.json"
+		},
+		{
+			"path": "../webtransport/tsconfig.json"
+		}
+	],
 	"include": ["src/**/*.ts", "src/**/.*.ts"]
 }

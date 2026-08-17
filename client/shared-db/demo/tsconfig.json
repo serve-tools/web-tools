@@ -11,5 +11,13 @@
 		"target": "es2025",
 		"types": ["vite/client"]
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts", "vite.config.ts"]
+	"include": ["src/**/*.ts", "src/**/.*.ts", "vite.config.ts"],
+	"references": [
+		{
+			"path": "../../db/tsconfig.json"
+		},
+		{
+			"path": "../tsconfig.json"
+		}
+	]
 }

@@ -44,7 +44,7 @@
 		"skills"
 	],
 	"scripts": {
-		"build": "npm run clean && tsc --build --force tsconfig.build.json",
+		"build": "tsc --build --force tsconfig.build.json",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run test:browser && npm run test:node",

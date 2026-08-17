@@ -34,7 +34,7 @@
 	],
 	"scripts": {
 		"benchmark": "npm run build:dependencies && vitest run --config vitest.benchmark.config.ts",
-		"build": "npm run clean && tsc --build --force tsconfig.json",
+		"build": "tsc --build --force tsconfig.json",
 		"build:dependencies": "npm run build:dependencies --workspace @serve-tools/client-shared-db && npm run build --workspace @serve-tools/client-shared-db --workspace @serve-tools/signal --workspace @serve-tools/signal-effect",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",

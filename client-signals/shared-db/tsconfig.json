@@ -5,5 +5,16 @@
 		"outDir": "dist",
 		"rootDir": "src"
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts"]
+	"include": ["src/**/*.ts", "src/**/.*.ts"],
+	"references": [
+		{
+			"path": "../../client/shared-db/tsconfig.json"
+		},
+		{
+			"path": "../../signals/effect/tsconfig.json"
+		},
+		{
+			"path": "../../signals/signal/tsconfig.json"
+		}
+	]
 }
