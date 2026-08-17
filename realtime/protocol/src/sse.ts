@@ -229,6 +229,7 @@ export function decodeBase64(value: string): Uint8Array {
 
 	const padding = value.endsWith("==") ? 2 : value.endsWith("=") ? 1 : 0;
 	const output = new Uint8Array((value.length / 4) * 3 - padding);
+
 	let offset = 0;
 
 	for (let index = 0; index < value.length; index += 4) {

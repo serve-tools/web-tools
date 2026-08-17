@@ -8,6 +8,7 @@ const rootPackage = await readJSON(path.join(root, "package.json"));
 const errors = [];
 const names = new Set();
 const publicPackageNames = new Set();
+
 let publicPackages = 0;
 let metadataCharacters = 0;
 let publishedMetadataCharacters = 0;
@@ -25,13 +26,15 @@ for (const workspace of rootPackage.workspaces) {
 		continue;
 	}
 
-	publicPackages += 1;
+	++publicPackages;
+
 	publicPackageNames.add(packageJSON.name);
 
 	const expectedName = packageJSON.name.replace(/^@/, "").replaceAll("/", "-");
 
 	if (skillDirectories.length !== 1 || skillDirectories[0] !== expectedName) {
 		errors.push(`${workspace}: expected exactly skills/${expectedName}`);
+
 		continue;
 	}
 
@@ -91,6 +94,7 @@ if (metadataCharacters > 5_300) {
 
 if (errors.length > 0) {
 	console.error(errors.map((error) => `- ${error}`).join("\n"));
+
 	process.exitCode = 1;
 } else {
 	console.log(
@@ -105,6 +109,7 @@ async function validateSkill(skillRoot, expectedName, packageName, validationErr
 		source = await readFile(path.join(skillRoot, "SKILL.md"), "utf8");
 	} catch {
 		validationErrors.push(`${relative(skillRoot)}: missing SKILL.md`);
+
 		return undefined;
 	}
 
@@ -180,6 +185,7 @@ async function validateSkill(skillRoot, expectedName, packageName, validationErr
 		openAI = await readFile(path.join(skillRoot, "agents", "openai.yaml"), "utf8");
 	} catch {
 		validationErrors.push(`${relative(skillRoot)}: missing agents/openai.yaml`);
+
 		return { name, description };
 	}
 
@@ -232,18 +238,21 @@ async function validateRecipe(packageRoot, skillRoot, packageName, validationErr
 
 	if (recipeFiles.length !== 1) {
 		validationErrors.push(`${relative(skillRoot)}: expected exactly one compile-checked test/*.recipes.ts fixture`);
+
 		return;
 	}
 
 	const [recipeFile] = recipeFiles;
 	const recipe = await readFile(path.join(packageRoot, "test", recipeFile), "utf8");
 	const expectedReference = createRecipeReference(recipe, recipeFile, packageName);
+
 	let reference;
 
 	try {
 		reference = await readFile(path.join(skillRoot, "references", "recipe-quick-start.md"), "utf8");
 	} catch {
 		validationErrors.push(`${relative(skillRoot)}: missing references/recipe-quick-start.md`);
+
 		return;
 	}
 
