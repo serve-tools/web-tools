@@ -38,21 +38,27 @@ describe("WebTransport session core", () => {
 		);
 
 		session.receiveOperations(encodeFrame(serialize([protocol, "request", 1, "ping", "hello"])));
+
 		await Promise.resolve();
 		await Promise.resolve();
 
 		const operationDecoder = new FrameDecoder();
+
 		expect(
 			operationWrites.flatMap((chunk) => operationDecoder.push(chunk)).map((frame) => deserialize(frame)),
 		).toEqual([[protocol, "resolve", 1, "hello!"]]);
 		expect(session.datagrams.maxDatagramSize).toBe(1_200);
 
 		const cursorKind = await clientRegistry.register("cursor");
+
 		session.receiveDatagram(encodeDatagram(cursorKind, { x: 3, y: 8 }));
+
 		await Promise.resolve();
+
 		expect(cursor).toHaveBeenCalledWith({ x: 3, y: 8 });
 
 		await session.datagrams.write("presence", { online: true });
+
 		const presence = decodeDatagram(datagramWrites[0]!);
 
 		expect(clientRegistry.name(presence.kind)).toBe("presence");
