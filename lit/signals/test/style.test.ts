@@ -28,10 +28,13 @@ class StyleTestElement extends SignalElement {
 		super();
 
 		this.accent = new Signal.State("red");
+
 		sizes.set(this, initializeSize.call(this, 20));
+
 		this.hiddenState = new Signal.State(false);
 		this.optional = new Signal.State<string | undefined>("present");
 		this.renders = 0;
+
 		hostStyles.set(
 			this,
 			initializeHostStyle.call(this, {
@@ -137,6 +140,7 @@ describe("style", () => {
 		const element = new StyleTestElement();
 
 		document.body.append(element);
+
 		await element.updateComplete;
 
 		try {
@@ -161,12 +165,14 @@ describe("style", () => {
 		const element = new StyleTestElement();
 
 		document.body.append(element);
+
 		await element.updateComplete;
 
 		try {
 			const rule = ruleOf(element);
 
 			element.size = 24;
+
 			await Promise.resolve();
 
 			expect(rule.style.getPropertyValue("--size")).toBe("24px");
@@ -176,6 +182,7 @@ describe("style", () => {
 			element.accent.set("blue");
 			element.hiddenState.set(true);
 			element.optional.set(undefined);
+
 			await Promise.resolve();
 
 			expect(rule.style.getPropertyValue("--accent")).toBe("blue");
@@ -192,23 +199,27 @@ describe("style", () => {
 		const element = new StyleTestElement();
 
 		document.body.append(element);
+
 		await element.updateComplete;
 
 		const rule = ruleOf(element);
 
 		element.remove();
+
 		await Promise.resolve();
 
 		expect(Signal.subtle.hasSinks(element.accent)).toBe(false);
 
 		element.accent.set("green");
 		element.size = 32;
+
 		await Promise.resolve();
 
 		expect(rule.style.getPropertyValue("--accent")).toBe("red");
 		expect(rule.style.getPropertyValue("--size")).toBe("20px");
 
 		document.body.append(element);
+
 		await element.updateComplete;
 
 		try {
@@ -226,6 +237,7 @@ describe("style", () => {
 		const nextAccent = new Signal.State("purple");
 
 		document.body.append(element);
+
 		await element.updateComplete;
 
 		try {
@@ -236,6 +248,7 @@ describe("style", () => {
 			};
 
 			element.hostStyle = replacement;
+
 			await Promise.resolve();
 
 			const rule = ruleOf(element);
@@ -250,6 +263,7 @@ describe("style", () => {
 
 			element.accent.set("ignored");
 			nextAccent.set("orange");
+
 			await Promise.resolve();
 
 			expect(rule.style.getPropertyValue("--accent")).toBe("");

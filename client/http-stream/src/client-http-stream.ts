@@ -128,21 +128,21 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 				if (
 					!isServerMessage(message) ||
-					message[1] === "event" ||
-					message[1] === "complete" ||
-					(message[1] !== "close" && message[2] !== id)
+					message[MessagePart.Type] === "event" ||
+					message[MessagePart.Type] === "complete" ||
+					(message[MessagePart.Type] !== "close" && message[MessagePart.Id] !== id)
 				) {
 					throw protocolError();
 				}
 
-				if (message[1] === "reject") {
-					throw remoteError(message[3]);
+				if (message[MessagePart.Type] === "reject") {
+					throw remoteError(message[MessagePart.Name]);
 				}
-				if (message[1] === "close") {
-					throw remoteError(message[2]);
+				if (message[MessagePart.Type] === "close") {
+					throw remoteError(message[MessagePart.Id]);
 				}
 
-				return message[3];
+				return message[MessagePart.Name];
 			} finally {
 				controller.abort();
 				active.delete(controller);
@@ -213,23 +213,23 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 								if (
 									!isServerMessage(message) ||
-									message[1] === "resolve" ||
-									(message[1] !== "close" && message[2] !== id)
+									message[MessagePart.Type] === "resolve" ||
+									(message[MessagePart.Type] !== "close" && message[MessagePart.Id] !== id)
 								) {
 									throw protocolError();
 								}
 
-								if (message[1] === "event") {
-									callSafely(listener, message[3]);
-								} else if (message[1] === "complete") {
+								if (message[MessagePart.Type] === "event") {
+									callSafely(listener, message[MessagePart.Name]);
+								} else if (message[MessagePart.Type] === "complete") {
 									isActive = false;
 									if (subscribeOptions?.onComplete) {
 										callSafely(subscribeOptions.onComplete, undefined);
 									}
-								} else if (message[1] === "reject") {
-									throw remoteError(message[3]);
+								} else if (message[MessagePart.Type] === "reject") {
+									throw remoteError(message[MessagePart.Name]);
 								} else {
-									throw remoteError(message[2]);
+									throw remoteError(message[MessagePart.Id]);
 								}
 							}
 						}
@@ -312,3 +312,11 @@ const callSafely = <Value>(callback: (value: Value) => void, value: Value): void
 const connectionClosedError = (): Error =>
 	Object.assign(new Error("The client is closed"), { name: "ConnectionClosedError" });
 const asError = (reason: unknown): Error => (reason instanceof Error ? reason : new Error(String(reason)));
+
+const enum MessagePart {
+	Protocol = 0,
+	Type = 1,
+	Id = 2,
+	Name = 3,
+	Data = 4,
+}

@@ -25,7 +25,7 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	const client = createClient<P>({
 		send: (payload) => socket.send(payload),
 		close: (reason) => {
-			if (socket.readyState < WebSocket.CLOSING) {
+			if (socket.readyState < WebSocketState.CLOSING) {
 				socket.close(reason instanceof Error && reason.name === "ProtocolError" ? 1002 : 1000);
 			}
 		},
@@ -113,3 +113,10 @@ const opened = (socket: WebSocket, signal?: AbortSignal): Promise<void> => {
 		signal?.addEventListener("abort", abort, { once: true });
 	});
 };
+
+const enum WebSocketState {
+	CONNECTING = 0,
+	OPEN = 1,
+	CLOSING = 2,
+	CLOSED = 3,
+}

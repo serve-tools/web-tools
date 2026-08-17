@@ -4,6 +4,7 @@ import {
 	errorRecord,
 	inactiveSubscription,
 	isWireMessage,
+	MessagePart,
 	noop,
 	post,
 	protocol,
@@ -51,7 +52,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 			return;
 		}
 
-		if (data[1] === "welcome") {
+		if (data[MessagePart.Type] === "welcome") {
 			if (isReady) {
 				closeProtocol(protocolError("The serving peer sent more than one welcome"));
 
@@ -64,45 +65,52 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 			return;
 		}
 
-		if (data[1] === "hello") {
+		if (data[MessagePart.Type] === "hello") {
 			closeProtocol(protocolError("The serving peer sent a client hello"));
 
 			return;
 		}
 
-		if (!isReady && data[1] !== "close") {
+		if (!isReady && data[MessagePart.Type] !== "close") {
 			closeProtocol(protocolError("The serving peer sent a message before welcoming the client"));
 
 			return;
 		}
 
-		if (data[1] === "close") {
-			finish(remoteError(data[2]), true);
+		if (data[MessagePart.Type] === "close") {
+			finish(remoteError(data[MessagePart.Name]), true);
 
 			return;
 		}
 
-		if (data[1] !== "next" && data[1] !== "resolve" && data[1] !== "reject") {
+		if (
+			data[MessagePart.Type] !== "next" &&
+			data[MessagePart.Type] !== "resolve" &&
+			data[MessagePart.Type] !== "reject"
+		) {
 			return;
 		}
 
-		const id = data[2];
+		const id = data[MessagePart.Name];
 		const operation = operations.get(id);
 
 		if (!operation) {
 			return;
 		}
 
-		if (data[1] === "next") {
+		if (data[MessagePart.Type] === "next") {
 			try {
-				operation.next(data[3]);
+				operation.next(data[MessagePart.Data]);
 			} catch (error) {
 				report(error);
 			}
 		} else {
 			operations.delete(id);
 			operation.off();
-			operation.settle(data[1] === "resolve", data[1] === "resolve" ? data[3] : remoteError(data[3]));
+			operation.settle(
+				data[MessagePart.Type] === "resolve",
+				data[MessagePart.Type] === "resolve" ? data[MessagePart.Data] : remoteError(data[MessagePart.Data]),
+			);
 		}
 	};
 

@@ -35,7 +35,9 @@ class FakeWebTransport {
 
 	constructor(_url: string | URL, options: Record<string, unknown> = {}) {
 		FakeWebTransport.instance = this;
+
 		this.options = options;
+
 		this.datagrams = {
 			readable: new ReadableStream({ start: (controller) => (this.#datagramController = controller) }),
 			maxDatagramSize: 1_250,
@@ -49,23 +51,31 @@ class FakeWebTransport {
 		}
 
 		const role = this.#streamCount++;
+
 		let controller!: ReadableStreamDefaultController<Uint8Array>;
+
 		const readable = new ReadableStream<Uint8Array>({ start: (value) => (controller = value) });
 
 		if (role === 0) {
 			const decoder = new FrameDecoder();
+
 			let identified = false;
+
 			const writable = new WritableStream<BufferSource>({
 				write: (chunk) => {
 					const value = bytes(chunk);
+
 					if (!identified) {
 						identified = true;
+
 						expect(value).toEqual(Uint8Array.of(0));
+
 						return;
 					}
 
 					for (const frame of decoder.push(value)) {
 						const message = deserialize(frame);
+
 						if (Array.isArray(message) && message[1] === "request") {
 							controller.enqueue(
 								encodeFrame(serialize([protocol, "resolve", message[2], `${message[4]}!`])),
@@ -79,15 +89,21 @@ class FakeWebTransport {
 		}
 
 		this.#serverRegistry = new DatagramRegistry((payload) => controller.enqueue(payload));
+
 		let identified = false;
+
 		const writable = new WritableStream<BufferSource>({
 			write: (chunk) => {
 				const value = bytes(chunk);
+
 				if (!identified) {
 					identified = true;
+
 					expect(value).toEqual(Uint8Array.of(1));
+
 					return;
 				}
+
 				this.#serverRegistry!.receive(value);
 			},
 		});
@@ -97,6 +113,7 @@ class FakeWebTransport {
 
 	async send(name: string, value: unknown): Promise<void> {
 		const kind = await this.#serverRegistry!.register(name);
+
 		this.#datagramController.enqueue(encodeDatagram(kind, value));
 	}
 
@@ -117,17 +134,24 @@ describe("WebTransport client conformance", () => {
 		const transport = FakeWebTransport.instance;
 
 		expect(transport.options.protocols).toEqual([subprotocol]);
+
 		transport.sendUnknown();
+
 		await Promise.resolve();
 		await expect(client.request("ping", "hello")).resolves.toBe("hello!");
+
 		expect(client.datagrams.maxDatagramSize).toBe(1_250);
 
 		await client.datagrams.write("packet", Uint8Array.of(1, 2, 3));
+
 		const packet = decodeDatagram(transport.sentDatagrams[0]!);
+
 		expect(packet.value).toEqual(Uint8Array.of(1, 2, 3));
 
 		const presence = Promise.withResolvers<{ online: boolean }>();
+
 		client.datagrams.subscribe("presence", presence.resolve);
+
 		await transport.send("presence", { online: true });
 		await expect(presence.promise).resolves.toEqual({ online: true });
 
@@ -136,6 +160,7 @@ describe("WebTransport client conformance", () => {
 
 	it("honors aborts during setup and after the client is ready", async () => {
 		FakeWebTransport.blockStreams = true;
+
 		const setupController = new AbortController();
 		const connecting = connect<TestProtocol>("https://example.test/realtime", {
 			signal: setupController.signal,
@@ -143,13 +168,17 @@ describe("WebTransport client conformance", () => {
 		});
 
 		await Promise.resolve();
+
 		setupController.abort(new Error("setup stopped"));
 
 		await expect(connecting).rejects.toThrow("setup stopped");
+
 		expect(FakeWebTransport.instance.closeInfo?.reason).toBe("Connection aborted");
 
 		FakeWebTransport.blockStreams = false;
+
 		const lifetimeController = new AbortController();
+
 		await connect<TestProtocol>("https://example.test/realtime", {
 			signal: lifetimeController.signal,
 			transportConstructor: FakeWebTransport,

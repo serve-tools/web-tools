@@ -39,3 +39,9 @@ export const callSafely = <Value>(callback: (value: Value) => void, value: Value
 		reportError(error);
 	}
 };
+
+export const enum MessagePart {
+	Type = 1,
+	Id = 2,
+	Name = 3,
+}

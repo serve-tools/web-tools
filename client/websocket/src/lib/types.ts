@@ -20,11 +20,11 @@ export type {
 	SubscriptionOperation,
 } from "@serve-tools/client-realtime";
 
-/** Options for opening a WebSocket protocol client. */
+/** Represents options for opening a WebSocket protocol client. */
 export interface ConnectOptions {
 	/** Aborts the opening handshake. */
 	readonly signal?: AbortSignal;
 }
 
-/** A typed, disposable WebSocket protocol client. */
+/** Represents a typed, disposable WebSocket protocol client. */
 export interface Client<P extends Protocol = Protocol> extends RealtimeClient<P> {}

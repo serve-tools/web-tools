@@ -1,7 +1,15 @@
 /// <reference lib="esnext.disposable" />
 
 import { deserialize, isServerMessage, protocol, serialize } from "@serve-tools/realtime-protocol";
-import { callSafely, connectionClosedError, errorRecord, noop, protocolError, remoteError } from "./internals.js";
+import {
+	callSafely,
+	connectionClosedError,
+	errorRecord,
+	MessagePart,
+	noop,
+	protocolError,
+	remoteError,
+} from "./internals.js";
 import type * as T from "./types.js";
 import type {
 	ClientConnection,
@@ -90,8 +98,8 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 			return;
 		}
 
-		if (message[1] === "close") {
-			const error = remoteError(message[2]);
+		if (message[MessagePart.Type] === "close") {
+			const error = remoteError(message[MessagePart.Id]);
 
 			finish(error, true);
 			transport.close(error);
@@ -99,38 +107,42 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 			return;
 		}
 
-		const operation = operations.get(message[2]);
+		const operation = operations.get(message[MessagePart.Id]);
 
 		if (!operation) {
 			return;
 		}
 
-		if (message[1] === "event") {
+		if (message[MessagePart.Type] === "event") {
 			if (operation.kind !== "subscription") {
 				fail("A request received a subscription event");
 
 				return;
 			}
 
-			callSafely(operation.next, message[3]);
+			callSafely(operation.next, message[MessagePart.Name]);
 
 			return;
 		}
 
 		if (
-			(message[1] === "resolve" && operation.kind !== "request") ||
-			(message[1] === "complete" && operation.kind !== "subscription")
+			(message[MessagePart.Type] === "resolve" && operation.kind !== "request") ||
+			(message[MessagePart.Type] === "complete" && operation.kind !== "subscription")
 		) {
 			fail("The operation received an incompatible settlement");
 
 			return;
 		}
 
-		operations.delete(message[2]);
+		operations.delete(message[MessagePart.Id]);
 		operation.off();
 		operation.settle(
-			message[1] !== "reject",
-			message[1] === "reject" ? remoteError(message[3]) : message[1] === "resolve" ? message[3] : undefined,
+			message[MessagePart.Type] !== "reject",
+			message[MessagePart.Type] === "reject"
+				? remoteError(message[MessagePart.Name])
+				: message[MessagePart.Type] === "resolve"
+					? message[MessagePart.Name]
+					: undefined,
 		);
 	};
 
@@ -209,6 +221,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 			if (isClosed) {
 				return Promise.reject(connectionClosedError());
 			}
+
 			if (options.signal?.aborted) {
 				return Promise.reject(options.signal.reason);
 			}

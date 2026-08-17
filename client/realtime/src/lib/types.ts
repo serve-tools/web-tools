@@ -48,28 +48,43 @@ export interface SubscribeOptions extends RequestOptions {
 
 /** A disposable handle for one active subscription. */
 export interface Subscription extends Disposable {
+	/** Represents whether the subscription can still receive events or not. */
 	readonly active: boolean;
+
+	/** Cancels the subscription. Calling it more than once has no effect. */
 	unsubscribe(): void;
 }
 
 /** A typed request and subscription client. */
 export interface Client<P extends Protocol = Protocol> extends Disposable, ProtocolResource<P> {
+	/** Sends a named request and resolves with its remote result. */
 	request<Name extends RequestName<P>>(
 		name: Name,
 		...arguments_: RequestArguments<RequestOperation<P, Name>>
 	): Promise<RequestOutput<RequestOperation<P, Name>>>;
+
+	/** Opens a named subscription and returns its disposable local handle. */
 	subscribe<Name extends SubscriptionName<P>>(
 		name: Name,
 		...arguments_: SubscribeArguments<SubscriptionOperation<P, Name>>
 	): Subscription;
+
+	/** Represents a promise that resolves when the client is closed. */
 	readonly closed: Promise<void>;
+
+	/** Closes the client and its underlying transport. */
 	close(reason?: unknown): void;
 }
 
 /** A typed client plus the receive-side methods used by a transport adapter. */
 export interface ClientConnection<P extends Protocol = Protocol> extends Client<P> {
+	/** Decodes and handles one complete binary protocol message. */
 	receive(payload: ArrayBuffer | ArrayBufferView): void;
+
+	/** Closes the client because the transport received invalid protocol input. */
 	fail(reason?: unknown): void;
+
+	/** Finishes the client after the physical transport has already disconnected. */
 	disconnect(reason?: unknown): void;
 }
 

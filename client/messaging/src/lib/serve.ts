@@ -3,6 +3,7 @@ import {
 	errorRecord,
 	isTransferResult,
 	isWireMessage,
+	MessagePart,
 	noop,
 	post,
 	protocol,
@@ -229,7 +230,7 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 			return;
 		}
 
-		if (data[1] === "hello") {
+		if (data[MessagePart.Type] === "hello") {
 			if (isReady) {
 				close(protocolError("The client sent more than one hello"));
 
@@ -237,6 +238,7 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 			}
 
 			isReady = true;
+
 			const result = send([protocol, "welcome"]);
 
 			if (!result.ok) {
@@ -247,36 +249,36 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 			return;
 		}
 
-		if (data[1] === "welcome") {
+		if (data[MessagePart.Type] === "welcome") {
 			close(protocolError("The client sent a server welcome"));
 
 			return;
 		}
 
-		if (!isReady && data[1] !== "close") {
+		if (!isReady && data[MessagePart.Type] !== "close") {
 			close(protocolError("The client sent a message before its hello"));
 
 			return;
 		}
 
-		if (data[1] === "request" || data[1] === "subscription") {
+		if (data[MessagePart.Type] === "request" || data[MessagePart.Type] === "subscription") {
 			open(data);
-		} else if (data[1] === "cancel") {
-			const id = data[2];
+		} else if (data[MessagePart.Type] === "cancel") {
+			const id = data[MessagePart.Name];
 			const operation = operations.get(id);
 
 			if (operation) {
 				settle(id, operation);
 			}
-		} else if (data[1] === "lease") {
+		} else if (data[MessagePart.Type] === "lease") {
 			const { locks } = navigator;
 
 			if (!leaseController && locks) {
 				leaseController = new AbortController();
 
-				void locks.request(data[2], { signal: leaseController.signal }, finish).catch(noop);
+				void locks.request(data[MessagePart.Name], { signal: leaseController.signal }, finish).catch(noop);
 			}
-		} else if (data[1] === "close") {
+		} else if (data[MessagePart.Type] === "close") {
 			finish();
 		}
 	};

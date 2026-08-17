@@ -17,7 +17,9 @@ class LoopbackWebSocket extends EventTarget {
 
 	constructor() {
 		super();
+
 		++LoopbackWebSocket.count;
+
 		queueMicrotask(() => {
 			this.readyState = LoopbackWebSocket.OPEN;
 			this.dispatchEvent(new Event("open"));
@@ -69,6 +71,7 @@ class LoopbackWebSocket extends EventTarget {
 		}
 
 		this.readyState = LoopbackWebSocket.CLOSED;
+
 		this.dispatchEvent(Object.assign(new Event("close"), { code: 1000, reason: "", wasClean: true }));
 	}
 

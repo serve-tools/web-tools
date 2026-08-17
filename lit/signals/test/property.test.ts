@@ -185,6 +185,7 @@ describe("property", () => {
 		expect(element.computations).toBe(1);
 
 		element.count = 2;
+
 		await Promise.resolve();
 
 		expect(element.updates).toBe(0);

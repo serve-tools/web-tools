@@ -26,10 +26,14 @@ class LoopbackWebTransport {
 
 	async createBidirectionalStream(): Promise<WebTransportBidirectionalStreamLike> {
 		const stream = this.#stream++;
+
 		let controller!: ReadableStreamDefaultController<Uint8Array>;
+
 		const readable = new ReadableStream<Uint8Array>({ start: (value) => (controller = value) });
 		const decoder = new FrameDecoder();
+
 		let identified = false;
+
 		const registry = stream === 1 ? new DatagramRegistry((payload) => controller.enqueue(payload)) : undefined;
 		const writable = new WritableStream<BufferSource>({
 			write(chunk) {

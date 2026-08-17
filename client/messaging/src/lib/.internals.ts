@@ -14,32 +14,32 @@ export const inactiveSubscription: Subscription = Object.freeze({
 });
 
 export const isWireMessage = (value: unknown): value is WireMessage => {
-	if (!Array.isArray(value) || value[0] !== protocol) {
+	if (!Array.isArray(value) || value[MessagePart.Protocol] !== protocol) {
 		return false;
 	}
 
-	if (value[1] === "close") {
-		return value.length === 3 && isErrorRecord(value[2]);
+	if (value[MessagePart.Type] === "close") {
+		return value.length === 3 && isErrorRecord(value[MessagePart.Name]);
 	}
 
-	if (value[1] === "hello" || value[1] === "welcome") {
+	if (value[MessagePart.Type] === "hello" || value[MessagePart.Type] === "welcome") {
 		return value.length === 2;
 	}
 
-	if (value[1] === "lease") {
-		return typeof value[2] === "string";
+	if (value[MessagePart.Type] === "lease") {
+		return typeof value[MessagePart.Name] === "string";
 	}
 
-	if (!Number.isSafeInteger(value[2]) || (value[2] as number) < 0) {
+	if (!Number.isSafeInteger(value[MessagePart.Name]) || (value[MessagePart.Name] as number) < 0) {
 		return false;
 	}
 
-	switch (value[1]) {
+	switch (value[MessagePart.Type]) {
 		case "request":
 		case "subscription":
-			return typeof value[3] === "string";
+			return typeof value[MessagePart.Data] === "string";
 		case "reject":
-			return isErrorRecord(value[3]);
+			return isErrorRecord(value[MessagePart.Data]);
 		case "next":
 		case "resolve":
 		case "cancel":
@@ -101,3 +101,10 @@ export const callSafely = <Value>(callback: (value: Value) => void, value: Value
 };
 
 export const report = (error: unknown): void => reportError(error);
+
+export const enum MessagePart {
+	Protocol = 0,
+	Type = 1,
+	Name = 2,
+	Data = 3,
+}
