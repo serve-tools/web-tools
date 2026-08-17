@@ -99,6 +99,32 @@ describe("runtime adapters", () => {
 		expect(socket.close).toHaveBeenCalledWith(1002, "Protocol error");
 	});
 
+	it("accepts Bun backpressure and fails only dropped outgoing messages", async () => {
+		interface Protocol {
+			requests: { ping(): string };
+		}
+
+		for (const [result, closes] of [
+			[-1, []],
+			[0, [[1011, "Transport failure"]]],
+		] as const) {
+			const adapter = createBunAdapter<Protocol>({ requests: { ping: () => "pong" } });
+			const close = vi.fn();
+			const socket = {
+				data: { context: undefined },
+				send: () => result,
+				getBufferedAmount: () => 0,
+				close,
+			} satisfies BunWebSocketLike<{ context: undefined }>;
+
+			adapter.websocket.open(socket);
+			adapter.websocket.message(socket, serialize([protocol, "request", 1, "ping", undefined]));
+			await tick();
+
+			expect(close.mock.calls).toEqual(closes);
+		}
+	});
+
 	it("maps crossws upgrade context and message hooks", async () => {
 		interface Protocol {
 			requests: { whoami(): string };

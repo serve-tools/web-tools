@@ -45,6 +45,7 @@ The package sets its required `Accept` and `Content-Type` fields after author he
 `headers` may be a `HeadersInit` value or an async provider called for each operation.
 Other standard `RequestInit` fields pass through to Fetch.
 The connection signal closes all exchanges, while operation signals cancel one request or subscription.
+Ending a subscription response before a protocol `complete`, `reject`, or `close` settlement reports a protocol error.
 
 ## Negotiation and deployment
 

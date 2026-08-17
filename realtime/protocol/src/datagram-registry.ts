@@ -42,7 +42,15 @@ export class DatagramRegistry {
 		registration = pending.promise;
 
 		this.#outgoing.set(name, registration);
-		this.#send(encodeFrame(serialize([protocol, "register", request, name] satisfies RegisterMessage)));
+
+		try {
+			this.#send(encodeFrame(serialize([protocol, "register", request, name] satisfies RegisterMessage)));
+		} catch (error) {
+			this.#pending.delete(request);
+			this.#outgoing.delete(name);
+
+			throw error;
+		}
 
 		return registration;
 	}

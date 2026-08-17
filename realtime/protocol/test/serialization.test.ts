@@ -179,6 +179,20 @@ describe("structured serialization", () => {
 		}
 	});
 
+	it("rejects encoded buffer capacities above a caller-provided resource limit", () => {
+		const metadata = new TextEncoder().encode(
+			JSON.stringify(["@serve-tools/structured-serialization/1", 0, [["A", 0, 1, 1_000_000_000]]]),
+		);
+		const payload = new Uint8Array(metadata.length + 2);
+
+		payload.set(metadata);
+		payload[payload.length - 1] = 1;
+
+		expect(() => deserialize(payload, { maximumArrayBufferLength: 1_024 })).toThrowError(
+			expect.objectContaining({ name: "DataCloneError" }),
+		);
+	});
+
 	it("keeps stable versioned golden frames", () => {
 		const text = new TextDecoder().decode(serialize({ ok: true }));
 

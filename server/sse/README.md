@@ -54,12 +54,13 @@ Subscription responses include no-buffering/no-transform guidance and send a com
 Set `keepAliveInterval` to another interval or `false` when the deployment owns keepalives.
 
 Authorization runs before decoding the operation body, and its non-`Response` result becomes the handler connection context.
+`maximumMessageLength` defaults to 16 MiB and is enforced while streaming the request body when the runtime exposes it, and always before protocol decoding or handler dispatch.
 Call `close()` or dispose the handler during shutdown to reject new exchanges and close active operations.
 
 ## Deployment responsibilities
 
 Add CORS and preflight handling in the surrounding HTTP application when clients are cross-origin.
-Configure authentication, origin policy, rate limits, body limits, proxy buffering, compression, keep-alives, and idle timeouts at the appropriate layer.
+Configure authentication, origin policy, rate limits, any stricter deployment body limits, proxy buffering, compression, keep-alives, and idle timeouts at the appropriate layer.
 The package does not emulate EventSource reconnection, event replay, resumption, or persistence.
 
 Protocol types do not validate untrusted inputs.

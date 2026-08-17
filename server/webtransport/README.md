@@ -67,6 +67,7 @@ const server = new HTTPServer().handle(realtime);
 The adapter requires `serve-tools.realtime.v1` in `WT-Available-Protocols` and selects it through `WT-Protocol` before accepting application data.
 Authorization runs during session establishment and its value becomes the typed connection context.
 Call `realtime.close()` during shutdown.
+The current `@http3-server/server` session API does not expose an application close-code method, so this adapter closes its owned reliable streams but cannot forward the core close code to the native session.
 
 ## Build another adapter
 
@@ -76,6 +77,7 @@ Forward stream chunks to `receiveOperations()` and `receiveRegistry()`, call the
 The package does not impose a datagram size limit.
 It exposes the native maximum when the adapter can observe it, and a native send rejection rejects that write.
 Structured datagrams use the shared serializer; binary views bypass it and arrive as `Uint8Array`.
+An unknown connection-local datagram kind is dropped because it may legitimately arrive before its reliable registry message.
 
 ## Boundaries
 

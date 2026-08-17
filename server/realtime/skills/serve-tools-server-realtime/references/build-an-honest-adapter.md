@@ -8,4 +8,5 @@ Call `fail()` for invalid peer input and `disconnect()` only after the physical 
 Expose observable queued bytes through `bufferedAmount()` when the transport supports it.
 
 Retain the core's operation, message, and buffering guards unless the application deliberately chooses other values.
+The message limit bounds both incoming bytes and any resizable `ArrayBuffer` capacity declared by those bytes.
 Treat `formatError()` as a disclosure boundary and validate untrusted handler inputs.

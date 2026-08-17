@@ -1,7 +1,11 @@
 /// <reference lib="esnext.disposable" />
 
 import { createClient } from "@serve-tools/client-realtime";
-import { subprotocol } from "@serve-tools/realtime-protocol";
+import {
+	subprotocol,
+	webTransportDatagramRegistryRole,
+	webTransportOperationsRole,
+} from "@serve-tools/realtime-protocol";
 import { decodeDatagram, encodeDatagram } from "@serve-tools/realtime-protocol/datagram";
 import { DatagramRegistry } from "@serve-tools/realtime-protocol/datagram-registry";
 import { encodeFrame, FrameDecoder } from "@serve-tools/realtime-protocol/stream";
@@ -16,9 +20,6 @@ import type {
 	Subscription,
 	WebTransportConstructor,
 } from "./lib/types.js";
-
-const operationsRole = 0;
-const datagramsRole = 1;
 
 /** Opens a protocol-owned WebTransport session with reliable operations and typed best-effort datagrams. */
 export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
@@ -53,10 +54,12 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		throw Object.assign(new Error(`Expected the ${subprotocol} WebTransport protocol`), { name: "ProtocolError" });
 	}
 
-	const operationStream = await transport.createBidirectionalStream();
+	const operationStream = await abortable(transport.createBidirectionalStream(), options.signal, () =>
+		transport.close({ reason: "Connection aborted" }),
+	);
 	const operationWriter = operationStream.writable.getWriter();
 	const operationDecoder = new FrameDecoder();
-	let operationWrites = operationWriter.write(Uint8Array.of(operationsRole));
+	let operationWrites = operationWriter.write(Uint8Array.of(webTransportOperationsRole));
 	let client!: ReturnType<typeof createClient<P>>;
 
 	client = createClient<P>({
@@ -86,9 +89,11 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	);
 	void operationWrites.catch((error) => client.disconnect(error));
 
-	const registryStream = await transport.createBidirectionalStream();
+	const registryStream = await abortable(transport.createBidirectionalStream(), options.signal, () =>
+		transport.close({ reason: "Connection aborted" }),
+	);
 	const registryWriter = registryStream.writable.getWriter();
-	let registryWrites = registryWriter.write(Uint8Array.of(datagramsRole));
+	let registryWrites = registryWriter.write(Uint8Array.of(webTransportDatagramRegistryRole));
 	const registry = new DatagramRegistry((payload) => {
 		registryWrites = registryWrites.then(() => registryWriter.write(payload));
 		void registryWrites.catch((error) => registry.fail(error));
@@ -115,8 +120,6 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		const name = registry.name(kind);
 
 		if (!name) {
-			client.fail("A datagram used an unregistered kind");
-
 			return;
 		}
 
@@ -133,6 +136,11 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		() => client.disconnect(),
 		(error) => client.disconnect(error),
 	);
+
+	const lifetimeAbort = (): void => client.close(options.signal?.reason);
+
+	options.signal?.addEventListener("abort", lifetimeAbort, { once: true });
+	void client.closed.then(() => options.signal?.removeEventListener("abort", lifetimeAbort));
 
 	const datagrams = {
 		get maxDatagramSize() {
@@ -250,6 +258,11 @@ const abortable = async <Value>(
 ): Promise<Value> => {
 	if (!signal) {
 		return promise;
+	}
+	if (signal.aborted) {
+		abort();
+
+		throw signal.reason;
 	}
 
 	return new Promise<Value>((resolve, reject) => {

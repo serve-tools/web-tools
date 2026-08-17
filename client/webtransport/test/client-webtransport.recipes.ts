@@ -16,6 +16,13 @@ export async function clientWebTransportRecipe(signal: AbortSignal) {
 	await client.datagrams.write("packet", Uint8Array.of(1, 2));
 	using _cursor = client.datagrams.subscribe("cursor", console.log);
 
+	// @ts-expect-error transport adapters own incoming protocol delivery
+	client.receive(new ArrayBuffer(0));
+	// @ts-expect-error transport adapters own protocol failure handling
+	client.fail();
+	// @ts-expect-error transport adapters own physical disconnect handling
+	client.disconnect();
+
 	return client;
 }
 

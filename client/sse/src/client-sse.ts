@@ -73,7 +73,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		if (signal?.aborted) {
 			controller.abort(signal.reason);
 		} else {
-			signal?.addEventListener("abort", abort, { once: true });
+			signal?.addEventListener("abort", abort, { once: true, signal: controller.signal });
 		}
 
 		active.add(controller);
@@ -135,7 +135,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 					!isServerMessage(message) ||
 					message[1] === "event" ||
 					message[1] === "complete" ||
-					message[2] !== id
+					(message[1] !== "close" && message[2] !== id)
 				) {
 					throw protocolError();
 				}
@@ -149,6 +149,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 				return message[3];
 			} finally {
+				controller.abort();
 				active.delete(controller);
 			}
 		},
@@ -216,7 +217,11 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 							for (const event of decoder.push(result.value)) {
 								const message = deserialize(decodeBase64(event.data));
 
-								if (!isServerMessage(message) || message[1] === "resolve" || message[2] !== id) {
+								if (
+									!isServerMessage(message) ||
+									message[1] === "resolve" ||
+									(message[1] !== "close" && message[2] !== id)
+								) {
 									throw protocolError();
 								}
 
@@ -236,6 +241,10 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 						}
 
 						decoder.finish();
+
+						if (isActive) {
+							throw protocolError("The event stream ended before completion");
+						}
 					} finally {
 						reader.releaseLock();
 					}
@@ -250,6 +259,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 				} finally {
 					isActive = false;
 
+					controller.abort();
 					active.delete(controller);
 				}
 			})();

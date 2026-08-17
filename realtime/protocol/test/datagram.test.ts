@@ -32,4 +32,23 @@ describe("typed datagrams", () => {
 		expect(again).toBe(first);
 		expect(right.name(first)).toBe("cursor");
 	});
+
+	it("allows registration to retry after a synchronous transport failure", async () => {
+		let peer!: DatagramRegistry;
+		let fail = true;
+		const registry = new DatagramRegistry((payload) => {
+			if (fail) {
+				fail = false;
+
+				throw new Error("stream unavailable");
+			}
+
+			peer.receive(payload);
+		});
+
+		peer = new DatagramRegistry((payload) => registry.receive(payload));
+
+		expect(() => registry.register("cursor")).toThrow("stream unavailable");
+		await expect(registry.register("cursor")).resolves.toBe(1);
+	});
 });

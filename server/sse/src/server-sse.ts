@@ -12,6 +12,8 @@ import type * as T from "./lib/types.js";
 import type { Connection, FetchHandler, HandlerOptions, Handlers } from "./lib/types.js";
 
 const keepAlive = new TextEncoder().encode(": keepalive\n\n");
+const defaultMaximumMessageLength = 16 * 1024 * 1024;
+const messageTooLarge = Symbol("messageTooLarge");
 
 /** Creates a Fetch handler for finite requests and streaming server-sent subscriptions. */
 export function createHandler<const P extends Protocol & ProtocolDefinition<P>, Context = undefined>(
@@ -19,6 +21,12 @@ export function createHandler<const P extends Protocol & ProtocolDefinition<P>, 
 	options: HandlerOptions<Context> = {},
 ): FetchHandler {
 	const connections = new Set<Connection<P, Context>>();
+	const maximumMessageLength = options.maximumMessageLength ?? defaultMaximumMessageLength;
+
+	if (!Number.isSafeInteger(maximumMessageLength) || maximumMessageLength < 1) {
+		throw new RangeError("Connection limits must be positive safe integers");
+	}
+
 	let isClosed = false;
 
 	const handle = async (request: Request): Promise<Response> => {
@@ -60,9 +68,13 @@ export function createHandler<const P extends Protocol & ProtocolDefinition<P>, 
 		let message: unknown;
 
 		try {
-			payload = await request.arrayBuffer();
+			payload = await readBody(request, maximumMessageLength);
 			message = deserialize(payload);
-		} catch {
+		} catch (error) {
+			if (error === messageTooLarge) {
+				return new Response("Content Too Large", { status: 413 });
+			}
+
 			return new Response("Bad Request", { status: 400 });
 		}
 
@@ -70,7 +82,7 @@ export function createHandler<const P extends Protocol & ProtocolDefinition<P>, 
 			return new Response("Bad Request", { status: 400 });
 		}
 
-		if ((message[1] === "subscribe") !== acceptsEvents) {
+		if (message[1] === "subscribe" ? !acceptsEvents : !acceptsBinary) {
 			return new Response("Not Acceptable", { status: 406 });
 		}
 
@@ -129,9 +141,16 @@ const serveRequest = async <P extends Protocol & ProtocolDefinition<P>, Context>
 	);
 	connections.add(connection);
 
-	const abort = (): void => connection.disconnect(signal.reason);
+	const abort = (): void => {
+		delivered.reject(signal.reason);
+		connection.disconnect(signal.reason);
+	};
 
-	signal.addEventListener("abort", abort, { once: true });
+	if (signal.aborted) {
+		abort();
+	} else {
+		signal.addEventListener("abort", abort, { once: true });
+	}
 	connection.receive(payload);
 
 	try {
@@ -145,6 +164,60 @@ const serveRequest = async <P extends Protocol & ProtocolDefinition<P>, Context>
 	}
 };
 
+const readBody = async (request: Request, maximumLength: number): Promise<ArrayBuffer> => {
+	const contentLength = request.headers.get("content-length");
+
+	if (contentLength && /^\d+$/.test(contentLength) && Number(contentLength) > maximumLength) {
+		throw messageTooLarge;
+	}
+
+	if (!request.body) {
+		const payload = await request.arrayBuffer();
+
+		if (payload.byteLength > maximumLength) {
+			throw messageTooLarge;
+		}
+
+		return payload;
+	}
+
+	const reader = request.body.getReader();
+	const chunks: Uint8Array[] = [];
+	let length = 0;
+
+	try {
+		while (true) {
+			const result = await reader.read();
+
+			if (result.done) {
+				break;
+			}
+
+			length += result.value.byteLength;
+
+			if (length > maximumLength) {
+				await reader.cancel();
+
+				throw messageTooLarge;
+			}
+
+			chunks.push(result.value);
+		}
+	} finally {
+		reader.releaseLock();
+	}
+
+	const output = new Uint8Array(length);
+	let offset = 0;
+
+	for (const chunk of chunks) {
+		output.set(chunk, offset);
+		offset += chunk.byteLength;
+	}
+
+	return output.buffer;
+};
+
 const serveSubscription = <P extends Protocol & ProtocolDefinition<P>, Context>(
 	handlers: Handlers<P, Context>,
 	context: Context,
@@ -155,6 +228,7 @@ const serveSubscription = <P extends Protocol & ProtocolDefinition<P>, Context>(
 ): Response => {
 	let connection!: Connection<P, Context>;
 	let finished = false;
+	let stopAbort = (): void => {};
 	let stopKeepAlive = (): void => {};
 
 	const body = new ReadableStream<Uint8Array>({
@@ -164,6 +238,7 @@ const serveSubscription = <P extends Protocol & ProtocolDefinition<P>, Context>(
 					return;
 				}
 				finished = true;
+				stopAbort();
 				stopKeepAlive();
 				try {
 					controller.close();
@@ -200,11 +275,19 @@ const serveSubscription = <P extends Protocol & ProtocolDefinition<P>, Context>(
 				finish();
 			});
 
-			signal.addEventListener("abort", () => connection.disconnect(signal.reason), { once: true });
+			const abort = (): void => connection.disconnect(signal.reason);
+
+			if (signal.aborted) {
+				abort();
+			} else {
+				signal.addEventListener("abort", abort, { once: true });
+				stopAbort = () => signal.removeEventListener("abort", abort);
+			}
 
 			connection.receive(payload);
 		},
 		cancel(reason) {
+			stopAbort();
 			stopKeepAlive();
 			connection?.disconnect(reason);
 		},

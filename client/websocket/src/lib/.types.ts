@@ -1,4 +1,4 @@
-import type { ClientConnection, Protocol } from "@serve-tools/client-realtime";
+import type { Protocol, Client as RealtimeClient } from "@serve-tools/client-realtime";
 
 export type {
 	Operation,
@@ -27,4 +27,4 @@ export interface ConnectOptions {
 }
 
 /** A typed, disposable WebSocket protocol client. */
-export interface Client<P extends Protocol = Protocol> extends ClientConnection<P> {}
+export interface Client<P extends Protocol = Protocol> extends RealtimeClient<P> {}

@@ -8,6 +8,6 @@ export function realtimeProtocolRecipe(value: unknown): unknown[] {
 
 	return decoder
 		.push(frame)
-		.map((payload) => deserialize(payload))
+		.map((payload) => deserialize(payload, { maximumArrayBufferLength: 16 * 1024 * 1024 }))
 		.filter(isClientMessage);
 }

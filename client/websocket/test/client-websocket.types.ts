@@ -48,6 +48,12 @@ async function useClient(requestOptions: RequestOptions, subscribeOptions: Subsc
 	client.subscribe("messages", 1, () => undefined);
 	// @ts-expect-error subscription events are Message values
 	client.subscribe("messages", "general", (message: string) => message);
+	// @ts-expect-error transport adapters own incoming protocol delivery
+	client.receive(new ArrayBuffer(0));
+	// @ts-expect-error transport adapters own protocol failure handling
+	client.fail();
+	// @ts-expect-error transport adapters own physical disconnect handling
+	client.disconnect();
 
 	void session;
 	void pong;

@@ -17,11 +17,13 @@ interface TestProtocol {
 
 class FakeWebTransport {
 	static instance: FakeWebTransport;
+	static blockStreams = false;
 	readonly ready = Promise.resolve();
 	readonly closed = new Promise<never>(() => {});
 	readonly protocol = subprotocol;
 	readonly options: Record<string, unknown>;
 	readonly sentDatagrams: Uint8Array[] = [];
+	closeInfo: { readonly closeCode?: number; readonly reason?: string } | undefined;
 	readonly datagrams: {
 		readonly readable: ReadableStream<Uint8Array>;
 		readonly maxDatagramSize: number;
@@ -42,6 +44,10 @@ class FakeWebTransport {
 	}
 
 	async createBidirectionalStream(): Promise<WebTransportBidirectionalStreamLike> {
+		if (FakeWebTransport.blockStreams) {
+			return new Promise(() => undefined);
+		}
+
 		const role = this.#streamCount++;
 		let controller!: ReadableStreamDefaultController<Uint8Array>;
 		const readable = new ReadableStream<Uint8Array>({ start: (value) => (controller = value) });
@@ -94,7 +100,13 @@ class FakeWebTransport {
 		this.#datagramController.enqueue(encodeDatagram(kind, value));
 	}
 
-	close(): void {}
+	sendUnknown(): void {
+		this.#datagramController.enqueue(encodeDatagram(999, { early: true }));
+	}
+
+	close(info?: { readonly closeCode?: number; readonly reason?: string }): void {
+		this.closeInfo = info;
+	}
 }
 
 describe("WebTransport client conformance", () => {
@@ -105,6 +117,8 @@ describe("WebTransport client conformance", () => {
 		const transport = FakeWebTransport.instance;
 
 		expect(transport.options.protocols).toEqual([subprotocol]);
+		transport.sendUnknown();
+		await Promise.resolve();
 		await expect(client.request("ping", "hello")).resolves.toBe("hello!");
 		expect(client.datagrams.maxDatagramSize).toBe(1_250);
 
@@ -118,6 +132,32 @@ describe("WebTransport client conformance", () => {
 		await expect(presence.promise).resolves.toEqual({ online: true });
 
 		client.close();
+	});
+
+	it("honors aborts during setup and after the client is ready", async () => {
+		FakeWebTransport.blockStreams = true;
+		const setupController = new AbortController();
+		const connecting = connect<TestProtocol>("https://example.test/realtime", {
+			signal: setupController.signal,
+			transportConstructor: FakeWebTransport,
+		});
+
+		await Promise.resolve();
+		setupController.abort(new Error("setup stopped"));
+
+		await expect(connecting).rejects.toThrow("setup stopped");
+		expect(FakeWebTransport.instance.closeInfo?.reason).toBe("Connection aborted");
+
+		FakeWebTransport.blockStreams = false;
+		const lifetimeController = new AbortController();
+		await connect<TestProtocol>("https://example.test/realtime", {
+			signal: lifetimeController.signal,
+			transportConstructor: FakeWebTransport,
+		});
+
+		lifetimeController.abort(new Error("session stopped"));
+
+		expect(FakeWebTransport.instance.closeInfo?.reason).toBe("session stopped");
 	});
 });
 

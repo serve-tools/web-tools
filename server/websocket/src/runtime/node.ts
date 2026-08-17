@@ -1,7 +1,7 @@
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
-import { subprotocol } from "@serve-tools/realtime-protocol";
+import { offersWebSocketSubprotocol, subprotocol } from "@serve-tools/realtime-protocol";
 import { WebSocketServer } from "ws";
 import { attach } from "../lib/attach.js";
 import type * as T from "../lib/types.js";
@@ -52,7 +52,7 @@ export function handleUpgrade<const P extends Protocol & ProtocolDefinition<P>, 
 			return;
 		}
 
-		if (!offeredProtocols(request.headers["sec-websocket-protocol"]).includes(subprotocol)) {
+		if (!offersWebSocketSubprotocol(request.headers["sec-websocket-protocol"])) {
 			await rejectUpgrade(socket, new Response("WebSocket Subprotocol Required", { status: 426 }));
 
 			return;
@@ -166,9 +166,3 @@ const defaultStatusText = (status: number): string =>
 					: status >= 500
 						? "Internal Server Error"
 						: "Upgrade Rejected";
-
-const offeredProtocols = (value: string | string[] | undefined): string[] =>
-	(Array.isArray(value) ? value.join(",") : (value ?? ""))
-		.split(",")
-		.map((entry) => entry.trim())
-		.filter(Boolean);

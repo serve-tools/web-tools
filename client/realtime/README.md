@@ -40,7 +40,8 @@ transport.onClose((reason) => client.disconnect(reason));
 Call `receive()` once for each complete incoming message; byte streams need `FrameDecoder` and `encodeFrame` from `@serve-tools/realtime-protocol/stream`.
 Call `fail()` when the peer violates the protocol, and `disconnect()` after the physical transport is already gone.
 
-The returned connection exposes the same typed `request()`, `subscribe()`, `closed`, and `close()` surface used by the network clients.
+The returned adapter connection adds `receive()`, `fail()`, and `disconnect()` to the typed `request()`, `subscribe()`, `closed`, and `close()` client surface.
+Network packages expose only the client surface so application code cannot invoke adapter lifecycle controls.
 It owns protocol state, operation IDs, cancellation, decoding, remote errors, and callback failure isolation.
 
 ## Boundaries

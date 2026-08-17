@@ -11,7 +11,6 @@ export interface ServerSentEvent {
 	readonly data: string;
 	readonly event: string;
 	readonly id: string;
-	readonly retry?: number;
 }
 
 /** Incrementally parses the standard server-sent event text format. */
@@ -21,8 +20,13 @@ export class EventStreamDecoder {
 	#data: string[] = [];
 	#event = "";
 	#id = "";
-	#retry: number | undefined;
+	#reconnectionTime: number | undefined;
 	#started = false;
+
+	/** The latest valid `retry` field, in milliseconds. */
+	get reconnectionTime(): number | undefined {
+		return this.#reconnectionTime;
+	}
 
 	/** Pushes UTF-8 response bytes and returns every complete dispatched event. */
 	push(chunk: ArrayBuffer | ArrayBufferView): ServerSentEvent[] {
@@ -41,7 +45,6 @@ export class EventStreamDecoder {
 		this.#buffer = "";
 		this.#data = [];
 		this.#event = "";
-		this.#retry = undefined;
 
 		return events;
 	}
@@ -93,13 +96,11 @@ export class EventStreamDecoder {
 					data: this.#data.join("\n"),
 					event: this.#event || "message",
 					id: this.#id,
-					...(this.#retry === undefined ? {} : { retry: this.#retry }),
 				});
 			}
 
 			this.#data = [];
 			this.#event = "";
-			this.#retry = undefined;
 
 			return;
 		}
@@ -127,7 +128,7 @@ export class EventStreamDecoder {
 				break;
 			case "retry":
 				if (/^[0-9]+$/.test(value)) {
-					this.#retry = Number(value);
+					this.#reconnectionTime = Number(value);
 				}
 				break;
 		}

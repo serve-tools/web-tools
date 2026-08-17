@@ -120,7 +120,7 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 				| undefined;
 
 			if (!name) {
-				throw new TypeError("A datagram used an unregistered kind");
+				return;
 			}
 
 			for (const listener of listeners.get(name) ?? []) {

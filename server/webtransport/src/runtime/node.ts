@@ -1,11 +1,13 @@
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
-import { subprotocol } from "@serve-tools/realtime-protocol";
+import {
+	offersWebTransportSubprotocol,
+	subprotocol,
+	webTransportDatagramRegistryRole,
+	webTransportOperationsRole,
+} from "@serve-tools/realtime-protocol";
 import { createSession } from "../lib/session.js";
 import type * as T from "../lib/types.js";
 import type { Awaitable, DatagramWritableOptions, Handlers, Session, SessionOptions } from "../lib/types.js";
-
-const operationsRole = 0;
-const datagramsRole = 1;
 
 export interface NodeWebTransportSessionLike {
 	readonly headers: Readonly<Record<string, string | readonly string[] | undefined>>;
@@ -57,7 +59,7 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 				return new Response("Service Unavailable", { status: 503 });
 			}
 
-			if (!availableProtocols(nativeSession.headers["wt-available-protocols"]).includes(subprotocol)) {
+			if (!offersWebTransportSubprotocol(nativeSession.headers["wt-available-protocols"])) {
 				return new Response("WebTransport Protocol Required", { status: 400 });
 			}
 
@@ -147,9 +149,9 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 
 				chunk = data.subarray(1);
 
-				if (streamState.role === operationsRole && !streamState.state.operations) {
+				if (streamState.role === webTransportOperationsRole && !streamState.state.operations) {
 					streamState.state.operations = stream;
-				} else if (streamState.role === datagramsRole && !streamState.state.registry) {
+				} else if (streamState.role === webTransportDatagramRegistryRole && !streamState.state.registry) {
 					streamState.state.registry = stream;
 				} else {
 					streamState.state.session.close("Invalid or duplicate WebTransport stream role");
@@ -162,7 +164,7 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 				return;
 			}
 
-			if (streamState.role === operationsRole) {
+			if (streamState.role === webTransportOperationsRole) {
 				streamState.state.session.receiveOperations(chunk);
 			} else {
 				streamState.state.session.receiveRegistry(chunk);
@@ -177,13 +179,13 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 				return;
 			}
 
-			if (streamState.role === operationsRole) {
+			if (streamState.role === webTransportOperationsRole) {
 				if (reason === "finished") {
 					streamState.state.session.finishOperations();
 				} else {
 					streamState.state.session.disconnect(`Operation stream aborted with code ${errorCode ?? 0}`);
 				}
-			} else if (streamState.role === datagramsRole) {
+			} else if (streamState.role === webTransportDatagramRegistryRole) {
 				if (reason === "finished") {
 					streamState.state.session.finishRegistry();
 				} else {
@@ -224,13 +226,3 @@ export namespace createNodeAdapter {
 }
 
 export type * from "../lib/types.js";
-
-const availableProtocols = (value: string | readonly string[] | undefined): string[] => {
-	const input = typeof value === "string" ? value : (value?.join(",") ?? "");
-
-	return input
-		.split(",")
-		.map((entry) => entry.trim())
-		.map((entry) => (entry.startsWith('"') && entry.endsWith('"') ? entry.slice(1, -1) : entry))
-		.filter(Boolean);
-};

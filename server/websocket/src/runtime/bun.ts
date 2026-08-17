@@ -1,5 +1,5 @@
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
-import { subprotocol } from "@serve-tools/realtime-protocol";
+import { offersWebSocketSubprotocol, subprotocol } from "@serve-tools/realtime-protocol";
 import { createConnection } from "../lib/connection.js";
 import type * as T from "../lib/types.js";
 import type { Awaitable, Connection, ConnectionOptions, Handlers } from "../lib/types.js";
@@ -68,7 +68,7 @@ export function createBunAdapter<const P extends Protocol & ProtocolDefinition<P
 				handlers,
 				{
 					send: (payload) => {
-						if (socket.send(payload) === -1) {
+						if (socket.send(payload) === 0) {
 							throw new Error("The Bun WebSocket dropped an outgoing message");
 						}
 					},
@@ -115,7 +115,7 @@ export function createBunAdapter<const P extends Protocol & ProtocolDefinition<P
 			return new Response("Service Unavailable", { status: 503 });
 		}
 
-		if (!offeredProtocols(request.headers.get("sec-websocket-protocol")).includes(subprotocol)) {
+		if (!offersWebSocketSubprotocol(request.headers.get("sec-websocket-protocol"))) {
 			return new Response("WebSocket Subprotocol Required", { status: 426 });
 		}
 
@@ -161,12 +161,6 @@ export function createBunAdapter<const P extends Protocol & ProtocolDefinition<P
 
 	return { websocket, upgrade, close, [Symbol.dispose]: close };
 }
-
-const offeredProtocols = (value: string | null): string[] =>
-	(value ?? "")
-		.split(",")
-		.map((entry) => entry.trim())
-		.filter(Boolean);
 
 /** Types used by {@link createBunAdapter}. */
 export namespace createBunAdapter {

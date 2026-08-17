@@ -70,6 +70,13 @@ Do not use them for authoritative mutations, required acknowledgements, or ordin
 
 The session negotiates `serve-tools.realtime.v1` through WebTransport's native `WT-Available-Protocols` and `WT-Protocol` mechanism.
 The package owns its operation stream, registry stream, and datagrams; create a separate WebTransport session for MoQ or another application protocol.
+Datagrams whose connection-local kind arrives before its reliable registration are dropped, because datagram and stream ordering is intentionally independent.
+
+## Public API
+
+`connect<P>()` resolves to a client with `request()`, `subscribe()`, `closed`, `close()`, and the typed `datagrams` API.
+Receive-side adapter controls remain internal.
+The optional connection signal cancels setup and closes an established client when later aborted.
 
 ## Boundaries
 

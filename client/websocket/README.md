@@ -220,6 +220,7 @@ Do not share the underlying socket with other framing protocols because the clie
 ## Public API
 
 - `connect<P>(url, options?)` opens a client-owned WebSocket and resolves to `Client<P>`.
+- `Client<P>` exposes requests, subscriptions, `closed`, and `close()`; receive-side adapter controls are intentionally not public.
 - `RemoteError` represents a failure returned by the remote endpoint.
 - `Client`, `ConnectOptions`, `Protocol`, `ProtocolType`, `RequestOptions`, `SubscribeOptions`, and `Subscription` are exported types.
 - The `connect` namespace also exposes `Client`, `Options`, `Protocol`, `ProtocolType`, `RequestOptions`, `SubscribeOptions`, and `Subscription` for APIs organized around the entrypoint.

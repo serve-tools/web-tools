@@ -59,6 +59,7 @@ The core owns operation IDs, one abort signal per operation, duplicate-ID protec
 
 The defaults allow 16 MiB per incoming message, 16 MiB in an observable send queue, and 1,024 active operations.
 Override `maximumMessageLength`, `maximumBufferedAmount`, or `maximumOperations` where appropriate.
+The message-length limit also clamps declared resizable `ArrayBuffer` capacity during deserialization before allocation.
 Exceeding observable backpressure closes the connection rather than dropping ordered protocol messages.
 
 Handler errors are stack-redacted by default.

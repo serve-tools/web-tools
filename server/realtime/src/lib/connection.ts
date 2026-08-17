@@ -371,7 +371,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		let message: unknown;
 
 		try {
-			message = deserialize(payload);
+			message = deserialize(payload, { maximumArrayBufferLength: maximumMessageLength });
 		} catch (error) {
 			failProtocol(error);
 

@@ -24,6 +24,12 @@ const typedArrayName = Object.getOwnPropertyDescriptor(
 const textDecoder = new TextDecoder("utf-8", { fatal: true });
 const textEncoder = new TextEncoder();
 
+/** Resource limits applied while decoding a structured value. */
+export interface DeserializeOptions {
+	/** Maximum current or resizable `ArrayBuffer` length accepted from the wire. */
+	readonly maximumArrayBufferLength?: number;
+}
+
 const die = (): never => {
 	throw new DOMException("The value could not be cloned", "DataCloneError");
 };
@@ -301,7 +307,13 @@ export function serialize(root: unknown): ArrayBuffer {
 }
 
 /** Deserializes one value from the package's binary wire format. */
-export function deserialize(payload: ArrayBuffer | ArrayBufferView): unknown {
+export function deserialize(payload: ArrayBuffer | ArrayBufferView, options: DeserializeOptions = {}): unknown {
+	const maximumArrayBufferLength = options.maximumArrayBufferLength ?? Number.MAX_SAFE_INTEGER;
+
+	if (!Number.isSafeInteger(maximumArrayBufferLength) || maximumArrayBufferLength < 0) {
+		throw new RangeError("The maximum ArrayBuffer length must be a non-negative safe integer");
+	}
+
 	try {
 		const bytes = ArrayBuffer.isView(payload)
 			? new Uint8Array(payload.buffer, payload.byteOffset, payload.byteLength)
@@ -377,7 +389,9 @@ export function deserialize(payload: ArrayBuffer | ArrayBufferView): unknown {
 						(entry.length !== 3 && entry.length !== 4) ||
 						!isSize(entry[1]) ||
 						!isSize(entry[2]) ||
-						(entry.length === 4 && (!isSize(entry[3]) || entry[3] < entry[2])) ||
+						(entry.length === 4 &&
+							(!isSize(entry[3]) || entry[3] < entry[2] || entry[3] > maximumArrayBufferLength)) ||
+						entry[2] > maximumArrayBufferLength ||
 						entry[1] + entry[2] > bytes.length - binaryOffset
 					) {
 						return die();

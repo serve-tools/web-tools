@@ -29,6 +29,7 @@ if (!isClientMessage(value)) {
 Unsupported values such as functions, symbols, weak collections, `SharedArrayBuffer`, and unknown host objects throw `DataCloneError`.
 
 `deserialize()` reconstructs data produced by the matching serializer.
+Pass `maximumArrayBufferLength` when decoding untrusted data to bound both the current and declared maximum length of resizable buffers before allocation.
 Treat its output as untrusted until a message guard and any application-specific value validation have succeeded.
 
 ## Frame a reliable byte stream
@@ -74,6 +75,7 @@ It is not an unreliable wire protocol by itself and must run over a framed relia
 ## Encode SSE protocol events
 
 The `sse` export provides protocol-qualified media types, a streaming standards-compatible event decoder, event encoding, and runtime-neutral base64 helpers.
+`EventStreamDecoder.reconnectionTime` reflects the latest valid `retry` field immediately; retry-only blocks do not dispatch events.
 It is used by the paired SSE packages so binary protocol messages can travel in event `data` fields while HTTP performs the application handshake.
 
 ## Wire contract
@@ -96,6 +98,7 @@ The root export provides:
 - `serialize(value)` and `deserialize(payload)` for structured binary values;
 - `protocol`, `isClientMessage()`, `isServerMessage()`, and `isErrorRecord()` for the versioned envelope;
 - `subprotocol`, the header-safe `serve-tools.realtime.v1` application protocol identifier;
+- transport negotiation helpers and the two stable WebTransport reliable-stream role bytes used by adapters;
 - protocol, operation, message, and error record types shared by clients and servers.
 
 The `@serve-tools/realtime-protocol/stream` export provides `encodeFrame()`, `FrameDecoder`, and `defaultMaximumFrameLength`.

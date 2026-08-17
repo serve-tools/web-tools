@@ -19,6 +19,7 @@ describe("WebTransport session core", () => {
 		const operationWrites: Uint8Array[] = [];
 		const datagramWrites: Uint8Array[] = [];
 		const cursor = vi.fn();
+		const close = vi.fn();
 		let session!: ReturnType<typeof createSession<TestProtocol>>;
 		const clientRegistry = new DatagramRegistry((payload) => session.receiveRegistry(payload));
 
@@ -31,11 +32,13 @@ describe("WebTransport session core", () => {
 				sendOperations: (payload) => operationWrites.push(payload),
 				sendRegistry: (payload) => clientRegistry.receive(payload),
 				sendDatagram: (payload) => void datagramWrites.push(payload),
-				close: vi.fn(),
+				close,
 				maxDatagramSize: 1_200,
 			},
 			undefined,
 		);
+
+		session.receiveDatagram(encodeDatagram(999, { early: true }));
 
 		session.receiveOperations(encodeFrame(serialize([protocol, "request", 1, "ping", "hello"])));
 
@@ -48,6 +51,7 @@ describe("WebTransport session core", () => {
 			operationWrites.flatMap((chunk) => operationDecoder.push(chunk)).map((frame) => deserialize(frame)),
 		).toEqual([[protocol, "resolve", 1, "hello!"]]);
 		expect(session.datagrams.maxDatagramSize).toBe(1_200);
+		expect(close).not.toHaveBeenCalled();
 
 		const cursorKind = await clientRegistry.register("cursor");
 

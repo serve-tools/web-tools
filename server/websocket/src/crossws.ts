@@ -1,5 +1,5 @@
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
-import { subprotocol } from "@serve-tools/realtime-protocol";
+import { offersWebSocketSubprotocol, subprotocol } from "@serve-tools/realtime-protocol";
 import type { Hooks, Message, Peer } from "crossws";
 import { createConnection } from "./lib/connection.js";
 import type * as T from "./lib/types.js";
@@ -34,7 +34,7 @@ export function createHooks<const P extends Protocol & ProtocolDefinition<P>, Co
 				return new Response("Service Unavailable", { status: 503 });
 			}
 
-			if (!offeredProtocols(request.headers.get("sec-websocket-protocol")).includes(subprotocol)) {
+			if (!offersWebSocketSubprotocol(request.headers.get("sec-websocket-protocol"))) {
 				return new Response("WebSocket Subprotocol Required", { status: 426 });
 			}
 
@@ -67,11 +67,7 @@ export function createHooks<const P extends Protocol & ProtocolDefinition<P>, Co
 			const connection = createConnection(
 				handlers,
 				{
-					send: (payload) => {
-						if (peer.send(payload) === -1) {
-							throw new Error("The crossws peer dropped an outgoing message");
-						}
-					},
+					send: (payload) => peer.send(payload),
 					bufferedAmount: () => peer.bufferedAmount,
 					close: (code, reason) => peer.close(code, reason),
 				},
@@ -153,9 +149,3 @@ const receiveCrosswsMessage = (
 
 	connection.receive(message.uint8Array());
 };
-
-const offeredProtocols = (value: string | null): string[] =>
-	(value ?? "")
-		.split(",")
-		.map((entry) => entry.trim())
-		.filter(Boolean);

@@ -1,4 +1,9 @@
-import type { ClientConnection, RequestOptions, SubscribeOptions, Subscription } from "@serve-tools/client-realtime";
+import type {
+	Client as RealtimeClient,
+	RequestOptions,
+	SubscribeOptions,
+	Subscription,
+} from "@serve-tools/client-realtime";
 import type {
 	ClientDatagramName,
 	ClientDatagramValue,
@@ -58,7 +63,7 @@ export interface ClientDatagrams<P extends Protocol> {
 }
 
 /** A typed request, subscription, and datagram WebTransport client. */
-export interface Client<P extends Protocol = Protocol> extends ClientConnection<P> {
+export interface Client<P extends Protocol = Protocol> extends RealtimeClient<P> {
 	readonly datagrams: ClientDatagrams<P>;
 }
 

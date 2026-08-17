@@ -20,6 +20,13 @@ describe("SSE protocol utilities", () => {
 		expect(decoder.finish()).toEqual([]);
 	});
 
+	it("applies retry fields without dispatching a data-less event", () => {
+		const decoder = new EventStreamDecoder();
+
+		expect(decoder.push(new TextEncoder().encode("retry: 1500\n\n"))).toEqual([]);
+		expect(decoder.reconnectionTime).toBe(1_500);
+	});
+
 	it("round-trips canonical binary event data", () => {
 		const bytes = Uint8Array.of(0, 1, 2, 253, 254, 255);
 

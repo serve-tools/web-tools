@@ -52,8 +52,8 @@ export interface Subscription extends Disposable {
 	unsubscribe(): void;
 }
 
-/** A typed client plus the receive-side methods used by a transport adapter. */
-export interface ClientConnection<P extends Protocol = Protocol> extends Disposable, ProtocolResource<P> {
+/** A typed request and subscription client. */
+export interface Client<P extends Protocol = Protocol> extends Disposable, ProtocolResource<P> {
 	request<Name extends RequestName<P>>(
 		name: Name,
 		...arguments_: RequestArguments<RequestOperation<P, Name>>
@@ -64,6 +64,10 @@ export interface ClientConnection<P extends Protocol = Protocol> extends Disposa
 	): Subscription;
 	readonly closed: Promise<void>;
 	close(reason?: unknown): void;
+}
+
+/** A typed client plus the receive-side methods used by a transport adapter. */
+export interface ClientConnection<P extends Protocol = Protocol> extends Client<P> {
 	receive(payload: ArrayBuffer | ArrayBufferView): void;
 	fail(reason?: unknown): void;
 	disconnect(reason?: unknown): void;
