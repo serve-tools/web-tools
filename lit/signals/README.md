@@ -188,65 +188,41 @@ html`${choose(
 An unmatched value renders nothing when the default callback is omitted.
 Nested `watch()`, `when()`, and `choose()` calls retain independent tracking boundaries.
 
-## `operate(source, ???)`
+## `observeOperationView(view, initialValue?)`
 
-`operate()` ???.
+`observeOperationView()` turns one filtered or mapped `OperationView` into a read-only Signal that retains that view's latest value.
+Pass an initial value when the template should render something before the view emits.
+Create the view and Signal before consuming the subscriber:
 
 ```ts
-import { AsyncOperation, html, operate } from "@serve-tools/lit-signals";
-import { render } from "lit";
+import {
+	AsyncOperation,
+	AsyncOperationSubscriber,
+	html,
+	observeOperationView,
+} from "@serve-tools/lit-signals";
 
-interface Product {
-	name: string;
-	price: number;
-}
-
-const loadProduct = (id: string) =>
-	new AsyncOperation<string, Product>(async (controller) => {
-		await controller.write("Requesting product…");
-
-		const response = await fetch(`/api/products/${id}`, { signal });
-
-		if (!response.ok) {
-			throw new Error(`Product request failed: ${response.status}`);
-		}
-
-		await controller.write("Reading product…");
-
-		return response.json() as Promise<Product>;
-	});
-
-const operation = loadProduct("robot-kit");
-
-render(
-	html`
-		${operate(operation, {
-			pending: () => html`<p>Starting…</p>`,
-			streaming: ({ event }) => html`<p>${event}</p>`,
-			complete: ({ result }) => html`
-				<h1>${result.name}</h1>
-				<p>$${result.price}</p>
-			`,
-			error: ({ error, latest }) => html`
-				<p>${latest ?? "Loading failed"}</p>
-				<pre>${String(error)}</pre>
-			`,
-		})}
-		<button
-			@click=${() => operation.abort(new DOMException("Product load cancelled.", "AbortError"))}
-		>
-			Cancel
-		</button>
-	`,
-	document.querySelector("#product")!,
+const subscriber = new AsyncOperationSubscriber<number>();
+const latestEvenSquare = observeOperationView(
+	subscriber
+		.filter((value) => value % 2 === 0)
+		.map((value) => value ** 2),
+	"Waiting…",
 );
+const operation = new AsyncOperation<number>(async ({ write }) => {
+	await write(1);
+	await write(2);
+});
 
-addEventListener("pagehide", () => void product.dispose(), { once: true });
+html`<output>${latestEvenSquare}</output>`;
+
+void subscriber.consume(operation);
 ```
 
-Only the selected callback is evaluated and tracked.
-Unknown case names are rejected by TypeScript.
-The observation owns and continuously drains the operation stream; Lit only renders its Signal state.
+Without an initial value, the Signal contains `undefined` until its view emits.
+The package's signal-native `html` and `svg` templates observe the Signal directly, so no lifecycle object or case map is needed.
+Disposing the Signal unsubscribes only that view and retains its current value; it does not cancel the subscriber or operation.
+Await `subscriber.consume(operation)` separately when the component needs the operation's final result or error.
 
 ## `repeat(source, key?, renderItem)`
 

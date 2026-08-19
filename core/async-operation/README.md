@@ -57,6 +57,38 @@ The operation attaches an internal rejection handler to its result, so disposing
 The original `result` remains rejectable and can still be awaited normally.
 The operation is intentionally not promise-like, so returning it from an async function preserves the operation object rather than assimilating its result.
 
+## Shared subscriptions
+
+Use `AsyncOperationSubscriber` when several consumers need the same ordered operation values.
+Configure its filter/map graph and terminal subscriptions before calling `consume()`:
+
+```ts
+import { AsyncOperation, AsyncOperationSubscriber } from "@serve-tools/async-operation";
+
+await using subscriber = new AsyncOperationSubscriber<number, string>();
+using logAll = subscriber.subscribe((value, index) => {
+	console.log(index, value);
+});
+using logEvenSquares = subscriber
+	.filter((value) => value % 2 === 0)
+	.map((value) => value ** 2)
+	.subscribe((value) => {
+		console.log("even square", value);
+	});
+
+const result = await subscriber.consume(operation);
+```
+
+The subscriber owns the operation's single async iterator and multicasts each value to every active branch.
+Matching callbacks and projections start concurrently, and all settle before the next operation value is requested, preserving backpressure.
+An unsubscribed branch is skipped.
+Each view has its own zero-based output index, so a filtered or mapped view counts only values it emits.
+
+A subscriber consumes at most one operation.
+After consumption starts, its graph cannot be changed, although an existing subscription can still be disposed.
+A projection or callback failure cancels the operation with that failure as its canonical reason.
+Disposing the subscriber cancels an active operation and waits for producer cleanup.
+
 ## Upstream cancellation and buffering
 
 Pass an upstream `AbortSignal` or readable-side stream queuing strategy when needed:

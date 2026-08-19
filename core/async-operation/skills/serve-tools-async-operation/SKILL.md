@@ -11,5 +11,6 @@ Read only the references needed for the current task.
 ## Route by task
 
 - [Recipe: construct and consume an operation](references/recipe-quick-start.md): compile-checked value streaming, terminal result, cancellation, and disposal usage.
+- To multicast one operation through filtered and mapped branches, read [Share operation values](references/share-operation-values.md).
 - To preserve terminal and cancellation behavior, read [Preserve operation lifecycle semantics](references/preserve-lifecycle-semantics.md).
 - To adapt a producer correctly, read [Adapt value-producing work](references/adapt-value-producers.md).

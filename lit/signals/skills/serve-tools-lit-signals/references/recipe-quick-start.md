@@ -5,7 +5,14 @@ This public-import example is generated from the compile-checked `test/lit-signa
 ```ts
 import { LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
-import { html, Signal, watch } from "@serve-tools/lit-signals";
+import {
+	AsyncOperation,
+	AsyncOperationSubscriber,
+	html,
+	observeOperationView,
+	Signal,
+	watch,
+} from "@serve-tools/lit-signals";
 
 @customElement("recipe-counter")
 class RecipeCounter extends LitElement {
@@ -17,4 +24,19 @@ class RecipeCounter extends LitElement {
 }
 
 void RecipeCounter;
+
+const operation = new AsyncOperation<string, number>(async ({ write }) => {
+	await write("loading");
+
+	return 42;
+});
+const subscriber = new AsyncOperationSubscriber<string, number>();
+using latestLength = observeOperationView(
+	subscriber.map((value) => value.length),
+	"Waiting",
+);
+
+html`<output>${latestLength}</output>`;
+
+void subscriber.consume(operation);
 ```

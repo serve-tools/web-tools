@@ -4,7 +4,8 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
-- Add `@serve-tools/async-operation@0.1.0` with typed backpressured events, one terminal result, canonical cancellation, upstream abort composition, and asynchronous disposal.
+- Add `@serve-tools/async-operation@0.1.0` with typed backpressured events, one terminal result, canonical cancellation, upstream abort composition, asynchronous disposal, and shared filtered/mapped subscriptions.
+- Add `OperationViewSignal` and `observeOperationView()` to `@serve-tools/lit-signals@0.4.0` for rendering one filtered or mapped operation view as a retained Signal.
 - Add `@serve-tools/signals@0.1.0` as a flat facade with focused subpaths for the compatible Signal runtime, collections, and effects.
 - Add Node.js runtimes for `@serve-tools/ponyfill-arraybuffer-base64@0.1.0` and `@serve-tools/polyfill-arraybuffer-base64@0.1.0` with the `Uint8Array.prototype.toBase64()` contract.
 - Add `@serve-tools/realtime-protocol@0.1.0` with the shared binary serializer, typed message tuples, runtime guards, error records, and bounded reliable-stream framing for WebSocket and future WebTransport integrations.
