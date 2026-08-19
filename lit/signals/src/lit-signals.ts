@@ -5,6 +5,7 @@ export * from "@serve-tools/signal-event-target";
 export * from "./callbackRef.js";
 export type { ReactiveCallback, ReactiveSource } from "./directives/.internals.js";
 export * from "./directives/choose.js";
+export * from "./directives/operate.js";
 export * from "./directives/repeat.js";
 export * from "./directives/watch.js";
 export * from "./directives/when.js";

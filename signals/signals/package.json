@@ -1,0 +1,52 @@
+{
+	"name": "@serve-tools/signals",
+	"version": "0.1.0",
+	"description": "Flat access to compatible Signal primitives, collections, and effects",
+	"keywords": [
+		"collection",
+		"computed",
+		"effect",
+		"reactive",
+		"reactivity",
+		"signal",
+		"state",
+		"tc39",
+		"watcher"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/signals/signals#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "signals/signals"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/signals.js",
+		"./collections": "./dist/lib/collections.js",
+		"./effect": "./dist/lib/effect.js",
+		"./signal": "./dist/lib/signal.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build --force tsconfig.json",
+		"build:dependencies": "npm run build --workspace @serve-tools/signal --workspace @serve-tools/signal-collections --workspace @serve-tools/signal-effect",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json --noEmit"
+	},
+	"dependencies": {
+		"@serve-tools/signal": "^0.1",
+		"@serve-tools/signal-collections": "^0.1",
+		"@serve-tools/signal-effect": "^0.1"
+	}
+}

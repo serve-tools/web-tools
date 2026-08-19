@@ -1,0 +1,48 @@
+{
+	"name": "@serve-tools/async-operation",
+	"version": "0.1.0",
+	"description": "Owned asynchronous operations with typed value streams and terminal results",
+	"keywords": [
+		"abort-controller",
+		"async-disposable",
+		"async-iterator",
+		"async-operation",
+		"backpressure",
+		"cancellation",
+		"concurrency",
+		"structured-concurrency"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/core/async-operation#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "core/async-operation"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/operation.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"benchmark": "vitest run --config vitest.benchmark.config.ts",
+		"build": "tsc --build --force tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run test:node && npm run test:browser",
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"test:node": "vitest run --config vitest.config.ts",
+		"typecheck": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"devDependencies": {
+		"ai": "7.0.66"
+	}
+}

@@ -4,6 +4,8 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
+- Add `@serve-tools/async-operation@0.1.0` with typed backpressured events, one terminal result, canonical cancellation, upstream abort composition, and asynchronous disposal.
+- Add `@serve-tools/signals@0.1.0` as a flat facade with focused subpaths for the compatible Signal runtime, collections, and effects.
 - Add Node.js runtimes for `@serve-tools/ponyfill-arraybuffer-base64@0.1.0` and `@serve-tools/polyfill-arraybuffer-base64@0.1.0` with the `Uint8Array.prototype.toBase64()` contract.
 - Add `@serve-tools/realtime-protocol@0.1.0` with the shared binary serializer, typed message tuples, runtime guards, error records, and bounded reliable-stream framing for WebSocket and future WebTransport integrations.
 - Establish `@serve-tools/realtime/1` as the initial wire-protocol compatibility identifier.
@@ -23,7 +25,7 @@ All notable changes to this package collection are documented here.
 - Harden the pending realtime packages for aborted HTTP requests, bounded streaming bodies and resizable buffers, exact remote errors, Bun backpressure, datagram registration races, and WebTransport lifetime aborts.
 - Centralize native WebSocket and WebTransport offer parsing and reliable WebTransport stream roles, and keep receive-side adapter controls out of public network client types.
 - Prepare browser-package patch releases for `@serve-tools/client-context@0.1.1`, `@serve-tools/client-db@0.1.2`, `@serve-tools/client-input@0.1.1`, `@serve-tools/client-interaction@0.1.1`, `@serve-tools/client-keyboard@0.1.1`, and `@serve-tools/client-storage@0.1.3`.
-- Prepare Signal and Lit patch releases for `@serve-tools/signal-dom@0.1.2`, `@serve-tools/signal-event-target@0.1.1`, `@serve-tools/signal-storage@0.1.2`, `@serve-tools/lit-signals@0.3.1`, `@serve-tools/signal-collections@0.1.2`, `@serve-tools/signal-effect@0.1.2`, and `@serve-tools/signal@0.1.2`.
+- Prepare Signal and Lit releases for `@serve-tools/signal-dom@0.1.2`, `@serve-tools/signal-event-target@0.1.1`, `@serve-tools/signal-storage@0.1.2`, `@serve-tools/lit-signals@0.4.0`, `@serve-tools/signal-collections@0.1.2`, `@serve-tools/signal-effect@0.1.2`, and `@serve-tools/signal@0.1.2`.
 - Prepare platform-tooling patch releases for `@serve-tools/polyfill-request-idle-callback@0.1.2`, `@serve-tools/polyfill-resource-management@0.1.2`, `@serve-tools/ponyfill-request-idle-callback@0.1.2`, `@serve-tools/ponyfill-resource-management@0.1.2`, and `@serve-tools/vite-polyfills@0.1.2`.
 
 ## 0.4.0 - 2026-08-15

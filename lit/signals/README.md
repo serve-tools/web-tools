@@ -188,6 +188,66 @@ html`${choose(
 An unmatched value renders nothing when the default callback is omitted.
 Nested `watch()`, `when()`, and `choose()` calls retain independent tracking boundaries.
 
+## `operate(source, ???)`
+
+`operate()` ???.
+
+```ts
+import { AsyncOperation, html, operate } from "@serve-tools/lit-signals";
+import { render } from "lit";
+
+interface Product {
+	name: string;
+	price: number;
+}
+
+const loadProduct = (id: string) =>
+	new AsyncOperation<string, Product>(async (controller) => {
+		await controller.write("Requesting product…");
+
+		const response = await fetch(`/api/products/${id}`, { signal });
+
+		if (!response.ok) {
+			throw new Error(`Product request failed: ${response.status}`);
+		}
+
+		await controller.write("Reading product…");
+
+		return response.json() as Promise<Product>;
+	});
+
+const operation = loadProduct("robot-kit");
+
+render(
+	html`
+		${operate(operation, {
+			pending: () => html`<p>Starting…</p>`,
+			streaming: ({ event }) => html`<p>${event}</p>`,
+			complete: ({ result }) => html`
+				<h1>${result.name}</h1>
+				<p>$${result.price}</p>
+			`,
+			error: ({ error, latest }) => html`
+				<p>${latest ?? "Loading failed"}</p>
+				<pre>${String(error)}</pre>
+			`,
+		})}
+		<button
+			@click=${() => operation.abort(new DOMException("Product load cancelled.", "AbortError"))}
+		>
+			Cancel
+		</button>
+	`,
+	document.querySelector("#product")!,
+);
+
+addEventListener("pagehide", () => void product.dispose(), { once: true });
+```
+
+Only the selected callback is evaluated and tracked.
+Unknown case names are rejected by TypeScript.
+The observation owns and continuously drains the operation stream; Lit only renders its Signal state.
+
 ## `repeat(source, key?, renderItem)`
 
 `repeat()` reconciles a reactive iterable with Lit's stable keyed DOM algorithm and gives every rendered row an independent computed signal boundary.

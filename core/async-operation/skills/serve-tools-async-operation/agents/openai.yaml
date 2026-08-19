@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Async Operation"
+  short_description: "Own cancellable async value streams and results"
+  default_prompt: "Use $serve-tools-async-operation to model this asynchronous operation correctly."

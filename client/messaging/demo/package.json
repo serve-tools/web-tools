@@ -11,7 +11,7 @@
 		"typecheck": "node scripts/build-local-dependency.mjs && tsc --project tsconfig.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-messaging": "*"
+		"@serve-tools/client-messaging": "^0.2"
 	},
 	"devDependencies": {
 		"typescript": "7.0.2",

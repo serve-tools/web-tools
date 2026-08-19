@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Signals"
+  short_description: "Use compatible Signal primitives and utilities"
+  default_prompt: "Use $serve-tools-signals to select and apply compatible Serve Tools Signal primitives, collections, and effects."

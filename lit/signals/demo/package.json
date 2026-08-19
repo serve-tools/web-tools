@@ -11,7 +11,7 @@
 		"typecheck": "node scripts/build-local-dependency.mjs && tsc --project tsconfig.json"
 	},
 	"dependencies": {
-		"@serve-tools/lit-signals": "*"
+		"@serve-tools/lit-signals": "^0.4"
 	},
 	"devDependencies": {
 		"typescript": "7.0.2",

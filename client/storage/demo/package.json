@@ -11,7 +11,7 @@
 		"typecheck": "node scripts/build-local-dependency.mjs && tsc --project tsconfig.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-storage": "*"
+		"@serve-tools/client-storage": "^0.1"
 	},
 	"devDependencies": {
 		"typescript": "7.0.2",

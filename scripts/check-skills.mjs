@@ -78,18 +78,18 @@ if (maintainerSkill !== undefined) {
 
 await validateReleasePackages(publicPackageNames, errors);
 
-if (publicPackages !== 53) {
-	errors.push(`expected 53 public workspaces, found ${publicPackages}`);
+if (publicPackages !== 55) {
+	errors.push(`expected 55 public workspaces, found ${publicPackages}`);
 }
 
-if (publishedMetadataCharacters > 6_300) {
+if (publishedMetadataCharacters > 6_650) {
 	errors.push(
-		`Published Skill names and descriptions use ${publishedMetadataCharacters} characters; keep them at or below 6300`,
+		`Published Skill names and descriptions use ${publishedMetadataCharacters} characters; keep them at or below 6650`,
 	);
 }
 
-if (metadataCharacters > 6_700) {
-	errors.push(`All Skill names and descriptions use ${metadataCharacters} characters; keep them at or below 6700`);
+if (metadataCharacters > 7_050) {
+	errors.push(`All Skill names and descriptions use ${metadataCharacters} characters; keep them at or below 7050`);
 }
 
 if (errors.length > 0) {

@@ -15,11 +15,13 @@
 	"author": "Jonathan Neal",
 	"type": "module",
 	"workspaces": [
+		"client/client",
 		"client/context",
 		"client/context/demo",
 		"client/db",
 		"client/db/demo",
 		"client/event-source",
+		"client/http-stream",
 		"client/input",
 		"client/input/demo",
 		"client/interaction",
@@ -27,9 +29,8 @@
 		"client/keyboard",
 		"client/keyboard/demo",
 		"client/messaging",
-		"client/realtime",
-		"client/http-stream",
 		"client/messaging/demo",
+		"client/realtime",
 		"client/shared-db",
 		"client/shared-db/demo",
 		"client/shared-event-source",
@@ -37,15 +38,15 @@
 		"client/shared-websocket",
 		"client/shared-webtransport",
 		"client/storage",
+		"client/storage/demo",
 		"client/websocket",
 		"client/webtransport",
-		"client/client",
-		"client/storage/demo",
+		"client-signals/client-signals",
+		"client-signals/db",
 		"client-signals/dom",
 		"client-signals/dom/demo",
-		"client-signals/event-target",
 		"client-signals/event-source",
-		"client-signals/db",
+		"client-signals/event-target",
 		"client-signals/http-stream",
 		"client-signals/messaging",
 		"client-signals/shared-db",
@@ -56,45 +57,48 @@
 		"client-signals/storage",
 		"client-signals/websocket",
 		"client-signals/webtransport",
-		"client-signals/client-signals",
+		"core/async-operation",
 		"lit/signals",
 		"lit/signals/demo",
 		"polyfills/arraybuffer-base64",
-		"polyfills/request-idle-callback",
 		"polyfills/report-error",
+		"polyfills/request-idle-callback",
 		"polyfills/resource-management",
 		"ponyfills/arraybuffer-base64",
-		"ponyfills/request-idle-callback",
 		"ponyfills/report-error",
+		"ponyfills/request-idle-callback",
 		"ponyfills/resource-management",
-		"server/websocket",
-		"server/realtime",
+		"realtime/protocol",
 		"server/event-source",
 		"server/http-stream",
+		"server/realtime",
+		"server/websocket",
 		"server/webtransport",
 		"signals/collections",
 		"signals/effect",
 		"signals/signal",
+		"signals/signals",
 		"suite",
-		"vite/polyfills",
-		"realtime/protocol"
+		"vite/polyfills"
 	],
 	"scripts": {
 		"benchmark": "npm run benchmark --workspaces --if-present",
 		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket --workspace @serve-tools/signal-websocket",
 		"benchmark:realtime": "npm run benchmark --workspace @serve-tools/realtime-protocol --workspace @serve-tools/client-messaging --workspace @serve-tools/client-websocket --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-http-stream --workspace @serve-tools/client-webtransport --workspace @serve-tools/signal-websocket",
 		"benchmark:skills": "node benchmark/skills/run.mjs",
-		"build": "npm run build --workspaces --if-present",
+		"build": "npm --workspaces --if-present run build",
 		"build:pages": "node scripts/build-pages.mjs",
-		"check:packages": "npm run check:package --workspaces --if-present",
+		"check:packages": "node scripts/check-packages.mjs",
 		"check:skill-bench": "node --test benchmark/skills/test/*.test.mjs && node benchmark/skills/run.mjs --provider fixture --no-compile --quiet",
 		"check:skills": "node scripts/check-skills.mjs",
 		"format": "dprint fmt",
 		"format:check": "dprint check",
 		"lint": "biome check",
 		"lint:fix": "biome check --write",
+		"sync:pkg-versions": "node scripts/sync-pkg-versions.js",
 		"sync:skill-recipes": "node scripts/check-skills.mjs --write-recipes",
 		"test": "npm run test --workspaces --if-present",
+		"test:browser:consolidated": "vitest run --config vitest.browser.projects.config.ts --maxWorkers=1 && vitest run --root client-signals/shared-db --config vitest.browser.config.ts && npm run test:browser --workspace @serve-tools/signal-dom",
 		"typecheck": "npm run typecheck --workspaces --if-present",
 		"verify": "npm run lint && npm run format:check && npm run typecheck && npm test && npm run check:skills && npm run check:skill-bench && npm run build && npm run check:packages"
 	},
@@ -141,11 +145,6 @@
 					"ws"
 				]
 			},
-			"client-signals/client-signals": {
-				"entry": [
-					"test/*.{recipes,types}.ts"
-				]
-			},
 			"client/client": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
@@ -153,6 +152,17 @@
 			},
 			"client/context": {
 				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"client/db": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"client/http-stream": {
+				"entry": [
+					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"
 				]
 			},
@@ -171,39 +181,6 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
-			"client-signals/dom": {
-				"entry": [
-					"test/*.recipes.ts"
-				],
-				"ignoreUnresolved": [
-					"/dom/signal-dom.js"
-				]
-			},
-			"client-signals/event-target": {
-				"entry": [
-					"test/*.{recipes,types}.ts"
-				]
-			},
-			"client-signals/db": {
-				"entry": [
-					"test/*.{recipes,types}.ts"
-				]
-			},
-			"client-signals/http-stream": {
-				"entry": [
-					"test/*.{recipes,types}.ts"
-				]
-			},
-			"client-signals/messaging": {
-				"entry": [
-					"test/*.{recipes,types}.ts"
-				]
-			},
-			"client/db": {
-				"entry": [
-					"test/*.{recipes,types}.ts"
-				]
-			},
 			"client/messaging": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
@@ -212,22 +189,6 @@
 			"client/realtime": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
-				]
-			},
-			"client/http-stream": {
-				"entry": [
-					"benchmark/*.benchmark.ts",
-					"test/*.{recipes,types}.ts"
-				]
-			},
-			"ponyfills/report-error": {
-				"entry": [
-					"test/*.recipes.ts"
-				]
-			},
-			"polyfills/report-error": {
-				"entry": [
-					"test/*.recipes.ts"
 				]
 			},
 			"client/shared-db": {
@@ -272,35 +233,36 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
-			"realtime/protocol": {
-				"entry": [
-					"benchmark/*.benchmark.ts",
-					"test/*.{recipes,types}.ts"
-				]
-			},
-			"server/websocket": {
+			"client-signals/client-signals": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
 				]
 			},
-			"server/realtime": {
+			"client-signals/db": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
 				]
 			},
-			"server/http-stream": {
+			"client-signals/dom": {
+				"entry": [
+					"test/*.recipes.ts"
+				],
+				"ignoreUnresolved": [
+					"/dom/signal-dom.js"
+				]
+			},
+			"client-signals/event-target": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
 				]
 			},
-			"server/webtransport": {
+			"client-signals/http-stream": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
 				]
 			},
-			"lit/signals": {
+			"client-signals/messaging": {
 				"entry": [
-					"src/{decorators,lit-signals}.ts",
 					"test/*.{recipes,types}.ts"
 				]
 			},
@@ -340,7 +302,23 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
+			"core/async-operation": {
+				"entry": [
+					"benchmark/*.benchmark.ts"
+				]
+			},
+			"lit/signals": {
+				"entry": [
+					"src/{decorators,lit-signals}.ts",
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"polyfills/arraybuffer-base64": {
+				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
+			"polyfills/report-error": {
 				"entry": [
 					"test/*.recipes.ts"
 				]
@@ -360,6 +338,11 @@
 					"test/*.recipes.ts"
 				]
 			},
+			"ponyfills/report-error": {
+				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
 			"ponyfills/request-idle-callback": {
 				"entry": [
 					"src/ponyfill-request-idle-callback.ts",
@@ -375,6 +358,32 @@
 				"entry": [
 					"src/ponyfill-resource-management.ts",
 					"test/*.recipes.ts"
+				]
+			},
+			"realtime/protocol": {
+				"entry": [
+					"benchmark/*.benchmark.ts",
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"server/http-stream": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"server/realtime": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"server/websocket": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"server/webtransport": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"signals/collections": {

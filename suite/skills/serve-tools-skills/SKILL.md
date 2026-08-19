@@ -1,12 +1,13 @@
 ---
 name: serve-tools-skills
-description: Use @serve-tools/skills to choose among browser, server, realtime, signals, Lit, polyfill, and Vite packages.
+description: Use @serve-tools/skills to choose focused Serve Tools packages.
 ---
 
 # Serve Tools package guide
 
 Choose packages by required capability and runtime ownership.
-Prefer a focused package over `@serve-tools/client`; use the facade only when namespace-oriented access to several client utilities is intentional.
+Prefer a focused package over `@serve-tools/client` or `@serve-tools/signals`.
+Use a facade only when access to several related packages is intentional.
 
 ## Route the task
 

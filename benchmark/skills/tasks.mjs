@@ -1,5 +1,10 @@
 const selections = [
 	[
+		"owned-async-operation",
+		"Represent one runtime-neutral asynchronous lifetime with ordered typed intermediate events, a terminal result, cancellation, stream backpressure, and asynchronous disposal.",
+		"@serve-tools/async-operation",
+	],
+	[
 		"context-provider-replay",
 		"Components outside Lit need typed DOM context providers and consumers. A consumer may connect before its provider, and it must receive late registrations and subsequent values.",
 		"@serve-tools/client-context",
@@ -205,6 +210,11 @@ const selections = [
 		"@serve-tools/signal",
 	],
 	[
+		"combined-signal-toolkit",
+		"One module intentionally combines core TC39 Signals, reactive collections, and effects and wants one compatible facade dependency with focused subpaths.",
+		"@serve-tools/signals",
+	],
+	[
 		"idle-callback-global",
 		"Legacy third-party code calls globalThis.requestIdleCallback directly. Install compatible globals when the browser lacks them.",
 		"@serve-tools/polyfill-request-idle-callback",
@@ -351,6 +361,14 @@ const compositionTasks = [
 ];
 
 const usageTasks = [
+	usage(
+		"async-operation-lifecycle",
+		"Create an owned asynchronous operation that emits connecting and ready events with backpressure, returns a terminal result, consumes the events in order, and disposes its producer lifetime.",
+		["@serve-tools/async-operation"],
+		"core/async-operation/test/async-operation.recipes.ts",
+		["new AsyncOperation", "await write(", "for await", "await operation", "await using"],
+		["core/async-operation/skills/serve-tools-async-operation/references/recipe-quick-start.md"],
+	),
 	usage(
 		"typed-websocket-client",
 		"Implement a typed WebSocket client with an authenticate request, a messages subscription, AbortSignal cancellation, protocol extraction, and deterministic connection disposal.",

@@ -11,8 +11,8 @@
 		"typecheck": "node scripts/build-local-dependency.mjs && tsc --project tsconfig.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-db": "*",
-		"@serve-tools/client-shared-db": "*"
+		"@serve-tools/client-db": "^0.1",
+		"@serve-tools/client-shared-db": "^0.2"
 	},
 	"devDependencies": {
 		"typescript": "7.0.2",

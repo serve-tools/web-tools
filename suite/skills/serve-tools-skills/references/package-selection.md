@@ -4,6 +4,7 @@ Select the narrowest package that owns the required behavior.
 
 | Need                                            | Package                                       | Distinguishing behavior                                                |
 | ----------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
+| Owned async events plus a terminal result       | `@serve-tools/async-operation`                | Backpressure, cancellation, and asynchronous disposal                  |
 | Several browser utilities through namespaces    | `@serve-tools/client`                         | Facade with focused capability subpaths                                |
 | DOM context propagation                         | `@serve-tools/client-context`                 | Provider and consumer lifecycle with late-registration replay          |
 | Direct IndexedDB operations                     | `@serve-tools/client-db`                      | Promise-based databases, transactions, and scans                       |
@@ -43,6 +44,7 @@ Select the narrowest package that owns the required behavior.
 | Shared WebTransport client with Signals         | `@serve-tools/signal-shared-webtransport`     | Complete shared lifecycle plus reliable page-owned state               |
 | Web Storage values as Signals                   | `@serve-tools/signal-storage`                 | Reactive storage watches                                               |
 | Signal-aware Lit components                     | `@serve-tools/lit-signals`                    | Templates, directives, decorators, host styles, and lifecycle tracking |
+| Core Signal capabilities together               | `@serve-tools/signals`                        | Flat facade with focused package subpaths                              |
 | Signal-aware maps, sets, and weak collections   | `@serve-tools/signal-collections`             | Native collection interfaces with reactive reads                       |
 | Batched reactive side effects                   | `@serve-tools/signal-effect`                  | Microtask-batched effects                                              |
 | Core Signals primitives                         | `@serve-tools/signal`                         | TC39 Signals proposal implementation                                   |
@@ -60,10 +62,12 @@ Select `@serve-tools/signal` separately only when application code imports it di
 
 ## Selection rules
 
+- Choose `@serve-tools/async-operation` for runtime-neutral owned work; keep transport framing, reconciliation, persistence, and reactive state in their owning layers.
 - Choose a `client-*` package when imperative state or transport APIs are sufficient.
 - Pair each realtime client with its matching server package.
 - Choose the `client-realtime` or `server-realtime` core only when building another transport adapter.
 - Choose `@serve-tools/realtime-protocol` directly only for transport integration or protocol infrastructure.
 - Choose a capability-complete `signal-*` counterpart instead when consumers need reactive reads alongside the same client operations.
+- Choose `@serve-tools/signals` when one module intentionally uses several core Signal capabilities together; otherwise use the focused owning package.
 - Choose a ponyfill when the fallback implementation itself is required, a non-apply polyfill export for native-first selection, and an apply entrypoint for global compatibility.
 - Choose `@serve-tools/vite-polyfills` when support should be derived and injected by the build rather than selected in application code.

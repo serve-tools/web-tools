@@ -8,6 +8,7 @@ on:
         required: true
         type: choice
         options:
+          - "@serve-tools/async-operation"
           - "@serve-tools/client-context"
           - "@serve-tools/client-db"
           - "@serve-tools/client-event-source"
@@ -59,6 +60,7 @@ on:
           - "@serve-tools/signal-websocket"
           - "@serve-tools/signal-webtransport"
           - "@serve-tools/signal"
+          - "@serve-tools/signals"
           - "@serve-tools/skills"
           - "@serve-tools/vite-polyfills"
       version:

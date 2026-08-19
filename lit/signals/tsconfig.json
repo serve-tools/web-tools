@@ -14,6 +14,9 @@
 			"path": "../../client/context/tsconfig.json"
 		},
 		{
+			"path": "../../core/async-operation/tsconfig.json"
+		},
+		{
 			"path": "../../signals/collections/tsconfig.json"
 		},
 		{

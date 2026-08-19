@@ -4,6 +4,7 @@ Load only the Skill for the affected public package.
 
 | Workspace                            | Package Skill                                                                                |
 | ------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `core/async-operation`               | `core/async-operation/skills/serve-tools-async-operation/SKILL.md`                           |
 | `client/client`                      | `client/client/skills/serve-tools-client/SKILL.md`                                           |
 | `client/context`                     | `client/context/skills/serve-tools-client-context/SKILL.md`                                  |
 | `client/db`                          | `client/db/skills/serve-tools-client-db/SKILL.md`                                            |
@@ -55,6 +56,7 @@ Load only the Skill for the affected public package.
 | `signals/collections`                | `signals/collections/skills/serve-tools-signal-collections/SKILL.md`                         |
 | `signals/effect`                     | `signals/effect/skills/serve-tools-signal-effect/SKILL.md`                                   |
 | `signals/signal`                     | `signals/signal/skills/serve-tools-signal/SKILL.md`                                          |
+| `signals/signals`                    | `signals/signals/skills/serve-tools-signals/SKILL.md`                                        |
 | `suite`                              | `suite/skills/serve-tools-skills/SKILL.md`                                                   |
 | `vite/polyfills`                     | `vite/polyfills/skills/serve-tools-vite-polyfills/SKILL.md`                                  |
 

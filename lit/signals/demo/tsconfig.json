@@ -1,8 +1,11 @@
 {
+	"extends": "../../../tsconfig.json",
 	"compilerOptions": {
 		"exactOptionalPropertyTypes": true,
 		"forceConsistentCasingInFileNames": true,
 		"lib": ["ES2025", "DOM"],
+		"outDir": "dist",
+		"rootDir": "src",
 		"module": "es2022",
 		"moduleResolution": "bundler",
 		"noEmit": true,
@@ -11,7 +14,7 @@
 		"target": "es2025",
 		"types": ["vite/client"]
 	},
-	"include": ["src/**/*.ts", "vite.config.ts"],
+	"include": ["src/**/*.ts", "src/**/.*.ts"],
 	"references": [
 		{
 			"path": "../tsconfig.json"

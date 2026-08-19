@@ -26,6 +26,7 @@ Use `@serve-tools/client-messaging` for request and subscription transport witho
 Use `@serve-tools/lit-signals` for Lit lifecycle integration.
 `@serve-tools/lit-signals` re-exports `Signal`; add `@serve-tools/signal` only when importing it directly.
 Add `@serve-tools/signal-effect` or `@serve-tools/signal-collections` only when the component directly needs those APIs.
+Use `@serve-tools/signals` instead when a non-Lit application module intentionally combines several core Signal capabilities.
 
 ## Browser compatibility
 
@@ -37,4 +38,5 @@ Use `@serve-tools/vite-polyfills` when Vite should inject feature-specific polyf
 
 Use `@serve-tools/client` when one module intentionally exposes several client namespaces.
 Use `@serve-tools/client-signals` when those namespaces should include their Signal-aware variants.
+Use `@serve-tools/signals` when one module intentionally combines the core Signal packages through a flat API.
 Use focused packages for isolated capabilities, smaller dependency surfaces, and clearer ownership.

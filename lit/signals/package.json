@@ -1,8 +1,9 @@
 {
 	"name": "@serve-tools/lit-signals",
-	"version": "0.3.1",
+	"version": "0.4.0",
 	"description": "Signal-native Lit templates, styles, directives, and decorators",
 	"keywords": [
+		"async-operation",
 		"computed",
 		"css",
 		"context",
@@ -53,6 +54,7 @@
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
+		"@serve-tools/async-operation": "^0.1",
 		"@serve-tools/client-context": "^0.1",
 		"@serve-tools/signal": "^0.1",
 		"@serve-tools/signal-collections": "^0.1",

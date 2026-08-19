@@ -1,11 +1,12 @@
 # @serve-tools/web-tools
 
-Client and server libraries, realtime protocols, Lit integrations, polyfills, ponyfills, Signal libraries, and Vite plugins maintained under the `@serve-tools` npm scope.
+Core, client and server libraries, realtime protocols, Lit integrations, polyfills, ponyfills, Signal libraries, and Vite plugins maintained under the `@serve-tools` npm scope.
 
 ## Workspace layout
 
 - [`client/`](./client/) contains libraries for browser databases, storage, messaging, and other client runtime capabilities.
 - [`client-signals/`](./client-signals/) contains signal-aware browser database, storage, and DOM libraries.
+- [`core/`](./core/) contains general runtime-neutral APIs.
 - [`lit/`](./lit/) contains Lit integrations.
 - [`polyfills/`](./polyfills/) contains polyfills that modify the global environment.
 - [`ponyfills/`](./ponyfills/) contains ponyfills imported without global modification.
@@ -33,6 +34,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 
 ## Packages
 
+- [`@serve-tools/async-operation`](./core/async-operation/) provides owned asynchronous work with typed events, terminal results, cancellation, backpressure, and disposal.
 - [`@serve-tools/client`](./client/client/) provides namespace-oriented access to the client libraries and focused capability subpaths.
 - [`@serve-tools/client-context`](./client/context/) provides interoperable context events, lifecycle-owned providers and consumers, and indexed late-registration replay.
 - [`@serve-tools/client-db`](./client/db/) provides promise-based IndexedDB operations, transactions, and scans.
@@ -75,6 +77,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/signal-collections`](./signals/collections/) provides signal-aware native collections.
 - [`@serve-tools/signal-effect`](./signals/effect/) provides microtask-batched effects.
 - [`@serve-tools/signal`](./signals/signal/) implements the TC39 Signals proposal.
+- [`@serve-tools/signals`](./signals/signals/) provides flat access to the compatible Signal runtime, collections, and effects.
 - [`@serve-tools/skills`](./suite/) provides package-selection guidance for the complete suite without runtime JavaScript.
 - [`@serve-tools/vite-polyfills`](./vite/polyfills/) detects and injects polyfills for unsupported JavaScript features in Vite projects.
 
