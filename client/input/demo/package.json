@@ -5,10 +5,12 @@
 	"description": "Browser demo for @serve-tools/client-input",
 	"type": "module",
 	"scripts": {
-		"build": "npm run typecheck && vite build",
+		"build": "npm run typecheck && npm run build:bundle",
+		"build:bundle": "vite build",
 		"dev": "vite",
 		"preview": "vite preview",
-		"typecheck": "node scripts/build-local-dependency.mjs && tsc --project tsconfig.json"
+		"typecheck": "node scripts/build-local-dependency.mjs && npm run typecheck:local",
+		"typecheck:local": "tsc --project tsconfig.json"
 	},
 	"dependencies": {
 		"@serve-tools/client-input": "^0.1"

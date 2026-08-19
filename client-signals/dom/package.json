@@ -31,7 +31,7 @@
 	],
 	"scripts": {
 		"benchmark": "vitest run --config vitest.benchmark.config.ts",
-		"build": "tsc --build --force tsconfig.build.json",
+		"build": "tsc --build tsconfig.build.json",
 		"build:dependencies": "npm run build --workspace @serve-tools/signal --workspace @serve-tools/signal-effect",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",

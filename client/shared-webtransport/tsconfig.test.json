@@ -12,6 +12,9 @@
 		},
 		{
 			"path": "../webtransport/tsconfig.json"
+		},
+		{
+			"path": "../../realtime/protocol/tsconfig.json"
 		}
 	]
 }

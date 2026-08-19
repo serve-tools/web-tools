@@ -8,7 +8,46 @@
 	"include": ["src/**/*.ts", "test/**/*.ts", "vitest.config.ts"],
 	"references": [
 		{
-			"path": "./tsconfig.json"
+			"path": "../db/tsconfig.json"
+		},
+		{
+			"path": "../dom/tsconfig.build.json"
+		},
+		{
+			"path": "../event-source/tsconfig.json"
+		},
+		{
+			"path": "../event-target/tsconfig.json"
+		},
+		{
+			"path": "../http-stream/tsconfig.json"
+		},
+		{
+			"path": "../messaging/tsconfig.json"
+		},
+		{
+			"path": "../shared-db/tsconfig.json"
+		},
+		{
+			"path": "../shared-event-source/tsconfig.json"
+		},
+		{
+			"path": "../shared-http-stream/tsconfig.json"
+		},
+		{
+			"path": "../shared-websocket/tsconfig.json"
+		},
+		{
+			"path": "../shared-webtransport/tsconfig.json"
+		},
+		{
+			"path": "../storage/tsconfig.json"
+		},
+		{
+			"path": "../websocket/tsconfig.json"
+		},
+		{
+			"path": "../webtransport/tsconfig.json"
 		}
 	]
 }

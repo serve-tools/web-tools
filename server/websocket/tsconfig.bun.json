@@ -7,5 +7,16 @@
 		"noEmit": true,
 		"types": ["bun"]
 	},
-	"include": ["test/runtime/bun-conformance.ts"]
+	"include": ["test/runtime/bun-conformance.ts"],
+	"references": [
+		{
+			"path": "../../polyfills/report-error/tsconfig.json"
+		},
+		{
+			"path": "../../realtime/protocol/tsconfig.json"
+		},
+		{
+			"path": "../realtime/tsconfig.json"
+		}
+	]
 }

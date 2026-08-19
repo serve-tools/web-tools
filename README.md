@@ -108,6 +108,12 @@ npm ci --ignore-scripts
 npm run verify
 ```
 
+`npm run build` uses the root TypeScript project graph for an incremental build, then checks and bundles the demos.
+Use `npm run build:fresh` to remove the configured TypeScript and demo outputs before running the same build.
+Run `npm run sync:tsconfig-references` after changing workspace dependencies or TypeScript build configurations.
+`npm test` builds that graph once, then runs the consolidated Node and browser test projects.
+Package-level test scripts remain available for focused validation.
+
 ## License
 
 [MIT-0](./LICENSE.md)

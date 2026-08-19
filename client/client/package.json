@@ -39,7 +39,7 @@
 		"skills"
 	],
 	"scripts": {
-		"build": "tsc --build --force tsconfig.json",
+		"build": "tsc --build tsconfig.json",
 		"build:dependencies": "npm run build --workspace @serve-tools/client-context --workspace @serve-tools/client-db --workspace @serve-tools/client-event-source --workspace @serve-tools/client-http-stream --workspace @serve-tools/client-input --workspace @serve-tools/client-interaction --workspace @serve-tools/client-keyboard --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-shared-event-source --workspace @serve-tools/client-shared-http-stream --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-shared-webtransport --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket --workspace @serve-tools/client-webtransport",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",

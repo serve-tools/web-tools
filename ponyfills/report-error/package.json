@@ -29,7 +29,7 @@
 		"skills"
 	],
 	"scripts": {
-		"build": "tsc --build --force tsconfig.build.json",
+		"build": "tsc --build tsconfig.build.json",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "vitest run --config vitest.config.ts",

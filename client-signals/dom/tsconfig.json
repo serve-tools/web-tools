@@ -8,10 +8,10 @@
 	"include": ["src/**/*.ts", "src/**/.*.ts"],
 	"references": [
 		{
-			"path": "../../signals/effect/tsconfig.json"
+			"path": "../../signals/signal/tsconfig.json"
 		},
 		{
-			"path": "../../signals/signal/tsconfig.json"
+			"path": "../../signals/effect/tsconfig.json"
 		}
 	]
 }

@@ -11,10 +11,10 @@
 			"path": "../../client/shared-db/tsconfig.json"
 		},
 		{
-			"path": "../../signals/effect/tsconfig.json"
+			"path": "../../signals/signal/tsconfig.json"
 		},
 		{
-			"path": "../../signals/signal/tsconfig.json"
+			"path": "../../signals/effect/tsconfig.json"
 		}
 	]
 }

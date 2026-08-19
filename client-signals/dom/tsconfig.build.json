@@ -5,5 +5,13 @@
 		"outDir": "./dist",
 		"stripInternal": true
 	},
-	"exclude": ["./src/**/*.types.ts"]
+	"exclude": ["./src/**/*.types.ts"],
+	"references": [
+		{
+			"path": "../../signals/signal/tsconfig.json"
+		},
+		{
+			"path": "../../signals/effect/tsconfig.json"
+		}
+	]
 }

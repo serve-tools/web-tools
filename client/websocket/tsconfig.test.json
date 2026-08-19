@@ -13,5 +13,13 @@
 		"test/**/*.ts",
 		"test/**/.*.ts",
 		"vitest*.config.ts"
+	],
+	"references": [
+		{
+			"path": "../realtime/tsconfig.json"
+		},
+		{
+			"path": "../../realtime/protocol/tsconfig.json"
+		}
 	]
 }

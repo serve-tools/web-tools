@@ -31,7 +31,7 @@
 		"skills"
 	],
 	"scripts": {
-		"build": "tsc --build --force tsconfig.json",
+		"build": "tsc --build tsconfig.json",
 		"build:dependencies": "npm run build:dependencies --workspace @serve-tools/client-shared-webtransport --workspace @serve-tools/signal-messaging && npm run build --workspace @serve-tools/client-shared-webtransport --workspace @serve-tools/signal-messaging",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",

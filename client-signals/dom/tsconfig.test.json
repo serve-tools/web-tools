@@ -9,5 +9,13 @@
 		"skipLibCheck": false,
 		"types": ["node"]
 	},
-	"include": ["test/package.types.ts", "playwright.config.ts"]
+	"include": ["test/package.types.ts", "playwright.config.ts"],
+	"references": [
+		{
+			"path": "../../signals/signal/tsconfig.json"
+		},
+		{
+			"path": "../../signals/effect/tsconfig.json"
+		}
+	]
 }

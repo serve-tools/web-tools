@@ -10,7 +10,7 @@
 			"path": "../db/tsconfig.json"
 		},
 		{
-			"path": "../dom/tsconfig.json"
+			"path": "../dom/tsconfig.build.json"
 		},
 		{
 			"path": "../event-source/tsconfig.json"

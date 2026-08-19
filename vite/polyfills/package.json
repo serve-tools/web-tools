@@ -37,7 +37,8 @@
 		"skills"
 	],
 	"scripts": {
-		"build": "tsc --build --force tsconfig.build.json && mkdir -p dist/types && cp -R src/types/. dist/types/",
+		"build": "tsc --build tsconfig.build.json && npm run build:assets",
+		"build:assets": "mkdir -p dist/types && cp -R src/types/. dist/types/",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build --workspace @serve-tools/polyfill-resource-management --workspace @serve-tools/polyfill-request-idle-callback && vitest run",

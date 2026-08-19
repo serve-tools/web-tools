@@ -9,10 +9,10 @@
 	"include": ["src/**/*.ts", "src/**/.*.ts"],
 	"references": [
 		{
-			"path": "../../realtime/protocol/tsconfig.json"
+			"path": "../../polyfills/report-error/tsconfig.json"
 		},
 		{
-			"path": "../../polyfills/report-error/tsconfig.json"
+			"path": "../../realtime/protocol/tsconfig.json"
 		}
 	]
 }
