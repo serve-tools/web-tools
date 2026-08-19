@@ -4,6 +4,10 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
+- Add `@serve-tools/polyfill-decorator-metadata@0.1.0` for native-preserving `Symbol.metadata` installation and selection.
+- Add `@serve-tools/ponyfill-decorator-metadata@0.1.0` with a stable module-scoped decorator metadata symbol.
+- Add `@serve-tools/rolldown-decorators@0.1.0` with an Oxc-AST-native modern TC39 decorator transform and package-owned runtime for Rolldown and Vite, backed by the shared decorator metadata polyfill.
+- Add syntax-detected `Symbol.metadata` injection to `@serve-tools/vite-polyfills@0.1.2`.
 - Add `@serve-tools/async-operation@0.1.0` with typed backpressured events, one terminal result, canonical cancellation, upstream abort composition, asynchronous disposal, and shared filtered/mapped subscriptions.
 - Add `OperationViewSignal` and `observeOperationView()` to `@serve-tools/lit-signals@0.4.0` for rendering one filtered or mapped operation view as a retained Signal.
 - Add `@serve-tools/signals@0.1.0` as a flat facade with focused subpaths for the compatible Signal runtime, collections, and effects.

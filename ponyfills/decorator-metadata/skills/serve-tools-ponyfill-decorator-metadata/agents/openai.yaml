@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Decorator Metadata Ponyfill"
+  short_description: "Import a module-scoped metadata symbol"
+  default_prompt: "Use $serve-tools-ponyfill-decorator-metadata for explicit metadata symbol identity without global mutation."

@@ -12,6 +12,7 @@ const NODE_MODULES_SEGMENT = /(?:^|[/\\])node_modules[/\\]/;
 export const builtinPolyfills: readonly Polyfill[] = await Promise.all([
 	import("../polyfills/symbol-dispose-polyfill.js"),
 	import("../polyfills/symbol-async-dispose-polyfill.js"),
+	import("../polyfills/symbol-metadata-polyfill.js"),
 	import("../polyfills/disposable-stack-polyfill.js"),
 	import("../polyfills/async-disposable-stack-polyfill.js"),
 	import("../polyfills/suppressed-error-polyfill.js"),

@@ -1,0 +1,44 @@
+{
+	"name": "@serve-tools/polyfill-decorator-metadata",
+	"version": "0.1.0",
+	"description": "Installs Symbol.metadata while preserving an existing native symbol",
+	"keywords": [
+		"decorator-metadata",
+		"decorators",
+		"metadata",
+		"polyfill",
+		"symbol-metadata"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/polyfills/decorator-metadata#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "polyfills/decorator-metadata"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": true,
+	"type": "module",
+	"exports": {
+		".": "./dist/polyfill-decorator-metadata.js",
+		"./*": "./dist/exports/*.js",
+		"./apply/*": "./dist/apply/*.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build --workspace @serve-tools/ponyfill-decorator-metadata && vitest run",
+		"typecheck": "npm run build --workspace @serve-tools/ponyfill-decorator-metadata && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/ponyfill-decorator-metadata": "^0.1"
+	}
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Rolldown Decorators"
+  short_description: "Transform modern decorators in Rolldown and Vite"
+  default_prompt: "Use $serve-tools-rolldown-decorators to configure modern decorator transformation correctly."

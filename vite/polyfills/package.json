@@ -10,6 +10,7 @@
 		"map-upsert",
 		"polyfill",
 		"request-idle-callback",
+		"symbol-metadata",
 		"urlpattern",
 		"vite",
 		"vite-plugin"
@@ -30,7 +31,8 @@
 	"exports": {
 		".": "./dist/vite-polyfills.js",
 		"./types": "./dist/types/index.d.ts",
-		"./types/map-upsert": "./dist/types/map-upsert.d.ts"
+		"./types/map-upsert": "./dist/types/map-upsert.d.ts",
+		"./types/symbol-metadata": "./dist/types/symbol-metadata.d.ts"
 	},
 	"files": [
 		"dist",
@@ -41,11 +43,12 @@
 		"build:assets": "mkdir -p dist/types && cp -R src/types/. dist/types/",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
-		"test": "npm run build --workspace @serve-tools/polyfill-resource-management --workspace @serve-tools/polyfill-request-idle-callback && vitest run",
+		"test": "npm run build --workspace @serve-tools/polyfill-decorator-metadata --workspace @serve-tools/polyfill-resource-management --workspace @serve-tools/polyfill-request-idle-callback && vitest run",
 		"typecheck": "tsc --project tsconfig.json --noEmit"
 	},
 	"dependencies": {
 		"@jsxtools/rolldown-transform": "^0.1",
+		"@serve-tools/polyfill-decorator-metadata": "^0.1",
 		"@serve-tools/polyfill-request-idle-callback": "^0.1",
 		"@serve-tools/polyfill-resource-management": "^0.1",
 		"urlpattern-polyfill": "^10.1.0"

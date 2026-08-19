@@ -225,6 +225,11 @@ const selections = [
 		"@serve-tools/polyfill-arraybuffer-base64",
 	],
 	[
+		"decorator-metadata-global",
+		"TypeScript or another decorator transform reads Symbol.metadata while defining decorated classes. Install that global key while preserving a native implementation.",
+		"@serve-tools/polyfill-decorator-metadata",
+	],
+	[
 		"idle-callback-import",
 		"Schedule optional work with imported requestIdleCallback functions while guaranteeing that no globals are modified.",
 		"@serve-tools/ponyfill-request-idle-callback",
@@ -245,6 +250,11 @@ const selections = [
 		"@serve-tools/ponyfill-arraybuffer-base64",
 	],
 	[
+		"decorator-metadata-import",
+		"Metadata producers and consumers can explicitly share one imported symbol and must not read or modify Symbol.metadata.",
+		"@serve-tools/ponyfill-decorator-metadata",
+	],
+	[
 		"resource-management-global",
 		"Third-party modules expect DisposableStack, AsyncDisposableStack, and related explicit-resource-management globals to exist.",
 		"@serve-tools/polyfill-resource-management",
@@ -258,6 +268,11 @@ const selections = [
 		"vite-target-polyfills",
 		"A Vite build should inspect source usage and configured browser targets, then inject only the required feature polyfills.",
 		"@serve-tools/vite-polyfills",
+	],
+	[
+		"rolldown-modern-decorators",
+		"A Rolldown or Vite application uses current TC39 decorator syntax in JavaScript and TypeScript source without enabling legacy TypeScript decorators or adding Babel.",
+		"@serve-tools/rolldown-decorators",
 	],
 	[
 		"client-namespace-facade",
@@ -427,6 +442,14 @@ const usageTasks = [
 		"signals/effect/test/signal-effect.recipes.ts",
 		["effect(", "createEffect(", ".start()", ".dispose()"],
 		["signals/effect/skills/serve-tools-signal-effect/references/recipe-quick-start.md"],
+	),
+	usage(
+		"rolldown-decorators-plugin",
+		"Configure the modern TC39 decorator transform once for a Rolldown or Vite plugin array without enabling TypeScript experimentalDecorators.",
+		["@serve-tools/rolldown-decorators"],
+		"rolldown/decorators/test/rolldown-decorators.recipes.ts",
+		["rolldownDecorators()"],
+		["rolldown/decorators/skills/serve-tools-rolldown-decorators/references/recipe-quick-start.md"],
 	),
 	usage(
 		"custom-vite-polyfill",

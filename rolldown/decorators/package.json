@@ -1,0 +1,46 @@
+{
+	"name": "@serve-tools/rolldown-decorators",
+	"version": "0.1.0",
+	"description": "Transform modern TC39 decorators in Rolldown and Vite",
+	"keywords": [
+		"decorators",
+		"oxc",
+		"rolldown",
+		"rolldown-plugin",
+		"tc39",
+		"transform",
+		"vite",
+		"vite-plugin"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/rolldown/decorators#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "rolldown/decorators"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/rolldown-decorators.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build tsconfig.build.json && node -e \"require('node:fs').copyFileSync('src/decorators.js', 'dist/decorators.js')\"",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build --workspace @serve-tools/polyfill-decorator-metadata && vitest run",
+		"typecheck": "tsc --project tsconfig.json --noEmit"
+	},
+	"dependencies": {
+		"@jsxtools/rolldown-transform": "^0.1",
+		"@serve-tools/polyfill-decorator-metadata": "^0.1"
+	}
+}

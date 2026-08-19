@@ -13,7 +13,7 @@ Execution order is deterministically shuffled so one condition does not consiste
 
 The corpus contains three independently scored task kinds:
 
-- `selection` covers all 54 runtime packages and tests narrow choices among adjacent packages.
+- `selection` covers all 57 runtime packages and tests narrow choices among adjacent packages.
 - `composition` covers package compatibility, responsibility splits, lifecycle, and cleanup across package boundaries.
 - `usage` asks for public-import TypeScript and checks package selection, document retrieval, required API semantics, imports, and compilation.
 

@@ -4,3 +4,4 @@
 //     /// <reference types="@serve-tools/vite-polyfills/types" />
 
 /// <reference path="./map-upsert.d.ts" />
+/// <reference path="./symbol-metadata.d.ts" />

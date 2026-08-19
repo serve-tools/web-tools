@@ -68,6 +68,22 @@ describe("build integration", () => {
 		});
 	});
 
+	describe("Symbol.metadata polyfill", () => {
+		it("injects the decorator metadata symbol when Symbol.metadata is referenced", async () => {
+			const result = await buildTest({
+				files: {
+					"index.js": "export const metadata = Symbol.metadata;",
+				},
+				plugins: [vitePolyfills()],
+			});
+
+			const code = result.getChunk("index");
+			expect(code).toBeDefined();
+			expect(code).toContain('Object.defineProperty(Symbol, "metadata"');
+			expect(code).toContain('Symbol("Symbol.metadata")');
+		});
+	});
+
 	describe("Explicit resource management global built-ins polyfill", () => {
 		it("injects polyfill when DisposableStack is referenced", async () => {
 			const result = await buildTest({

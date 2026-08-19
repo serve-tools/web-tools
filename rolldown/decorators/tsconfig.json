@@ -1,0 +1,12 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"types": ["node"]
+	},
+	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "test/**/.*.ts"],
+	"references": [
+		{
+			"path": "../../polyfills/decorator-metadata/tsconfig.json"
+		}
+	]
+}

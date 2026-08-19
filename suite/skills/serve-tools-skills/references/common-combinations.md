@@ -34,6 +34,9 @@ Use ponyfills when the fallback implementation itself should be imported explici
 Use non-apply polyfill exports to select native platform behavior first, and apply entrypoints when third-party code requires missing globals.
 Use `@serve-tools/vite-polyfills` when Vite should inject feature-specific polyfills for configured targets.
 
+For decorators, use `@serve-tools/rolldown-decorators` to transform syntax and implement decorator runtime semantics.
+Add `@serve-tools/polyfill-decorator-metadata` only when another decorator transform or runtime expects global `Symbol.metadata`; use the ponyfill only for explicitly shared module-scoped symbol identity.
+
 ## Facade versus focused packages
 
 Use `@serve-tools/client` when one module intentionally exposes several client namespaces.

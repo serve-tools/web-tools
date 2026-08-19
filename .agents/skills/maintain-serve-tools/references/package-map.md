@@ -40,14 +40,17 @@ Load only the Skill for the affected public package.
 | `client-signals/webtransport`        | `client-signals/webtransport/skills/serve-tools-signal-webtransport/SKILL.md`                |
 | `lit/signals`                        | `lit/signals/skills/serve-tools-lit-signals/SKILL.md`                                        |
 | `polyfills/arraybuffer-base64`       | `polyfills/arraybuffer-base64/skills/serve-tools-polyfill-arraybuffer-base64/SKILL.md`       |
+| `polyfills/decorator-metadata`       | `polyfills/decorator-metadata/skills/serve-tools-polyfill-decorator-metadata/SKILL.md`       |
 | `polyfills/request-idle-callback`    | `polyfills/request-idle-callback/skills/serve-tools-polyfill-request-idle-callback/SKILL.md` |
 | `polyfills/report-error`             | `polyfills/report-error/skills/serve-tools-polyfill-report-error/SKILL.md`                   |
 | `polyfills/resource-management`      | `polyfills/resource-management/skills/serve-tools-polyfill-resource-management/SKILL.md`     |
 | `ponyfills/arraybuffer-base64`       | `ponyfills/arraybuffer-base64/skills/serve-tools-ponyfill-arraybuffer-base64/SKILL.md`       |
+| `ponyfills/decorator-metadata`       | `ponyfills/decorator-metadata/skills/serve-tools-ponyfill-decorator-metadata/SKILL.md`       |
 | `ponyfills/request-idle-callback`    | `ponyfills/request-idle-callback/skills/serve-tools-ponyfill-request-idle-callback/SKILL.md` |
 | `ponyfills/report-error`             | `ponyfills/report-error/skills/serve-tools-ponyfill-report-error/SKILL.md`                   |
 | `ponyfills/resource-management`      | `ponyfills/resource-management/skills/serve-tools-ponyfill-resource-management/SKILL.md`     |
 | `realtime/protocol`                  | `realtime/protocol/skills/serve-tools-realtime-protocol/SKILL.md`                            |
+| `rolldown/decorators`                | `rolldown/decorators/skills/serve-tools-rolldown-decorators/SKILL.md`                        |
 | `server/http-stream`                 | `server/http-stream/skills/serve-tools-server-http-stream/SKILL.md`                          |
 | `server/event-source`                | `server/event-source/skills/serve-tools-server-event-source/SKILL.md`                        |
 | `server/realtime`                    | `server/realtime/skills/serve-tools-server-realtime/SKILL.md`                                |

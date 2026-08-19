@@ -9,6 +9,7 @@ export default defineConfig({
 			"polyfills/*/vitest.config.ts",
 			"ponyfills/*/vitest.config.ts",
 			"realtime/*/vitest.config.ts",
+			"rolldown/*/vitest.config.ts",
 			"server/*/vitest.config.ts",
 			"signals/*/vitest.config.ts",
 			"vite/*/vitest.config.ts",

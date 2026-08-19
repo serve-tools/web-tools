@@ -48,6 +48,9 @@ Select the narrowest package that owns the required behavior.
 | Signal-aware maps, sets, and weak collections   | `@serve-tools/signal-collections`             | Native collection interfaces with reactive reads                       |
 | Batched reactive side effects                   | `@serve-tools/signal-effect`                  | Microtask-batched effects                                              |
 | Core Signals primitives                         | `@serve-tools/signal`                         | TC39 Signals proposal implementation                                   |
+| Install the decorator metadata symbol           | `@serve-tools/polyfill-decorator-metadata`    | Native-preserving global `Symbol.metadata` installation                |
+| Import a module-scoped metadata symbol          | `@serve-tools/ponyfill-decorator-metadata`    | Explicit shared identity without global mutation                       |
+| Transform modern decorator syntax               | `@serve-tools/rolldown-decorators`            | Oxc-AST transform for Rolldown and Vite                                |
 | Install idle-callback globals                   | `@serve-tools/polyfill-request-idle-callback` | Global mutation                                                        |
 | Import idle-callback functions                  | `@serve-tools/ponyfill-request-idle-callback` | No global mutation                                                     |
 | Import native-aware error reporting             | `@serve-tools/polyfill-report-error`          | Native function or ponyfill without global mutation                    |
@@ -70,4 +73,6 @@ Select `@serve-tools/signal` separately only when application code imports it di
 - Choose a capability-complete `signal-*` counterpart instead when consumers need reactive reads alongside the same client operations.
 - Choose `@serve-tools/signals` when one module intentionally uses several core Signal capabilities together; otherwise use the focused owning package.
 - Choose a ponyfill when the fallback implementation itself is required, a non-apply polyfill export for native-first selection, and an apply entrypoint for global compatibility.
+- Choose the decorator metadata polyfill when emitted decorator code reads `Symbol.metadata`; choose its ponyfill only when every producer and consumer explicitly imports the same symbol.
+- Choose `@serve-tools/rolldown-decorators` for decorator syntax and runtime semantics; the metadata polyfill supplies only the global symbol key.
 - Choose `@serve-tools/vite-polyfills` when support should be derived and injected by the build rather than selected in application code.

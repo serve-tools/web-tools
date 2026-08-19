@@ -1,0 +1,39 @@
+{
+	"name": "@serve-tools/ponyfill-decorator-metadata",
+	"version": "0.1.0",
+	"description": "Provides a module-scoped Symbol.metadata fallback without global mutation",
+	"keywords": [
+		"decorator-metadata",
+		"decorators",
+		"metadata",
+		"ponyfill"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/decorator-metadata#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "ponyfills/decorator-metadata"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/ponyfill-decorator-metadata.js",
+		"./lib/*": "./dist/lib/*.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build tsconfig.build.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "vitest run",
+		"typecheck": "tsc --project tsconfig.json --noEmit"
+	}
+}

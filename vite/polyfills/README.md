@@ -29,6 +29,7 @@ Install it in the same project as this plugin.
 | ------------------------ | ------------------------------------------------------------------------ |
 | `symbol-dispose`         | `Symbol.dispose` well-known symbol                                       |
 | `symbol-async-dispose`   | `Symbol.asyncDispose` well-known symbol                                  |
+| `symbol-metadata`        | `Symbol.metadata` decorator metadata symbol                              |
 | `disposable-stack`       | Global `DisposableStack`                                                 |
 | `async-disposable-stack` | Global `AsyncDisposableStack`                                            |
 | `suppressed-error`       | Global `SuppressedError`                                                 |
@@ -37,7 +38,7 @@ Install it in the same project as this plugin.
 | `request-idle-callback`  | Global `requestIdleCallback`                                             |
 | `cancel-idle-callback`   | Global `cancelIdleCallback`                                              |
 
-Detection matches member expressions like `Symbol.dispose` or `cache.getOrInsert(...)`, plus global constructor references like `new DisposableStack()` or `new URLPattern(...)`, and calls to `requestIdleCallback(...)` or `cancelIdleCallback(...)`.
+Detection matches member expressions like `Symbol.dispose`, `Symbol.metadata`, or `cache.getOrInsert(...)`, plus global constructor references like `new DisposableStack()` or `new URLPattern(...)`, and calls to `requestIdleCallback(...)` or `cancelIdleCallback(...)`.
 References inside string literals or comments are ignored because detection runs on the AST.
 
 ## TypeScript
@@ -53,8 +54,10 @@ Or pick just the ones you use:
 
 ```ts
 /// <reference types="@serve-tools/vite-polyfills/types/map-upsert" />
+/// <reference types="@serve-tools/vite-polyfills/types/symbol-metadata" />
 ```
 
+The `symbol-metadata` declaration reuses the conflict-safe global type shipped by `@serve-tools/polyfill-decorator-metadata`.
 `Symbol.dispose`, `SuppressedError`, `DisposableStack`, and `AsyncDisposableStack` are already covered by TypeScript's built-in disposable libs.
 `requestIdleCallback` and `cancelIdleCallback` are covered by TypeScript's DOM lib.
 Those polyfills do not need a separate reference.

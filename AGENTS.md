@@ -9,6 +9,7 @@ This repository hosts web platform tooling under the `@serve-tools` npm scope:
 - `lit/` for Lit integrations.
 - `polyfills/` for implementations that modify the global environment.
 - `ponyfills/` for implementations imported without global modification.
+- `rolldown/` for Rolldown plugins that also integrate with Vite.
 - `server/` for server runtimes and integration adapters.
 - `signals/` for signal runtimes and signal-aware libraries.
 - `vite/` for Vite plugins.

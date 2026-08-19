@@ -8,6 +8,8 @@ const VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "symbol-dispose";
 const RESOLVED_VIRTUAL_MODULE_ID = "\0" + VIRTUAL_MODULE_ID;
 const SYMBOL_ASYNC_DISPOSE_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "symbol-async-dispose";
 const RESOLVED_SYMBOL_ASYNC_DISPOSE_VIRTUAL_MODULE_ID = "\0" + SYMBOL_ASYNC_DISPOSE_VIRTUAL_MODULE_ID;
+const SYMBOL_METADATA_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "symbol-metadata";
+const RESOLVED_SYMBOL_METADATA_VIRTUAL_MODULE_ID = "\0" + SYMBOL_METADATA_VIRTUAL_MODULE_ID;
 const DISPOSABLE_STACK_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "disposable-stack";
 const RESOLVED_DISPOSABLE_STACK_VIRTUAL_MODULE_ID = "\0" + DISPOSABLE_STACK_VIRTUAL_MODULE_ID;
 const ASYNC_DISPOSABLE_STACK_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "async-disposable-stack";
@@ -64,6 +66,15 @@ describe("vitePolyfills", () => {
 
 			const code = load(RESOLVED_SYMBOL_ASYNC_DISPOSE_VIRTUAL_MODULE_ID);
 			expect(code).toBe('import"@serve-tools/polyfill-resource-management/apply/Symbol/asyncDispose";');
+			expect(load("other-module")).toBeNull();
+		});
+
+		it("loads Symbol.metadata polyfill code for virtual module", () => {
+			const plugin = vitePolyfills();
+			const load = plugin.load as (id: string) => string | null;
+
+			const code = load(RESOLVED_SYMBOL_METADATA_VIRTUAL_MODULE_ID);
+			expect(code).toBe('import"@serve-tools/polyfill-decorator-metadata/apply/Symbol/metadata";');
 			expect(load("other-module")).toBeNull();
 		});
 
@@ -134,6 +145,7 @@ describe("vitePolyfills", () => {
 				"file.js",
 				SYMBOL_ASYNC_DISPOSE_VIRTUAL_MODULE_ID,
 			],
+			["Symbol.metadata", "const x = Symbol.metadata;", "file.js", SYMBOL_METADATA_VIRTUAL_MODULE_ID],
 			["DisposableStack", "const stack = new DisposableStack();", "file.js", DISPOSABLE_STACK_VIRTUAL_MODULE_ID],
 			[
 				"AsyncDisposableStack",
@@ -242,6 +254,7 @@ describe("vitePolyfills", () => {
 			expect(ids).toEqual([
 				"symbol-dispose",
 				"symbol-async-dispose",
+				"symbol-metadata",
 				"disposable-stack",
 				"async-disposable-stack",
 				"suppressed-error",

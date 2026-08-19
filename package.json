@@ -2,7 +2,7 @@
 	"name": "web-tools-workspace",
 	"version": "0.0.0",
 	"private": true,
-	"description": "Client and server libraries, realtime protocols, polyfills, ponyfills, and Vite plugins",
+	"description": "Client and server libraries, realtime protocols, polyfills, ponyfills, and Rolldown and Vite plugins",
 	"homepage": "https://github.com/serve-tools/web-tools#readme",
 	"bugs": {
 		"url": "https://github.com/serve-tools/web-tools/issues"
@@ -61,14 +61,17 @@
 		"lit/signals",
 		"lit/signals/demo",
 		"polyfills/arraybuffer-base64",
+		"polyfills/decorator-metadata",
 		"polyfills/report-error",
 		"polyfills/request-idle-callback",
 		"polyfills/resource-management",
 		"ponyfills/arraybuffer-base64",
+		"ponyfills/decorator-metadata",
 		"ponyfills/report-error",
 		"ponyfills/request-idle-callback",
 		"ponyfills/resource-management",
 		"realtime/protocol",
+		"rolldown/decorators",
 		"server/event-source",
 		"server/http-stream",
 		"server/realtime",
@@ -335,6 +338,11 @@
 					"test/*.recipes.ts"
 				]
 			},
+			"polyfills/decorator-metadata": {
+				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
 			"polyfills/report-error": {
 				"entry": [
 					"test/*.recipes.ts"
@@ -351,6 +359,11 @@
 				]
 			},
 			"ponyfills/arraybuffer-base64": {
+				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
+			"ponyfills/decorator-metadata": {
 				"entry": [
 					"test/*.recipes.ts"
 				]
@@ -381,6 +394,12 @@
 				"entry": [
 					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"
+				]
+			},
+			"rolldown/decorators": {
+				"entry": [
+					"src/rolldown-decorators.ts",
+					"test/*.recipes.ts"
 				]
 			},
 			"server/http-stream": {
@@ -424,6 +443,7 @@
 					"test/*.recipes.ts"
 				],
 				"ignoreDependencies": [
+					"@serve-tools/polyfill-decorator-metadata",
 					"@serve-tools/polyfill-request-idle-callback",
 					"@serve-tools/polyfill-resource-management",
 					"urlpattern-polyfill"

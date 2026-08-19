@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Decorator Metadata Polyfill"
+  short_description: "Select or install Symbol.metadata"
+  default_prompt: "Use $serve-tools-polyfill-decorator-metadata with the correct imported or global installation boundary."

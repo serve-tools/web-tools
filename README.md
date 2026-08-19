@@ -1,6 +1,6 @@
 # @serve-tools/web-tools
 
-Core, client and server libraries, realtime protocols, Lit integrations, polyfills, ponyfills, Signal libraries, and Vite plugins maintained under the `@serve-tools` npm scope.
+Core, client and server libraries, realtime protocols, Lit integrations, polyfills, ponyfills, Signal libraries, and Rolldown and Vite plugins maintained under the `@serve-tools` npm scope.
 
 ## Workspace layout
 
@@ -10,11 +10,12 @@ Core, client and server libraries, realtime protocols, Lit integrations, polyfil
 - [`lit/`](./lit/) contains Lit integrations.
 - [`polyfills/`](./polyfills/) contains polyfills that modify the global environment.
 - [`ponyfills/`](./ponyfills/) contains ponyfills imported without global modification.
+- [`realtime/`](./realtime/) contains transport-neutral realtime protocol infrastructure shared by clients and servers.
+- [`rolldown/`](./rolldown/) contains Rolldown plugins that also integrate with Vite.
 - [`server/`](./server/) contains server runtime libraries and adapters.
 - [`signals/`](./signals/) contains a Signals implementation and signal-aware libraries.
 - [`suite/`](./suite/) contains the published package-selection Skill for the full suite.
 - [`vite/`](./vite/) contains Vite plugins.
-- [`realtime/`](./realtime/) contains transport-neutral realtime protocol infrastructure shared by clients and servers.
 
 Each package directory owns its package metadata, source, tests, and documentation.
 
@@ -52,6 +53,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-websocket`](./client/websocket/) provides typed requests and subscriptions over binary structured-data WebSockets.
 - [`@serve-tools/client-webtransport`](./client/webtransport/) combines reliable typed operations with typed best-effort WebTransport datagrams.
 - [`@serve-tools/realtime-protocol`](./realtime/protocol/) provides the shared binary serializer, wire messages, guards, types, and reliable-stream framing.
+- [`@serve-tools/rolldown-decorators`](./rolldown/decorators/) transforms modern TC39 decorators in Rolldown and Vite builds.
 - [`@serve-tools/server-realtime`](./server/realtime/) provides the sans-I/O operation server for custom transport adapters.
 - [`@serve-tools/server-http-stream`](./server/http-stream/) provides typed WHATWG Fetch handlers for binary requests and streaming subscriptions.
 - [`@serve-tools/server-websocket`](./server/websocket/) serves typed requests and subscriptions through a sans-I/O core and Node.js, Deno, Bun, or crossws adapters.
@@ -70,8 +72,10 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-signals`](./client-signals/client-signals/) provides namespace-oriented access to signal-aware client libraries.
 - [`@serve-tools/signal-storage`](./client-signals/storage/) adds reactive watches to the Web Storage client.
 - [`@serve-tools/lit-signals`](./lit/signals/) provides signal-native Lit templates, reactive host styles, lifecycle tracking, directives, and decorators.
+- [`@serve-tools/polyfill-decorator-metadata`](./polyfills/decorator-metadata/) installs the proposal's `Symbol.metadata` global while preserving a native symbol.
 - [`@serve-tools/polyfill-request-idle-callback`](./polyfills/request-idle-callback/) installs the `requestIdleCallback` and `cancelIdleCallback` globals.
 - [`@serve-tools/polyfill-resource-management`](./polyfills/resource-management/) installs ECMAScript Explicit Resource Management globals.
+- [`@serve-tools/ponyfill-decorator-metadata`](./ponyfills/decorator-metadata/) provides a stable module-scoped metadata symbol without global mutation.
 - [`@serve-tools/ponyfill-request-idle-callback`](./ponyfills/request-idle-callback/) provides `requestIdleCallback` and `cancelIdleCallback` without global mutation.
 - [`@serve-tools/ponyfill-resource-management`](./ponyfills/resource-management/) provides a side-effect-free implementation of ECMAScript Explicit Resource Management.
 - [`@serve-tools/signal-collections`](./signals/collections/) provides signal-aware native collections.
