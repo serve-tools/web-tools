@@ -19,7 +19,5 @@ declare global {
 	}
 
 	/** The native or installed function for scheduling idle work. */
-	var requestIdleCallback: typeof globalThis extends { onmessage: any; requestIdleCallback: infer T }
-		? T
-		: typeof value;
+	function requestIdleCallback(callback: IdleRequestCallback, options?: IdleRequestOptions): number;
 }

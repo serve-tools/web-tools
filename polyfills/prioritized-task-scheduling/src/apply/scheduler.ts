@@ -3,8 +3,12 @@ import { Scheduler as $Scheduler, scheduler as $scheduler } from "@serve-tools/p
 globalThis.scheduler ?? Object.assign(globalThis, { scheduler: $scheduler, Scheduler: $Scheduler });
 
 type $SchedulerConstructor = typeof $Scheduler;
+type $SchedulerInterface = $SchedulerConstructor["prototype"];
 
 declare global {
+	/** Schedules prioritized tasks and continuations. */
+	interface Scheduler extends $SchedulerInterface {}
+
 	/** Schedules prioritized tasks and continuations. */
 	interface SchedulerConstructor extends $SchedulerConstructor {}
 

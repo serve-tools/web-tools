@@ -15,7 +15,7 @@ declare global {
 	}
 
 	/** Provides TaskSignal static operations. */
-	var TaskSignal: typeof globalThis extends { TaskSignal: infer T }
+	var TaskSignal: typeof globalThis extends { onmessage: any; TaskSignal: infer T }
 		? T
 		: {
 				readonly prototype: TaskSignal;

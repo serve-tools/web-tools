@@ -4,6 +4,7 @@
 		"composite": false,
 		"lib": ["ES2025", "DOM"],
 		"noEmit": true,
+		"skipLibCheck": false,
 		"types": ["vitest"]
 	},
 	"include": ["src/**/*.ts", "test/**/*.ts"],

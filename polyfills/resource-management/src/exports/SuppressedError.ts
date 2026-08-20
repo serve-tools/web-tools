@@ -1,6 +1,6 @@
-import { SuppressedError as fallback } from "@serve-tools/ponyfill-resource-management/lib/SuppressedError";
+/// <reference lib="esnext.disposable" preserve="true" />
 
-const nativeValue = Reflect.get(globalThis, "SuppressedError") as typeof fallback | undefined;
+import { SuppressedError as _SuppressedError } from "@serve-tools/ponyfill-resource-management/lib/SuppressedError";
 
 /** The native `SuppressedError` constructor when available, otherwise a module-scoped fallback. */
-export const SuppressedError: typeof fallback = nativeValue || fallback;
+export const SuppressedError = globalThis.SuppressedError ?? _SuppressedError;
