@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Task Scheduling Ponyfill"
+  short_description: "Schedule prioritized work without globals"
+  default_prompt: "Use $serve-tools-ponyfill-prioritized-task-scheduling to schedule prioritized work without global mutation."

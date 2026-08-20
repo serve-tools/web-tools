@@ -4,8 +4,7 @@ import type {
 } from "@serve-tools/ponyfill-request-idle-callback";
 import { requestIdleCallback as value } from "../exports/requestIdleCallback.js";
 
-globalThis.requestIdleCallback ||
-	Object.defineProperty(globalThis, "requestIdleCallback", { value, configurable: true, writable: true });
+globalThis.requestIdleCallback ?? (globalThis.requestIdleCallback = value);
 
 declare global {
 	/** The deadline supplied to an idle callback. */

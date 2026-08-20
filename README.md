@@ -73,9 +73,11 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/signal-storage`](./client-signals/storage/) adds reactive watches to the Web Storage client.
 - [`@serve-tools/lit-signals`](./lit/signals/) provides signal-native Lit templates, reactive host styles, lifecycle tracking, directives, and decorators.
 - [`@serve-tools/polyfill-decorator-metadata`](./polyfills/decorator-metadata/) installs the proposal's `Symbol.metadata` global while preserving a native symbol.
+- [`@serve-tools/polyfill-prioritized-task-scheduling`](./polyfills/prioritized-task-scheduling/) installs missing Prioritized Task Scheduling globals and scheduler methods while preserving native implementations.
 - [`@serve-tools/polyfill-request-idle-callback`](./polyfills/request-idle-callback/) installs the `requestIdleCallback` and `cancelIdleCallback` globals.
 - [`@serve-tools/polyfill-resource-management`](./polyfills/resource-management/) installs ECMAScript Explicit Resource Management globals.
 - [`@serve-tools/ponyfill-decorator-metadata`](./ponyfills/decorator-metadata/) provides a stable module-scoped metadata symbol without global mutation.
+- [`@serve-tools/ponyfill-prioritized-task-scheduling`](./ponyfills/prioritized-task-scheduling/) provides prioritized tasks, continuations, and task controls without global mutation.
 - [`@serve-tools/ponyfill-request-idle-callback`](./ponyfills/request-idle-callback/) provides `requestIdleCallback` and `cancelIdleCallback` without global mutation.
 - [`@serve-tools/ponyfill-resource-management`](./ponyfills/resource-management/) provides a side-effect-free implementation of ECMAScript Explicit Resource Management.
 - [`@serve-tools/signal-collections`](./signals/collections/) provides signal-aware native collections.

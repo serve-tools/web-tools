@@ -45,6 +45,7 @@
 		"skills"
 	],
 	"scripts": {
+		"benchmark": "node benchmark/runtime-node.bench.ts && vitest run --config vitest.benchmark.config.ts",
 		"build": "tsc --build tsconfig.json",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",

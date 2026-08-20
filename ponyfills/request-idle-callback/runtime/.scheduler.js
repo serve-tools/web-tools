@@ -37,17 +37,15 @@ export function createIdleCallbackScheduler({
 		}
 
 		const end = now() + idleDeadline;
-		const runnableCallbacks = Array.from(callbacks);
+		const lastRunnableHandle = nextHandle;
 
 		try {
-			for (const [handle, scheduled] of runnableCallbacks) {
-				if (now() >= end) {
+			for (const [handle, scheduled] of callbacks) {
+				if (handle > lastRunnableHandle || now() >= end) {
 					break;
 				}
 
-				if (!callbacks.delete(handle)) {
-					continue;
-				}
+				callbacks.delete(handle);
 
 				if (scheduled.timeoutHandle !== undefined) {
 					clearTimer(scheduled.timeoutHandle);

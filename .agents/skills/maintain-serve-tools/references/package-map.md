@@ -63,4 +63,9 @@ Load only the Skill for the affected public package.
 | `suite`                              | `suite/skills/serve-tools-skills/SKILL.md`                                                   |
 | `vite/polyfills`                     | `vite/polyfills/skills/serve-tools-vite-polyfills/SKILL.md`                                  |
 
+Long-named workspaces:
+
+- `polyfills/prioritized-task-scheduling`: `polyfills/prioritized-task-scheduling/skills/serve-tools-polyfill-prioritized-task-scheduling/SKILL.md`
+- `ponyfills/prioritized-task-scheduling`: `ponyfills/prioritized-task-scheduling/skills/serve-tools-ponyfill-prioritized-task-scheduling/SKILL.md`
+
 The private `demo` workspaces provide examples and build fixtures. They do not publish package Skills.

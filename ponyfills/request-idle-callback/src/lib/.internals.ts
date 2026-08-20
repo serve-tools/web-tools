@@ -50,17 +50,15 @@ function updateHiddenDelay(): void {
 
 function runCallbacks(): void {
 	const end = performance.now() + 50;
-	const runnableCallbacks = Array.from(callbacks);
+	const lastRunnableHandle = nextHandle;
 
 	try {
-		for (const [handle, scheduled] of runnableCallbacks) {
-			if (performance.now() >= end) {
+		for (const [handle, scheduled] of callbacks) {
+			if (handle > lastRunnableHandle || performance.now() >= end) {
 				break;
 			}
 
-			if (!callbacks.delete(handle)) {
-				continue;
-			}
+			callbacks.delete(handle);
 
 			if (scheduled.timeoutHandle !== undefined) {
 				clearTimeout(scheduled.timeoutHandle);

@@ -220,6 +220,11 @@ const selections = [
 		"@serve-tools/polyfill-request-idle-callback",
 	],
 	[
+		"prioritized-scheduling-global",
+		"Third-party browser code expects scheduler.postTask, scheduler.yield, TaskController, and TaskSignal globals. Preserve a complete native scheduler or install the complete fallback without mixing their methods.",
+		"@serve-tools/polyfill-prioritized-task-scheduling",
+	],
+	[
 		"arraybuffer-base64-global",
 		"Server-side code expects Uint8Array.prototype.toBase64. Install the proposal-compatible method in Node.js without changing browser bundles.",
 		"@serve-tools/polyfill-arraybuffer-base64",
@@ -233,6 +238,11 @@ const selections = [
 		"idle-callback-import",
 		"Schedule optional work with imported requestIdleCallback functions while guaranteeing that no globals are modified.",
 		"@serve-tools/ponyfill-request-idle-callback",
+	],
+	[
+		"prioritized-scheduling-import",
+		"Schedule prioritized and abortable browser tasks through explicit imports, including dynamic TaskController priorities and scheduler.yield, without modifying globals.",
+		"@serve-tools/ponyfill-prioritized-task-scheduling",
 	],
 	[
 		"cross-runtime-report-error",

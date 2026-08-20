@@ -1,11 +1,6 @@
 import { SuppressedError as value } from "../exports/SuppressedError.js";
 
-globalThis.SuppressedError ||
-	Object.defineProperty(globalThis, "SuppressedError", {
-		value,
-		configurable: true,
-		writable: true,
-	});
+globalThis.SuppressedError ?? (globalThis.SuppressedError = value);
 
 declare global {
 	/** The native or installed constructor for errors that preserve a suppressed failure. */

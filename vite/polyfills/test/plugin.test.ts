@@ -252,16 +252,19 @@ describe("vitePolyfills", () => {
 		it("exposes the built-in polyfill list", () => {
 			const ids = builtinPolyfills.map((polyfill) => polyfill.id);
 			expect(ids).toEqual([
-				"symbol-dispose",
-				"symbol-async-dispose",
-				"symbol-metadata",
-				"disposable-stack",
 				"async-disposable-stack",
-				"suppressed-error",
-				"url-pattern",
+				"cancel-idle-callback",
+				"disposable-stack",
 				"map-upsert",
 				"request-idle-callback",
-				"cancel-idle-callback",
+				"scheduler",
+				"suppressed-error",
+				"symbol-async-dispose",
+				"symbol-dispose",
+				"symbol-metadata",
+				"task-controller",
+				"task-signal",
+				"url-pattern",
 			]);
 		});
 

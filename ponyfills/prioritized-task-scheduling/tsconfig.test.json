@@ -1,0 +1,21 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"composite": false,
+		"lib": ["ES2025", "DOM"],
+		"noEmit": true
+	},
+	"include": [
+		"benchmark/**/*.ts",
+		"src/**/*.ts",
+		"src/**/.*.ts",
+		"test/**/*.ts",
+		"test/**/.*.ts",
+		"vitest*.config.ts"
+	],
+	"references": [
+		{
+			"path": "../request-idle-callback/tsconfig.json"
+		}
+	]
+}

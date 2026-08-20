@@ -62,11 +62,13 @@
 		"lit/signals/demo",
 		"polyfills/arraybuffer-base64",
 		"polyfills/decorator-metadata",
+		"polyfills/prioritized-task-scheduling",
 		"polyfills/report-error",
 		"polyfills/request-idle-callback",
 		"polyfills/resource-management",
 		"ponyfills/arraybuffer-base64",
 		"ponyfills/decorator-metadata",
+		"ponyfills/prioritized-task-scheduling",
 		"ponyfills/report-error",
 		"ponyfills/request-idle-callback",
 		"ponyfills/resource-management",
@@ -344,6 +346,11 @@
 					"test/*.recipes.ts"
 				]
 			},
+			"polyfills/prioritized-task-scheduling": {
+				"entry": [
+					"test/*.recipes.ts"
+				]
+			},
 			"polyfills/report-error": {
 				"entry": [
 					"test/*.recipes.ts"
@@ -369,6 +376,13 @@
 					"test/*.recipes.ts"
 				]
 			},
+			"ponyfills/prioritized-task-scheduling": {
+				"entry": [
+					"benchmark/*.benchmark.ts",
+					"src/ponyfill-prioritized-task-scheduling.ts",
+					"test/*.recipes.ts"
+				]
+			},
 			"ponyfills/report-error": {
 				"entry": [
 					"test/*.recipes.ts"
@@ -376,6 +390,8 @@
 			},
 			"ponyfills/request-idle-callback": {
 				"entry": [
+					"benchmark/*.bench.ts",
+					"benchmark/*.benchmark.ts",
 					"src/ponyfill-request-idle-callback.ts",
 					"test/*.recipes.ts"
 				],
@@ -445,6 +461,7 @@
 				],
 				"ignoreDependencies": [
 					"@serve-tools/polyfill-decorator-metadata",
+					"@serve-tools/polyfill-prioritized-task-scheduling",
 					"@serve-tools/polyfill-request-idle-callback",
 					"@serve-tools/polyfill-resource-management",
 					"urlpattern-polyfill"

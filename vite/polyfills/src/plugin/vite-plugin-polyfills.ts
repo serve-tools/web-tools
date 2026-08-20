@@ -10,16 +10,19 @@ const NODE_MODULES_SEGMENT = /(?:^|[/\\])node_modules[/\\]/;
 
 /** Polyfills bundled with the plugin and enabled by default. */
 export const builtinPolyfills: readonly Polyfill[] = await Promise.all([
-	import("../polyfills/symbol-dispose-polyfill.js"),
-	import("../polyfills/symbol-async-dispose-polyfill.js"),
-	import("../polyfills/symbol-metadata-polyfill.js"),
-	import("../polyfills/disposable-stack-polyfill.js"),
 	import("../polyfills/async-disposable-stack-polyfill.js"),
-	import("../polyfills/suppressed-error-polyfill.js"),
-	import("../polyfills/url-pattern-polyfill.js"),
+	import("../polyfills/cancel-idle-callback-polyfill.js"),
+	import("../polyfills/disposable-stack-polyfill.js"),
 	import("../polyfills/map-upsert-polyfill.js"),
 	import("../polyfills/request-idle-callback-polyfill.js"),
-	import("../polyfills/cancel-idle-callback-polyfill.js"),
+	import("../polyfills/scheduler-polyfill.js"),
+	import("../polyfills/suppressed-error-polyfill.js"),
+	import("../polyfills/symbol-async-dispose-polyfill.js"),
+	import("../polyfills/symbol-dispose-polyfill.js"),
+	import("../polyfills/symbol-metadata-polyfill.js"),
+	import("../polyfills/task-controller-polyfill.js"),
+	import("../polyfills/task-signal-polyfill.js"),
+	import("../polyfills/url-pattern-polyfill.js"),
 ]).then((modules) => modules.map((module) => module.default));
 
 /** Options for configuring {@link vitePolyfills}. */

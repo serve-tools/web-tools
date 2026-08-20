@@ -21,6 +21,7 @@ const projects = [
 	"client-signals/websocket/vitest.browser.config.ts",
 	"core/async-operation/vitest.browser.config.ts",
 	"lit/signals/vitest.browser.config.ts",
+	"ponyfills/prioritized-task-scheduling/vitest.browser.config.ts",
 	"ponyfills/request-idle-callback/vitest.browser.config.ts",
 	"realtime/protocol/vitest.browser.config.ts",
 	"signals/collections/vitest.browser.config.ts",

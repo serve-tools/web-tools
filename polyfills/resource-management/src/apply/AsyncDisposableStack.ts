@@ -6,12 +6,7 @@ import { AsyncDisposableStack as value } from "../exports/AsyncDisposableStack.j
 
 const nativeValue = value as AsyncDisposableStackConstructor<typeof Symbol.asyncDispose, typeof Symbol.dispose>;
 
-globalThis.AsyncDisposableStack ||
-	Object.defineProperty(globalThis, "AsyncDisposableStack", {
-		value: nativeValue,
-		configurable: true,
-		writable: true,
-	});
+globalThis.AsyncDisposableStack ?? (globalThis.AsyncDisposableStack = nativeValue);
 
 declare global {
 	/** The native or installed asynchronous disposable-stack constructor. */

@@ -5,8 +5,7 @@ import { DisposableStack as value } from "../exports/DisposableStack.js";
 
 const nativeValue = value as DisposableStackConstructor<typeof Symbol.dispose>;
 
-globalThis.DisposableStack ||
-	Object.defineProperty(globalThis, "DisposableStack", { value: nativeValue, configurable: true, writable: true });
+globalThis.DisposableStack ?? (globalThis.DisposableStack = nativeValue);
 
 declare global {
 	/** The native or installed synchronous disposable-stack constructor. */

@@ -39,7 +39,7 @@ describe("resource management polyfill", () => {
 		expect(Symbol.asyncDispose).toBeTypeOf("symbol");
 		expect(Object.getOwnPropertyDescriptor(globalThis, "DisposableStack")).toMatchObject({
 			configurable: true,
-			enumerable: false,
+			enumerable: true,
 			writable: true,
 		});
 	});

@@ -1,7 +1,6 @@
 import { cancelIdleCallback as value } from "../exports/cancelIdleCallback.js";
 
-globalThis.cancelIdleCallback ||
-	Object.defineProperty(globalThis, "cancelIdleCallback", { value, configurable: true, writable: true });
+globalThis.cancelIdleCallback ?? (globalThis.cancelIdleCallback = value);
 
 declare global {
 	/** The native or installed function for cancelling scheduled idle work. */

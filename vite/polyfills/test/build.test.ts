@@ -170,8 +170,8 @@ describe("build integration", () => {
 
 			const code = result.getChunk("index");
 			expect(code).toBeDefined();
-			expect(code).toContain('Object.defineProperty(globalThis, "requestIdleCallback"');
-			expect(code).toContain('Object.defineProperty(globalThis, "cancelIdleCallback"');
+			expect(code).toContain("globalThis.requestIdleCallback ??");
+			expect(code).toContain("globalThis.cancelIdleCallback ??");
 		});
 	});
 });

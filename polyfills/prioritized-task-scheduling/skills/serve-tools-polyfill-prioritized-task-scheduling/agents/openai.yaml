@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Task Scheduling Polyfill"
+  short_description: "Install prioritized scheduling globals safely"
+  default_prompt: "Use $serve-tools-polyfill-prioritized-task-scheduling to add prioritized scheduling support safely."

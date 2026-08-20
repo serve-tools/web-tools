@@ -1,0 +1,48 @@
+{
+	"name": "@serve-tools/ponyfill-prioritized-task-scheduling",
+	"version": "0.1.0",
+	"description": "Implements the Prioritized Task Scheduling API without global mutation",
+	"keywords": [
+		"background-tasks",
+		"cooperative-scheduling",
+		"post-task",
+		"prioritized-task-scheduling",
+		"scheduler",
+		"task-controller",
+		"task-signal",
+		"worker",
+		"yield",
+		"ponyfill"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/prioritized-task-scheduling#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "ponyfills/prioritized-task-scheduling"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/ponyfill-prioritized-task-scheduling.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"benchmark": "vitest run --config vitest.benchmark.config.ts",
+		"build": "tsc --build tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "vitest run --config vitest.browser.config.ts",
+		"typecheck": "tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/ponyfill-request-idle-callback": "^0.1"
+	}
+}

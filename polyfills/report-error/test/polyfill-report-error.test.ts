@@ -55,7 +55,7 @@ describe("reportError polyfill", () => {
 		expect(Reflect.get(globalThis, "reportError")).toBeTypeOf("function");
 		expect(Object.getOwnPropertyDescriptor(globalThis, "reportError")).toMatchObject({
 			configurable: true,
-			enumerable: false,
+			enumerable: true,
 			writable: true,
 		});
 	});

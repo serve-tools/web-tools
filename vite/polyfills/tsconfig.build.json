@@ -10,6 +10,9 @@
 			"path": "../../polyfills/decorator-metadata/tsconfig.json"
 		},
 		{
+			"path": "../../polyfills/prioritized-task-scheduling/tsconfig.json"
+		},
+		{
 			"path": "../../polyfills/request-idle-callback/tsconfig.json"
 		},
 		{

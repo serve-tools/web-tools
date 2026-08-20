@@ -30,7 +30,7 @@ describe("requestIdleCallback polyfill", () => {
 		expect(globalThis.cancelIdleCallback).toBeTypeOf("function");
 		expect(Object.getOwnPropertyDescriptor(globalThis, "requestIdleCallback")).toMatchObject({
 			configurable: true,
-			enumerable: false,
+			enumerable: true,
 			writable: true,
 		});
 	});
