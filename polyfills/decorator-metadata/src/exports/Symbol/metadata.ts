@@ -1,6 +1,5 @@
-import { metadata as fallback } from "@serve-tools/ponyfill-decorator-metadata/lib/Symbol/metadata";
-
-const nativeValue = Reflect.get(Symbol, "metadata") as typeof fallback | undefined;
+import { metadata as value } from "@serve-tools/ponyfill-decorator-metadata/lib/Symbol/metadata";
 
 /** The native `Symbol.metadata` when available, otherwise a module-scoped fallback symbol. */
-export const metadata: typeof fallback = nativeValue || fallback;
+export const metadata: SymbolConstructor extends { description: any; metadata: infer T } ? T : typeof value =
+	Symbol.metadata || value;
