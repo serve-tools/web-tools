@@ -39,7 +39,7 @@ const model = new MockLanguageModelV3({
 });
 
 const generateRobotStory = (): AsyncOperation<UIMessage, UIMessage | undefined> => {
-	return new AsyncOperation<UIMessage, UIMessage | undefined>(async ({ signal, write }) => {
+	return new AsyncOperation<UIMessage, UIMessage | undefined>(async (write, { signal }) => {
 		const result = streamText({
 			model,
 			prompt: "Ignored deterministic test prompt",
@@ -69,7 +69,7 @@ describe("AI SDK adapter with streaming", () => {
 			usage: LanguageModelUsage;
 		};
 
-		await using connection = new AsyncOperation<TextStreamPart<Toolset>, ChatVerdict>(async ({ signal, write }) => {
+		await using connection = new AsyncOperation<TextStreamPart<Toolset>, ChatVerdict>(async (write, { signal }) => {
 			const result = streamText({
 				model,
 				prompt,

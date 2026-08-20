@@ -33,7 +33,8 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/ponyfill-request-idle-callback.js",
-		"./lib/*": "./dist/lib/*.js",
+		"./lib/cancelIdleCallback": "./dist/lib/cancelIdleCallback.js",
+		"./lib/requestIdleCallback": "./dist/lib/requestIdleCallback.js",
 		"./runtime/node": "./runtime/node.js",
 		"./runtime/bun": "./runtime/bun.js",
 		"./runtime/deno": "./runtime/deno.js"
@@ -44,7 +45,7 @@
 		"skills"
 	],
 	"scripts": {
-		"build": "tsc --build tsconfig.build.json",
+		"build": "tsc --build tsconfig.json",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run test:browser && npm run test:node",
@@ -52,6 +53,6 @@
 		"test:bun": "bun test/runtime/bun-conformance.js",
 		"test:deno": "deno run test/runtime/deno-conformance.js",
 		"test:node": "node --test test/runtime/node.test.js",
-		"typecheck": "tsc --project tsconfig.json --noEmit"
+		"typecheck": "tsc --project tsconfig.test.json"
 	}
 }

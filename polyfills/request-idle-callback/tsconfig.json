@@ -7,7 +7,7 @@
 	"include": ["src/**/*.ts", "src/**/.*.ts"],
 	"references": [
 		{
-			"path": "../../ponyfills/request-idle-callback/tsconfig.build.json"
+			"path": "../../ponyfills/request-idle-callback/tsconfig.json"
 		}
 	]
 }

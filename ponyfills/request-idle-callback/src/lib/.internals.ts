@@ -1,10 +1,4 @@
-import type { IdleRequestCallback } from "./IdleRequestCallback.js";
-import type { IdleRequestOptions } from "./IdleRequestOptions.js";
-
-export interface ScheduledCallback {
-	callback: IdleRequestCallback;
-	timeoutHandle?: ReturnType<typeof setTimeout>;
-}
+import type { IdleRequestCallback } from "./types.js";
 
 export const callbacks = new Map<number, ScheduledCallback>();
 
@@ -14,16 +8,6 @@ let isScheduled = false;
 let nextHandle = 0;
 
 export const getNextHandle = () => ++nextHandle;
-
-export const clearCallbackTimeout = (handle: ReturnType<typeof setTimeout>) => clearTimeout(handle);
-
-export const setCallbackTimeout = (callback: () => void, timeout: number) => setTimeout(callback, timeout);
-
-export const resetScheduleIfEmpty = () => {
-	if (!callbacks.size) {
-		isScheduled = false;
-	}
-};
 
 export function getChannel(): MessageChannel {
 	if (channel) {
@@ -38,6 +22,26 @@ export function getChannel(): MessageChannel {
 	updateHiddenDelay();
 
 	return channel;
+}
+
+export const resetScheduleIfEmpty = () => {
+	if (!callbacks.size) {
+		isScheduled = false;
+	}
+};
+
+export function schedule(): void {
+	if (isScheduled) {
+		return;
+	}
+
+	isScheduled = true;
+
+	requestAnimationFrame(() => {
+		const postMessage = () => getChannel().port2.postMessage(null);
+
+		hiddenDelay ? setTimeout(postMessage, hiddenDelay) : postMessage();
+	});
 }
 
 function updateHiddenDelay(): void {
@@ -76,59 +80,11 @@ function runCallbacks(): void {
 	}
 }
 
-export function schedule(): void {
-	if (isScheduled) {
-		return;
-	}
+// #region Types
 
-	isScheduled = true;
-
-	requestAnimationFrame(() => {
-		const postMessage = () => getChannel().port2.postMessage(null);
-
-		hiddenDelay ? setTimeout(postMessage, hiddenDelay) : postMessage();
-	});
-}
-
-/** Schedules work for an idle period and returns its cancellation handle. */
-export function requestIdleCallback(callback: IdleRequestCallback, options?: IdleRequestOptions): number {
-	getChannel();
-
-	const handle = ++nextHandle;
-	const scheduled: ScheduledCallback = { callback };
-
-	if (options?.timeout !== undefined && options.timeout > 0) {
-		scheduled.timeoutHandle = setTimeout(() => {
-			if (!callbacks.delete(handle)) {
-				return;
-			}
-
-			if (!callbacks.size) {
-				isScheduled = false;
-			}
-
-			callback({ didTimeout: true, timeRemaining: () => 0 });
-		}, options.timeout);
-	}
-
-	callbacks.set(handle, scheduled);
-
-	schedule();
-
-	return handle;
-}
-
-/** Cancels a callback previously scheduled by this module. */
-export function cancelIdleCallback(handle: number): void {
-	const scheduled = callbacks.get(handle);
-
-	if (scheduled?.timeoutHandle !== undefined) {
-		clearTimeout(scheduled.timeoutHandle);
-	}
-
-	if (callbacks.delete(handle) && !callbacks.size) {
-		isScheduled = false;
-	}
+export interface ScheduledCallback {
+	callback: IdleRequestCallback;
+	timeoutHandle?: ReturnType<typeof setTimeout>;
 }
 
 declare var MessageChannel: typeof globalThis extends { onmessage: any; MessageChannel: infer T }
@@ -176,3 +132,5 @@ type MessagePort = typeof globalThis extends { onmessage: any; MessagePort: { ne
 type Transferable = typeof globalThis extends { onmessage: any; Transferable: infer T }
 	? T
 	: ArrayBufferView | ArrayBuffer;
+
+// #endregion Types

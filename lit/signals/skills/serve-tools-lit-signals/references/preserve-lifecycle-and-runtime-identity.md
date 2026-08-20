@@ -1,6 +1,7 @@
 # Preserve lifecycle and runtime identity
 
 - Signal-native template bindings, `watch()`, `when()`, `choose()`, `repeat()`, consumed context subscriptions, `SignalElement`, `SignalWatcher`, and `@style` remove subscriptions while their Lit owner is disconnected and restore them on reconnection.
+- `@operation` disposes only its element-owned terminal subscription on disconnection and resubscribes to future ambient view values on reconnection; configure `disconnectDelay` only when brief disconnections should retain that subscription.
 - `repeat()` requires unique stable keys for keyed lists, preserves keyed DOM across moves, and releases removed row dependencies immediately.
 - Automatic effects clean up after a lasting disconnection and restart on reconnection; same-task DOM moves do not tear them down.
 - A manually managed effect remains active while disconnected and therefore must always be explicitly disposed.

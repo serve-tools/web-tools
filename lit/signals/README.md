@@ -188,41 +188,55 @@ html`${choose(
 An unmatched value renders nothing when the default callback is omitted.
 Nested `watch()`, `when()`, and `choose()` calls retain independent tracking boundaries.
 
-## `observeOperationView(view, initialValue?)`
+## `@operation(view, options?)`
 
-`observeOperationView()` turns one filtered or mapped `OperationView` into a read-only Signal that retains that view's latest value.
-Pass an initial value when the template should render something before the view emits.
-Create the view and Signal before consuming the subscriber:
+`operation()` decorates a read-only auto-accessor with values from one ambient `OperationView`.
+Each connected element instance owns an independent subscription while the caller that consumes the `AsyncOperationSubscriber` retains ownership of the operation.
+The accessor initializer is its value before that element's subscription receives a view value.
 
 ```ts
-import {
-	AsyncOperation,
-	AsyncOperationSubscriber,
-	html,
-	observeOperationView,
-} from "@serve-tools/lit-signals";
+import { AsyncOperation, AsyncOperationSubscriber, html, SignalElement } from "@serve-tools/lit-signals";
+import { operation } from "@serve-tools/lit-signals/decorators";
 
-const subscriber = new AsyncOperationSubscriber<number>();
-const latestEvenSquare = observeOperationView(
-	subscriber
-		.filter((value) => value % 2 === 0)
-		.map((value) => value ** 2),
-	"Waiting…",
-);
-const operation = new AsyncOperation<number>(async ({ write }) => {
-	await write(1);
-	await write(2);
-});
+const progress = new AsyncOperationSubscriber<number>();
 
-html`<output>${latestEvenSquare}</output>`;
+class ProgressElement extends SignalElement {
+	@operation(progress.filter((value) => value > 0).map((value) => `${value}%`))
+	accessor progress = "Starting…";
 
-void subscriber.consume(operation);
+	protected render() {
+		return html`<output>${this.progress}</output>`;
+	}
+}
+
+const startOperation = () =>
+	progress.consume(
+		new AsyncOperation<number>(async (write) => {
+			await write(25);
+			await write(50);
+		}),
+	);
 ```
 
-Without an initial value, the Signal contains `undefined` until its view emits.
-The package's signal-native `html` and `svg` templates observe the Signal directly, so no lifecycle object or case map is needed.
-Disposing the Signal unsubscribes only that view and retains its current value; it does not cancel the subscriber or operation.
-Await `subscriber.consume(operation)` separately when the component needs the operation's final result or error.
+Create every filtered or mapped view before calling `consume()` because the subscriber's projection graph becomes immutable once consumption starts.
+Element instances may connect, disconnect, and reconnect while consumption is active; each connection subscribes to future values from the already-created view.
+Multiple elements may decorate accessors with the same view and update independently.
+
+Disconnection disposes only that element's terminal subscription.
+It does not cancel or dispose the ambient subscriber or operation.
+The code that calls `consume()` receives the terminal result or error and owns eventual subscriber disposal when cancellation or producer cleanup is required.
+A subscriber consumes at most one operation.
+
+Operation views do not replay.
+A newly connected element retains its initializer, and a reconnected element retains its last received value, until the view emits again.
+Assigning the accessor throws a `TypeError`.
+
+Unsubscription is immediate by default.
+Set `disconnectDelay` to a number or a function returning a number to retain the same element subscription across a brief disconnection.
+`0` preserves it through a synchronous DOM move if the host reconnects before the timer fires, avoiding missed values during that gap.
+
+Reading the accessor from a `SignalElement` or `SignalWatcher` update participates in the complete Lit update lifecycle.
+A plain `LitElement` can instead read it inside `watch(() => this.progress)` for a fine-grained template-part update.
 
 ## `repeat(source, key?, renderItem)`
 
@@ -509,6 +523,7 @@ The package root exports:
 - The public `@serve-tools/signal` API, including `Signal`, `AnySignal`, `ComputedSignal`, and `StateSignal`.
 - The public `@serve-tools/signal-collections` API: `SignalArray`, `SignalMap`, `SignalObject`, and `SignalSet`.
 - The public `@serve-tools/signal-event-target` API: `EventTargetSignal`, `MatchMediaSignal`, and `EventTargetSignalOptions`.
+- `AsyncOperation`, `AsyncOperationSubscriber`, and `OperationView` from the compatible operation runtime.
 - Signal-native `html` and `svg` tags that automatically bind direct Signal substitutions.
 - Lit's static `css` tag and its `CSSResult` and `CSSResultGroup` types.
 - `callbackRef(callback, options?)` for Lit-compatible element refs with setup cleanup and optional connection waiting.
@@ -534,13 +549,15 @@ The `@serve-tools/lit-signals/decorators` entrypoint exports:
 - `style` for instance-owned reactive `:host` style declarations.
 - `computed` for memoized standard getter decorators.
 - `effect(options?)` for lifecycle-owned reactive methods.
+- `operation(view, options?)` for a connection-owned, read-only accessor over an ambient operation view.
 - `defaultAttributeConverter` for Lit-compatible default attribute conversion.
-- `CollectionConstructor`, `ConsumeOptions`, `EffectDecoratorOptions`, `ProvideOptions`, `SignalPropertyDeclaration`, `StyleDeclarations`, `StyleSource`, `StyleValue`, `PropertyDeclaration`, `AttributeConverter`, and `TypeHint` for decorator configuration.
+- `CollectionConstructor`, `ConsumeOptions`, `EffectDecoratorOptions`, `OperationOptions`, `ProvideOptions`, `SignalPropertyDeclaration`, `StyleDeclarations`, `StyleSource`, `StyleValue`, `PropertyDeclaration`, `AttributeConverter`, and `TypeHint` for decorator configuration.
 
 ## Compatibility
 
 The package is an ES module for Lit 3.3 and re-exports its compatible signal runtime, collections, event-target state utilities, and curated static CSS API.
 `@style` requires a shadow render root with constructed stylesheet support.
+`@operation` requires a Lit `ReactiveControllerHost`; direct accessor reads require `SignalElement` or `SignalWatcher`, while callback-form fine-grained directives work with plain `LitElement`.
 The decorators require the current standard decorator proposal and auto-accessor support from the application's compiler and runtime.
 
 ## Agent Skill
@@ -550,7 +567,7 @@ Activation is explicit; installing the package does not automatically trust or e
 
 ## Demo
 
-The [hosted demo](https://serve-tools.github.io/web-tools/lit/signals/) provides small runnable examples for direct Signal substitutions, keyed collections, context, and reactive styles.
+The [hosted demo](https://serve-tools.github.io/web-tools/lit/signals/) provides small runnable examples for direct Signal substitutions, keyed collections, shared operation views, context, and reactive styles.
 Each example reveals the exact TypeScript module powering its live preview, so the displayed sample cannot drift from the code being exercised.
 
 [Open the demo directory in StackBlitz](https://stackblitz.com/fork/github/serve-tools/web-tools/tree/main/lit/signals/demo), or run it against the local workspace package:

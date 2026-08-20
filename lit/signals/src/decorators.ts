@@ -5,6 +5,7 @@ export * from "./decorators/computed.js";
 export * from "./decorators/consume.js";
 export * from "./decorators/defaultAttributeConverter.js";
 export * from "./decorators/effect.js";
+export * from "./decorators/operation.js";
 export * from "./decorators/property.js";
 export * from "./decorators/provide.js";
 export * from "./decorators/style.js";

@@ -5,7 +5,7 @@ This public-import example is generated from the compile-checked `test/async-ope
 ```ts
 import { AsyncOperation, AsyncOperationSubscriber } from "@serve-tools/async-operation";
 
-await using operation = new AsyncOperation<string, number>(async ({ signal, write }) => {
+await using operation = new AsyncOperation<string, number>(async (write, { signal }) => {
 	if (signal.aborted) {
 		throw signal.reason;
 	}
@@ -30,7 +30,7 @@ using _evenValues = subscriber
 	});
 
 await subscriber.consume(
-	new AsyncOperation<number, string>(async ({ write }) => {
+	new AsyncOperation<number, string>(async (write) => {
 		await write(1);
 		await write(2);
 

@@ -67,7 +67,7 @@ export class AsyncOperation<T = void, TResult = void> implements AsyncIterable<T
 	/**
 	 * Aborts the operation.
 	 *
-	 * The executor is expected to observe `controller.signal` and stop
+	 * The executor is expected to observe its context signal and stop
 	 * cooperatively.
 	 */
 	abort(reason?: unknown): void {
@@ -95,9 +95,8 @@ export class AsyncOperation<T = void, TResult = void> implements AsyncIterable<T
 		};
 
 		try {
-			const value = await executor({
-				signal,
-				write: (value) => {
+			const value = await executor(
+				(value) => {
 					if (this.#state !== OperationState.ACTIVE) {
 						return Promise.reject(
 							signal.aborted
@@ -114,7 +113,8 @@ export class AsyncOperation<T = void, TResult = void> implements AsyncIterable<T
 
 					return writing;
 				},
-			});
+				{ signal },
+			);
 
 			if (this.#state !== OperationState.ACTIVE) {
 				return;
@@ -194,18 +194,16 @@ export class AsyncOperation<T = void, TResult = void> implements AsyncIterable<T
 	#state: OperationState = OperationState.ACTIVE;
 }
 
-/** Controls value delivery and observes cancellation. */
-export interface AsyncOperationController<T> {
+/** Represents the context for an operation. */
+export interface AsyncOperationContext {
 	/** Aborted when the operation is cancelled. */
 	readonly signal: AbortSignal;
-
-	/** Writes a value, applying stream backpressure; it must settle before the executor returns. */
-	write(value: T): Promise<void>;
 }
 
 /** Produces values and a terminal result. */
 export type AsyncOperationExecutor<T, TResult> = (
-	controller: AsyncOperationController<T>,
+	writer: AsyncOperationWriter<T>,
+	context: AsyncOperationContext,
 ) => TResult | PromiseLike<TResult>;
 
 /** Configures cancellation and value buffering. */
@@ -215,6 +213,10 @@ export interface AsyncOperationOptions<T> {
 
 	/** Controls value buffering and sizing. */
 	readonly strategy?: QueuingStrategy<T>;
+}
+
+export interface AsyncOperationWriter<T> {
+	(value: T): Promise<void>;
 }
 
 const enum OperationState {

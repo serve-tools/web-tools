@@ -1,6 +1,6 @@
 import { AsyncOperation, AsyncOperationSubscriber } from "../src/operation.js";
 
-await using operation = new AsyncOperation<string, number>(async ({ signal, write }) => {
+await using operation = new AsyncOperation<string, number>(async (write, { signal }) => {
 	if (signal.aborted) {
 		throw signal.reason;
 	}
@@ -25,7 +25,7 @@ using _evenValues = subscriber
 	});
 
 await subscriber.consume(
-	new AsyncOperation<number, string>(async ({ write }) => {
+	new AsyncOperation<number, string>(async (write) => {
 		await write(1);
 		await write(2);
 

@@ -18,7 +18,7 @@ describe("AsyncOperationSubscriber", () => {
 				even.push([value, index]);
 			});
 
-		const operation = new AsyncOperation<number, string>(async ({ write }) => {
+		const operation = new AsyncOperation<number, string>(async (write) => {
 			await write(1);
 			await write(2);
 			await write(3);
@@ -56,7 +56,7 @@ describe("AsyncOperationSubscriber", () => {
 			await releaseFirst.promise;
 		});
 
-		const operation = new AsyncOperation<number>(async ({ write }) => {
+		const operation = new AsyncOperation<number>(async (write) => {
 			writes.push(1);
 			await write(1);
 			writes.push(2);
@@ -80,7 +80,7 @@ describe("AsyncOperationSubscriber", () => {
 
 		subscriber.map(map);
 
-		const operation = new AsyncOperation<number>(async ({ write }) => {
+		const operation = new AsyncOperation<number>(async (write) => {
 			await write(1);
 		});
 
@@ -99,7 +99,7 @@ describe("AsyncOperationSubscriber", () => {
 			subscription[Symbol.dispose]();
 		});
 
-		const operation = new AsyncOperation<number>(async ({ write }) => {
+		const operation = new AsyncOperation<number>(async (write) => {
 			await write(1);
 			await write(2);
 		});
@@ -120,7 +120,7 @@ describe("AsyncOperationSubscriber", () => {
 		subscriber.subscribe(callback);
 		first[Symbol.dispose]();
 
-		const operation = new AsyncOperation<number>(async ({ write }) => {
+		const operation = new AsyncOperation<number>(async (write) => {
 			await write(1);
 		});
 
@@ -141,7 +141,7 @@ describe("AsyncOperationSubscriber", () => {
 			throw secondError;
 		});
 
-		const operation = new AsyncOperation<number>(async ({ write }) => {
+		const operation = new AsyncOperation<number>(async (write) => {
 			await write(1);
 		});
 		const consuming = subscriber.consume(operation);
@@ -151,23 +151,44 @@ describe("AsyncOperationSubscriber", () => {
 		expect(operation.signal.reason).toBe(firstError);
 	});
 
-	test("rejects graph changes after consumption starts", async () => {
+	test("locks projections while allowing terminal subscriptions during consumption", async () => {
 		const subscriber = new AsyncOperationSubscriber<number>();
-		const operation = new AsyncOperation<number>(() => undefined);
+		const firstWritten = Promise.withResolvers<void>();
+		const releaseSecond = Promise.withResolvers<void>();
+		const values: number[] = [];
+		const operation = new AsyncOperation<number>(async (write) => {
+			await write(1);
+			firstWritten.resolve();
+			await releaseSecond.promise;
+			await write(2);
+		});
 		const consuming = subscriber.consume(operation);
 
-		expect(() => subscriber.subscribe(() => {})).toThrowError(DOMException);
+		await firstWritten.promise;
+
+		using _subscription = subscriber.subscribe((value) => {
+			values.push(value);
+		});
+
 		expect(() => subscriber.filter(Boolean)).toThrowError(DOMException);
 		expect(() => subscriber.map(String)).toThrowError(DOMException);
 
+		releaseSecond.resolve();
 		await consuming;
+
+		expect(values).toEqual([2]);
+
+		using _completedSubscription = subscriber.subscribe((value) => {
+			values.push(value);
+		});
+
 		expect(() => subscriber.consume(operation)).toThrowError(DOMException);
 	});
 
 	test("disposal cancels the owned operation and waits for cleanup", async () => {
 		const subscriber = new AsyncOperationSubscriber<never>();
 		const cleaned = Promise.withResolvers<void>();
-		const operation = new AsyncOperation<never>(async ({ signal }) => {
+		const operation = new AsyncOperation<never>(async (_, { signal }) => {
 			await new Promise<void>((resolve) => signal.addEventListener("abort", () => resolve(), { once: true }));
 			cleaned.resolve();
 		});
@@ -178,5 +199,6 @@ describe("AsyncOperationSubscriber", () => {
 		await expect(consuming).rejects.toBe(operation.signal.reason);
 		await expect(cleaned.promise).resolves.toBeUndefined();
 		expect(subscriber.active).toBe(false);
+		expect(() => subscriber.subscribe(() => {})).toThrowError(DOMException);
 	});
 });

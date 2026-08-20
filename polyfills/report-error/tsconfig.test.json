@@ -9,7 +9,7 @@
 	"include": ["src/**/*.ts", "test/**/*.ts"],
 	"references": [
 		{
-			"path": "../../ponyfills/report-error/tsconfig.build.json"
+			"path": "../../ponyfills/report-error/tsconfig.json"
 		}
 	]
 }

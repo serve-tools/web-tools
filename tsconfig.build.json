@@ -3,60 +3,170 @@
 	"files": [],
 	"include": [],
 	"references": [
-		{ "path": "./client/client/tsconfig.json" },
-		{ "path": "./client/context/tsconfig.json" },
-		{ "path": "./client/db/tsconfig.json" },
-		{ "path": "./client/event-source/tsconfig.json" },
-		{ "path": "./client/http-stream/tsconfig.json" },
-		{ "path": "./client/input/tsconfig.json" },
-		{ "path": "./client/interaction/tsconfig.json" },
-		{ "path": "./client/keyboard/tsconfig.json" },
-		{ "path": "./client/messaging/tsconfig.json" },
-		{ "path": "./client/realtime/tsconfig.json" },
-		{ "path": "./client/shared-db/tsconfig.json" },
-		{ "path": "./client/shared-event-source/tsconfig.json" },
-		{ "path": "./client/shared-http-stream/tsconfig.json" },
-		{ "path": "./client/shared-websocket/tsconfig.json" },
-		{ "path": "./client/shared-webtransport/tsconfig.json" },
-		{ "path": "./client/storage/tsconfig.json" },
-		{ "path": "./client/websocket/tsconfig.json" },
-		{ "path": "./client/webtransport/tsconfig.json" },
-		{ "path": "./client-signals/client-signals/tsconfig.json" },
-		{ "path": "./client-signals/db/tsconfig.json" },
-		{ "path": "./client-signals/dom/tsconfig.build.json" },
-		{ "path": "./client-signals/event-source/tsconfig.json" },
-		{ "path": "./client-signals/event-target/tsconfig.json" },
-		{ "path": "./client-signals/http-stream/tsconfig.json" },
-		{ "path": "./client-signals/messaging/tsconfig.json" },
-		{ "path": "./client-signals/shared-db/tsconfig.json" },
-		{ "path": "./client-signals/shared-event-source/tsconfig.json" },
-		{ "path": "./client-signals/shared-http-stream/tsconfig.json" },
-		{ "path": "./client-signals/shared-websocket/tsconfig.json" },
-		{ "path": "./client-signals/shared-webtransport/tsconfig.json" },
-		{ "path": "./client-signals/storage/tsconfig.json" },
-		{ "path": "./client-signals/websocket/tsconfig.json" },
-		{ "path": "./client-signals/webtransport/tsconfig.json" },
-		{ "path": "./core/async-operation/tsconfig.json" },
-		{ "path": "./lit/signals/tsconfig.json" },
-		{ "path": "./polyfills/decorator-metadata/tsconfig.json" },
-		{ "path": "./polyfills/report-error/tsconfig.json" },
-		{ "path": "./polyfills/request-idle-callback/tsconfig.json" },
-		{ "path": "./polyfills/resource-management/tsconfig.json" },
-		{ "path": "./ponyfills/decorator-metadata/tsconfig.build.json" },
-		{ "path": "./ponyfills/report-error/tsconfig.build.json" },
-		{ "path": "./ponyfills/request-idle-callback/tsconfig.build.json" },
-		{ "path": "./ponyfills/resource-management/tsconfig.build.json" },
-		{ "path": "./realtime/protocol/tsconfig.json" },
-		{ "path": "./rolldown/decorators/tsconfig.build.json" },
-		{ "path": "./server/event-source/tsconfig.json" },
-		{ "path": "./server/http-stream/tsconfig.json" },
-		{ "path": "./server/realtime/tsconfig.json" },
-		{ "path": "./server/websocket/tsconfig.json" },
-		{ "path": "./server/webtransport/tsconfig.json" },
-		{ "path": "./signals/collections/tsconfig.json" },
-		{ "path": "./signals/effect/tsconfig.json" },
-		{ "path": "./signals/signal/tsconfig.json" },
-		{ "path": "./signals/signals/tsconfig.json" },
-		{ "path": "./vite/polyfills/tsconfig.build.json" }
+		{
+			"path": "./client/client/tsconfig.json"
+		},
+		{
+			"path": "./client/context/tsconfig.json"
+		},
+		{
+			"path": "./client/db/tsconfig.json"
+		},
+		{
+			"path": "./client/event-source/tsconfig.json"
+		},
+		{
+			"path": "./client/http-stream/tsconfig.json"
+		},
+		{
+			"path": "./client/input/tsconfig.json"
+		},
+		{
+			"path": "./client/interaction/tsconfig.json"
+		},
+		{
+			"path": "./client/keyboard/tsconfig.json"
+		},
+		{
+			"path": "./client/messaging/tsconfig.json"
+		},
+		{
+			"path": "./client/realtime/tsconfig.json"
+		},
+		{
+			"path": "./client/shared-db/tsconfig.json"
+		},
+		{
+			"path": "./client/shared-event-source/tsconfig.json"
+		},
+		{
+			"path": "./client/shared-http-stream/tsconfig.json"
+		},
+		{
+			"path": "./client/shared-websocket/tsconfig.json"
+		},
+		{
+			"path": "./client/shared-webtransport/tsconfig.json"
+		},
+		{
+			"path": "./client/storage/tsconfig.json"
+		},
+		{
+			"path": "./client/websocket/tsconfig.json"
+		},
+		{
+			"path": "./client/webtransport/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/client-signals/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/db/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/dom/tsconfig.build.json"
+		},
+		{
+			"path": "./client-signals/event-source/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/event-target/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/http-stream/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/messaging/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/shared-db/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/shared-event-source/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/shared-http-stream/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/shared-websocket/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/shared-webtransport/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/storage/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/websocket/tsconfig.json"
+		},
+		{
+			"path": "./client-signals/webtransport/tsconfig.json"
+		},
+		{
+			"path": "./core/async-operation/tsconfig.json"
+		},
+		{
+			"path": "./lit/signals/tsconfig.json"
+		},
+		{
+			"path": "./polyfills/decorator-metadata/tsconfig.json"
+		},
+		{
+			"path": "./polyfills/report-error/tsconfig.json"
+		},
+		{
+			"path": "./polyfills/request-idle-callback/tsconfig.json"
+		},
+		{
+			"path": "./polyfills/resource-management/tsconfig.json"
+		},
+		{
+			"path": "./ponyfills/decorator-metadata/tsconfig.json"
+		},
+		{
+			"path": "./ponyfills/report-error/tsconfig.json"
+		},
+		{
+			"path": "./ponyfills/request-idle-callback/tsconfig.json"
+		},
+		{
+			"path": "./ponyfills/resource-management/tsconfig.build.json"
+		},
+		{
+			"path": "./realtime/protocol/tsconfig.json"
+		},
+		{
+			"path": "./rolldown/decorators/tsconfig.build.json"
+		},
+		{
+			"path": "./server/event-source/tsconfig.json"
+		},
+		{
+			"path": "./server/http-stream/tsconfig.json"
+		},
+		{
+			"path": "./server/realtime/tsconfig.json"
+		},
+		{
+			"path": "./server/websocket/tsconfig.json"
+		},
+		{
+			"path": "./server/webtransport/tsconfig.json"
+		},
+		{
+			"path": "./signals/collections/tsconfig.json"
+		},
+		{
+			"path": "./signals/effect/tsconfig.json"
+		},
+		{
+			"path": "./signals/signal/tsconfig.json"
+		},
+		{
+			"path": "./signals/signals/tsconfig.json"
+		},
+		{
+			"path": "./vite/polyfills/tsconfig.build.json"
+		}
 	]
 }

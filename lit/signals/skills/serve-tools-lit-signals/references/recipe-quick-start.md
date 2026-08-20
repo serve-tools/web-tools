@@ -5,14 +5,8 @@ This public-import example is generated from the compile-checked `test/lit-signa
 ```ts
 import { LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
-import {
-	AsyncOperation,
-	AsyncOperationSubscriber,
-	html,
-	observeOperationView,
-	Signal,
-	watch,
-} from "@serve-tools/lit-signals";
+import { operation } from "@serve-tools/lit-signals/decorators";
+import { AsyncOperation, AsyncOperationSubscriber, html, Signal, SignalElement, watch } from "@serve-tools/lit-signals";
 
 @customElement("recipe-counter")
 class RecipeCounter extends LitElement {
@@ -25,18 +19,27 @@ class RecipeCounter extends LitElement {
 
 void RecipeCounter;
 
-const operation = new AsyncOperation<string, number>(async ({ write }) => {
-	await write("loading");
+const progress = new AsyncOperationSubscriber<string, number>();
 
-	return 42;
-});
-const subscriber = new AsyncOperationSubscriber<string, number>();
-using latestLength = observeOperationView(
-	subscriber.map((value) => value.length),
-	"Waiting",
-);
+@customElement("recipe-progress")
+class RecipeProgress extends SignalElement {
+	@operation(progress.map((value) => `${value.length} characters`))
+	accessor progress = "Waiting";
 
-html`<output>${latestLength}</output>`;
+	protected render() {
+		return html`<output>${this.progress}</output>`;
+	}
+}
 
-void subscriber.consume(operation);
+const startProgress = () =>
+	progress.consume(
+		new AsyncOperation<string, number>(async (write) => {
+			await write("loading");
+
+			return 42;
+		}),
+	);
+
+void RecipeProgress;
+void startProgress;
 ```

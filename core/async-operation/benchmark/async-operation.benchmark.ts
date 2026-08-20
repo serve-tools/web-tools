@@ -17,7 +17,7 @@ test("async operation lifecycle", async () => {
 	await benchmark(
 		"async-operation/one-value",
 		async () => {
-			const operation = new AsyncOperation<number, number>(async ({ write }) => {
+			const operation = new AsyncOperation<number, number>(async (write) => {
 				await write(1);
 
 				return 2;
@@ -35,7 +35,7 @@ test("async operation lifecycle", async () => {
 	await benchmark(
 		"async-operation/32-values-unbuffered",
 		async () => {
-			const operation = new AsyncOperation<number, number>(async ({ write }) => {
+			const operation = new AsyncOperation<number, number>(async (write) => {
 				for (let value = 1; value <= 32; ++value) {
 					await write(value);
 				}
@@ -58,7 +58,7 @@ test("async operation lifecycle", async () => {
 		"async-operation/32-values-buffer-8",
 		async () => {
 			const operation = new AsyncOperation<number, number>(
-				async ({ write }) => {
+				async (write) => {
 					for (let value = 1; value <= 32; ++value) {
 						await write(value);
 					}
@@ -83,7 +83,7 @@ test("async operation lifecycle", async () => {
 		"async-operation/32-values-buffered",
 		async () => {
 			const operation = new AsyncOperation<number, number>(
-				async ({ write }) => {
+				async (write) => {
 					for (let value = 1; value <= 32; ++value) {
 						await write(value);
 					}
@@ -108,7 +108,7 @@ test("async operation lifecycle", async () => {
 		"async-operation/1024-values-buffered",
 		async () => {
 			const operation = new AsyncOperation<number, number>(
-				async ({ write }) => {
+				async (write) => {
 					for (let value = 1; value <= 1_024; ++value) {
 						await write(value);
 					}
@@ -130,7 +130,7 @@ test("async operation lifecycle", async () => {
 	await benchmark(
 		"async-operation/dispose",
 		async () => {
-			const operation = new AsyncOperation<never, void>(({ signal }) => {
+			const operation = new AsyncOperation<never, void>((_, { signal }) => {
 				return new Promise((resolve) => signal.addEventListener("abort", () => resolve(), { once: true }));
 			});
 

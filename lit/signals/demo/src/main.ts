@@ -5,6 +5,8 @@ import "./examples/context.js";
 import contextSource from "./examples/context.ts?raw";
 import "./examples/counter.js";
 import counterSource from "./examples/counter.ts?raw";
+import "./examples/operation.js";
+import operationSource from "./examples/operation.ts?raw";
 import "./examples/styles.js";
 
 import type { CodeExampleElement } from "./code-example.js";
@@ -14,6 +16,7 @@ const sources = new Map<string, string>([
 	["counter-example", counterSource],
 	["collections-example", collectionsSource],
 	["context-example", contextSource],
+	["operation-example", operationSource],
 	["styles-example", stylesSource],
 ]);
 

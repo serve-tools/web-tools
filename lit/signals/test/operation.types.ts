@@ -1,13 +1,37 @@
-import { AsyncOperationSubscriber, observeOperationView } from "../src/lit-signals.js";
+import { LitElement } from "lit";
 
-const subscriber = new AsyncOperationSubscriber<string, number>();
-const lengthView = subscriber.map((value) => value.length);
-const optionalLength = observeOperationView(lengthView);
-const lengthOrUndefined: number | undefined = optionalLength.get();
-const lengthWithLabel = observeOperationView(lengthView, "Waiting");
-const lengthOrLabel: number | string = lengthWithLabel.get();
+import type { OperationOptions } from "../src/decorators.js";
+import { operation } from "../src/decorators.js";
+import { AsyncOperationSubscriber, SignalElement, watch } from "../src/lit-signals.js";
 
-// @ts-expect-error The initial string remains part of the Signal value type.
-const length: number = lengthWithLabel.get();
+const progress = new AsyncOperationSubscriber<number>();
+const progressLabel = progress.map((value) => `${value}%`);
 
-void [subscriber, optionalLength, lengthOrUndefined, lengthWithLabel, lengthOrLabel, length];
+class OperationElement extends SignalElement {
+	@operation(progressLabel, { disconnectDelay: () => 0 })
+	accessor progress = "Waiting";
+}
+
+class FineGrainedOperationElement extends LitElement {
+	@operation(progressLabel)
+	accessor progress = "Waiting";
+
+	protected override render() {
+		return watch(() => this.progress);
+	}
+}
+
+class InvalidOperationElement extends SignalElement {
+	// @ts-expect-error The operation view value must match the accessor value.
+	@operation(progress)
+	accessor status = "Waiting";
+}
+
+const options: OperationOptions = { disconnectDelay: 10 };
+const element = new OperationElement();
+const label: string = element.progress;
+
+void FineGrainedOperationElement;
+void InvalidOperationElement;
+void label;
+void options;

@@ -1,3 +1,4 @@
+export * from "@serve-tools/async-operation";
 export * from "@serve-tools/client-context";
 export * from "@serve-tools/signal";
 export * from "@serve-tools/signal-collections";
@@ -10,5 +11,4 @@ export * from "./directives/watch.js";
 export * from "./directives/when.js";
 export * from "./elements/SignalElement.js";
 export * from "./mixins/SignalWatcher.js";
-export * from "./operation.js";
 export * from "./templates.js";

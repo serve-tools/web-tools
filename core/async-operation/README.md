@@ -5,10 +5,10 @@ The `@serve-tools/async-operation` package represents one owned asynchronous lif
 ```ts
 import { AsyncOperation } from "@serve-tools/async-operation";
 
-await using operation = new AsyncOperation<"connecting" | "connected", "closed">(async (controller) => {
-	await controller.write("connecting");
+await using operation = new AsyncOperation<"connecting" | "connected", "closed">(async (write) => {
+	await write("connecting");
 
-	await controller.write("connected");
+	await write("connected");
 
 	return "closed";
 });
@@ -36,7 +36,7 @@ npm install @serve-tools/async-operation
 - Observe `signal` or call `abort(reason)` for cancellation.
 - Dispose the operation to abort active work and wait for the executor to stop.
 
-The producer receives `signal` for underlying cancellable work and `write(value)` for backpressure-aware value delivery.
+The producer receives `write(value)` as its first parameter for backpressure-aware value delivery and a context containing `signal` as its second parameter for underlying cancellable work.
 Await every write.
 If the executor returns while any write remains unsettled, the operation fails with an `InvalidStateError` and errors the value stream.
 This prevents an unconsumed, backpressured write from trapping stream closure and asynchronous disposal.
@@ -60,7 +60,7 @@ The operation is intentionally not promise-like, so returning it from an async f
 ## Shared subscriptions
 
 Use `AsyncOperationSubscriber` when several consumers need the same ordered operation values.
-Configure its filter/map graph and terminal subscriptions before calling `consume()`:
+Configure its filter/map graph before calling `consume()`; terminal subscriptions may attach whenever they need future values:
 
 ```ts
 import { AsyncOperation, AsyncOperationSubscriber } from "@serve-tools/async-operation";
@@ -81,11 +81,11 @@ const result = await subscriber.consume(operation);
 
 The subscriber owns the operation's single async iterator and multicasts each value to every active branch.
 Matching callbacks and projections start concurrently, and all settle before the next operation value is requested, preserving backpressure.
-An unsubscribed branch is skipped.
-Each view has its own zero-based output index, so a filtered or mapped view counts only values it emits.
+An unsubscribed branch is skipped, and terminal subscriptions added during consumption observe only subsequent values rather than replaying earlier ones.
+Each view has its own zero-based output index, so a filtered or mapped view counts only values emitted while that branch is active.
 
 A subscriber consumes at most one operation.
-After consumption starts, its graph cannot be changed, although an existing subscription can still be disposed.
+After consumption starts, its filter/map graph cannot be changed, but terminal subscriptions may still be added and disposed until the subscriber itself is disposed.
 A projection or callback failure cancels the operation with that failure as its canonical reason.
 Disposing the subscriber cancels an active operation and waits for producer cleanup.
 

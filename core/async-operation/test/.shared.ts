@@ -3,9 +3,9 @@ import { expect } from "vitest";
 import { AsyncOperation } from "../src/operation.js";
 
 export const testDemoOperation = async (): Promise<void> => {
-	const operation = new AsyncOperation<string, string>(async (controller) => {
-		await controller.write("connecting");
-		await controller.write("connected");
+	const operation = new AsyncOperation<string, string>(async (write) => {
+		await write("connecting");
+		await write("connected");
 
 		return "closed";
 	});
@@ -34,16 +34,16 @@ export const testDemoOperation = async (): Promise<void> => {
 };
 
 export const testSuccessfulOperation = async (): Promise<void> => {
-	let controllerSignal!: AbortSignal;
+	let executorSignal!: AbortSignal;
 	let writeAfterCompletion!: (value: string) => Promise<void>;
 
-	const operation = new AsyncOperation<string, number>(async (controller) => {
-		controllerSignal = controller.signal;
+	const operation = new AsyncOperation<string, number>(async (write, { signal }) => {
+		executorSignal = signal;
 
-		writeAfterCompletion = controller.write;
+		writeAfterCompletion = write;
 
-		await controller.write("connecting");
-		await controller.write("ready");
+		await write("connecting");
+		await write("ready");
 
 		return 2;
 	});
@@ -61,11 +61,11 @@ export const testSuccessfulOperation = async (): Promise<void> => {
 
 	await expect(operation.finished).resolves.toBeUndefined();
 
-	expect(controllerSignal.aborted).toBe(false);
+	expect(executorSignal.aborted).toBe(false);
 
 	await operation[Symbol.asyncDispose]();
 
-	expect(controllerSignal.aborted).toBe(false);
+	expect(executorSignal.aborted).toBe(false);
 
 	await expect(writeAfterCompletion("late")).rejects.toMatchObject({ name: "InvalidStateError" });
 };
@@ -73,10 +73,10 @@ export const testSuccessfulOperation = async (): Promise<void> => {
 export const testProducerFailure = async (): Promise<void> => {
 	const failure = new Error("producer failed");
 
-	let controllerSignal!: AbortSignal;
+	let executorSignal!: AbortSignal;
 
-	const operation = new AsyncOperation<string, void>(async ({ signal, write }) => {
-		controllerSignal = signal;
+	const operation = new AsyncOperation<string, void>(async (write, { signal }) => {
+		executorSignal = signal;
 
 		await write("started");
 
@@ -91,11 +91,11 @@ export const testProducerFailure = async (): Promise<void> => {
 	await expect(operation.result).rejects.toBe(failure);
 	await expect(operation.finished).resolves.toBeUndefined();
 
-	expect(controllerSignal.aborted).toBe(false);
+	expect(executorSignal.aborted).toBe(false);
 };
 
 export const testCompletedIterationSurvivesDisposal = async (): Promise<void> => {
-	const operation = new AsyncOperation<string, number>(async ({ write }) => {
+	const operation = new AsyncOperation<string, number>(async (write) => {
 		await write("complete");
 
 		return 1;
@@ -117,10 +117,10 @@ export const testCompletedIterationSurvivesDisposal = async (): Promise<void> =>
 };
 
 export const testIterationCancellation = async (): Promise<void> => {
-	let controllerSignal!: AbortSignal;
+	let executorSignal!: AbortSignal;
 
-	const operation = new AsyncOperation<string, void>(async ({ signal, write }) => {
-		controllerSignal = signal;
+	const operation = new AsyncOperation<string, void>(async (write, { signal }) => {
+		executorSignal = signal;
 
 		await write("started");
 
@@ -137,9 +137,9 @@ export const testIterationCancellation = async (): Promise<void> => {
 		break;
 	}
 
-	expect(controllerSignal.aborted).toBe(true);
+	expect(executorSignal.aborted).toBe(true);
 
-	await expect(operation.result).rejects.toBe(controllerSignal.reason);
+	await expect(operation.result).rejects.toBe(executorSignal.reason);
 	await operation[Symbol.asyncDispose]();
 };
 
@@ -168,11 +168,11 @@ export const testUpstreamAbort = async (): Promise<void> => {
 	const abortController = new AbortController();
 	const reason = new Error("upstream stopped");
 
-	let controllerSignal!: AbortSignal;
+	let executorSignal!: AbortSignal;
 
 	const operation = new AsyncOperation<never, never>(
-		({ signal }) => {
-			controllerSignal = signal;
+		(_, { signal }) => {
+			executorSignal = signal;
 
 			return new Promise((_, reject) => {
 				signal.addEventListener("abort", () => reject(signal.reason), { once: true });
@@ -185,7 +185,7 @@ export const testUpstreamAbort = async (): Promise<void> => {
 
 	abortController.abort(reason);
 
-	expect(controllerSignal.reason).toBe(reason);
+	expect(executorSignal.reason).toBe(reason);
 
 	await expect(pendingValue).rejects.toBe(reason);
 	await expect(operation.result).rejects.toBe(reason);
@@ -204,7 +204,7 @@ export const testBackpressure = async (): Promise<void> => {
 	let secondDelivered = false;
 
 	const operation = new AsyncOperation<number, string>(
-		async ({ write }) => {
+		async (write) => {
 			await write(1);
 			attemptedSecond();
 			await write(2);
@@ -234,7 +234,7 @@ export const testBackpressure = async (): Promise<void> => {
 
 export const testBufferedCompletionDoesNotRequireConsumption = async (): Promise<void> => {
 	const operation = new AsyncOperation<number, string>(
-		async ({ write }) => {
+		async (write) => {
 			await write(1);
 			await write(2);
 
@@ -265,7 +265,7 @@ export const testExecutorCannotReturnWithPendingWrites = async (): Promise<void>
 	let pendingWrite!: Promise<void>;
 	let writeSettled = false;
 
-	const operation = new AsyncOperation<string, string>(({ write }) => {
+	const operation = new AsyncOperation<string, string>((write) => {
 		pendingWrite = write("unconsumed");
 
 		void pendingWrite.then(
@@ -295,10 +295,10 @@ export const testExecutorCannotReturnWithPendingWrites = async (): Promise<void>
 export const testExplicitAbort = async (): Promise<void> => {
 	const reason = new Error("explicitly stopped");
 
-	let controllerSignal!: AbortSignal;
+	let executorSignal!: AbortSignal;
 
-	const operation = new AsyncOperation<never, never>(({ signal }) => {
-		controllerSignal = signal;
+	const operation = new AsyncOperation<never, never>((_, { signal }) => {
+		executorSignal = signal;
 
 		return new Promise((_, reject) => {
 			signal.addEventListener("abort", () => reject(signal.reason), { once: true });
@@ -309,7 +309,7 @@ export const testExplicitAbort = async (): Promise<void> => {
 
 	operation.abort(reason);
 
-	expect(operation.signal).toBe(controllerSignal);
+	expect(operation.signal).toBe(executorSignal);
 	expect(operation.signal.reason).toBe(reason);
 
 	await expect(pendingValue).rejects.toBe(reason);
@@ -323,11 +323,11 @@ export const testDisposalWaitsForProducer = async (): Promise<void> => {
 
 	const cleanupGate = new Promise<void>((resolve) => (releaseCleanup = resolve));
 
-	let controllerSignal!: AbortSignal;
+	let executorSignal!: AbortSignal;
 	let producerSettled = false;
 
-	const operation = new AsyncOperation<never, void>(async ({ signal }) => {
-		controllerSignal = signal;
+	const operation = new AsyncOperation<never, void>(async (_, { signal }) => {
+		executorSignal = signal;
 
 		try {
 			await new Promise<never>((_, reject) => {
@@ -350,7 +350,7 @@ export const testDisposalWaitsForProducer = async (): Promise<void> => {
 
 	await Promise.resolve();
 
-	expect(controllerSignal.aborted).toBe(true);
+	expect(executorSignal.aborted).toBe(true);
 	expect(disposalSettled).toBe(false);
 
 	releaseCleanup();
@@ -365,7 +365,7 @@ export const testDisposalWaitsForProducer = async (): Promise<void> => {
 export const testDisposalReleasesAnUnconsumedWrite = async (): Promise<void> => {
 	const attempted = Promise.withResolvers<void>();
 
-	const operation = new AsyncOperation<string, void>(async ({ write }) => {
+	const operation = new AsyncOperation<string, void>(async (write) => {
 		const writing = write("unconsumed");
 
 		attempted.resolve();

@@ -29,10 +29,10 @@
 		"skills"
 	],
 	"scripts": {
-		"build": "tsc --build tsconfig.build.json",
+		"build": "tsc --build tsconfig.json",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "vitest run --config vitest.config.ts",
-		"typecheck": "tsc --project tsconfig.json --noEmit"
+		"typecheck": "tsc --project tsconfig.test.json"
 	}
 }

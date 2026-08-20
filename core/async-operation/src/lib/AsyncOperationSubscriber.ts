@@ -14,7 +14,7 @@ export interface OperationView<T> {
 
 	map<TPart>(callback: (value: T, index: number) => Awaitable<TPart>): OperationView<TPart>;
 
-	/** Attaches a terminal consumer to this view. */
+	/** Attaches a terminal consumer that observes future values from this view. */
 	subscribe(callback: ViewCallback<T>): Disposable;
 }
 
@@ -24,7 +24,11 @@ export interface OperationView<T> {
  */
 export class AsyncOperationSubscriber<T, TResult = void> implements AsyncDisposable {
 	constructor() {
-		this.#view = new OperationViewImplementation(this.#root, () => this.#assertConfigurable());
+		this.#view = new OperationViewImplementation(
+			this.#root,
+			() => this.#assertConfigurable(),
+			() => this.#assertSubscribable(),
+		);
 	}
 
 	/** Whether this subscriber is currently consuming an operation. */
@@ -146,6 +150,12 @@ export class AsyncOperationSubscriber<T, TResult = void> implements AsyncDisposa
 		}
 	}
 
+	#assertSubscribable(): void {
+		if (this.#disposed) {
+			throw new DOMException("The subscriber has been disposed.", "InvalidStateError");
+		}
+	}
+
 	readonly #root = new ViewNode<T>();
 	readonly #view: OperationViewImplementation<T>;
 
@@ -158,8 +168,9 @@ export class AsyncOperationSubscriber<T, TResult = void> implements AsyncDisposa
 }
 
 class OperationViewImplementation<T> implements OperationView<T> {
-	constructor(node: ViewNode<T>, assertConfigurable: () => void) {
+	constructor(node: ViewNode<T>, assertConfigurable: () => void, assertSubscribable: () => void) {
 		this.#assertConfigurable = assertConfigurable;
+		this.#assertSubscribable = assertSubscribable;
 		this.#node = node;
 	}
 
@@ -174,7 +185,7 @@ class OperationViewImplementation<T> implements OperationView<T> {
 
 		this.#node.addTarget(new FilterTarget<T, TPart>(predicate, output));
 
-		return new OperationViewImplementation(output, this.#assertConfigurable);
+		return new OperationViewImplementation(output, this.#assertConfigurable, this.#assertSubscribable);
 	}
 
 	map<TPart>(callback: (value: T, index: number) => Awaitable<TPart>): OperationView<TPart> {
@@ -184,11 +195,11 @@ class OperationViewImplementation<T> implements OperationView<T> {
 
 		this.#node.addTarget(new MapTarget(callback, output));
 
-		return new OperationViewImplementation(output, this.#assertConfigurable);
+		return new OperationViewImplementation(output, this.#assertConfigurable, this.#assertSubscribable);
 	}
 
 	subscribe(callback: ViewCallback<T>): Disposable {
-		this.#assertConfigurable();
+		this.#assertSubscribable();
 
 		const subscription = new ViewSubscription(this.#node, callback);
 
@@ -198,6 +209,7 @@ class OperationViewImplementation<T> implements OperationView<T> {
 	}
 
 	readonly #assertConfigurable: () => void;
+	readonly #assertSubscribable: () => void;
 	readonly #node: ViewNode<T>;
 }
 
