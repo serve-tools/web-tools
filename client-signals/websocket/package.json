@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-websocket",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Typed WebSocket clients with subscription Signal state",
 	"keywords": [
 		"reactive",
@@ -42,6 +42,6 @@
 	},
 	"dependencies": {
 		"@serve-tools/client-websocket": "^0.1",
-		"@serve-tools/signal-messaging": "^0.2"
+		"@serve-tools/signal-messaging": "^0.3"
 	}
 }

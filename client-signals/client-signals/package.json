@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-signals",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Namespaced access to capability-complete Signal clients",
 	"keywords": [
 		"browser",
@@ -50,12 +50,12 @@
 		"@serve-tools/signal-event-source": "^0.1",
 		"@serve-tools/signal-event-target": "^0.1",
 		"@serve-tools/signal-http-stream": "^0.1",
-		"@serve-tools/signal-messaging": "^0.2",
+		"@serve-tools/signal-messaging": "^0.3",
 		"@serve-tools/signal-shared-db": "^0.2",
 		"@serve-tools/signal-shared-event-source": "^0.1",
-		"@serve-tools/signal-shared-http-stream": "^0.1",
-		"@serve-tools/signal-shared-websocket": "^0.1",
-		"@serve-tools/signal-shared-webtransport": "^0.1",
+		"@serve-tools/signal-shared-http-stream": "^0.2",
+		"@serve-tools/signal-shared-websocket": "^0.2",
+		"@serve-tools/signal-shared-webtransport": "^0.2",
 		"@serve-tools/signal-storage": "^0.1",
 		"@serve-tools/signal-websocket": "^0.1",
 		"@serve-tools/signal-webtransport": "^0.1"

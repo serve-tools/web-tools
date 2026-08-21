@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/server-http-stream",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Typed binary HTTP handlers for requests and streaming subscriptions",
 	"keywords": [
 		"fetch",

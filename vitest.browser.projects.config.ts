@@ -29,9 +29,17 @@ const projects = [
 	"signals/signal/vitest.browser.config.ts",
 ];
 
+const [shard = 0, shardCount = 1] = (process.env.VITEST_BROWSER_PROJECT_SHARD ?? "0/1").split("/").map(Number);
+
+if (!Number.isInteger(shard) || !Number.isInteger(shardCount) || shard < 0 || shard >= shardCount) {
+	throw new Error(`Invalid VITEST_BROWSER_PROJECT_SHARD: ${process.env.VITEST_BROWSER_PROJECT_SHARD}`);
+}
+
+const selectedProjects = projects.filter((_, index) => index % shardCount === shard);
+
 // @vitest/browser-playwright installs one temporary SIGTERM listener per browser instance in each project.
-process.setMaxListeners(process.getMaxListeners() + projects.length * 3);
+process.setMaxListeners(process.getMaxListeners() + selectedProjects.length * 3);
 
 export default defineConfig({
-	test: { projects },
+	test: { projects: selectedProjects, browser: { connectTimeout: 120_000 } },
 });

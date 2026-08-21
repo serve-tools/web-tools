@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/server-webtransport",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Typed request, subscription, and datagram servers over WebTransport",
 	"keywords": [
 		"datagram",

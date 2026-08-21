@@ -7,10 +7,22 @@ All notable changes to this package collection are documented here.
 - Add `@serve-tools/polyfill-decorator-metadata@0.1.0` for native-preserving `Symbol.metadata` installation and selection.
 - Add `@serve-tools/ponyfill-decorator-metadata@0.1.0` with a stable module-scoped decorator metadata symbol.
 - Add `@serve-tools/rolldown-decorators@0.1.0` with an Oxc-AST-native modern TC39 decorator transform and package-owned runtime for Rolldown and Vite, backed by the shared decorator metadata polyfill.
-- Add syntax-detected `Symbol.metadata` injection to `@serve-tools/vite-polyfills@0.1.2`.
+- Add syntax-detected decorator metadata and prioritized task scheduling injection to `@serve-tools/vite-polyfills@0.2.0`.
 - Add `@serve-tools/async-operation@0.1.0` with typed backpressured events, one terminal result, canonical cancellation, upstream abort composition, asynchronous disposal, and shared filtered/mapped views with dynamically attachable non-replaying subscriptions.
 - Add `@operation` to `@serve-tools/lit-signals@0.4.0` for exposing an ambient operation view through a signal-backed accessor whose element connection owns only its immediate or delayed view subscription.
 - Add `@serve-tools/signals@0.1.0` as a flat facade with focused subpaths for the compatible Signal runtime, collections, and effects.
+- Add `@serve-tools/client-event-source@0.1.0`, `@serve-tools/client-shared-event-source@0.1.0`, `@serve-tools/server-event-source@0.1.0`, `@serve-tools/signal-event-source@0.1.0`, and `@serve-tools/signal-shared-event-source@0.1.0` for typed EventSource operations and reactive SharedWorker coordination.
+- Add EventSource namespaces and focused imports to `@serve-tools/client@0.3.0` and `@serve-tools/client-signals@0.2.0`.
+- Add `@serve-tools/polyfill-report-error@0.1.0` and `@serve-tools/ponyfill-report-error@0.1.0` for native-preserving global error reporting and an import-only fallback.
+- Add `@serve-tools/polyfill-prioritized-task-scheduling@0.1.0` and `@serve-tools/ponyfill-prioritized-task-scheduling@0.1.0` with priorities, cancellation, delay, yielding, and native-compatible task controls.
+- Reduce scheduling and disposal overhead in `@serve-tools/polyfill-request-idle-callback@0.1.3`, `@serve-tools/ponyfill-request-idle-callback@0.1.3`, and `@serve-tools/polyfill-resource-management@0.1.3` while tightening their declarations and native-preserving installation paths.
+- Prepare lifecycle and protocol fixes for `@serve-tools/client-context@0.1.2`, `@serve-tools/client-messaging@0.2.1`, and `@serve-tools/client-websocket@0.1.1`.
+- Prepare adapter hardening releases for `@serve-tools/server-http-stream@0.1.1`, `@serve-tools/server-realtime@0.1.1`, `@serve-tools/server-websocket@0.1.1`, and `@serve-tools/server-webtransport@0.1.1`.
+- Add focused scope entrypoints and unified subscription behavior to `@serve-tools/signal-messaging@0.3.0`, `@serve-tools/signal-shared-http-stream@0.2.0`, `@serve-tools/signal-shared-websocket@0.2.0`, and `@serve-tools/signal-shared-webtransport@0.2.0`.
+- Prepare transport fixes for `@serve-tools/signal-http-stream@0.1.1`, `@serve-tools/signal-websocket@0.1.1`, and `@serve-tools/signal-webtransport@0.1.1`.
+
+## 0.5.0 - 2026-08-17
+
 - Add Node.js runtimes for `@serve-tools/ponyfill-arraybuffer-base64@0.1.0` and `@serve-tools/polyfill-arraybuffer-base64@0.1.0` with the `Uint8Array.prototype.toBase64()` contract.
 - Add `@serve-tools/realtime-protocol@0.1.0` with the shared binary serializer, typed message tuples, runtime guards, error records, and bounded reliable-stream framing for WebSocket and future WebTransport integrations.
 - Establish `@serve-tools/realtime/1` as the initial wire-protocol compatibility identifier.
@@ -30,7 +42,7 @@ All notable changes to this package collection are documented here.
 - Harden the pending realtime packages for aborted HTTP requests, bounded streaming bodies and resizable buffers, exact remote errors, Bun backpressure, datagram registration races, and WebTransport lifetime aborts.
 - Centralize native WebSocket and WebTransport offer parsing and reliable WebTransport stream roles, and keep receive-side adapter controls out of public network client types.
 - Prepare browser-package patch releases for `@serve-tools/client-context@0.1.1`, `@serve-tools/client-db@0.1.2`, `@serve-tools/client-input@0.1.1`, `@serve-tools/client-interaction@0.1.1`, `@serve-tools/client-keyboard@0.1.1`, and `@serve-tools/client-storage@0.1.3`.
-- Prepare Signal and Lit releases for `@serve-tools/signal-dom@0.1.2`, `@serve-tools/signal-event-target@0.1.1`, `@serve-tools/signal-storage@0.1.2`, `@serve-tools/lit-signals@0.4.0`, `@serve-tools/signal-collections@0.1.2`, `@serve-tools/signal-effect@0.1.2`, and `@serve-tools/signal@0.1.2`.
+- Prepare Signal releases for `@serve-tools/signal-dom@0.1.2`, `@serve-tools/signal-event-target@0.1.1`, `@serve-tools/signal-storage@0.1.2`, `@serve-tools/signal-collections@0.1.2`, `@serve-tools/signal-effect@0.1.2`, and `@serve-tools/signal@0.1.2`.
 - Prepare platform-tooling patch releases for `@serve-tools/polyfill-request-idle-callback@0.1.2`, `@serve-tools/polyfill-resource-management@0.1.2`, `@serve-tools/ponyfill-request-idle-callback@0.1.2`, `@serve-tools/ponyfill-resource-management@0.1.2`, and `@serve-tools/vite-polyfills@0.1.2`.
 
 ## 0.4.0 - 2026-08-15

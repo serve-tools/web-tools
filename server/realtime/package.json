@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/server-realtime",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Sans-I/O typed request and subscription server core",
 	"keywords": [
 		"realtime",

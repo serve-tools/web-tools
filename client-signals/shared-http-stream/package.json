@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-shared-http-stream",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "SharedWorker HTTP stream clients with subscription Signal state",
 	"keywords": [
 		"http",

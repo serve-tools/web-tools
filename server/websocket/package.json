@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/server-websocket",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Typed request and subscription servers over binary WebSockets",
 	"keywords": [
 		"binary",

@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-messaging",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Requests and subscriptions across workers and message ports",
 	"keywords": [
 		"messagechannel",

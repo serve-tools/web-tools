@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-context",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Interoperable context events, providers, consumers, and late-registration coordination for web components",
 	"keywords": [
 		"context",

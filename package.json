@@ -113,7 +113,7 @@
 		"sync:skill-recipes": "node scripts/check-skills.mjs --write-recipes",
 		"sync:tsconfig-references": "node scripts/sync-tsconfig-references.mjs --write",
 		"test": "npm run build:typescript && npm run test:node && npm run test:browser:consolidated",
-		"test:browser:consolidated": "vitest run --config vitest.browser.projects.config.ts --maxWorkers=1 && vitest run --root client-signals/shared-db --config vitest.browser.config.ts && npm run test:browser --workspace @serve-tools/signal-dom",
+		"test:browser:consolidated": "node scripts/run-browser-projects.mjs && vitest run --root client-signals/shared-db --config vitest.browser.config.ts && npm run test:browser --workspace @serve-tools/signal-dom",
 		"test:node": "npm run test:node:vitest && npm run test:node:native && npm run test:node:coverage",
 		"test:node:coverage": "npm run test:node --workspace @serve-tools/signal-dom",
 		"test:node:native": "node --test polyfills/arraybuffer-base64/test/*.test.js ponyfills/arraybuffer-base64/test/*.test.js ponyfills/request-idle-callback/test/runtime/node.test.js",

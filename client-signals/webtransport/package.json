@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-webtransport",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Typed WebTransport clients with subscription Signal state",
 	"keywords": [
 		"reactive",
@@ -39,6 +39,6 @@
 	},
 	"dependencies": {
 		"@serve-tools/client-webtransport": "^0.1",
-		"@serve-tools/signal-messaging": "^0.2"
+		"@serve-tools/signal-messaging": "^0.3"
 	}
 }
