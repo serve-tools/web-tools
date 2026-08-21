@@ -163,6 +163,9 @@
 		"ignoreExportsUsedInFile": true,
 		"workspaces": {
 			".": {
+				"entry": [
+					"vitest.browser.projects.config.ts"
+				],
 				"ignoreDependencies": [
 					"crossws",
 					"ws"
@@ -379,7 +382,6 @@
 			"ponyfills/prioritized-task-scheduling": {
 				"entry": [
 					"benchmark/*.benchmark.ts",
-					"src/ponyfill-prioritized-task-scheduling.ts",
 					"test/*.recipes.ts"
 				]
 			},
@@ -392,7 +394,6 @@
 				"entry": [
 					"benchmark/*.bench.ts",
 					"benchmark/*.benchmark.ts",
-					"src/ponyfill-request-idle-callback.ts",
 					"test/*.recipes.ts"
 				],
 				"ignoreIssues": {
@@ -460,7 +461,6 @@
 					"test/*.recipes.ts"
 				],
 				"ignoreDependencies": [
-					"@serve-tools/polyfill-decorator-metadata",
 					"@serve-tools/polyfill-prioritized-task-scheduling",
 					"@serve-tools/polyfill-request-idle-callback",
 					"@serve-tools/polyfill-resource-management",

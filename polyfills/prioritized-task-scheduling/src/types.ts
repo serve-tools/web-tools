@@ -1,6 +1,4 @@
 export type {
-	Scheduler,
-	SchedulerConstructor,
 	TaskControllerInit,
 	TaskPriority,
 	TaskPriorityChangeEvent,
