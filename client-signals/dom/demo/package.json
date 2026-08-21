@@ -13,6 +13,7 @@
 		"typecheck:local": "tsc --project tsconfig.json"
 	},
 	"dependencies": {
+		"@michijs/htmltype": "0.4.13",
 		"@serve-tools/signal": "^0.1",
 		"@serve-tools/signal-dom": "^0.1"
 	},
