@@ -8,7 +8,7 @@ import {
 	isStreamContentType,
 	streamContentType,
 } from "@serve-tools/realtime-protocol/http-stream";
-import { FrameDecoder } from "@serve-tools/realtime-protocol/stream";
+import { defaultMaximumFrameLength, FrameDecoder } from "@serve-tools/realtime-protocol/stream";
 import type * as T from "./lib/types.js";
 import type {
 	Client,
@@ -31,9 +31,22 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	options: ConnectOptions = {},
 ): Client<P> {
 	const fetcher = options.fetch ?? globalThis.fetch;
-	const { fetch: _fetch, headers: _headers, signal: _signal, ...requestInit } = options;
+	const {
+		fetch: _fetch,
+		headers: _headers,
+		maximumMessageLength: suppliedMaximumMessageLength,
+		signal: _signal,
+		...requestInit
+	} = options;
+	const maximumMessageLength = suppliedMaximumMessageLength ?? defaultMaximumFrameLength;
+
+	if (!Number.isSafeInteger(maximumMessageLength) || maximumMessageLength < 1) {
+		throw new RangeError("The maximum message length must be a positive safe integer");
+	}
+
 	const closed = Promise.withResolvers<void>();
 	const active = new Set<AbortController>();
+
 	let nextId = 0;
 	let isClosed = false;
 
@@ -80,15 +93,21 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 		return controller;
 	};
+
 	const post = async (
 		operation: OperationRequest,
 		message: import("@serve-tools/realtime-protocol").ClientMessage,
 		controller: AbortController,
 	): Promise<Response> => {
+		controller.signal.throwIfAborted();
+
 		const supplied =
 			typeof options.headers === "function"
 				? await (options.headers as HeaderProvider)(operation)
 				: options.headers;
+
+		controller.signal.throwIfAborted();
+
 		const result = new Headers(supplied);
 
 		result.set("Accept", operation.kind === "subscription" ? streamContentType : contentType);
@@ -102,6 +121,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 			signal: controller.signal,
 		});
 	};
+
 	const nextOperationId = (): number => {
 		if (nextId >= Number.MAX_SAFE_INTEGER) {
 			throw new RangeError("The client exhausted its operation IDs");
@@ -124,7 +144,13 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 				validateResponse(response, false);
 
-				const message = deserialize(await response.arrayBuffer());
+				const payload = await response.arrayBuffer();
+
+				if (payload.byteLength > maximumMessageLength) {
+					throw protocolError("The response exceeds the configured maximum message length");
+				}
+
+				const message = deserialize(payload, { maximumArrayBufferLength: maximumMessageLength });
 
 				if (
 					!isServerMessage(message) ||
@@ -138,6 +164,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 				if (message[MessagePart.Type] === "reject") {
 					throw remoteError(message[MessagePart.Name]);
 				}
+
 				if (message[MessagePart.Type] === "close") {
 					throw remoteError(message[MessagePart.Id]);
 				}
@@ -197,7 +224,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 						throw new TypeError("The binary stream response has no body");
 					}
 
-					const decoder = new FrameDecoder();
+					const decoder = new FrameDecoder(maximumMessageLength);
 					const reader = response.body.getReader();
 
 					try {
@@ -209,7 +236,9 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 							}
 
 							for (const payload of decoder.push(result.value)) {
-								const message = deserialize(payload);
+								const message = deserialize(payload, {
+									maximumArrayBufferLength: maximumMessageLength,
+								});
 
 								if (
 									!isServerMessage(message) ||
@@ -223,9 +252,12 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 									callSafely(listener, message[MessagePart.Name]);
 								} else if (message[MessagePart.Type] === "complete") {
 									isActive = false;
+
 									if (subscribeOptions?.onComplete) {
 										callSafely(subscribeOptions.onComplete, undefined);
 									}
+
+									return;
 								} else if (message[MessagePart.Type] === "reject") {
 									throw remoteError(message[MessagePart.Name]);
 								} else {
@@ -300,8 +332,10 @@ const validateResponse = (response: Response, stream: boolean): void => {
 
 const remoteError = (record: import("@serve-tools/realtime-protocol").ErrorRecord): RemoteError =>
 	new RemoteError(record.name, record.message, record.stack);
+
 const protocolError = (reason = "Invalid protocol response"): Error =>
 	Object.assign(new Error(reason), { name: "ProtocolError" });
+
 const callSafely = <Value>(callback: (value: Value) => void, value: Value): void => {
 	try {
 		callback(value);
@@ -309,8 +343,10 @@ const callSafely = <Value>(callback: (value: Value) => void, value: Value): void
 		reportError(error);
 	}
 };
+
 const connectionClosedError = (): Error =>
 	Object.assign(new Error("The client is closed"), { name: "ConnectionClosedError" });
+
 const asError = (reason: unknown): Error => (reason instanceof Error ? reason : new Error(String(reason)));
 
 const enum MessagePart {

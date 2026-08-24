@@ -3,12 +3,21 @@
 	"version": "0.1.1",
 	"description": "Typed HTTP streaming clients with subscription Signal state",
 	"keywords": [
+		"browser",
 		"fetch",
+		"fine-grained-reactivity",
 		"http",
+		"http-streaming",
 		"reactive",
+		"readable-stream",
 		"signal",
+		"signals",
+		"streaming",
 		"subscription",
-		"typescript"
+		"tc39-signals",
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/http-stream#readme",
 	"bugs": {

@@ -3,12 +3,22 @@
 	"version": "0.1.0",
 	"description": "Typed IndexedDB access with signal-backed reactive queries",
 	"keywords": [
+		"browser",
 		"database",
+		"fine-grained-reactivity",
+		"idb",
 		"indexeddb",
+		"offline-first",
 		"reactive",
+		"reactive-database",
+		"reactive-query",
 		"signal",
+		"signals",
 		"storage",
-		"typescript"
+		"tc39-signals",
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/db#readme",
 	"bugs": {
@@ -35,7 +45,9 @@
 		"build:dependencies": "npm run build --workspace @serve-tools/client-db --workspace @serve-tools/signal --workspace @serve-tools/signal-effect",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
-		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
+		"test": "npm run test:node && npm run test:browser",
+		"test:browser": "npm run build:dependencies && vitest run --config vitest.browser.config.ts",
+		"test:node": "npm run build:dependencies && vitest run --config vitest.config.ts",
 		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {

@@ -5,11 +5,15 @@
 	"keywords": [
 		"binary",
 		"browser",
+		"real-time",
 		"rpc",
 		"structured-clone",
 		"subscription",
 		"typescript",
-		"websocket"
+		"web-api",
+		"web-platform",
+		"websocket",
+		"websockets"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/websocket#readme",
 	"bugs": {

@@ -4,13 +4,16 @@
 	"description": "Binary structured values and typed realtime protocol messages",
 	"keywords": [
 		"binary",
+		"binary-protocol",
+		"framing",
 		"protocol",
 		"realtime",
 		"rpc",
 		"serialization",
 		"stream",
 		"structured-clone",
-		"typescript"
+		"typescript",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/realtime/protocol#readme",
 	"bugs": {

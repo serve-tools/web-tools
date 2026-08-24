@@ -4,12 +4,18 @@
 	"description": "Provides native-aware Prioritized Task Scheduling imports and global installation",
 	"keywords": [
 		"browser",
+		"browser-compatibility",
 		"polyfill",
 		"post-task",
+		"posttask",
 		"prioritized-task-scheduling",
 		"scheduler",
 		"task-controller",
+		"task-priority",
 		"task-signal",
+		"taskcontroller",
+		"typescript",
+		"web-platform",
 		"worker",
 		"yield"
 	],

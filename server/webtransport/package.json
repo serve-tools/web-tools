@@ -4,11 +4,18 @@
 	"description": "Typed request, subscription, and datagram servers over WebTransport",
 	"keywords": [
 		"datagram",
+		"datagrams",
+		"http-3",
+		"http3",
 		"node",
+		"nodejs",
 		"quic",
 		"realtime",
 		"rpc",
 		"server",
+		"typescript",
+		"web-platform",
+		"web-transport",
 		"webtransport"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/server/webtransport#readme",
@@ -26,7 +33,7 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/server-webtransport.js",
-		"./runtime/*": "./dist/runtime/*.js"
+		"./runtime/node": "./dist/runtime/node.js"
 	},
 	"files": [
 		"dist",

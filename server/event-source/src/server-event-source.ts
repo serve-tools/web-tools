@@ -13,6 +13,7 @@ import type {
 } from "./lib/types.js";
 
 const encoder = new TextEncoder();
+const defaultMaximumBufferedAmount = 16 * 1024 * 1024;
 
 type OpenConnection<Events extends EventMap, Context> = EventConnection<Events, Context> & {
 	write(value: string): void;
@@ -23,6 +24,16 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 	options: HandlerOptions<Events, Context> = {},
 ): EventSourceHandler<Events> => {
 	const connections = new Set<OpenConnection<Events, Context>>();
+	const headers = new Headers(options.headers);
+	const maximumBufferedAmount = options.maximumBufferedAmount ?? defaultMaximumBufferedAmount;
+
+	headers.set("Cache-Control", "no-cache, no-transform");
+	headers.set("Content-Type", "text/event-stream");
+	headers.set("X-Accel-Buffering", "no");
+
+	if (!Number.isSafeInteger(maximumBufferedAmount) || maximumBufferedAmount < 1) {
+		throw new RangeError("maximumBufferedAmount must be a positive safe integer");
+	}
 
 	let isClosed = false;
 
@@ -35,15 +46,21 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 			return new Response("Method Not Allowed", { status: 405, headers: { Allow: "GET" } });
 		}
 
+		request.signal.throwIfAborted();
+
 		let context: Context | Response;
 
 		try {
 			context = options.authorize ? await options.authorize(request) : (undefined as Context);
 		} catch (error) {
+			request.signal.throwIfAborted();
+
 			reportError(error);
 
 			return error instanceof Response ? error : new Response("Internal Server Error", { status: 500 });
 		}
+
+		request.signal.throwIfAborted();
 
 		if (context instanceof Response) {
 			return context;
@@ -60,12 +77,26 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 		let active = true;
 
 		const write = (value: string): void => {
-			if (active) {
-				streamController.enqueue(encoder.encode(value));
+			if (!active) {
+				return;
 			}
+
+			const payload = encoder.encode(value);
+
+			if ((streamController.desiredSize ?? 0) < payload.byteLength) {
+				finish(
+					Object.assign(new Error("The event stream queue exceeds the configured maximum"), {
+						name: "BackpressureError",
+					}),
+				);
+
+				return;
+			}
+
+			streamController.enqueue(payload);
 		};
 
-		const close = (): void => {
+		const finish = (reason?: unknown): void => {
 			if (!active) {
 				return;
 			}
@@ -76,7 +107,7 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 
 			connections.delete(connection);
 
-			controller.abort();
+			controller.abort(reason);
 
 			try {
 				cleanup();
@@ -85,9 +116,10 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 			}
 
 			try {
-				streamController.close();
+				reason === undefined ? streamController.close() : streamController.error(reason);
 			} catch {}
 		};
+		const close = (): void => finish();
 
 		const connection: OpenConnection<Events, Context> = {
 			context,
@@ -102,16 +134,24 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 			[Symbol.dispose]: close,
 		};
 
-		const body = new ReadableStream<Uint8Array>({
-			start(value) {
-				streamController = value;
+		const body = new ReadableStream<Uint8Array>(
+			{
+				start(value) {
+					streamController = value;
+				},
+				cancel: close,
 			},
-			cancel: close,
-		});
+			{ highWaterMark: maximumBufferedAmount, size: (chunk) => chunk.byteLength },
+		);
 
 		connections.add(connection);
 
 		request.signal.addEventListener("abort", close, { once: true });
+		if (request.signal.aborted) {
+			close();
+
+			request.signal.throwIfAborted();
+		}
 
 		try {
 			const connectedCleanup = await options.connect?.(connection);
@@ -130,60 +170,43 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 		}
 
 		return new Response(body, {
-			headers: {
-				"Cache-Control": "no-cache, no-transform",
-				"Content-Type": "text/event-stream",
-				"X-Accel-Buffering": "no",
-			},
+			headers,
 		});
 	};
 
 	const handler = handle as EventSourceHandler<Events>;
+	const broadcast = (value: string): void => {
+		for (const connection of connections) {
+			connection.write(value);
+		}
+	};
+	const close = (): void => {
+		if (isClosed) {
+			return;
+		}
+
+		isClosed = true;
+		for (const connection of connections) {
+			connection.close();
+		}
+	};
 
 	Object.defineProperties(handler, {
 		size: {
 			get: () => connections.size,
 		},
 		send: {
-			value: (name: string, data: JSONValue, sendOptions?: SendOptions) => {
-				const value = encodeEvent(name, data, sendOptions);
-
-				for (const connection of connections) {
-					connection.write(value);
-				}
-			},
+			value: (name: string, data: JSONValue, sendOptions?: SendOptions) =>
+				broadcast(encodeEvent(name, data, sendOptions)),
 		},
 		comment: {
-			value: (value?: string) => {
-				const encoded = encodeComment(value);
-
-				for (const connection of connections) {
-					connection.write(encoded);
-				}
-			},
+			value: (value?: string) => broadcast(encodeComment(value)),
 		},
 		retry: {
-			value: (milliseconds: number) => {
-				const encoded = encodeRetry(milliseconds);
-
-				for (const connection of connections) {
-					connection.write(encoded);
-				}
-			},
+			value: (milliseconds: number) => broadcast(encodeRetry(milliseconds)),
 		},
-		close: {
-			value: () => {
-				if (isClosed) {
-					return;
-				}
-
-				isClosed = true;
-				for (const connection of [...connections]) {
-					connection.close();
-				}
-			},
-		},
-		[Symbol.dispose]: { value: () => handler.close() },
+		close: { value: close },
+		[Symbol.dispose]: { value: close },
 	});
 
 	return handler;

@@ -15,6 +15,7 @@ npm install @serve-tools/client-shared-webtransport
 The worker owns the physical session, reliable streams, datagram registry, and native datagram writer.
 Each page owns its logical client, subscriptions, and port.
 `maxDatagramSize` is a Promise because the native value is worker-owned.
+Pending `read()` calls reject and remove their page-local subscriptions when either the page client or worker-owned session closes.
 The shared client intentionally does not expose `createWritable()` because native WebTransport scheduling groups and writable ownership cannot retain their semantics across a `MessagePort`.
 
 Datagrams remain best-effort and unbuffered.

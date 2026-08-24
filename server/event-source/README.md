@@ -30,7 +30,10 @@ The default `message` event omits the optional `event:` field.
 Use `comment()` for keepalives, `retry()` to set the browser reconnection delay, and `connection.send()` for per-client replay or initialization.
 Returning a `204 No Content` response from `authorize()` tells a conforming EventSource client to stop reconnecting.
 Authorization, connection, and cleanup failures use the runtime's native `reportError()` or `console.error()` when that web API is unavailable.
-The application remains responsible for replay storage, authorization, CORS, rate limits, proxy timeouts, and choosing stable event IDs.
+`maximumBufferedAmount` defaults to 16 MiB per connection; a client whose event queue would exceed the limit is failed and removed without affecting other clients.
+Pass `headers` as any `HeadersInit` value to add response headers such as CORS policy.
+`Content-Type: text/event-stream`, `Cache-Control: no-cache, no-transform`, and `X-Accel-Buffering: no` always override conflicting `headers` values.
+The application remains responsible for replay storage, authorization, rate limits, proxy timeouts, and choosing stable event IDs.
 
 ## Agent Skill
 

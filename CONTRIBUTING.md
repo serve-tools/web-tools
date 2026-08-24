@@ -28,12 +28,26 @@ Published Skills remain instruction-only unless executable resources have a demo
 
 ## Publishing
 
-Packages are independently versioned and published one at a time through the `Release` GitHub Actions workflow.
-Run it from `main`, select the package, enter the exact version from its `package.json`, and choose the npm distribution tag.
+Packages are independently versioned and published through the `Release` GitHub Actions workflow.
+Run it from `main`, select one package or `all`, and choose the npm distribution tag.
+For one package, enter the exact version from its `package.json` as an additional safety check.
+For `all`, leave the version empty; the workflow selects every publishable workspace whose exact version is not yet on npm.
 
 The `npm` GitHub environment requires approval.
 Each npm package must trust the `serve-tools/web-tools` repository's `release.yml` workflow with the `npm` environment.
-Publish internal dependencies before their dependants; the workflow rejects releases whose internal dependency ranges are unavailable.
+The workflow checks package versions and internal dependency ranges before installing dependencies or browsers, then runs one clean install and one full verification for the complete release.
+It packs and publishes selected packages in internal dependency order from the same immutable artifact set.
+
+Dispatch and monitor a prepared batch with GitHub CLI:
+
+```shell
+gh workflow run release.yml --ref main -f package=all -f version= -f tag=latest
+RUN_ID=$(gh run list --workflow release.yml --branch main --event workflow_dispatch --user "@me" --limit 1 --json databaseId --jq '.[0].databaseId')
+gh run watch "$RUN_ID" --exit-status
+```
+
+Review the release plan before approving the protected `npm` environment.
+The `all` selector is resumable: after a partial publish, inspect npm, fix the cause, and dispatch it again to select only versions that remain unpublished.
 
 Brand-new packages require a one-time bootstrap because npm cannot configure a trusted publisher before a package exists.
 Create a short-lived granular token with only the required scope, write access, and bypass 2FA; store it only as the `NPM_TOKEN` secret on the `npm` environment.

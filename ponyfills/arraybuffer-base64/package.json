@@ -6,11 +6,15 @@
 		"arraybuffer",
 		"base64",
 		"base64url",
+		"no-global-mutation",
 		"node",
 		"ponyfill",
 		"to-base64",
+		"tobase64",
 		"typed-array",
-		"uint8array"
+		"typescript",
+		"uint8array",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/arraybuffer-base64#readme",
 	"bugs": {

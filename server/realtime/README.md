@@ -56,6 +56,7 @@ transport.onClose(connection.disconnect);
 
 The core owns operation IDs, one abort signal per operation, duplicate-ID protection, cleanup, serialization, and graceful protocol closure.
 `receive()` expects one complete message; frame reliable byte streams with `@serve-tools/realtime-protocol/stream`.
+Physical transport closure is requested immediately, while `closed` resolves after in-flight handlers and asynchronous subscription cleanup settle.
 
 The defaults allow 16 MiB per incoming message, 16 MiB in an observable send queue, and 1,024 active operations.
 Override `maximumMessageLength`, `maximumBufferedAmount`, or `maximumOperations` where appropriate.
@@ -64,6 +65,7 @@ Exceeding observable backpressure closes the connection rather than dropping ord
 
 Handler errors are stack-redacted by default.
 Use `formatError()` only for information intentionally exposed to a client.
+Thrown values that cannot be safely inspected or converted to strings use a generic stack-redacted error record.
 Cleanup, formatter, and transport failures that cannot be delivered remotely use the runtime's native `reportError()` or `console.error()` when that web API is unavailable.
 
 ## Boundaries

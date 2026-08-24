@@ -710,11 +710,12 @@ describe("liveness", () => {
 		port2.close();
 	});
 
-	it.runIf(hasWebLocks)("closes the client and releases the lease on pagehide", async () => {
+	it("closes the client on pagehide without Web Locks", async () => {
 		type P = { requests: { ping(): string } };
 
 		const listeners = new Set<() => void>();
 
+		vi.stubGlobal("navigator", {});
 		vi.stubGlobal("onpagehide", null);
 		vi.stubGlobal("addEventListener", (type: string, listener: () => void) => {
 			if (type === "pagehide") {
@@ -734,12 +735,6 @@ describe("liveness", () => {
 
 			expect(await client.request("ping")).toBe("pong");
 
-			await vi.waitFor(async () => {
-				const { held } = await navigator.locks.query();
-
-				expect(held?.some(isLease)).toBe(true);
-			});
-
 			expect(listeners.size).toBe(1);
 
 			listeners.forEach((listener) => {
@@ -751,13 +746,6 @@ describe("liveness", () => {
 			await expect(client.request("ping")).rejects.toMatchObject({ name: "ConnectionClosedError" });
 
 			expect(listeners.size).toBe(0);
-
-			await vi.waitFor(async () => {
-				const { held, pending } = await navigator.locks.query();
-
-				expect(held?.some(isLease) ?? false).toBe(false);
-				expect(pending?.some(isLease) ?? false).toBe(false);
-			});
 
 			port1.close();
 			port2.close();

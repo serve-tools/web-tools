@@ -7,8 +7,10 @@ Forward one complete protocol message to `receive()`.
 Call `fail()` for invalid peer input and `disconnect()` only after the physical transport is gone.
 Expose observable queued bytes through `bufferedAmount()` when the transport supports it.
 Use the original envelope passed as the second `send(payload, message)` argument when framing or lifecycle decisions need message metadata.
+Transport closure remains immediate, while `closed` resolves after in-flight handlers and asynchronous subscription cleanup settle.
 
 Retain the core's operation, message, and buffering guards unless the application deliberately chooses other values.
 The message limit bounds both incoming bytes and any resizable `ArrayBuffer` capacity declared by those bytes.
 Treat `formatError()` as a disclosure boundary and validate untrusted handler inputs.
+Values that cannot be safely inspected or converted to strings fall back to a generic remote error record.
 Expect failures that cannot be delivered remotely to use native `reportError()` or `console.error()` when that web API is unavailable.

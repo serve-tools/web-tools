@@ -18,9 +18,12 @@ describe("WebTransport session core", () => {
 	it("shares reliable operations and typed best-effort datagrams", async () => {
 		const operationWrites: Uint8Array[] = [];
 		const datagramWrites: Uint8Array[] = [];
+
 		const cursor = vi.fn();
 		const close = vi.fn();
+
 		let session!: ReturnType<typeof createSession<TestProtocol>>;
+
 		const clientRegistry = new DatagramRegistry((payload) => session.receiveRegistry(payload));
 
 		session = createSession<TestProtocol>(
@@ -67,5 +70,72 @@ describe("WebTransport session core", () => {
 
 		expect(clientRegistry.name(presence.kind)).toBe("presence");
 		expect(presence.value).toEqual({ online: true });
+	});
+
+	it("rejects pending datagram work when the registry stream ends cleanly", async () => {
+		const session = createSession<TestProtocol>(
+			{
+				requests: { ping: (value) => value },
+				datagrams: { cursor: () => undefined },
+			},
+			{
+				sendOperations: () => undefined,
+				sendRegistry: () => undefined,
+				sendDatagram: () => true,
+				close: () => undefined,
+			},
+			undefined,
+		);
+		const reading = session.datagrams.read("cursor");
+		const writing = session.datagrams.write("presence", { online: true });
+		const readRejected = expect(reading).rejects.toThrow("reliable datagram registry stream ended");
+		const writeRejected = expect(writing).rejects.toThrow("reliable datagram registry stream ended");
+
+		session.finishRegistry();
+
+		await readRejected;
+		await writeRejected;
+		await session.closed;
+	});
+
+	it("aborts datagram handlers and rejects reads when the session closes", async () => {
+		const close = vi.fn();
+
+		let session!: ReturnType<typeof createSession<TestProtocol>>;
+		let handlerSignal: AbortSignal | undefined;
+
+		const clientRegistry = new DatagramRegistry((payload) => session.receiveRegistry(payload));
+
+		session = createSession<TestProtocol>(
+			{
+				requests: { ping: (value) => value },
+				datagrams: { cursor: (_value, context) => void (handlerSignal = context.signal) },
+			},
+			{
+				sendOperations: () => undefined,
+				sendRegistry: (payload) => clientRegistry.receive(payload),
+				sendDatagram: () => true,
+				close,
+			},
+			undefined,
+		);
+
+		const cursorKind = await clientRegistry.register("cursor");
+
+		session.receiveDatagram(encodeDatagram(cursorKind, { x: 1, y: 2 }));
+
+		await Promise.resolve();
+
+		const reading = session.datagrams.read("cursor");
+		const subscription = session.datagrams.subscribe("cursor", () => undefined);
+
+		session.close("shutdown");
+
+		expect(handlerSignal?.aborted).toBe(true);
+		expect(subscription.active).toBe(false);
+
+		await expect(reading).rejects.toThrow("shutdown");
+
+		expect(close).toHaveBeenCalledOnce();
 	});
 });

@@ -23,9 +23,9 @@ export class FixtureProvider {
 				continue;
 			}
 
-			for (const suffix of task.expected.documentSuffixes ?? []) {
+			for (const referencePath of task.expected.documentSuffixes ?? []) {
 				const reference = packageEntry.references.find(
-					(candidate) => candidate.path === suffix || candidate.path.endsWith(`/${suffix}`),
+					(candidate) => candidate.path === referencePath || candidate.path.endsWith(`/${referencePath}`),
 				);
 
 				if (reference !== undefined) {
@@ -42,6 +42,7 @@ export class FixtureProvider {
 
 		if (task.goldenRecipe !== undefined) {
 			const source = await readFile(path.join(this.root, task.goldenRecipe), "utf8");
+
 			files.push({ content: publicizeRecipe(source, task.expected.packages[0]), path: "solution.ts" });
 		}
 
@@ -60,6 +61,7 @@ export class OpenAIProvider {
 		if (!apiKey) {
 			throw new Error("OPENAI_API_KEY is required for the OpenAI provider");
 		}
+
 		if (!model) {
 			throw new Error("--model is required for the OpenAI provider");
 		}
@@ -91,6 +93,9 @@ export class OpenAIProvider {
 				"Select only the focused reference paths needed to solve the task.",
 				"Use only paths linked from the supplied package Skill routers.",
 				"Do not select README files, SKILL.md itself, or references that do not affect the answer.",
+				...(task.kind === "usage"
+					? ["Always select the exact references/recipe-quick-start.md path for each selected package."]
+					: []),
 			].join("\n"),
 			user: [
 				`<task>\n${task.prompt}\n</task>`,
@@ -107,8 +112,13 @@ export class OpenAIProvider {
 			system: [
 				"Solve the task using only the supplied package documents.",
 				"Preserve public API names, ownership, cancellation, failure, and cleanup semantics.",
-				"For implementation tasks, return complete compile-ready TypeScript in files. Use only public package imports.",
-				"For design tasks, give a concise actionable answer and return an empty files array.",
+				...(task.kind === "usage"
+					? [
+							"This is an implementation task: return at least one complete compile-ready TypeScript file using only public package imports.",
+							"Adapt the supplied compile-checked recipe closely; preserve its exact public imports, API signatures, types, and ownership semantics.",
+							"Return only .ts files; never return package.json, tsconfig.json, or other configuration files.",
+						]
+					: ["This is a design task: give a concise actionable answer and return an empty files array."]),
 			].join("\n"),
 			user: [
 				`<task>\n${task.prompt}\n</task>`,
@@ -120,6 +130,7 @@ export class OpenAIProvider {
 
 	async #complete({ name, schema, system, user }) {
 		const startedAt = performance.now();
+
 		let response;
 
 		for (let attempt = 0; attempt < 3; ++attempt) {
@@ -188,6 +199,7 @@ export function emptyMetrics() {
 	return {
 		cachedInputTokens: 0,
 		cacheWriteTokens: 0,
+		contextCharacters: 0,
 		inputTokens: 0,
 		latencyMilliseconds: 0,
 		outputTokens: 0,
@@ -196,11 +208,14 @@ export function emptyMetrics() {
 	};
 }
 
-function publicizeRecipe(source, packageName) {
+export function publicizeRecipe(source, packageName) {
 	return source
 		.replace(/(["'])\.\.\/src\/lib\/scope\/([^"']+)\.js\1/g, `$1${packageName}/scope/$2$1`)
 		.replace(/(["'])\.\.\/src\/exports\/Symbol\/([^"']+)\.js\1/g, `$1${packageName}/Symbol/$2$1`)
 		.replace(/(["'])\.\.\/src\/exports\/([^"']+)\.js\1/g, `$1${packageName}/$2$1`)
+		.replace(/(["'])\.\.\/src\/apply\/index\.js\1/g, `$1${packageName}/apply$1`)
+		.replace(/(["'])\.\.\/src\/decorators\.js\1/g, `$1${packageName}/decorators$1`)
+		.replace(/(["'])\.\.\/src\/stream\.js\1/g, `$1${packageName}/stream$1`)
 		.replace(/(["'])\.\.\/src\/[^"']+\.js\1/g, `$1${packageName}$1`);
 }
 

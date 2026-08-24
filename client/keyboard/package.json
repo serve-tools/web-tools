@@ -5,12 +5,16 @@
 	"keywords": [
 		"accessibility",
 		"aria-keyshortcuts",
+		"browser",
 		"hotkey",
+		"hotkeys",
 		"keyboard",
+		"keyboard-shortcuts",
 		"platform",
 		"shortcut",
 		"typescript",
-		"web-api"
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/keyboard#readme",
 	"bugs": {
@@ -26,8 +30,7 @@
 	"sideEffects": false,
 	"type": "module",
 	"exports": {
-		".": "./dist/client-keyboard.js",
-		"./lib/*": "./dist/lib/*.js"
+		".": "./dist/client-keyboard.js"
 	},
 	"files": [
 		"dist",

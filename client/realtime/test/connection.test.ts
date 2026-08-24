@@ -1,5 +1,5 @@
 import { deserialize, protocol, serialize } from "@serve-tools/realtime-protocol";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { createClient } from "../src/client-realtime.js";
 
@@ -40,5 +40,29 @@ describe("createClient", () => {
 		await completed.promise;
 
 		expect(values).toEqual([3]);
+	});
+
+	it("bounds declared resizable buffer capacity before dispatching a peer message", async () => {
+		const close = vi.fn();
+		const client = createClient<{ requests: { hold(): unknown } }>(
+			{ send: vi.fn(), close },
+			{ maximumMessageLength: 256 },
+		);
+		const request = client.request("hold");
+		const value = new ArrayBuffer(0, { maxByteLength: 1_024 });
+
+		client.receive(serialize([protocol, "resolve", 1, value]));
+
+		await expect(request).rejects.toMatchObject({ name: "ProtocolError" });
+		expect(close).toHaveBeenCalledOnce();
+	});
+
+	it("rejects a complete peer message above its configured limit", async () => {
+		const close = vi.fn();
+		const client = createClient({ send: vi.fn(), close }, { maximumMessageLength: 8 });
+
+		client.receive(serialize([protocol, "close", { name: "Error", message: "too large" }]));
+
+		expect(close).toHaveBeenCalledOnce();
 	});
 });

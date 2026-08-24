@@ -3,17 +3,22 @@
 	"version": "0.1.2",
 	"description": "Implements Explicit Resource Management without global mutation",
 	"keywords": [
-		"explicit-resource-management",
-		"resource-management",
-		"disposable-stack",
-		"async-disposable-stack",
-		"disposable",
 		"async-disposable",
-		"symbol-dispose",
-		"symbol-async-dispose",
-		"suppressed-error",
+		"async-disposable-stack",
+		"await-using",
+		"disposable",
+		"disposable-stack",
+		"explicit-resource-management",
+		"no-global-mutation",
+		"ponyfill",
 		"resource-cleanup",
-		"ponyfill"
+		"resource-management",
+		"suppressed-error",
+		"symbol-async-dispose",
+		"symbol-dispose",
+		"typescript",
+		"using",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/resource-management#readme",
 	"bugs": {
@@ -30,7 +35,13 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/ponyfill-resource-management.js",
-		"./lib/*": "./dist/lib/*.js"
+		"./lib/AsyncDisposable": "./dist/lib/AsyncDisposable.js",
+		"./lib/AsyncDisposableStack": "./dist/lib/AsyncDisposableStack.js",
+		"./lib/Disposable": "./dist/lib/Disposable.js",
+		"./lib/DisposableStack": "./dist/lib/DisposableStack.js",
+		"./lib/SuppressedError": "./dist/lib/SuppressedError.js",
+		"./lib/Symbol/asyncDispose": "./dist/lib/Symbol/asyncDispose.js",
+		"./lib/Symbol/dispose": "./dist/lib/Symbol/dispose.js"
 	},
 	"files": [
 		"dist",

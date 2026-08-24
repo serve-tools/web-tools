@@ -55,12 +55,15 @@ export async function compileFiles(root, files) {
 	}
 
 	const benchmarkRoot = path.join(root, "benchmark", "skills");
+
 	await mkdir(benchmarkRoot, { recursive: true });
+
 	const temporaryRoot = await mkdtemp(path.join(benchmarkRoot, ".tmp-"));
 
 	try {
 		for (const file of files) {
 			const target = path.join(temporaryRoot, file.path);
+
 			await mkdir(path.dirname(target), { recursive: true });
 			await writeFile(target, file.content);
 		}
@@ -69,7 +72,6 @@ export async function compileFiles(root, files) {
 			path.join(temporaryRoot, "tsconfig.json"),
 			JSON.stringify({
 				compilerOptions: {
-					experimentalDecorators: true,
 					lib: ["ESNext", "DOM", "DOM.Iterable", "WebWorker"],
 					module: "Preserve",
 					moduleResolution: "Bundler",
@@ -109,11 +111,19 @@ function gradeDocuments(catalog, documents, task, variant) {
 		const skillPath = catalog.packages.find((candidate) => candidate.name === packageName)?.skillPath;
 		return skillPath !== undefined && documents.includes(skillPath);
 	});
-	const referencesPresent = (task.expected.documentSuffixes ?? []).every((suffix) =>
-		documents.some((document) => document === suffix || document.endsWith(`/${suffix}`)),
+	const referencesPresent = (task.expected.documentSuffixes ?? []).every((reference) =>
+		documents.some((document) => matchesReference(document, reference)),
 	);
 
 	return packageSkillsPresent && referencesPresent ? 1 : 0;
+}
+
+function matchesReference(document, reference) {
+	if (reference.includes("/")) {
+		return document === reference;
+	}
+
+	return document === reference || document.endsWith(`/${reference}`);
 }
 
 function gradeImports(source, expectedPackages, allowedImports = []) {
@@ -174,13 +184,16 @@ function sameSet(left, right) {
 function runProcess(command, arguments_, options) {
 	return new Promise((resolve, reject) => {
 		const child = spawn(command, arguments_, { ...options, stdio: ["ignore", "pipe", "pipe"] });
+
 		let stderr = "";
 		let stdout = "";
 
 		child.stderr.setEncoding("utf8");
 		child.stderr.on("data", (chunk) => (stderr += chunk));
+
 		child.stdout.setEncoding("utf8");
 		child.stdout.on("data", (chunk) => (stdout += chunk));
+
 		child.on("error", reject);
 		child.on("close", (code) => resolve({ code, stderr, stdout }));
 	});

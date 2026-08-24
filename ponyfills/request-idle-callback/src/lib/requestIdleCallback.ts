@@ -4,12 +4,18 @@ import type { IdleRequestCallback, IdleRequestOptions } from "./types.js";
 
 /** Schedules work for an idle period and returns its cancellation handle. */
 export function requestIdleCallback(callback: IdleRequestCallback, options?: IdleRequestOptions): number {
+	if (typeof callback !== "function") {
+		throw new TypeError("Idle callback must be a function");
+	}
+
+	const timeout = +(options?.timeout ?? 0) >>> 0;
+
 	getChannel();
 
 	const handle = getNextHandle();
 	const scheduled: ScheduledCallback = { callback };
 
-	if (options?.timeout !== undefined && options.timeout > 0) {
+	if (timeout > 0) {
 		scheduled.timeoutHandle = setTimeout(() => {
 			if (!callbacks.delete(handle)) {
 				return;
@@ -18,7 +24,7 @@ export function requestIdleCallback(callback: IdleRequestCallback, options?: Idl
 			resetScheduleIfEmpty();
 
 			callback({ didTimeout: true, timeRemaining: () => 0 });
-		}, options.timeout);
+		}, timeout);
 	}
 
 	callbacks.set(handle, scheduled);

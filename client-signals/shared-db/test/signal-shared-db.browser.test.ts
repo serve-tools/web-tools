@@ -29,16 +29,25 @@ test("coordinates real shared database operations with reactive signals", async 
 	const count = new Signal.State(1);
 	const selected = second.database.watch("users", selectedKey);
 	const users = first.database.watchAll("users", { count });
+	const userKeys = first.database.watchAllKeys("users", { count });
+	const userCount = first.database.watchCount("users");
 	const ada: User = { id: "ada", name: "Ada" };
 	const margaret: User = { id: "margaret", name: "Margaret" };
 
 	try {
 		expect(selected.get()).toEqual({ status: "pending" });
 		expect(users.get()).toEqual({ status: "pending" });
-		await expect.poll(() => [selected.get(), users.get()]).toEqual([ready(undefined), ready([])]);
+
+		await expect
+			.poll(() => [selected.get(), users.get(), userKeys.get(), userCount.get()])
+			.toEqual([ready(undefined), ready([]), ready([]), ready(0)]);
 
 		expect(await first.database.add("users", ada)).toBe(ada.id);
-		await expect.poll(() => [selected.get(), users.get()]).toEqual([ready(ada), ready([ada])]);
+
+		await expect
+			.poll(() => [selected.get(), users.get(), userKeys.get(), userCount.get()])
+			.toEqual([ready(ada), ready([ada]), ready([ada.id]), ready(1)]);
+
 		expect(await second.database.get("users", ada.id)).toEqual(ada);
 		expect(await second.database.has("users", ada.id)).toBe(true);
 
@@ -47,15 +56,20 @@ test("coordinates real shared database operations with reactive signals", async 
 		const updatedAda = { ...ada, name: "Augusta" };
 
 		expect(await second.database.put("users", updatedAda)).toBe(ada.id);
+
 		await expect.poll(() => [selected.get(), users.get()]).toEqual([ready(updatedAda), ready([updatedAda])]);
 
 		await first.database.add("users", margaret);
+
 		expect(await second.database.getAllKeys("users")).toEqual([ada.id, margaret.id]);
 		expect(await second.database.count("users")).toBe(2);
+
 		count.set(2);
+
 		await expect.poll(() => users.get()).toEqual(ready([updatedAda, margaret]));
 
 		selectedKey.set(margaret.id);
+
 		await expect.poll(() => selected.get()).toEqual(ready(margaret));
 		await first.database.delete("users", margaret.id);
 		await expect.poll(() => [selected.get(), users.get()]).toEqual([ready(undefined), ready([updatedAda])]);
@@ -66,22 +80,30 @@ test("coordinates real shared database operations with reactive signals", async 
 		const cancelled = new AbortController();
 
 		cancelled.abort();
+
 		await expect(second.database.get("users", ada.id, { signal: cancelled.signal })).rejects.toMatchObject({
 			name: "AbortError",
 		});
 
 		expect(Signal.subtle.hasSinks(selectedKey)).toBe(true);
+
 		selected.dispose();
+
 		expect(Signal.subtle.hasSinks(selectedKey)).toBe(false);
+
 		await first.database.clear("users");
 		await expect.poll(() => users.get()).toEqual(ready([]));
 
 		expect(Signal.subtle.hasSinks(count)).toBe(true);
+
 		first.database.close();
+
 		expect(Signal.subtle.hasSinks(count)).toBe(false);
 	} finally {
 		selected.dispose();
 		users.dispose();
+		userKeys.dispose();
+		userCount.dispose();
 
 		for (const connection of connections) {
 			connection.close();

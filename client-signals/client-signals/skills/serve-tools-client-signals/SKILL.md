@@ -1,6 +1,6 @@
 ---
 name: serve-tools-client-signals
-description: Use @serve-tools/client-signals browser Signals.
+description: Use @serve-tools/client-signals Signal namespaces.
 ---
 
 # Use @serve-tools/client-signals

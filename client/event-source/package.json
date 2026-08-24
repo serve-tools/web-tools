@@ -3,12 +3,17 @@
 	"version": "0.1.0",
 	"description": "Typed JSON events over the native EventSource API",
 	"keywords": [
+		"browser",
+		"event-source",
+		"event-stream",
 		"eventsource",
 		"json",
 		"realtime",
 		"server-sent-events",
 		"sse",
-		"typescript"
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/event-source#readme",
 	"bugs": {

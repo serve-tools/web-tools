@@ -9,9 +9,42 @@ const META = new WeakMap();
 const CLASS = new WeakMap();
 const identity = (value) => value;
 
-const decorate = (decorators, value, context) => {
+const assertCallable = (value, optionalLabel) => {
+	if (typeof value !== "function" && !(optionalLabel && value === undefined)) {
+		throw new TypeError(
+			`${optionalLabel ?? "An initializer"} must be a function${optionalLabel ? " or undefined" : ""}`,
+		);
+	}
+
+	return value;
+};
+
+const invokeDecorator = (decorator, value, context, initializers) => {
+	let finished = false;
+
+	try {
+		return decorator(value, {
+			...context,
+			addInitializer: (initializer) => {
+				if (finished) {
+					throw new TypeError("Attempted to call addInitializer after decoration was finished");
+				}
+
+				initializers.push(assertCallable(initializer));
+			},
+		});
+	} finally {
+		finished = true;
+	}
+};
+
+const decorate = (decorators, value, context, initializers) => {
 	for (let index = decorators.length; index--; ) {
-		value = decorators[index](value, context) ?? value;
+		value =
+			assertCallable(
+				invokeDecorator(decorators[index], value, context, initializers),
+				`${context.kind} decorators`,
+			) ?? value;
 	}
 
 	return value;
@@ -111,12 +144,16 @@ const applyDecorators = (Class, ...entries) => {
 
 	for (const [[decorators, kind, name, isStatic, isPrivate, controller]] of entries) {
 		if (kind === 0) {
-			Replacement = decorate(decorators, Replacement, {
-				kind: KIND_NAMES[kind],
-				name,
-				metadata,
-				addInitializer: (initializer) => classInitializers.push(initializer),
-			});
+			Replacement = decorate(
+				decorators,
+				Replacement,
+				{
+					kind: KIND_NAMES[kind],
+					name,
+					metadata,
+				},
+				classInitializers,
+			);
 			continue;
 		}
 
@@ -147,16 +184,17 @@ const applyDecorators = (Class, ...entries) => {
 				set: (receiver, next) =>
 					descriptor?.set ? descriptor.set.call(receiver, next) : void (receiver[name] = next),
 			},
-			addInitializer: (initializer) => {
-				(extraInitializers ?? (isStatic ? staticInitializers : instanceInitializers)).push(initializer);
-			},
 		};
+		const initializersForContext = extraInitializers ?? (isStatic ? staticInitializers : instanceInitializers);
 
 		if (kind === 2) {
 			const initializers = [];
 			for (let index = decorators.length; index--; ) {
-				const initializer = decorators[index](undefined, context);
-				if (initializer !== undefined) {
+				const initializer = assertCallable(
+					invokeDecorator(decorators[index], undefined, context, initializersForContext),
+					"field decorators",
+				);
+				if (initializer) {
 					initializers.push(initializer);
 				}
 			}
@@ -165,18 +203,27 @@ const applyDecorators = (Class, ...entries) => {
 			const initializers = [];
 			for (let index = decorators.length; index--; ) {
 				const current = { get: value.get, set: value.set };
-				const replacement = decorators[index](current, context);
+				const replacement = invokeDecorator(decorators[index], current, context, initializersForContext);
+
+				if (replacement !== undefined && (typeof replacement !== "object" || replacement === null)) {
+					throw new TypeError(
+						"accessor decorators must return an object with get, set, or init properties or undefined",
+					);
+				}
+
+				const init = assertCallable(replacement?.init, "accessor.init");
+
 				value = {
-					get: replacement?.get ?? current.get,
-					set: replacement?.set ?? current.set,
+					get: assertCallable(replacement?.get, "accessor.get") ?? current.get,
+					set: assertCallable(replacement?.set, "accessor.set") ?? current.set,
 				};
-				if (replacement?.init) {
-					initializers.push(replacement.init);
+				if (init) {
+					initializers.push(init);
 				}
 			}
 			value.init = composeInitializers(initializers);
 		} else {
-			value = decorate(decorators, value, context);
+			value = decorate(decorators, value, context, initializersForContext);
 		}
 
 		if (kind === 2 || kind === 3) {

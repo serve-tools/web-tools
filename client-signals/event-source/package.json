@@ -3,12 +3,21 @@
 	"version": "0.1.0",
 	"description": "Typed JSON EventSource clients with latest-event Signal state",
 	"keywords": [
+		"browser",
+		"event-source",
+		"event-stream",
 		"eventsource",
+		"fine-grained-reactivity",
 		"json",
 		"reactive",
 		"server-sent-events",
 		"signal",
-		"sse"
+		"signals",
+		"sse",
+		"tc39-signals",
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/event-source#readme",
 	"bugs": {

@@ -10,6 +10,8 @@ Drop an unknown connection-local kind because a datagram may race ahead of its r
 Use `write()` for the shared writer and `createWritable(name)` only when separate native scheduling matters.
 Binary inputs bypass structured serialization but remain named and enveloped.
 Do not pre-reject by size; consult `maxDatagramSize` when the application wants to adapt.
+Expect direct datagram subscriptions to become inactive, and pending datagram registrations and `read()` calls to reject, when either reliable protocol stream or the client session closes.
+Incoming structured binary allocations are bounded by the native maximum datagram size, with a 64 KiB fallback.
 
 Keep MoQ and every other application protocol on a separate WebTransport session.
 Treat the connection signal as lifetime ownership after setup as well as cancellation during setup.

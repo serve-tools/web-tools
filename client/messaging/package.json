@@ -3,6 +3,8 @@
 	"version": "0.2.1",
 	"description": "Requests and subscriptions across workers and message ports",
 	"keywords": [
+		"browser",
+		"message-port",
 		"messagechannel",
 		"messageport",
 		"postmessage",
@@ -10,6 +12,10 @@
 		"sharedworker",
 		"subscription",
 		"transferable",
+		"typescript",
+		"web-api",
+		"web-platform",
+		"web-worker",
 		"webworker"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/messaging#readme",
@@ -27,7 +33,8 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/client-messaging.js",
-		"./scope/*": "./dist/scope/*.js"
+		"./scope/window": "./dist/scope/window.js",
+		"./scope/worker": "./dist/scope/worker.js"
 	},
 	"files": [
 		"dist",

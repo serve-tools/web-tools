@@ -4,11 +4,18 @@
 	"description": "SharedWorker-coordinated typed HTTP requests and streaming subscriptions",
 	"keywords": [
 		"browser",
+		"cross-tab",
 		"fetch",
 		"http",
+		"http-streaming",
+		"readable-stream",
+		"shared-worker",
 		"sharedworker",
+		"streaming",
 		"subscription",
-		"typescript"
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/shared-http-stream#readme",
 	"bugs": {
@@ -25,7 +32,8 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/client-shared-http-stream.js",
-		"./scope/*": "./dist/lib/scope/*.js"
+		"./scope/shared-worker": "./dist/lib/scope/shared-worker.js",
+		"./scope/window": "./dist/lib/scope/window.js"
 	},
 	"files": [
 		"dist",
@@ -36,7 +44,9 @@
 		"build:dependencies": "npm run build:dependencies --workspace @serve-tools/client-http-stream && npm run build --workspace @serve-tools/client-http-stream --workspace @serve-tools/client-messaging",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
-		"test": "npm run build:dependencies && vitest run --config vitest.config.ts",
+		"test": "npm run build:dependencies && npm run test:node && npm run test:browser",
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"test:node": "vitest run --config vitest.config.ts",
 		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {

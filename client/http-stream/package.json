@@ -3,13 +3,19 @@
 	"version": "0.1.0",
 	"description": "Typed binary HTTP requests and streaming subscriptions",
 	"keywords": [
+		"browser",
 		"fetch",
 		"http",
+		"http-streaming",
+		"readable-stream",
 		"realtime",
 		"rpc",
 		"stream",
+		"streaming",
 		"subscription",
-		"typescript"
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/http-stream#readme",
 	"bugs": {

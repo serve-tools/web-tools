@@ -3,12 +3,23 @@
 	"version": "0.1.0",
 	"description": "SharedWorker EventSource clients with latest-event Signal state",
 	"keywords": [
+		"browser",
+		"cross-tab",
+		"event-source",
+		"event-stream",
 		"eventsource",
+		"fine-grained-reactivity",
 		"reactive",
 		"server-sent-events",
+		"shared-worker",
 		"sharedworker",
 		"signal",
-		"sse"
+		"signals",
+		"sse",
+		"tc39-signals",
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/shared-event-source#readme",
 	"bugs": {
@@ -25,7 +36,8 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/signal-shared-event-source.js",
-		"./scope/*": "./dist/scope/*.js"
+		"./scope/shared-worker": "./dist/scope/shared-worker.js",
+		"./scope/window": "./dist/scope/window.js"
 	},
 	"files": [
 		"dist",

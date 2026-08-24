@@ -12,4 +12,6 @@ interface AppSchema {
 declare const db: SignalDB<AppSchema>;
 
 export const note = db.watch("notes", "welcome");
+export const noteKeys = db.watchAllKeys("notes", { count: 10 });
+export const noteCount = db.watchCount("notes");
 ```

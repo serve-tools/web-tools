@@ -4,6 +4,11 @@
 	"description": "Package-selection guidance for the @serve-tools web platform utilities",
 	"keywords": [
 		"agent-skills",
+		"ai-agents",
+		"coding-agents",
+		"developer-tools",
+		"llm",
+		"npm-packages",
 		"serve-tools",
 		"web-platform"
 	],

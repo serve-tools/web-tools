@@ -5,6 +5,7 @@
 - Add and dispose terminal `subscribe()` callbacks before or during consumption; a late subscription observes only future values and does not replay earlier ones.
 - Await `consume()` for the operation's terminal result.
 - Expect all matching callbacks and projections to settle before the next operation value is requested.
+- Expect each delivery to use a callback snapshot; disposal during a callback affects subsequent values.
 - Dispose an individual subscription to deactivate that terminal branch without cancelling the operation.
 - Treat each derived view's index as its shared emitted-value index, starting at zero and advancing while that branch is active rather than restarting for each terminal subscription.
 - Expect a callback, predicate, or mapper failure to cancel the operation with that failure as its canonical reason.

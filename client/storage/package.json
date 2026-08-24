@@ -4,11 +4,16 @@
 	"description": "Observable access to local and session storage",
 	"keywords": [
 		"browser",
+		"local-storage",
 		"localstorage",
 		"observable",
+		"session-storage",
 		"sessionstorage",
 		"storage",
 		"subscription",
+		"typescript",
+		"web-api",
+		"web-platform",
 		"web-storage"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/storage#readme",

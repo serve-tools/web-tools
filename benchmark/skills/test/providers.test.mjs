@@ -1,9 +1,49 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import test from "node:test";
-import { OpenAIProvider } from "../lib/providers.mjs";
+import { FixtureProvider, OpenAIProvider, publicizeRecipe } from "../lib/providers.mjs";
+
+const root = path.resolve(import.meta.dirname, "../../..");
+
+test("Fixture provider publicizes apply, decorators, and stream recipe imports", async () => {
+	const provider = new FixtureProvider(root);
+	const fixtures = [
+		[
+			"polyfills/report-error/test/polyfill-report-error.recipes.ts",
+			"@serve-tools/polyfill-report-error",
+			'await import("@serve-tools/polyfill-report-error/apply");',
+		],
+		[
+			"lit/signals/test/lit-signals.recipes.ts",
+			"@serve-tools/lit-signals",
+			'from "@serve-tools/lit-signals/decorators"',
+		],
+		[
+			"realtime/protocol/test/realtime-protocol.recipes.ts",
+			"@serve-tools/realtime-protocol",
+			'from "@serve-tools/realtime-protocol/stream"',
+		],
+	];
+
+	for (const [goldenRecipe, packageName, expectedImport] of fixtures) {
+		const result = await provider.solve({ task: { expected: { packages: [packageName] }, goldenRecipe } });
+
+		assert.match(result.data.files[0].content, new RegExp(expectedImport.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+		assert.doesNotMatch(result.data.files[0].content, /\.\.\/src\/(apply\/index|decorators|stream)\.js/);
+	}
+});
+
+test("recipe publicizing preserves a literal escaped tab", () => {
+	const source = 'const separator = "\\\\t";\nexport { value } from "../src/value.js";\n';
+	const publicSource = publicizeRecipe(source, "@serve-tools/example");
+
+	assert.match(publicSource, /const separator = "\\\\t"/);
+	assert.match(publicSource, /from "@serve-tools\/example"/);
+});
 
 test("OpenAI provider requests strict structured output and records usage", async () => {
 	let requestBody;
+
 	const provider = new OpenAIProvider({
 		apiKey: "test-key",
 		fetchImplementation: async (_url, request) => {
@@ -36,6 +76,7 @@ test("OpenAI provider requests strict structured output and records usage", asyn
 		},
 		model: "test-model",
 	});
+
 	const result = await provider.route({
 		discoveryContext: "catalog",
 		task: { prompt: "Use IndexedDB" },
@@ -54,6 +95,7 @@ test("OpenAI provider requests strict structured output and records usage", asyn
 
 test("OpenAI provider keeps focused document selection in a separate structured request", async () => {
 	let requestBody;
+
 	const provider = new OpenAIProvider({
 		apiKey: "test-key",
 		fetchImplementation: async (_url, request) => {
@@ -80,6 +122,7 @@ test("OpenAI provider keeps focused document selection in a separate structured 
 		},
 		model: "test-model",
 	});
+
 	const result = await provider.selectDocuments({
 		route: { packages: ["@serve-tools/client-db"] },
 		routers: "<document>router</document>",

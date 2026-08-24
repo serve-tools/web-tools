@@ -3,14 +3,19 @@
 	"version": "0.1.0",
 	"description": "Transform modern TC39 decorators in Rolldown and Vite",
 	"keywords": [
+		"decorator-transform",
 		"decorators",
 		"oxc",
 		"rolldown",
 		"rolldown-plugin",
+		"symbol-metadata",
 		"tc39",
+		"tc39-decorators",
 		"transform",
+		"typescript",
 		"vite",
-		"vite-plugin"
+		"vite-plugin",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/rolldown/decorators#readme",
 	"bugs": {

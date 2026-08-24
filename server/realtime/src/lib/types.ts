@@ -101,7 +101,7 @@ export type SubscriptionHandlerResult = void | (() => Awaitable<void>);
 export interface Connection<P extends Protocol = Protocol, Context = undefined>
 	extends Disposable,
 		ProtocolResource<P> {
-	/** Resolves after the protocol finishes. */
+	/** Resolves after the protocol finishes and its handlers and subscription cleanup settle. */
 	readonly closed: Promise<void>;
 
 	/** Decodes and handles one complete binary protocol message. */

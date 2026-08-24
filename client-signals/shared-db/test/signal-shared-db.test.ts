@@ -47,6 +47,7 @@ class FakeSharedDBClient {
 	readonly closed: Promise<void>;
 	closeCalls = 0;
 	unsubscribeCalls = 0;
+
 	#resolveClosed!: () => void;
 
 	constructor() {
@@ -61,6 +62,7 @@ class FakeSharedDBClient {
 		options?: OperationOptions,
 	): Promise<StoreValue<TestSchema[Name]> | undefined> {
 		this.calls.push(["get", storeName, key, options]);
+
 		const value = storeName === "users" ? this.users.get(key as string) : this.logs.get(key as number);
 
 		return value as StoreValue<TestSchema[Name]> | undefined;
@@ -71,6 +73,7 @@ class FakeSharedDBClient {
 		options?: GetAllOptions<TestSchema[Name]>,
 	): Promise<StoreValue<TestSchema[Name]>[]> {
 		this.calls.push(["getAll", storeName, options]);
+
 		const values = [...(storeName === "users" ? this.users.values() : this.logs.values())];
 
 		return values.slice(0, options?.count) as StoreValue<TestSchema[Name]>[];
@@ -81,6 +84,7 @@ class FakeSharedDBClient {
 		options?: GetAllOptions<TestSchema[Name]>,
 	): Promise<StoreKey<TestSchema[Name]>[]> {
 		this.calls.push(["getAllKeys", storeName, options]);
+
 		const keys = [...(storeName === "users" ? this.users.keys() : this.logs.keys())];
 
 		return keys.slice(0, options?.count) as StoreKey<TestSchema[Name]>[];
@@ -273,6 +277,9 @@ describe("SignalDB", () => {
 		expectTypeOf(database.get("users", one.id)).toEqualTypeOf<Promise<User | undefined>>();
 		expectTypeOf(database.getAllKeys("logs")).toEqualTypeOf<Promise<number[]>>();
 		expectTypeOf(database.watch("users", one.id)).toEqualTypeOf<Query<User | undefined>>();
+		expectTypeOf(database.watchAllKeys("logs")).toEqualTypeOf<Query<number[]>>();
+		expectTypeOf(database.watchCount("users")).toEqualTypeOf<Query<number>>();
+		expectTypeOf(database.closed).toEqualTypeOf<Promise<void>>();
 		expectTypeOf(SignalDB.connect<TestSchema>).returns.toEqualTypeOf<SignalDB<TestSchema>>();
 
 		const invalidTypes = () => {
@@ -326,6 +333,31 @@ describe("SignalDB", () => {
 
 		logs.dispose();
 		expect(source.unsubscribeCalls).toBe(2);
+	});
+
+	it("watches reactive key lists and counts", async () => {
+		const limit = new Signal.State(1);
+		const key = new Signal.State<string | null>(null);
+		const keys = database.watchAllKeys("users", { count: limit });
+		const count = database.watchCount("users", { query: key });
+
+		source.ready();
+
+		await waitFor(() => {
+			expect(keys.get()).toEqual({ status: "ready", value: [one.id] });
+			expect(count.get()).toEqual({ status: "ready", value: 2 });
+		});
+
+		limit.set(2);
+		key.set(one.id);
+
+		await waitFor(() => {
+			expect(keys.get()).toEqual({ status: "ready", value: [one.id, two.id] });
+			expect(count.get()).toEqual({ status: "ready", value: 2 });
+		});
+
+		expect(source.calls.filter(([method]) => method === "getAllKeys")).toHaveLength(2);
+		expect(source.calls.filter(([method]) => method === "count")).toHaveLength(2);
 	});
 
 	it("refreshes after subscribed committed changes", async () => {
@@ -406,7 +438,12 @@ describe("SignalDB", () => {
 		const otherKey = new Signal.State(one.id);
 
 		database.watch("users", otherKey);
+
+		expect(database.closed).toBe(source.closed);
+
 		database.close("done");
+
+		await expect(database.closed).resolves.toBeUndefined();
 
 		expect(source.closeCalls).toBe(1);
 		expect(source.unsubscribeCalls).toBe(2);
@@ -432,9 +469,34 @@ describe("SignalDB", () => {
 		query.dispose();
 
 		await expect(refresh).resolves.toBeUndefined();
+
 		expect(query.get()).toMatchObject({
 			status: "error",
 			error: { name: "InvalidStateError" },
 		});
+	});
+
+	it("prevents an in-flight database read from publishing after disposal", async () => {
+		const query = database.watch("users", one.id);
+
+		source.ready();
+
+		await waitFor(() => expect(query.get()).toEqual({ status: "ready", value: one }));
+
+		const pending = Promise.withResolvers<User | undefined>();
+
+		source.get = (() => pending.promise) as typeof source.get;
+
+		const refresh = query.refresh();
+
+		query.dispose();
+
+		await expect(refresh).resolves.toBeUndefined();
+		expect(query.get()).toMatchObject({ status: "error", error: { name: "InvalidStateError" } });
+
+		pending.resolve(two);
+		await pending.promise;
+
+		expect(query.get()).toMatchObject({ status: "error", error: { name: "InvalidStateError" } });
 	});
 });

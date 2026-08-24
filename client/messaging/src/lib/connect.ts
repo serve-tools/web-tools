@@ -43,6 +43,8 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 	let isClosed = false;
 	let isReady = false;
 	let releaseLease: (() => void) | undefined;
+	const hidden = (): void => close("The page was hidden");
+	const pageEvents = "onpagehide" in globalThis ? globalThis : undefined;
 
 	const receive = ({ data }: MessageEventLike): void => {
 		if (!isWireMessage(data)) {
@@ -177,6 +179,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 		}
 
 		endpoint.removeEventListener("message", receive);
+		pageEvents?.removeEventListener("pagehide", hidden);
 
 		releaseLease?.();
 
@@ -217,6 +220,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 
 	endpoint.addEventListener("message", receive);
 	endpoint.start?.();
+	pageEvents?.addEventListener("pagehide", hidden);
 
 	void ready.promise.catch(noop);
 
@@ -231,15 +235,9 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 	if (locks) {
 		const name = `${protocol}#${crypto.randomUUID()}`;
 		const released = Promise.withResolvers<void>();
-		const hidden = (): void => close("The page was hidden");
-		const pageEvents = "onpagehide" in globalThis ? globalThis : undefined;
-
-		pageEvents?.addEventListener("pagehide", hidden);
 
 		releaseLease = (): void => {
 			released.resolve();
-
-			pageEvents?.removeEventListener("pagehide", hidden);
 		};
 
 		void locks.request(name, () => released.promise).catch(noop);

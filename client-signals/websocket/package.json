@@ -3,11 +3,19 @@
 	"version": "0.1.1",
 	"description": "Typed WebSocket clients with subscription Signal state",
 	"keywords": [
+		"browser",
+		"fine-grained-reactivity",
 		"reactive",
+		"real-time",
 		"signal",
+		"signals",
 		"subscription",
+		"tc39-signals",
 		"typescript",
-		"websocket"
+		"web-api",
+		"web-platform",
+		"websocket",
+		"websockets"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/websocket#readme",
 	"bugs": {

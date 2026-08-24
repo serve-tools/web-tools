@@ -7,10 +7,14 @@
 		"async-iterator",
 		"browser",
 		"database",
+		"idb",
 		"indexeddb",
+		"offline-first",
 		"promise",
 		"transaction",
-		"typescript"
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/db#readme",
 	"bugs": {

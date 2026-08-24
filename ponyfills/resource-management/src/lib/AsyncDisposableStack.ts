@@ -1,4 +1,10 @@
-import { assertPending, disposeResourcesAsync, getDisposeMethod, StackState } from "./.internals.js";
+import {
+	assertPending,
+	assertPendingCallback,
+	disposeResourcesAsync,
+	getDisposeMethod,
+	StackState,
+} from "./.internals.js";
 import type { AsyncDisposable } from "./AsyncDisposable.js";
 import type { Disposable } from "./Disposable.js";
 import { asyncDispose } from "./Symbol/asyncDispose.js";
@@ -38,7 +44,7 @@ export class AsyncDisposableStack {
 
 	/** Registers a callback that asynchronously disposes `value`, then returns `value` unchanged. */
 	adopt<T>(value: T, onDisposeAsync: (value: T) => void | PromiseLike<void>): T {
-		assertPending(this.#state);
+		assertPendingCallback(this.#state, onDisposeAsync);
 
 		this.#disposers.push(() => onDisposeAsync(value));
 
@@ -47,7 +53,7 @@ export class AsyncDisposableStack {
 
 	/** Registers a callback to run during asynchronous disposal. */
 	defer(onDisposeAsync: () => void | PromiseLike<void>): void {
-		assertPending(this.#state);
+		assertPendingCallback(this.#state, onDisposeAsync);
 
 		this.#disposers.push(onDisposeAsync);
 	}

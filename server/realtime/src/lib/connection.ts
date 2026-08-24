@@ -22,6 +22,7 @@ const defaultMaximumMessageLength = 16 * 1024 * 1024;
 const defaultMaximumBufferedAmount = 16 * 1024 * 1024;
 const defaultMaximumOperations = 1_024;
 const cancelled = Object.assign(new Error("The operation was cancelled"), { name: "AbortError" });
+const unknownErrorMessage = "An unknown error occurred";
 
 interface DeliveryFailure {
 	readonly phase: "serialize" | "transport";
@@ -56,10 +57,38 @@ class ServerOperation {
 }
 
 /** Converts a failure to the default stack-redacted remote representation. */
-export const defaultErrorRecord = (reason: unknown): ErrorRecord =>
-	reason instanceof Error
-		? { name: reason.name || "Error", message: reason.message }
-		: { name: "Error", message: String(reason) };
+export const defaultErrorRecord = (reason: unknown): ErrorRecord => {
+	try {
+		if (reason instanceof Error) {
+			let name = "Error";
+			let message = unknownErrorMessage;
+
+			try {
+				const value = reason.name;
+
+				if (typeof value === "string" && value) {
+					name = value;
+				}
+			} catch {}
+
+			try {
+				const value = reason.message;
+
+				if (typeof value === "string") {
+					message = value;
+				}
+			} catch {}
+
+			return { name, message };
+		}
+	} catch {}
+
+	try {
+		return { name: "Error", message: String(reason) };
+	} catch {
+		return { name: "Error", message: unknownErrorMessage };
+	}
+};
 
 /** Creates one typed request and subscription server over byte-oriented callbacks. */
 export function createConnection<const P extends Protocol & ProtocolDefinition<P>, Context = undefined>(
@@ -78,6 +107,13 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		readonly subscriptions?: Record<string, AnyHandler | undefined>;
 	};
 	let isClosed = false;
+	let taskCount = 0;
+
+	const reportFailure = (reason: unknown): void => {
+		try {
+			reportError(reason);
+		} catch {}
+	};
 
 	const formatError = (reason: unknown): ErrorRecord => {
 		if (!options.formatError) {
@@ -93,9 +129,9 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 					: { name: record.name, message: record.message };
 			}
 
-			reportError(new TypeError("formatError() returned an invalid ErrorRecord"));
+			reportFailure(new TypeError("formatError() returned an invalid ErrorRecord"));
 		} catch (error) {
-			reportError(error);
+			reportFailure(error);
 		}
 
 		return defaultErrorRecord(reason);
@@ -133,8 +169,17 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		try {
 			transport.close(code, reason);
 		} catch (error) {
-			reportError(error);
+			reportFailure(error);
 		}
+	};
+
+	const track = (task: Promise<void>): void => {
+		++taskCount;
+		void task.finally(() => {
+			if (--taskCount === 0 && isClosed) {
+				closed.resolve();
+			}
+		});
 	};
 
 	const runCleanup = (operation: ServerOperation): void => {
@@ -145,8 +190,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		}
 
 		delete operation.cleanup;
-
-		Promise.resolve().then(cleanup).catch(reportError);
+		track(Promise.resolve().then(cleanup).catch(reportFailure));
 	};
 
 	const finish = (reason: unknown): void => {
@@ -162,12 +206,22 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 			runCleanup(operation);
 		}
 
-		closed.resolve();
+		if (taskCount === 0) {
+			closed.resolve();
+		}
 	};
 
 	const transportFailed = (error: unknown): void => {
 		finish(error);
 		closeTransport(1011, "Transport failure");
+	};
+
+	const handleDeliveryFailure = (failure: DeliveryFailure): void => {
+		if (failure.phase === "transport") {
+			transportFailed(failure.error);
+		} else {
+			reportFailure(failure.error);
+		}
 	};
 
 	const settle = (
@@ -182,50 +236,44 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		operations.delete(id);
 		operation.abort(outcome && !outcome.ok ? outcome.reason : cancelled);
 
-		if (outcome) {
-			const message: ServerMessage = outcome.ok
-				? [protocol, "resolve", id, outcome.value]
-				: [protocol, "reject", id, formatError(outcome.reason)];
-			const failure = deliver(message);
+		try {
+			if (outcome) {
+				const message: ServerMessage = outcome.ok
+					? [protocol, "resolve", id, outcome.value]
+					: [protocol, "reject", id, formatError(outcome.reason)];
+				const failure = deliver(message);
 
-			if (failure) {
-				if (failure.phase === "serialize" && outcome.ok) {
-					const fallback = deliver([protocol, "reject", id, formatError(failure.error)]);
+				if (failure) {
+					if (failure.phase === "serialize" && outcome.ok) {
+						const fallback = deliver([protocol, "reject", id, formatError(failure.error)]);
 
-					if (fallback) {
-						if (fallback.phase === "transport") {
-							transportFailed(fallback.error);
-						} else {
-							reportError(fallback.error);
+						if (fallback) {
+							handleDeliveryFailure(fallback);
 						}
+					} else {
+						handleDeliveryFailure(failure);
 					}
-				} else if (failure.phase === "transport") {
-					transportFailed(failure.error);
-				} else {
-					reportError(failure.error);
 				}
 			}
+		} finally {
+			runCleanup(operation);
 		}
-
-		runCleanup(operation);
 	};
 
 	const failProtocol = (reason: unknown, code = 1002): void => {
+		if (isClosed) {
+			return;
+		}
+
 		const error = Object.assign(
-			new Error(
-				reason instanceof Error
-					? reason.message
-					: reason === undefined
-						? "Invalid protocol message"
-						: String(reason),
-			),
+			new Error(reason === undefined ? "Invalid protocol message" : defaultErrorRecord(reason).message),
 			{ name: code === 1009 ? "MessageTooLargeError" : "ProtocolError" },
 		);
 
 		const failure = deliver([protocol, "close", formatError(error)]);
 
 		if (failure?.phase === "transport") {
-			reportError(failure.error);
+			reportFailure(failure.error);
 		}
 
 		finish(error);
@@ -236,11 +284,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		const failure = deliver([protocol, "reject", id, formatError(reason)]);
 
 		if (failure) {
-			if (failure.phase === "transport") {
-				transportFailed(failure.error);
-			} else {
-				reportError(failure.error);
-			}
+			handleDeliveryFailure(failure);
 		}
 	};
 
@@ -313,22 +357,22 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 							operations.delete(id);
 							operation.abort(cancelled);
 
-							const failure = deliver([protocol, "complete", id]);
+							try {
+								const failure = deliver([protocol, "complete", id]);
 
-							if (failure?.phase === "transport") {
-								transportFailed(failure.error);
-							} else if (failure) {
-								reportError(failure.error);
+								if (failure) {
+									handleDeliveryFailure(failure);
+								}
+							} finally {
+								runCleanup(operation);
 							}
-
-							runCleanup(operation);
 						},
 						error(reason): void {
 							settle(id, operation, { ok: false, reason });
 						},
 					};
 
-		Promise.resolve()
+		const handlerTask = Promise.resolve()
 			.then(() => handler(input, handlerContext as never))
 			.then(
 				(result) => {
@@ -343,7 +387,10 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 					}
 				},
 				(error) => settle(id, operation, { ok: false, reason: error }),
-			);
+			)
+			.catch(reportFailure);
+
+		track(handlerTask);
 	};
 
 	const receive = (payload: ArrayBuffer | ArrayBufferView): void => {
@@ -393,19 +440,13 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		}
 
 		const error = Object.assign(
-			new Error(
-				reason instanceof Error
-					? reason.message
-					: reason === undefined
-						? "The connection is closed"
-						: String(reason),
-			),
+			new Error(reason === undefined ? "The connection is closed" : defaultErrorRecord(reason).message),
 			{ name: "ConnectionClosedError" },
 		);
 		const failure = deliver([protocol, "close", formatError(error)]);
 
 		if (failure?.phase === "transport") {
-			reportError(failure.error);
+			reportFailure(failure.error);
 		}
 
 		finish(error);

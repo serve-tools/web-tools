@@ -1,1 +1,1 @@
-export { emptyConfig as default } from "../../vitest.node.config.js";
+export { flatNodeConfig as default } from "../../vitest.node.config.js";

@@ -2,7 +2,7 @@ import { deserialize, protocol, serialize, subprotocol } from "@serve-tools/real
 import { decodeDatagram, encodeDatagram } from "@serve-tools/realtime-protocol/datagram";
 import { DatagramRegistry } from "@serve-tools/realtime-protocol/datagram-registry";
 import { encodeFrame, FrameDecoder } from "@serve-tools/realtime-protocol/stream";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { connect } from "../src/client-webtransport.js";
 import type { DatagramWritableOptions, WebTransportBidirectionalStreamLike } from "../src/lib/types.js";
@@ -18,8 +18,12 @@ interface TestProtocol {
 class FakeWebTransport {
 	static instance: FakeWebTransport;
 	static blockStreams = false;
-	readonly ready = Promise.resolve();
-	readonly closed = new Promise<never>(() => {});
+	static failStreamAt: number | undefined;
+	static readyError: Error | undefined;
+	static suppressRegistryReplies = false;
+	readonly ready = FakeWebTransport.readyError ? Promise.reject(FakeWebTransport.readyError) : Promise.resolve();
+	readonly #closed = Promise.withResolvers<void>();
+	readonly closed = this.#closed.promise;
 	readonly protocol = subprotocol;
 	readonly options: Record<string, unknown>;
 	readonly sentDatagrams: Uint8Array[] = [];
@@ -30,6 +34,7 @@ class FakeWebTransport {
 		createWritable(options?: DatagramWritableOptions): WritableStream<BufferSource>;
 	};
 	#datagramController!: ReadableStreamDefaultController<Uint8Array>;
+	#registryController?: ReadableStreamDefaultController<Uint8Array>;
 	#streamCount = 0;
 	#serverRegistry?: DatagramRegistry;
 
@@ -51,6 +56,10 @@ class FakeWebTransport {
 		}
 
 		const role = this.#streamCount++;
+
+		if (role === FakeWebTransport.failStreamAt) {
+			throw new Error("stream setup failed");
+		}
 
 		let controller!: ReadableStreamDefaultController<Uint8Array>;
 
@@ -88,6 +97,7 @@ class FakeWebTransport {
 			return { readable, writable };
 		}
 
+		this.#registryController = controller;
 		this.#serverRegistry = new DatagramRegistry((payload) => controller.enqueue(payload));
 
 		let identified = false;
@@ -104,7 +114,9 @@ class FakeWebTransport {
 					return;
 				}
 
-				this.#serverRegistry!.receive(value);
+				if (!FakeWebTransport.suppressRegistryReplies) {
+					this.#serverRegistry!.receive(value);
+				}
 			},
 		});
 
@@ -121,12 +133,24 @@ class FakeWebTransport {
 		this.#datagramController.enqueue(encodeDatagram(999, { early: true }));
 	}
 
+	endRegistry(): void {
+		this.#registryController?.close();
+	}
+
 	close(info?: { readonly closeCode?: number; readonly reason?: string }): void {
 		this.closeInfo = info;
+		this.#closed.resolve();
 	}
 }
 
 describe("WebTransport client conformance", () => {
+	beforeEach(() => {
+		FakeWebTransport.blockStreams = false;
+		FakeWebTransport.failStreamAt = undefined;
+		FakeWebTransport.readyError = undefined;
+		FakeWebTransport.suppressRegistryReplies = false;
+	});
+
 	it("negotiates the native protocol and combines reliable operations with typed datagrams", async () => {
 		const client = await connect<TestProtocol>("https://example.test/realtime", {
 			transportConstructor: FakeWebTransport,
@@ -187,6 +211,79 @@ describe("WebTransport client conformance", () => {
 		lifetimeController.abort(new Error("session stopped"));
 
 		expect(FakeWebTransport.instance.closeInfo?.reason).toBe("session stopped");
+	});
+
+	it("closes post-ready setup failures", async () => {
+		FakeWebTransport.failStreamAt = 1;
+
+		await expect(
+			connect<TestProtocol>("https://example.test/realtime", { transportConstructor: FakeWebTransport }),
+		).rejects.toThrow("stream setup failed");
+
+		expect(FakeWebTransport.instance.closeInfo?.reason).toBe("Connection setup failed");
+	});
+
+	it("closes when the native ready promise rejects", async () => {
+		FakeWebTransport.readyError = new Error("native setup failed");
+
+		await expect(
+			connect<TestProtocol>("https://example.test/realtime", { transportConstructor: FakeWebTransport }),
+		).rejects.toThrow("native setup failed");
+
+		expect(FakeWebTransport.instance.closeInfo?.reason).toBe("Connection setup failed");
+	});
+
+	it("rejects pending datagram reads when the client closes", async () => {
+		const client = await connect<TestProtocol>("https://example.test/realtime", {
+			transportConstructor: FakeWebTransport,
+		});
+		const reading = client.datagrams.read("presence");
+
+		client.close("finished");
+
+		await expect(reading).rejects.toMatchObject({ name: "ConnectionClosedError" });
+		await expect(client.datagrams.read("presence")).rejects.toMatchObject({ name: "ConnectionClosedError" });
+	});
+
+	it("deactivates direct datagram subscriptions when the client closes", async () => {
+		const client = await connect<TestProtocol>("https://example.test/realtime", {
+			transportConstructor: FakeWebTransport,
+		});
+		const subscription = client.datagrams.subscribe("presence", () => undefined);
+
+		expect(subscription.active).toBe(true);
+
+		client.close();
+
+		await client.closed;
+
+		expect(subscription.active).toBe(false);
+	});
+
+	it("fails pending registry work when the registry stream ends cleanly", async () => {
+		FakeWebTransport.suppressRegistryReplies = true;
+
+		const client = await connect<TestProtocol>("https://example.test/realtime", {
+			transportConstructor: FakeWebTransport,
+		});
+		const writing = client.datagrams.write("packet", Uint8Array.of(1));
+		const rejected = expect(writing).rejects.toThrow("reliable datagram registry stream ended");
+
+		FakeWebTransport.instance.endRegistry();
+
+		await rejected;
+		await client.closed;
+	});
+
+	it("closes when a structured datagram exceeds the native allocation bound", async () => {
+		const client = await connect<TestProtocol>("https://example.test/realtime", {
+			transportConstructor: FakeWebTransport,
+		});
+
+		await FakeWebTransport.instance.send("presence", { bytes: new Uint8Array(1_251) });
+		await client.closed;
+
+		expect(FakeWebTransport.instance.closeInfo?.closeCode).toBe(1);
 	});
 });
 

@@ -74,6 +74,127 @@ describe("rolldownDecorators", () => {
 		]);
 	});
 
+	it.each([
+		["class", "return null;", "@invalid class Example {}", "class decorators must be a function or undefined"],
+		[
+			"method",
+			"return {};",
+			"class Example { @invalid method() {} }",
+			"method decorators must be a function or undefined",
+		],
+		[
+			"getter",
+			"return null;",
+			"class Example { @invalid get value() { return 1; } }",
+			"getter decorators must be a function or undefined",
+		],
+		[
+			"setter",
+			"return 0;",
+			"class Example { @invalid set value(next) {} }",
+			"setter decorators must be a function or undefined",
+		],
+		[
+			"field initializer",
+			"return null;",
+			"class Example { @invalid value = 1; }",
+			"field decorators must be a function or undefined",
+		],
+	])("rejects an invalid %s replacement synchronously", async (_label, body, declaration, message) => {
+		await expectDecoratorExecutionToThrow(
+			`
+				function invalid() { ${body} }
+				${declaration}
+				globalThis.__decoratorResult = Example;
+			`,
+			message,
+		);
+	});
+
+	it.each([
+		[
+			"null descriptor",
+			"return null;",
+			"accessor decorators must return an object with get, set, or init properties or undefined",
+		],
+		[
+			"callable descriptor",
+			"return function () {};",
+			"accessor decorators must return an object with get, set, or init properties or undefined",
+		],
+		["getter", "return { get: 1 };", "accessor.get must be a function or undefined"],
+		["setter", "return { set: null };", "accessor.set must be a function or undefined"],
+		["initializer", "return { init: {} };", "accessor.init must be a function or undefined"],
+	])("rejects an invalid auto-accessor %s synchronously", async (_label, body, message) => {
+		await expectDecoratorExecutionToThrow(
+			`
+				function invalid() { ${body} }
+				class Example { @invalid accessor value = 1; }
+				globalThis.__decoratorResult = Example;
+			`,
+			message,
+		);
+	});
+
+	it.each([
+		["class", "@invalid class Example {}"],
+		["method", "class Example { @invalid method() {} }"],
+		["field", "class Example { @invalid value = 1; }"],
+		["accessor", "class Example { @invalid accessor value = 1; }"],
+	])("rejects a non-callable %s initializer synchronously", async (_label, declaration) => {
+		await expectDecoratorExecutionToThrow(
+			`
+				function invalid(_value, context) { context.addInitializer(null); }
+				${declaration}
+				globalThis.__decoratorResult = Example;
+			`,
+			"An initializer must be a function",
+		);
+	});
+
+	it("rejects addInitializer calls after each decorator invocation finishes", async () => {
+		const { code } = await bundleSource(`
+			const captured = [];
+			let innerAddInitializer;
+			let nestedError;
+
+			function capture(_value, context) {
+				captured.push([context.kind, context.addInitializer]);
+			}
+			function inner(_value, context) {
+				innerAddInitializer = context.addInitializer;
+			}
+			function outer() {
+				try { innerAddInitializer(() => {}); }
+				catch (error) { nestedError = error.message; }
+			}
+
+			@capture
+			class Example {
+				@outer @inner method() {}
+				@capture field;
+				@capture accessor value;
+			}
+
+			globalThis.__decoratorResult = {
+				nestedError,
+				late: captured.map(([kind, addInitializer]) => {
+					try { addInitializer(() => {}); }
+					catch (error) { return [kind, error.message]; }
+				}),
+			};
+		`);
+
+		expect(await execute(code, "__decoratorResult")).toEqual({
+			nestedError: "Attempted to call addInitializer after decoration was finished",
+			late: [
+				["accessor", "Attempted to call addInitializer after decoration was finished"],
+				["field", "Attempted to call addInitializer after decoration was finished"],
+				["class", "Attempted to call addInitializer after decoration was finished"],
+			],
+		});
+	});
+
 	it("preserves expression evaluation, application order, instance initializers, class replacement, and metadata", async () => {
 		const { code } = await bundleSource(`
 			const events = [];
@@ -228,6 +349,37 @@ describe("rolldownDecorators", () => {
 		expect(await execute(code, "__decoratorResult")).toEqual([4, 4]);
 	});
 
+	it("keeps inherited replacements and initializers scoped to their declaring class", async () => {
+		const { code } = await bundleSource(`
+			const events = [];
+			const field = () => (_value, _context) => (value) => value + 1;
+			const method = (value, context) => {
+				context.addInitializer(function () { events.push(String(context.name)); });
+				return function () { return "decorated:" + value.call(this); };
+			};
+
+			class Base {
+				@field() baseValue = 1;
+				@method baseMethod() { return "base"; }
+			}
+			class Derived extends Base {
+				@field() derivedValue = 2;
+				@method derivedMethod() { return "derived"; }
+			}
+
+			const instance = new Derived();
+			globalThis.__decoratorResult = {
+				events,
+				values: [instance.baseValue, instance.derivedValue, instance.baseMethod(), instance.derivedMethod()],
+			};
+		`);
+
+		expect(await execute(code, "__decoratorResult")).toEqual({
+			events: ["baseMethod", "derivedMethod"],
+			values: [2, 3, "decorated:base", "decorated:derived"],
+		});
+	});
+
 	it("parses TypeScript and TSX while leaving their non-decorator syntax for the host transform", async () => {
 		const { code, map } = await transformSource(
 			`
@@ -361,6 +513,20 @@ async function execute<Result>(code: string, key: string): Promise<Result> {
 	} finally {
 		delete globalThis[key as keyof typeof globalThis];
 	}
+}
+
+async function expectDecoratorExecutionToThrow(source: string, message: string): Promise<void> {
+	const { code } = await bundleSource(source);
+	let error: unknown;
+
+	try {
+		await importModule(code);
+	} catch (cause) {
+		error = cause;
+	}
+
+	expect(error).toBeInstanceOf(TypeError);
+	expect(error).toHaveProperty("message", message);
 }
 
 async function bundleSource(source: string, id = "example.js") {

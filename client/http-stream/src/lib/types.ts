@@ -22,6 +22,8 @@ export interface OperationRequest {
 export type HeaderProvider = (operation: OperationRequest) => HeadersInit | PromiseLike<HeadersInit>;
 
 export interface ConnectOptions extends Omit<RequestInit, "body" | "headers" | "method" | "signal"> {
+	/** Maximum serialized response message length accepted from the server. Defaults to 16 MiB. */
+	readonly maximumMessageLength?: number;
 	readonly signal?: AbortSignal;
 	readonly headers?: HeadersInit | HeaderProvider;
 	readonly fetch?: typeof globalThis.fetch;

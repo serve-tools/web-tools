@@ -19,6 +19,10 @@ describe("requestIdleCallback", () => {
 		expect(globalThis.cancelIdleCallback).not.toBe(cancelIdleCallback);
 	});
 
+	it("rejects non-callable callbacks synchronously", () => {
+		expect(() => requestIdleCallback(null as never)).toThrow(TypeError);
+	});
+
 	it("calls the callback with an idle deadline", async () => {
 		const callback = vi.fn();
 		requestIdleCallback(callback);
@@ -65,6 +69,32 @@ describe("requestIdleCallback", () => {
 		await vi.waitFor(() => expect(callback).toHaveBeenCalledOnce());
 		expect(callback.mock.calls[0]![0].didTimeout).toBe(true);
 		expect(callback.mock.calls[0]![0].timeRemaining()).toBe(0);
+	});
+
+	it("converts timeout with the platform unsigned-long rules", () => {
+		vi.stubGlobal("requestAnimationFrame", () => 1);
+		const setTimeout = vi.fn(() => 1);
+		vi.stubGlobal("setTimeout", setTimeout);
+		vi.stubGlobal("clearTimeout", vi.fn());
+		const callback = vi.fn();
+		let reads = 0;
+		const options = {
+			get timeout() {
+				++reads;
+
+				return 2 ** 32 + 1.9;
+			},
+		};
+
+		const handle = requestIdleCallback(callback, options);
+		expect(reads).toBe(1);
+		expect(setTimeout).toHaveBeenLastCalledWith(expect.any(Function), 1);
+		cancelIdleCallback(handle);
+
+		const infiniteHandle = requestIdleCallback(callback, { timeout: Infinity });
+		expect(setTimeout).toHaveBeenCalledOnce();
+		cancelIdleCallback(infiniteHandle);
+		expect(() => requestIdleCallback(callback, { timeout: 1n } as never)).toThrow(TypeError);
 	});
 
 	it("continues scheduling after the previous callback times out before its frame", async () => {

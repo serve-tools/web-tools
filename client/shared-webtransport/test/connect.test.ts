@@ -49,3 +49,35 @@ test("forwards operations and datagrams over a message port", async () => {
 		channel.port2.close();
 	}
 });
+
+test("rejects pending datagram reads when the page client closes", async () => {
+	const channel = new MessageChannel();
+	const server = serve<BridgeProtocol>(channel.port1, {
+		requests: {
+			request: ({ input }: { input: unknown }) => input,
+			datagramWrite: () => undefined,
+			datagramMaximumSize: () => 1200,
+		},
+		subscriptions: {
+			subscribe: () => undefined,
+			datagramSubscribe: () => undefined,
+		},
+	});
+	const client = connect<{
+		datagrams: { cursor: { server: { x: number } } };
+	}>(channel.port2);
+
+	try {
+		const reading = client.datagrams.read("cursor");
+		const rejected = expect(reading).rejects.toMatchObject({ name: "ConnectionClosedError" });
+
+		client.close("finished");
+
+		await rejected;
+		await expect(client.datagrams.read("cursor")).rejects.toMatchObject({ name: "ConnectionClosedError" });
+	} finally {
+		server.close();
+		channel.port1.close();
+		channel.port2.close();
+	}
+});

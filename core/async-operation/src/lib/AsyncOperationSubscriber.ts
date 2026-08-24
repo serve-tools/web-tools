@@ -254,11 +254,11 @@ class ViewNode<T> {
 		++this.#nextIndex;
 
 		// Snapshot both collections so mutations during delivery affect only subsequent values.
-		for (const subscription of [...this.#subscriptions]) {
-			tasks.push(() => subscription.invoke(value, index));
+		for (const subscription of this.#subscriptions) {
+			tasks.push(subscription.snapshot(value, index));
 		}
 
-		for (const target of [...this.#targets]) {
+		for (const target of this.#targets) {
 			if (target.active) {
 				tasks.push(() => target.dispatch(value, index));
 			}
@@ -331,8 +331,10 @@ class ViewSubscription<T> implements Disposable {
 		this.#callback = undefined;
 	}
 
-	invoke(value: T, index: number): Awaitable<void> {
-		return this.#callback?.(value, index);
+	snapshot(value: T, index: number): Task {
+		const callback = this.#callback!;
+
+		return () => callback(value, index);
 	}
 
 	#callback: ViewCallback<T> | undefined;

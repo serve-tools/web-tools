@@ -3,13 +3,18 @@
 	"version": "0.1.1",
 	"description": "One-shot clipboard, picker, sharing, and eyedropper interactions with explicit outcomes",
 	"keywords": [
+		"browser",
 		"clipboard",
+		"clipboard-api",
 		"eyedropper",
 		"file-picker",
+		"file-system-access",
 		"share",
 		"transient-activation",
 		"typescript",
-		"web-api"
+		"web-api",
+		"web-platform",
+		"web-share-api"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/interaction#readme",
 	"bugs": {
@@ -26,7 +31,10 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/client-interaction.js",
-		"./*": "./dist/lib/*.js"
+		"./clipboard": "./dist/lib/clipboard.js",
+		"./eyedropper": "./dist/lib/eyedropper.js",
+		"./file-picker": "./dist/lib/file-picker.js",
+		"./share": "./dist/lib/share.js"
 	},
 	"files": [
 		"dist",

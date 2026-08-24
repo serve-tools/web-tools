@@ -61,7 +61,7 @@ These synchronous and asynchronous stack patterns are covered by the package's T
 - `SuppressedError`: an error that preserves multiple disposal failures.
 
 The root entrypoint exports the complete API.
-Individual declarations can also be imported from `./lib/*` subpaths, such as `@serve-tools/ponyfill-resource-management/lib/DisposableStack`.
+Individual public declarations can also be imported from their named `./lib/*` subpaths, such as `@serve-tools/ponyfill-resource-management/lib/DisposableStack`.
 
 ## Ponyfill boundary
 

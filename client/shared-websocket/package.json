@@ -4,11 +4,17 @@
 	"description": "SharedWorker-coordinated typed WebSocket requests and subscriptions",
 	"keywords": [
 		"browser",
+		"cross-tab",
+		"real-time",
 		"rpc",
+		"shared-worker",
 		"sharedworker",
 		"subscription",
 		"typescript",
-		"websocket"
+		"web-api",
+		"web-platform",
+		"websocket",
+		"websockets"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/shared-websocket#readme",
 	"bugs": {
@@ -25,7 +31,8 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/client-shared-websocket.js",
-		"./scope/*": "./dist/lib/scope/*.js"
+		"./scope/shared-worker": "./dist/lib/scope/shared-worker.js",
+		"./scope/window": "./dist/lib/scope/window.js"
 	},
 	"files": [
 		"dist",

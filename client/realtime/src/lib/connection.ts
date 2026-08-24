@@ -1,6 +1,7 @@
 /// <reference lib="esnext.disposable" />
 
 import { deserialize, isServerMessage, protocol, serialize } from "@serve-tools/realtime-protocol";
+import { defaultMaximumFrameLength } from "@serve-tools/realtime-protocol/stream";
 import {
 	callSafely,
 	connectionClosedError,
@@ -14,6 +15,7 @@ import type * as T from "./types.js";
 import type {
 	ClientConnection,
 	ClientOperation,
+	ClientOptions,
 	ClientTransport,
 	Protocol,
 	ProtocolDefinition,
@@ -31,7 +33,14 @@ const inactiveSubscription: Subscription = Object.freeze({
 /** Creates one typed request and subscription client over byte-oriented callbacks. */
 export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 	transport: ClientTransport,
+	options: ClientOptions = {},
 ): ClientConnection<P> {
+	const maximumMessageLength = options.maximumMessageLength ?? defaultMaximumFrameLength;
+
+	if (!Number.isSafeInteger(maximumMessageLength) || maximumMessageLength < 1) {
+		throw new RangeError("The maximum message length must be a positive safe integer");
+	}
+
 	const operations = new Map<number, ClientOperation>();
 	const closed = Promise.withResolvers<void>();
 
@@ -82,10 +91,16 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 			return;
 		}
 
+		if (payload.byteLength > maximumMessageLength) {
+			fail("The message exceeds the configured maximum length");
+
+			return;
+		}
+
 		let message: unknown;
 
 		try {
-			message = deserialize(payload);
+			message = deserialize(payload, { maximumArrayBufferLength: maximumMessageLength });
 		} catch (error) {
 			fail(error);
 
@@ -306,6 +321,7 @@ export namespace createClient {
 	export type Connection<P extends T.Protocol = T.Protocol> = T.ClientConnection<P>;
 	export type Protocol = T.Protocol;
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+	export type Options = T.ClientOptions;
 	export type RequestOptions = T.RequestOptions;
 	export type SubscribeOptions = T.SubscribeOptions;
 	export type Subscription = T.Subscription;

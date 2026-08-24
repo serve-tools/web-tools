@@ -4,13 +4,18 @@
 	"description": "Owned asynchronous operations with typed value streams and terminal results",
 	"keywords": [
 		"abort-controller",
+		"abortsignal",
 		"async-disposable",
+		"async-generator",
+		"async-iterable",
 		"async-iterator",
 		"async-operation",
 		"backpressure",
 		"cancellation",
 		"concurrency",
-		"structured-concurrency"
+		"structured-concurrency",
+		"typescript",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/core/async-operation#readme",
 	"bugs": {

@@ -13,11 +13,13 @@ import type { Awaitable, DatagramWritableOptions, Handlers, Session, SessionOpti
 export interface NodeWebTransportSessionLike {
 	readonly headers: Readonly<Record<string, string | readonly string[] | undefined>>;
 	readonly path: string;
+
 	sendDatagram(data: Uint8Array): boolean;
 }
 
 export interface NodeWebTransportStreamLike {
 	readonly session: NodeWebTransportSessionLike;
+
 	send(data: Uint8Array, options?: { readonly fin?: boolean }): boolean;
 	close(data?: Uint8Array): boolean;
 }
@@ -40,6 +42,7 @@ export interface NodeAdapter extends NodeHandlers, Disposable {
 
 interface State<P extends Protocol, Context> {
 	readonly session: Session<P, Context>;
+	readonly streams: Set<NodeWebTransportStreamLike>;
 	operations?: NodeWebTransportStreamLike;
 	registry?: NodeWebTransportStreamLike;
 }
@@ -53,6 +56,21 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 	const streams = new Map<NodeWebTransportStreamLike, { readonly state: State<P, Context>; role?: number }>();
 
 	let isClosed = false;
+
+	const closeState = (nativeSession: NodeWebTransportSessionLike, state: State<P, Context>): void => {
+		if (sessions.get(nativeSession) === state) {
+			sessions.delete(nativeSession);
+		}
+
+		for (const stream of state.streams) {
+			streams.delete(stream);
+			stream.close();
+		}
+
+		state.streams.clear();
+		delete state.operations;
+		delete state.registry;
+	};
 
 	const adapter: NodeAdapter = {
 		async session(nativeSession) {
@@ -82,36 +100,40 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 			}
 
 			let state!: State<P, Context>;
+			let session: Session<P, Context>;
 
-			const session = createSession(
-				handlers,
-				{
-					sendOperations(payload) {
-						if (!state.operations?.send(payload)) {
-							throw new Error("The operation stream rejected a send");
-						}
+			try {
+				session = createSession(
+					handlers,
+					{
+						sendOperations(payload) {
+							if (!state.operations?.send(payload)) {
+								throw new Error("The operation stream rejected a send");
+							}
+						},
+						sendRegistry(payload) {
+							if (!state.registry?.send(payload)) {
+								throw new Error("The datagram registry stream rejected a send");
+							}
+						},
+						sendDatagram: (payload, _sendOptions?: DatagramWritableOptions) =>
+							nativeSession.sendDatagram(payload),
+						close: () => closeState(nativeSession, state),
 					},
-					sendRegistry(payload) {
-						if (!state.registry?.send(payload)) {
-							throw new Error("The datagram registry stream rejected a send");
-						}
-					},
-					sendDatagram: (payload, _sendOptions?: DatagramWritableOptions) =>
-						nativeSession.sendDatagram(payload),
-					close() {
-						state.operations?.close();
-						state.registry?.close();
-					},
-				},
-				result,
-				options,
-			);
+					result,
+					options,
+				);
+			} catch (error) {
+				reportError(error);
 
-			state = { session };
+				return new Response("Internal Server Error", { status: 500 });
+			}
+
+			state = { session, streams: new Set() };
 
 			sessions.set(nativeSession, state);
 
-			void session.closed.then(() => sessions.delete(nativeSession));
+			void session.closed.then(() => closeState(nativeSession, state));
 
 			return new Response(null, {
 				status: 200,
@@ -131,6 +153,7 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 			}
 
 			streams.set(stream, { state });
+			state.streams.add(stream);
 		},
 		webTransportData(stream, data) {
 			const streamState = streams.get(stream);
@@ -175,6 +198,7 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 			const streamState = streams.get(stream);
 
 			streams.delete(stream);
+			streamState?.state.streams.delete(stream);
 
 			if (!streamState) {
 				return;

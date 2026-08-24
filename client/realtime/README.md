@@ -43,6 +43,8 @@ Call `fail()` when the peer violates the protocol, and `disconnect()` after the 
 The returned adapter connection adds `receive()`, `fail()`, and `disconnect()` to the typed `request()`, `subscribe()`, `closed`, and `close()` client surface.
 Network packages expose only the client surface so application code cannot invoke adapter lifecycle controls.
 It owns protocol state, operation IDs, cancellation, decoding, remote errors, and callback failure isolation.
+Pass `{ maximumMessageLength }` as the second argument when the transport has a lower negotiated message limit.
+It defaults to 16 MiB and bounds both complete incoming message bytes and the declared capacity of resizable `ArrayBuffer` values before allocation.
 
 ## Boundaries
 

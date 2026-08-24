@@ -32,13 +32,14 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 
 		super(() => state.get());
 
+		const disposedResult = Promise.withResolvers<never>();
 		const invalidation = new Signal.State(0);
+
+		void disposedResult.promise.catch(() => {});
 
 		let current = Promise.resolve();
 		let disposed = false;
 		let generation = 0;
-		const disposedReady = Promise.withResolvers<never>();
-		const ready = Promise.race([groupReady, disposedReady.promise]);
 
 		const fail = (error: unknown) => {
 			if (disposed) {
@@ -64,7 +65,10 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 			state.set(pending);
 
 			try {
-				result = read(ready, options).then<QueryState<T>, QueryState<T>>(
+				result = Promise.race([read(groupReady, options), disposedResult.promise]).then<
+					QueryState<T>,
+					QueryState<T>
+				>(
 					(value) => ({ status: "ready", value }),
 					(error: unknown) => ({ status: "error", error }),
 				);
@@ -85,6 +89,7 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 
 		const controller = createEffect(() => {
 			invalidation.get();
+
 			void refresh();
 		});
 
@@ -98,7 +103,7 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 
 			disposed = true;
 
-			disposedReady.reject(new DOMException("Query is disposed", "InvalidStateError"));
+			disposedResult.reject(new DOMException("Query is disposed", "InvalidStateError"));
 
 			controller.dispose();
 
@@ -139,6 +144,11 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		readonly source: SharedDBClient<Schema>,
 	) {
 		void source.closed.then(() => this.#disposeQueries());
+	}
+
+	/** Resolves when the underlying shared database connection has closed. */
+	get closed(): Promise<void> {
+		return this.source.closed;
 	}
 
 	/** Returns the value for a primary key or range, or `undefined` when no record matches. */
@@ -250,6 +260,40 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 			};
 
 			return ready.then(() => this.getAll(storeName, getAllOptions));
+		});
+	}
+
+	/** Watches all matching primary keys and refreshes them after committed changes to their store. */
+	watchAllKeys<Name extends StoreName<Schema>>(
+		storeName: Name,
+		options?: WatchAllOptions<Schema[Name]>,
+	): Query<StoreKey<Schema[Name]>[]> {
+		return this.#query(storeName, (ready, operationOptions) => {
+			const count = valueOf(options?.count);
+			const query = valueOf(options?.query);
+			const getAllOptions = {
+				...operationOptions,
+				...(count === undefined ? {} : { count }),
+				...(query === undefined ? {} : { query }),
+			};
+
+			return ready.then(() => this.getAllKeys(storeName, getAllOptions));
+		});
+	}
+
+	/** Watches the matching record count and refreshes it after committed changes to its store. */
+	watchCount<Name extends StoreName<Schema>>(
+		storeName: Name,
+		options?: WatchCountOptions<Schema[Name]>,
+	): Query<number> {
+		return this.#query(storeName, (ready, operationOptions) => {
+			const query = valueOf(options?.query);
+			const countOptions = {
+				...operationOptions,
+				...(query === undefined ? {} : { query }),
+			};
+
+			return ready.then(() => this.count(storeName, countOptions));
 		});
 	}
 
@@ -370,7 +414,7 @@ export type Query<T> = InstanceType<typeof Signal.Computed<QueryState<T>>> &
 		/** Runs the query again and resolves once the latest requested state has been published. */
 		refresh(options?: OperationOptions): Promise<void>;
 
-		/** Stops automatic refreshes. An in-flight request may still settle. */
+		/** Stops automatic refreshes and prevents in-flight requests from publishing later state. */
 		dispose(): void;
 	};
 
@@ -452,6 +496,12 @@ export interface WatchAllOptions<Store extends StoreDefinition> {
 	/** The static or reactive maximum number of matching records. */
 	count?: Watchable<number | undefined>;
 
+	/** The static or reactive primary-key query. */
+	query?: Watchable<StoreKey<Store> | IDBKeyRange | null | undefined>;
+}
+
+/** Static or signal-backed options for a reactive `watchCount()` query. */
+export interface WatchCountOptions<Store extends StoreDefinition> {
 	/** The static or reactive primary-key query. */
 	query?: Watchable<StoreKey<Store> | IDBKeyRange | null | undefined>;
 }

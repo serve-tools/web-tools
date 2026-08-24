@@ -3,12 +3,23 @@
 	"version": "0.3.0",
 	"description": "Typed messaging clients and servers with subscription Signal state",
 	"keywords": [
+		"browser",
+		"fine-grained-reactivity",
+		"message-port",
+		"messagechannel",
 		"messageport",
 		"messaging",
 		"reactive",
+		"rpc",
 		"sharedworker",
 		"signal",
+		"signals",
 		"subscription",
+		"tc39-signals",
+		"typescript",
+		"web-api",
+		"web-platform",
+		"web-worker",
 		"webworker"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/messaging#readme",
@@ -26,7 +37,8 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/signal-messaging.js",
-		"./scope/*": "./dist/scope/*.js"
+		"./scope/window": "./dist/scope/window.js",
+		"./scope/worker": "./dist/scope/worker.js"
 	},
 	"files": [
 		"dist",

@@ -11,6 +11,17 @@ export const assertPending = (state: StackState): void => {
 	}
 };
 
+export function assertPendingCallback(
+	state: StackState,
+	value: unknown,
+): asserts value is (...args: never[]) => unknown {
+	assertPending(state);
+
+	if (typeof value !== "function") {
+		throw new TypeError("Dispose callback must be a function");
+	}
+}
+
 export const getDisposeMethod = <Result>(value: object, key: symbol): (() => Result) | undefined => {
 	const method = Reflect.get(value, key);
 
@@ -26,11 +37,7 @@ export const getDisposeMethod = <Result>(value: object, key: symbol): (() => Res
 };
 
 const throwDisposalErrors = (errors: unknown[]): void => {
-	if (errors.length === 1) {
-		throw errors[0];
-	}
-
-	if (errors.length > 1) {
+	if (errors.length) {
 		throw errors.reduce((suppressed, error) => new SuppressedError(error, suppressed));
 	}
 };

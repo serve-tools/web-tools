@@ -16,5 +16,6 @@ Treat the installed package README and public declarations as the API source of 
 - Call `listen()` in the shared worker and `connect(worker.port)` in each page.
 - Keep the physical session, reliable streams, datagram registry, and native writer worker-owned.
 - Treat `maxDatagramSize` as asynchronous and use `write()`, `subscribe()`, or `read()` for shared datagrams.
+- Expect a pending `read()` to reject when the page client or worker-owned session closes.
 - Use the direct WebTransport package when independent native writable scheduling is required.
 - Do not use datagrams for authoritative mutations or required delivery.

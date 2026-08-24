@@ -3,12 +3,17 @@
 	"version": "0.1.0",
 	"description": "Fetch-compatible JSON Server-Sent Events",
 	"keywords": [
+		"event-source",
+		"event-stream",
 		"eventsource",
 		"fetch",
 		"json",
+		"nodejs",
+		"server",
 		"server-sent-events",
 		"sse",
-		"typescript"
+		"typescript",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/server/event-source#readme",
 	"bugs": {

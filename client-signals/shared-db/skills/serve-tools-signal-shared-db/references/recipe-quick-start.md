@@ -15,6 +15,8 @@ declare const port: MessagePort;
 const database = SignalDB.connect<Schema>(port);
 const selectedID = new Signal.State("ada");
 const selectedUser = database.watch("users", selectedID);
+const userKeys = database.watchAllKeys("users", { count: 10 });
+const userCount = database.watchCount("users");
 
 await database.put("users", { id: "ada", name: "Ada" });
 
@@ -25,5 +27,7 @@ if (state.status === "ready") {
 }
 
 selectedUser.dispose();
+userKeys.dispose();
+userCount.dispose();
 database.close();
 ```

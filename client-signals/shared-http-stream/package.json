@@ -3,11 +3,24 @@
 	"version": "0.2.0",
 	"description": "SharedWorker HTTP stream clients with subscription Signal state",
 	"keywords": [
+		"browser",
+		"cross-tab",
+		"fetch",
+		"fine-grained-reactivity",
 		"http",
+		"http-streaming",
 		"reactive",
+		"readable-stream",
+		"shared-worker",
 		"sharedworker",
 		"signal",
-		"subscription"
+		"signals",
+		"streaming",
+		"subscription",
+		"tc39-signals",
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/shared-http-stream#readme",
 	"bugs": {
@@ -24,7 +37,8 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/signal-shared-http-stream.js",
-		"./scope/*": "./dist/scope/*.js"
+		"./scope/shared-worker": "./dist/scope/shared-worker.js",
+		"./scope/window": "./dist/scope/window.js"
 	},
 	"files": [
 		"dist",

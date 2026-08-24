@@ -39,6 +39,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client`](./client/client/) provides namespace-oriented access to the client libraries and focused capability subpaths.
 - [`@serve-tools/client-context`](./client/context/) provides interoperable context events, lifecycle-owned providers and consumers, and indexed late-registration replay.
 - [`@serve-tools/client-db`](./client/db/) provides promise-based IndexedDB operations, transactions, and scans.
+- [`@serve-tools/client-event-source`](./client/event-source/) provides typed JSON events over the native EventSource API.
 - [`@serve-tools/client-input`](./client/input/) observes pointer and drag-and-drop input sessions with explicit lifecycle ownership.
 - [`@serve-tools/client-interaction`](./client/interaction/) provides one-shot clipboard, picker, sharing, and eyedropper interactions with explicit outcomes.
 - [`@serve-tools/client-keyboard`](./client/keyboard/) provides platform-aware keyboard chords, labels, symbols, and ARIA shortcuts.
@@ -46,6 +47,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-realtime`](./client/realtime/) provides the sans-I/O operation core for custom client transports.
 - [`@serve-tools/client-http-stream`](./client/http-stream/) provides typed binary HTTP requests and streaming subscriptions with author headers.
 - [`@serve-tools/client-shared-db`](./client/shared-db/) coordinates IndexedDB operations and change subscriptions through a SharedWorker.
+- [`@serve-tools/client-shared-event-source`](./client/shared-event-source/) coordinates typed JSON EventSource events through a SharedWorker.
 - [`@serve-tools/client-shared-http-stream`](./client/shared-http-stream/) coordinates typed HTTP requests and streaming subscriptions through a SharedWorker.
 - [`@serve-tools/client-shared-websocket`](./client/shared-websocket/) shares one typed WebSocket across browser windows through a SharedWorker.
 - [`@serve-tools/client-shared-webtransport`](./client/shared-webtransport/) shares typed WebTransport operations and datagrams through a SharedWorker.
@@ -54,16 +56,19 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-webtransport`](./client/webtransport/) combines reliable typed operations with typed best-effort WebTransport datagrams.
 - [`@serve-tools/realtime-protocol`](./realtime/protocol/) provides the shared binary serializer, wire messages, guards, types, and reliable-stream framing.
 - [`@serve-tools/rolldown-decorators`](./rolldown/decorators/) transforms modern TC39 decorators in Rolldown and Vite builds.
+- [`@serve-tools/server-event-source`](./server/event-source/) provides Fetch-compatible JSON Server-Sent Events.
 - [`@serve-tools/server-realtime`](./server/realtime/) provides the sans-I/O operation server for custom transport adapters.
 - [`@serve-tools/server-http-stream`](./server/http-stream/) provides typed WHATWG Fetch handlers for binary requests and streaming subscriptions.
 - [`@serve-tools/server-websocket`](./server/websocket/) serves typed requests and subscriptions through a sans-I/O core and Node.js, Deno, Bun, or crossws adapters.
 - [`@serve-tools/server-webtransport`](./server/webtransport/) serves reliable typed operations and typed best-effort datagrams over WebTransport.
 - [`@serve-tools/signal-dom`](./client-signals/dom/) provides functional signal-aware DOM, SVG, and MathML templating.
+- [`@serve-tools/signal-event-source`](./client-signals/event-source/) exposes the latest typed JSON EventSource event as Signal state.
 - [`@serve-tools/signal-event-target`](./client-signals/event-target/) observes EventTarget state and media-query matches as read-only Signals.
 - [`@serve-tools/signal-messaging`](./client-signals/messaging/) observes typed messaging subscriptions as explicit Signal state.
 - [`@serve-tools/signal-db`](./client-signals/db/) adds reactive queries to one typed IndexedDB connection.
 - [`@serve-tools/signal-http-stream`](./client-signals/http-stream/) observes HTTP streaming subscriptions as explicit Signal state.
 - [`@serve-tools/signal-shared-db`](./client-signals/shared-db/) adds reactive queries to the shared IndexedDB client.
+- [`@serve-tools/signal-shared-event-source`](./client-signals/shared-event-source/) exposes the latest shared typed JSON EventSource event as Signal state.
 - [`@serve-tools/signal-shared-http-stream`](./client-signals/shared-http-stream/) observes shared HTTP streaming subscriptions as explicit Signal state.
 - [`@serve-tools/signal-websocket`](./client-signals/websocket/) observes typed WebSocket subscriptions as explicit Signal state.
 - [`@serve-tools/signal-shared-websocket`](./client-signals/shared-websocket/) observes shared WebSocket subscriptions as explicit Signal state.
@@ -72,12 +77,16 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-signals`](./client-signals/client-signals/) provides namespace-oriented access to signal-aware client libraries.
 - [`@serve-tools/signal-storage`](./client-signals/storage/) adds reactive watches to the Web Storage client.
 - [`@serve-tools/lit-signals`](./lit/signals/) provides signal-native Lit templates, reactive host styles, lifecycle tracking, directives, and decorators.
+- [`@serve-tools/polyfill-arraybuffer-base64`](./polyfills/arraybuffer-base64/) installs `Uint8Array.prototype.toBase64` in Node.js.
 - [`@serve-tools/polyfill-decorator-metadata`](./polyfills/decorator-metadata/) installs the proposal's `Symbol.metadata` global while preserving a native symbol.
 - [`@serve-tools/polyfill-prioritized-task-scheduling`](./polyfills/prioritized-task-scheduling/) installs missing Prioritized Task Scheduling globals and scheduler methods while preserving native implementations.
+- [`@serve-tools/polyfill-report-error`](./polyfills/report-error/) provides native-aware `reportError` imports and opt-in global installation.
 - [`@serve-tools/polyfill-request-idle-callback`](./polyfills/request-idle-callback/) installs the `requestIdleCallback` and `cancelIdleCallback` globals.
 - [`@serve-tools/polyfill-resource-management`](./polyfills/resource-management/) installs ECMAScript Explicit Resource Management globals.
+- [`@serve-tools/ponyfill-arraybuffer-base64`](./ponyfills/arraybuffer-base64/) encodes `Uint8Array` values as base64 in Node.js without global mutation.
 - [`@serve-tools/ponyfill-decorator-metadata`](./ponyfills/decorator-metadata/) provides a stable module-scoped metadata symbol without global mutation.
 - [`@serve-tools/ponyfill-prioritized-task-scheduling`](./ponyfills/prioritized-task-scheduling/) provides prioritized tasks, continuations, and task controls without global mutation.
+- [`@serve-tools/ponyfill-report-error`](./ponyfills/report-error/) provides a console-backed `reportError` implementation without global mutation.
 - [`@serve-tools/ponyfill-request-idle-callback`](./ponyfills/request-idle-callback/) provides `requestIdleCallback` and `cancelIdleCallback` without global mutation.
 - [`@serve-tools/ponyfill-resource-management`](./ponyfills/resource-management/) provides a side-effect-free implementation of ECMAScript Explicit Resource Management.
 - [`@serve-tools/signal-collections`](./signals/collections/) provides signal-aware native collections.
@@ -118,6 +127,7 @@ npm run verify
 Use `npm run build:fresh` to remove the configured TypeScript and demo outputs before running the same build.
 Run `npm run sync:tsconfig-references` after changing workspace dependencies or TypeScript build configurations.
 `npm test` builds that graph once, then runs the consolidated Node and browser test projects.
+Root typechecking also builds the project graph once, then checks the source, test, benchmark, and demo projects declared by workspace typecheck scripts without rebuilding dependencies between projects.
 Package-level test scripts remain available for focused validation.
 
 ## License

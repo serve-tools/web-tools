@@ -5,10 +5,17 @@
 	"keywords": [
 		"browser",
 		"datagram",
+		"datagrams",
+		"http-3",
+		"http3",
 		"quic",
 		"realtime",
 		"rpc",
 		"subscription",
+		"typescript",
+		"web-api",
+		"web-platform",
+		"web-transport",
 		"webtransport"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/webtransport#readme",

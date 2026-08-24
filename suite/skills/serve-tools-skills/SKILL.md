@@ -8,6 +8,7 @@ description: Use @serve-tools/skills to choose focused Serve Tools packages.
 Choose packages by required capability and runtime ownership.
 Prefer a focused package over `@serve-tools/client` or `@serve-tools/signals`.
 Use a facade only when access to several related packages is intentional.
+Select only packages the requested implementation imports directly; do not add their internal dependencies, matching servers, or clients unless the task explicitly implements those sides.
 
 ## Route the task
 

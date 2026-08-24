@@ -3,13 +3,27 @@
 	"version": "0.2.0",
 	"description": "Typed, promise-based IndexedDB access with signal-backed reactive queries",
 	"keywords": [
+		"browser",
+		"cross-tab",
 		"database",
+		"fine-grained-reactivity",
+		"idb",
 		"indexeddb",
+		"offline-first",
 		"reactive",
+		"reactive-database",
+		"reactive-query",
 		"reactivity",
+		"shared-worker",
+		"sharedworker",
 		"signal",
+		"signals",
 		"storage",
-		"tc39"
+		"tc39",
+		"tc39-signals",
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/shared-db#readme",
 	"bugs": {

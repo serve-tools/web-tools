@@ -3,11 +3,20 @@
 	"version": "0.1.2",
 	"description": "Functional DOM, SVG, and MathML templating with TC39 Signals",
 	"keywords": [
+		"browser",
 		"dom",
+		"fine-grained-reactivity",
 		"functional",
+		"html",
+		"mathml",
+		"reactive-dom",
 		"signals",
 		"svg",
-		"templating"
+		"tc39-signals",
+		"templating",
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/dom#readme",
 	"bugs": {

@@ -15,12 +15,22 @@ export const connect = <const P extends Protocol & ProtocolDefinition<P>>(
 	port: MessagePort,
 ): SharedWebTransportClient<P> => {
 	const client = connectPort<SharedWebTransportBridgeProtocol>(port);
+	const pendingReads = new Set<(reason: unknown) => void>();
+	let datagramsClosed: Error | undefined;
+	const maxDatagramSize = client.request("datagramMaximumSize");
+
+	void maxDatagramSize.catch(() => undefined);
+
 	const datagrams = {
-		maxDatagramSize: client.request("datagramMaximumSize"),
+		maxDatagramSize,
 		write: (name: string, value: unknown): Promise<void> => client.request("datagramWrite", { name, value }),
 		subscribe: (name: string, listener: (value: unknown) => void): Subscription =>
 			client.subscribe("datagramSubscribe", { name }, listener),
 		read(name: string, options: { readonly signal?: AbortSignal } = {}): Promise<unknown> {
+			if (datagramsClosed) {
+				return Promise.reject(datagramsClosed);
+			}
+
 			if (options.signal?.aborted) {
 				return Promise.reject(options.signal.reason);
 			}
@@ -28,24 +38,35 @@ export const connect = <const P extends Protocol & ProtocolDefinition<P>>(
 			return new Promise((resolve, reject) => {
 				let subscription: Subscription;
 
-				const abort = (): void => {
+				const finish = (): void => {
 					subscription.unsubscribe();
-
-					reject(options.signal?.reason);
+					pendingReads.delete(close);
+					options.signal?.removeEventListener("abort", abort);
 				};
+				const close = (reason: unknown): void => {
+					finish();
+					reject(reason);
+				};
+				const abort = (): void => close(options.signal?.reason);
 
 				subscription = datagrams.subscribe(name, (value) => {
-					subscription.unsubscribe();
-
-					options.signal?.removeEventListener("abort", abort);
-
+					finish();
 					resolve(value);
 				});
 
+				pendingReads.add(close);
 				options.signal?.addEventListener("abort", abort, { once: true });
 			});
 		},
 	};
+
+	void client.closed.then(() => {
+		datagramsClosed = connectionClosedError();
+
+		for (const close of pendingReads) {
+			close(datagramsClosed);
+		}
+	});
 
 	return {
 		request(name: string, input?: unknown, options: RequestOptions = {}): Promise<unknown> {
@@ -70,6 +91,13 @@ export const connect = <const P extends Protocol & ProtocolDefinition<P>>(
 		[Symbol.dispose]: client[Symbol.dispose],
 	} as SharedWebTransportClient<P>;
 };
+
+const connectionClosedError = (reason: unknown = "The connection is closed"): Error =>
+	reason instanceof Error
+		? reason
+		: Object.assign(new Error(String(reason)), {
+				name: "ConnectionClosedError",
+			});
 
 export namespace connect {
 	export type Client<P extends T.Protocol = T.Protocol> = T.SharedWebTransportClient<P>;

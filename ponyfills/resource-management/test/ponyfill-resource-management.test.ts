@@ -112,6 +112,14 @@ describe("DisposableStack", () => {
 		expect(disposed).toEqual(["test"]);
 	});
 
+	it("rejects non-callable cleanup callbacks synchronously", () => {
+		const stack = new DisposableStack();
+
+		expect(() => stack.adopt(null, null as never)).toThrow(TypeError);
+		expect(() => stack.defer(null as never)).toThrow(TypeError);
+		expect(stack.disposed).toBe(false);
+	});
+
 	it("move() transfers resources to new stack", () => {
 		const stack1 = new DisposableStack();
 		const order: number[] = [];
@@ -160,6 +168,16 @@ describe("DisposableStack", () => {
 		expect(thrown).toBeInstanceOf(SuppressedError);
 		expect((thrown as SuppressedError).error).toBe(error1);
 		expect((thrown as SuppressedError).suppressed).toBe(error2);
+	});
+
+	it("preserves a single disposal error", () => {
+		const stack = new DisposableStack();
+		const error = new Error("failure");
+		stack.defer(() => {
+			throw error;
+		});
+
+		expect(() => stack.dispose()).toThrow(error);
 	});
 
 	it("has Symbol.toStringTag", () => {
@@ -249,6 +267,14 @@ describe("AsyncDisposableStack", () => {
 		expect(disposed).toEqual(["test"]);
 	});
 
+	it("rejects non-callable cleanup callbacks synchronously", () => {
+		const stack = new AsyncDisposableStack();
+
+		expect(() => stack.adopt(null, null as never)).toThrow(TypeError);
+		expect(() => stack.defer(null as never)).toThrow(TypeError);
+		expect(stack.disposed).toBe(false);
+	});
+
 	it("move() transfers resources to new stack", async () => {
 		const stack1 = new AsyncDisposableStack();
 		const order: number[] = [];
@@ -297,6 +323,16 @@ describe("AsyncDisposableStack", () => {
 		expect(thrown).toBeInstanceOf(SuppressedError);
 		expect((thrown as SuppressedError).error).toBe(error1);
 		expect((thrown as SuppressedError).suppressed).toBe(error2);
+	});
+
+	it("preserves a single disposal error", async () => {
+		const stack = new AsyncDisposableStack();
+		const error = new Error("failure");
+		stack.defer(async () => {
+			throw error;
+		});
+
+		await expect(stack.disposeAsync()).rejects.toBe(error);
 	});
 
 	it("has Symbol.toStringTag", () => {

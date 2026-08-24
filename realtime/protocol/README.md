@@ -66,11 +66,16 @@ Structured values use the shared serializer, while `ArrayBuffer` and view inputs
 import { decodeDatagram, encodeDatagram } from "@serve-tools/realtime-protocol/datagram";
 
 const payload = encodeDatagram(4, Uint8Array.of(1, 2, 3));
-const { kind, value } = decodeDatagram(payload);
+const { kind, value } = decodeDatagram(payload, { maximumArrayBufferLength: 64 * 1024 });
 ```
+
+Pass `maximumArrayBufferLength` when structured datagrams cross a trust boundary to reject declared resizable buffer capacities above the transport's datagram limit before allocation.
 
 `datagram-registry` provides the reliable per-session name-to-kind handshake used by the WebTransport packages.
 It is not an unreliable wire protocol by itself and must run over a framed reliable stream.
+The registry accepts at most 256 distinct names from its peer by default.
+It also limits each UTF-8 registration name to 256 bytes and each framed registry control payload to 4 KiB.
+Pass positive `maximumPeerRegistrations`, `maximumNameLength`, or `maximumControlFrameLength` options only when the application deliberately needs different limits.
 
 ## Negotiate binary HTTP streams
 
@@ -102,6 +107,7 @@ The root export provides:
 
 The `@serve-tools/realtime-protocol/stream` export provides `encodeFrame()`, `FrameDecoder`, and `defaultMaximumFrameLength`.
 The `datagram`, `datagram-registry`, and `http-stream` exports provide the transport-specific shared contracts described above.
+`datagram-registry` also exports its default peer-registration, name, and control-frame limits.
 
 ## Compatibility
 

@@ -101,6 +101,7 @@
 		"build:typescript": "tsc --build tsconfig.build.json --builders 4 --checkers 2",
 		"build:typescript:clean": "tsc --build tsconfig.build.json --clean",
 		"check:packages": "node scripts/check-packages.mjs",
+		"check:release": "node --test scripts/release-plan.test.mjs scripts/release-pack.test.mjs",
 		"check:skill-bench": "node --test benchmark/skills/test/*.test.mjs && node benchmark/skills/run.mjs --provider fixture --no-compile --quiet",
 		"check:skills": "node scripts/check-skills.mjs",
 		"check:tsconfig-references": "node scripts/sync-tsconfig-references.mjs",
@@ -120,9 +121,9 @@
 		"test:node:vitest": "vitest run --config vitest.node.projects.config.ts",
 		"typecheck": "npm run build:typescript && npm run typecheck:workspaces",
 		"typecheck:demos": "npm run typecheck:local --workspaces --if-present",
-		"typecheck:workspaces": "npm run typecheck --workspaces --if-present",
+		"typecheck:workspaces": "node scripts/typecheck-workspaces.mjs",
 		"verify": "npm run verify:node && npm run test:browser:consolidated",
-		"verify:node": "npm run lint && npm run format:check && npm run check:tsconfig-references && npm run typecheck && npm run test:node && npm run check:skills && npm run check:skill-bench && npm run build:extras && npm run check:packages"
+		"verify:node": "npm run lint && npm run format:check && npm run check:tsconfig-references && npm run typecheck && npm run test:node && npm run check:skills && npm run check:skill-bench && npm run check:release && npm run build:extras && npm run check:packages"
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "0.18.5",

@@ -4,11 +4,17 @@
 	"description": "Implements requestIdleCallback and cancelIdleCallback with global mutation",
 	"keywords": [
 		"browser",
+		"browser-compatibility",
 		"cancel-idle-callback",
+		"cancelidlecallback",
 		"idle-callback",
+		"idle-deadline",
 		"polyfill",
 		"request-idle-callback",
-		"scheduler"
+		"requestidlecallback",
+		"scheduler",
+		"typescript",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/polyfills/request-idle-callback#readme",
 	"bugs": {

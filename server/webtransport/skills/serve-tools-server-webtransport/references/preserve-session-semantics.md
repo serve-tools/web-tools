@@ -8,9 +8,11 @@ Forward stream chunks and finish notifications separately; forward native datagr
 Drop unknown datagram kinds because datagrams can overtake their reliable registry entries.
 
 Use reliable handlers for required ordered work and datagram handlers only for replaceable state.
-Do not impose an additional datagram size cap or promise delivery.
+Do not impose an additional outgoing datagram size cap or promise delivery.
 Expose the native maximum when available.
+Bound incoming structured binary allocations by that maximum, `maximumMessageLength`, or the 64 KiB fallback.
 
 Close the adapter during shutdown and keep certificates, HTTP/3 configuration, origin policy, limits, and MoQ on their owning layers.
+Treat either reliable protocol stream ending as session termination, and expect shutdown to abort handler signals and fail pending datagram reads and registrations.
 Expect failures that cannot be returned to the client to use native `reportError()` or `console.error()` when that web API is unavailable.
 The current `@http3-server/server` peer cannot transmit the core's application close code at session level; document this if an adapter uses that peer.

@@ -134,7 +134,7 @@ describe("createConnection", () => {
 		const pendingCleanup = new Promise<() => void>((resolve) => {
 			release = resolve;
 		});
-		const { receive, sent } = setup({
+		const { connection, receive, sent } = setup({
 			subscriptions: {
 				numbers: vi.fn(),
 				lateCleanup: (_input: undefined, context: SubscriptionContext<number>) => {
@@ -150,13 +150,21 @@ describe("createConnection", () => {
 		await tick();
 
 		receive([protocol, "cancel", 1]);
+		connection.disconnect("gone");
 
 		expect(signal?.aborted).toBe(true);
 		expect(sent).toEqual([]);
 
+		let didClose = false;
+		void connection.closed.then(() => {
+			didClose = true;
+		});
+		await tick();
+		expect(didClose).toBe(false);
+
 		release?.(cleanup);
 
-		await tick();
+		await expect(connection.closed).resolves.toBeUndefined();
 
 		expect(cleanup).toHaveBeenCalledOnce();
 	});
@@ -181,6 +189,72 @@ describe("createConnection", () => {
 		expect(report).toHaveBeenCalledExactlyOnceWith(error);
 
 		report.mockRestore();
+	});
+
+	it("settles and cleans up when a subscription fails with a hostile value", async () => {
+		const cleanup = vi.fn();
+		const reason = {
+			[Symbol.toPrimitive]() {
+				throw new Error("conversion denied");
+			},
+		};
+		let subscription: SubscriptionContext<number> | undefined;
+		const { receive, sent } = setup({
+			subscriptions: {
+				numbers: (_input: number, context: SubscriptionContext<number>) => {
+					subscription = context;
+
+					return cleanup;
+				},
+				lateCleanup: vi.fn(),
+			},
+		});
+
+		receive([protocol, "subscribe", 1, "numbers", 3]);
+		await tick();
+
+		subscription?.error(reason);
+		await tick();
+
+		expect(sent).toEqual([[protocol, "reject", 1, { name: "Error", message: "An unknown error occurred" }]]);
+		expect(cleanup).toHaveBeenCalledOnce();
+	});
+
+	it("closes the transport immediately and resolves closed after asynchronous cleanup", async () => {
+		const cleanupStarted = vi.fn();
+		const cleanupFinished = vi.fn();
+		const release = Promise.withResolvers<void>();
+		const local = setup({
+			subscriptions: {
+				numbers: () => async () => {
+					cleanupStarted();
+					await release.promise;
+					cleanupFinished();
+				},
+				lateCleanup: vi.fn(),
+			},
+		});
+
+		local.receive([protocol, "subscribe", 1, "numbers", 3]);
+		await tick();
+
+		local.connection.close("finished");
+
+		expect(local.closes).toEqual([[1000, ""]]);
+		await tick();
+		expect(cleanupStarted).toHaveBeenCalledOnce();
+		expect(cleanupFinished).not.toHaveBeenCalled();
+
+		let didClose = false;
+		void local.connection.closed.then(() => {
+			didClose = true;
+		});
+		await tick();
+		expect(didClose).toBe(false);
+
+		release.resolve();
+		await expect(local.connection.closed).resolves.toBeUndefined();
+		expect(cleanupFinished).toHaveBeenCalledOnce();
 	});
 
 	it("rejects unknown operations and closes on duplicate active IDs", async () => {
@@ -348,6 +422,7 @@ describe("createConnection", () => {
 		const local = setup();
 
 		local.connection.close("finished");
+		local.connection.fail("too late");
 
 		expect(local.sent).toEqual([
 			[protocol, "close", expect.objectContaining({ name: "ConnectionClosedError", message: "finished" })],

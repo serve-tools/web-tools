@@ -66,6 +66,49 @@ describe("HTTP stream conformance", () => {
 		client.close();
 	});
 
+	it("bounds finite response bytes and declared buffer capacity before dispatch", async () => {
+		const capacityClient = connect<TestProtocol>("https://example.test/realtime", {
+			maximumMessageLength: 256,
+			fetch: async () =>
+				new Response(serialize([protocol, "resolve", 1, new ArrayBuffer(0, { maxByteLength: 1_024 })]), {
+					headers: { "Content-Type": contentType },
+				}),
+		});
+
+		await expect(capacityClient.request("identity")).rejects.toMatchObject({ name: "DataCloneError" });
+		capacityClient.close();
+
+		const sizeClient = connect<TestProtocol>("https://example.test/realtime", {
+			maximumMessageLength: 8,
+			fetch: async () => new Response(new Uint8Array(9), { headers: { "Content-Type": contentType } }),
+		});
+
+		await expect(sizeClient.request("identity")).rejects.toMatchObject({
+			name: "ProtocolError",
+			message: "The response exceeds the configured maximum message length",
+		});
+		sizeClient.close();
+	});
+
+	it("bounds subscription frames before deserializing them", async () => {
+		const client = connect<TestProtocol>("https://example.test/realtime", {
+			maximumMessageLength: 8,
+			fetch: async () =>
+				new Response(encodeFrame(serialize([protocol, "event", 1, 7])), {
+					headers: { "Content-Type": streamContentType },
+				}),
+		});
+		const failed = Promise.withResolvers<Error>();
+
+		client.subscribe("numbers", 1, () => undefined, { onError: failed.resolve });
+
+		await expect(failed.promise).resolves.toMatchObject({
+			name: "RangeError",
+			message: "The stream frame exceeds the configured maximum length",
+		});
+		client.close();
+	});
+
 	it("selects a finite representation when Accept lists multiple representations", async () => {
 		const server = createHandler<TestProtocol, { user: string }>(handlers, {
 			authorize: () => ({ user: "test" }),
@@ -198,6 +241,71 @@ describe("HTTP stream conformance", () => {
 		await completed.promise;
 
 		expect(values).toEqual([7]);
+		client.close();
+	});
+
+	it("stops a subscription immediately after complete", async () => {
+		const event = encodeFrame(serialize([protocol, "event", 1, 7]));
+		const complete = encodeFrame(serialize([protocol, "complete", 1]));
+		const afterComplete = encodeFrame(serialize([protocol, "event", 1, 8]));
+		const secondComplete = encodeFrame(serialize([protocol, "complete", 1]));
+		const bytes = new Uint8Array(
+			event.byteLength + complete.byteLength + afterComplete.byteLength + secondComplete.byteLength,
+		);
+		let offset = 0;
+
+		for (const frame of [event, complete, afterComplete, secondComplete]) {
+			bytes.set(frame, offset);
+			offset += frame.byteLength;
+		}
+
+		const client = connect<TestProtocol>("https://example.test/realtime", {
+			fetch: async () => new Response(bytes, { headers: { "Content-Type": streamContentType } }),
+		});
+		const completed = Promise.withResolvers<void>();
+		const values: number[] = [];
+		const onComplete = vi.fn(completed.resolve);
+
+		client.subscribe("numbers", 1, (value) => values.push(value), { onComplete });
+		await completed.promise;
+		await Promise.resolve();
+
+		expect(values).toEqual([7]);
+		expect(onComplete).toHaveBeenCalledOnce();
+		client.close();
+	});
+
+	it("does not resolve headers or fetch for aborted operations", async () => {
+		const headers = vi.fn();
+		const fetch = vi.fn();
+		const client = connect<TestProtocol>("https://example.test/realtime", { fetch, headers });
+		const alreadyAborted = new AbortController();
+
+		alreadyAborted.abort();
+
+		await expect(client.request("identity", undefined, { signal: alreadyAborted.signal })).rejects.toBe(
+			alreadyAborted.signal.reason,
+		);
+		expect(headers).not.toHaveBeenCalled();
+		expect(fetch).not.toHaveBeenCalled();
+
+		const pendingHeaders = Promise.withResolvers<HeadersInit>();
+		const duringHeaders = new AbortController();
+		const started = Promise.withResolvers<void>();
+
+		headers.mockImplementation(async () => {
+			started.resolve();
+			return pendingHeaders.promise;
+		});
+
+		const request = client.request("identity", undefined, { signal: duringHeaders.signal });
+
+		await started.promise;
+		duringHeaders.abort();
+		pendingHeaders.resolve({ Authorization: "aborted" });
+
+		await expect(request).rejects.toBe(duringHeaders.signal.reason);
+		expect(fetch).not.toHaveBeenCalled();
 		client.close();
 	});
 

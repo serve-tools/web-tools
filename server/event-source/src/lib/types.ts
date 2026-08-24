@@ -61,6 +61,12 @@ export interface HandlerOptions<Events extends EventMap = EventMap, Context = un
 
 	/** Handles one EventSource connection request. */
 	readonly connect?: (connection: EventConnection<Events, Context>) => Awaitable<ConnectionResult>;
+
+	/** Additional response headers. Required event-stream and proxy-safety headers override conflicting values. */
+	readonly headers?: HeadersInit;
+
+	/** Maximum bytes queued for one connection before it is failed. Defaults to 16 MiB. */
+	readonly maximumBufferedAmount?: number;
 }
 
 /** Represents a fetch handler that broadcasts typed JSON events to its open connections. */

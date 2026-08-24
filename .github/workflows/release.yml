@@ -4,10 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       package:
-        description: Package to publish
+        description: Package to publish, or all prepared packages
         required: true
         type: choice
         options:
+          - "all"
           - "@serve-tools/async-operation"
           - "@serve-tools/client-context"
           - "@serve-tools/client-db"
@@ -69,8 +70,8 @@ on:
           - "@serve-tools/skills"
           - "@serve-tools/vite-polyfills"
       version:
-        description: Exact package.json version to confirm
-        required: true
+        description: Exact package.json version; leave empty for all
+        required: false
         type: string
       tag:
         description: npm distribution tag
@@ -85,19 +86,19 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ inputs.package }}
+  group: release
   cancel-in-progress: false
 
 jobs:
   prepare:
-    name: Verify and pack
+    name: Plan, verify, and pack
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 30
     outputs:
-      artifact: ${{ steps.package.outputs.artifact }}
-      name: ${{ steps.package.outputs.name }}
-      version: ${{ steps.package.outputs.version }}
+      artifact: ${{ steps.plan.outputs.artifact }}
+      count: ${{ steps.plan.outputs.count }}
+      packages: ${{ steps.plan.outputs.packages }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -108,71 +109,35 @@ jobs:
           package-manager-cache: false
           registry-url: https://registry.npmjs.org/
       - run: npm install --global npm@12.0.2
-      - run: npm ci --ignore-scripts
-      - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npm run verify
-      - id: package
-        name: Resolve package
+      - id: plan
+        name: Check release prerequisites
         env:
+          RELEASE_DIRECTORY: ${{ runner.temp }}/release
           RELEASE_PACKAGE: ${{ inputs.package }}
           RELEASE_VERSION: ${{ inputs.version }}
         run: |
-          node <<'NODE'
-          const { appendFileSync } = require("node:fs");
-          const { execFileSync } = require("node:child_process");
-          const packages = JSON.parse(execFileSync("npm", ["query", ".workspace"], { encoding: "utf8" }));
-          const packageData = packages.find(({ name, private: isPrivate }) => name === process.env.RELEASE_PACKAGE && !isPrivate);
-          if (!packageData) throw new Error(`Unknown publishable package: ${process.env.RELEASE_PACKAGE}`);
-          if (packageData.version !== process.env.RELEASE_VERSION) {
-            throw new Error(`Expected ${packageData.name}@${packageData.version}, received ${process.env.RELEASE_VERSION}`);
-          }
-          const artifact = `${packageData.name.slice(1).replace("/", "-")}-${packageData.version}`;
-          appendFileSync(process.env.GITHUB_OUTPUT, `artifact=${artifact}\nname=${packageData.name}\npath=${packageData.location}\nversion=${packageData.version}\n`);
-          NODE
-      - name: Check release prerequisites
+          node scripts/release-plan.mjs
+          echo "artifact=release-$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
+      - run: npm ci --ignore-scripts
+      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run verify
+      - name: Pack release artifacts
         env:
-          RELEASE_PACKAGE: ${{ steps.package.outputs.name }}
-          RELEASE_PATH: ${{ steps.package.outputs.path }}
-          RELEASE_VERSION: ${{ steps.package.outputs.version }}
-        run: |
-          node <<'NODE'
-          const { readFileSync } = require("node:fs");
-          const { execFileSync } = require("node:child_process");
-          const manifest = JSON.parse(readFileSync(`${process.env.RELEASE_PATH}/package.json`));
-          const dependencies = { ...manifest.dependencies, ...manifest.optionalDependencies, ...manifest.peerDependencies };
-          for (const [name, range] of Object.entries(dependencies)) {
-            if (name.startsWith("@serve-tools/")) execFileSync("npm", ["view", `${name}@${range}`, "version", "--json"], { stdio: "inherit" });
-          }
-          NODE
-          if npm view "$RELEASE_PACKAGE@$RELEASE_VERSION" version --json >/dev/null 2>&1; then
-            echo "::error::$RELEASE_PACKAGE@$RELEASE_VERSION is already published"
-            exit 1
-          fi
-      - id: pack
-        name: Pack release artifact
-        env:
-          RELEASE_PATH: ${{ steps.package.outputs.path }}
-        run: |
-          PACK_RESULT=$(npm pack "$GITHUB_WORKSPACE/$RELEASE_PATH" --pack-destination "$RUNNER_TEMP" --json)
-          TARBALL=$(printf '%s' "$PACK_RESULT" | node -e 'const result = JSON.parse(require("node:fs").readFileSync(0, "utf8")); console.log((Array.isArray(result) ? result[0] : Object.values(result)[0]).filename)')
-          cd "$RUNNER_TEMP"
-          sha256sum "$TARBALL" > "$TARBALL.sha256"
-          echo "tarball=$TARBALL" >> "$GITHUB_OUTPUT"
+          RELEASE_DIRECTORY: ${{ runner.temp }}/release
+        run: node scripts/release-pack.mjs
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: ${{ steps.package.outputs.artifact }}
-          path: |
-            ${{ runner.temp }}/${{ steps.pack.outputs.tarball }}
-            ${{ runner.temp }}/${{ steps.pack.outputs.tarball }}.sha256
+          name: ${{ steps.plan.outputs.artifact }}
+          path: ${{ runner.temp }}/release
           if-no-files-found: error
           retention-days: 30
           compression-level: 0
 
   publish:
-    name: Publish ${{ needs.prepare.outputs.name }}@${{ needs.prepare.outputs.version }}
+    name: Publish ${{ needs.prepare.outputs.count }} package(s)
     needs: prepare
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 20
     environment: npm
     permissions:
       contents: read
@@ -193,7 +158,16 @@ jobs:
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           cd "$RUNNER_TEMP/release"
-          sha256sum --check *.sha256
-          TARBALL=$(find . -maxdepth 1 -type f -name '*.tgz' -print -quit)
-          test -n "$TARBALL"
-          npm publish "$TARBALL" --access public --tag "$RELEASE_TAG"
+          sha256sum --check -- *.sha256
+          node <<'NODE' > "$RUNNER_TEMP/release-tarballs"
+          const plan = require("./release-plan.json");
+          if (!plan.length) process.exit(1);
+          for (const { tarball } of plan) {
+            if (!tarball) process.exit(1);
+            console.log(tarball);
+          }
+          NODE
+          while IFS= read -r TARBALL; do
+            test -f "$TARBALL"
+            npm publish "$TARBALL" --access public --tag "$RELEASE_TAG"
+          done < "$RUNNER_TEMP/release-tarballs"

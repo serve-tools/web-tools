@@ -6,7 +6,12 @@
 		"decorator-metadata",
 		"decorators",
 		"metadata",
-		"ponyfill"
+		"no-global-mutation",
+		"ponyfill",
+		"symbol-metadata",
+		"tc39-decorators",
+		"typescript",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/decorator-metadata#readme",
 	"bugs": {
@@ -23,7 +28,7 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/ponyfill-decorator-metadata.js",
-		"./lib/*": "./dist/lib/*.js"
+		"./lib/Symbol/metadata": "./dist/lib/Symbol/metadata.js"
 	},
 	"files": [
 		"dist",

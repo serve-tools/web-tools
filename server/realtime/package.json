@@ -3,12 +3,14 @@
 	"version": "0.1.1",
 	"description": "Sans-I/O typed request and subscription server core",
 	"keywords": [
+		"nodejs",
 		"realtime",
 		"rpc",
 		"sans-io",
 		"server",
 		"subscription",
-		"typescript"
+		"typescript",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/server/realtime#readme",
 	"bugs": {

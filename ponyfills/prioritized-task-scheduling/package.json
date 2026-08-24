@@ -5,14 +5,20 @@
 	"keywords": [
 		"background-tasks",
 		"cooperative-scheduling",
+		"no-global-mutation",
+		"ponyfill",
 		"post-task",
+		"posttask",
 		"prioritized-task-scheduling",
 		"scheduler",
 		"task-controller",
+		"task-priority",
 		"task-signal",
+		"taskcontroller",
+		"typescript",
+		"web-platform",
 		"worker",
-		"yield",
-		"ponyfill"
+		"yield"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/prioritized-task-scheduling#readme",
 	"bugs": {

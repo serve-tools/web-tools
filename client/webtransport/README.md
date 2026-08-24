@@ -45,12 +45,14 @@ Use `@serve-tools/server-webtransport` for the matching server.
 `write()` reuses a shared native writer.
 `createWritable(name)` provides an independently scheduled writable for applications that need separate send groups or ordering.
 `subscribe()` observes future arrivals without replay or buffering; `read()` waits for exactly the next arrival.
+Subscriptions become inactive, and pending `read()` calls reject and remove their local subscriptions, when the client closes.
 
 Datagrams are always named and typed within a session owned by this package.
 Names are registered once over a reliable control stream and then represented by compact connection-local integers.
 Structured values use the shared serializer.
 `ArrayBuffer` and `ArrayBufferView` values bypass serialization and are received as `Uint8Array`, while still carrying the small typed-datagram envelope.
 The package exposes the native `maxDatagramSize` but does not impose a second size limit or pre-reject a write.
+Incoming structured binary allocations are bounded by the native maximum datagram size, with a 64 KiB fallback when the transport does not report a positive finite maximum.
 
 ## Transport semantics
 
@@ -64,6 +66,7 @@ Do not use them for authoritative mutations, required acknowledgements, or ordin
 The session negotiates `serve-tools.realtime.v1` through WebTransport's native `WT-Available-Protocols` and `WT-Protocol` mechanism.
 The package owns its operation stream, registry stream, and datagrams; create a separate WebTransport session for MoQ or another application protocol.
 Datagrams whose connection-local kind arrives before its reliable registration are dropped, because datagram and stream ordering is intentionally independent.
+Ending either reliable protocol stream ends the client and fails pending work, including datagram registrations and reads.
 
 ## Public API
 

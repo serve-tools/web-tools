@@ -81,6 +81,7 @@ const result = await subscriber.consume(operation);
 
 The subscriber owns the operation's single async iterator and multicasts each value to every active branch.
 Matching callbacks and projections start concurrently, and all settle before the next operation value is requested, preserving backpressure.
+Each delivery uses a callback snapshot, so disposing one subscription during another callback affects only subsequent values.
 An unsubscribed branch is skipped, and terminal subscriptions added during consumption observe only subsequent values rather than replaying earlier ones.
 Each view has its own zero-based output index, so a filtered or mapped view counts only values emitted while that branch is active.
 

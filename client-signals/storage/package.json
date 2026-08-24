@@ -3,14 +3,24 @@
 	"version": "0.1.2",
 	"description": "Typed Web Storage change subscriptions and signal-backed watches",
 	"keywords": [
+		"browser",
+		"fine-grained-reactivity",
+		"local-storage",
 		"localstorage",
 		"reactive",
-		"signal",
+		"session-storage",
 		"sessionstorage",
+		"signal",
+		"signals",
 		"storage",
 		"subscription",
+		"tc39-signals",
 		"typed",
-		"watcher"
+		"typescript",
+		"watcher",
+		"web-api",
+		"web-platform",
+		"web-storage"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/storage#readme",
 	"bugs": {

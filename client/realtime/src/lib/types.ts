@@ -35,6 +35,12 @@ export interface ClientTransport {
 	close(reason?: unknown): void;
 }
 
+/** Resource limits for one typed realtime client. */
+export interface ClientOptions {
+	/** Maximum serialized message length accepted from the peer. Defaults to 16 MiB. */
+	readonly maximumMessageLength?: number;
+}
+
 /** Options for sending and cancelling a request. */
 export interface RequestOptions {
 	readonly signal?: AbortSignal;

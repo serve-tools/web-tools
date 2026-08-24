@@ -5,11 +5,17 @@
 	"keywords": [
 		"fetch",
 		"http",
+		"http-streaming",
+		"nodejs",
+		"readable-stream",
 		"realtime",
 		"rpc",
 		"server",
 		"stream",
-		"subscription"
+		"streaming",
+		"subscription",
+		"typescript",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/server/http-stream#readme",
 	"bugs": {

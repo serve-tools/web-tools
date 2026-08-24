@@ -1,3 +1,4 @@
+import type { DeserializeOptions } from "./realtime-protocol.js";
 import { deserialize, serialize } from "./realtime-protocol.js";
 
 const headerLength = 5;
@@ -12,6 +13,9 @@ export interface DecodedDatagram {
 	/** The decoded structured value, or a zero-copy view of binary payload bytes. */
 	readonly value: unknown;
 }
+
+/** Resource limits applied while decoding a typed datagram. */
+export type DecodeDatagramOptions = DeserializeOptions;
 
 /** Encodes one typed datagram with a compact kind and payload-encoding prefix. */
 export function encodeDatagram(kind: number, value: unknown): Uint8Array<ArrayBuffer> {
@@ -39,7 +43,10 @@ export function encodeDatagram(kind: number, value: unknown): Uint8Array<ArrayBu
 }
 
 /** Decodes one typed datagram envelope. */
-export function decodeDatagram(payload: ArrayBuffer | ArrayBufferView): DecodedDatagram {
+export function decodeDatagram(
+	payload: ArrayBuffer | ArrayBufferView,
+	options?: DecodeDatagramOptions,
+): DecodedDatagram {
 	const bytes = ArrayBuffer.isView(payload)
 		? new Uint8Array(payload.buffer, payload.byteOffset, payload.byteLength)
 		: new Uint8Array(payload);
@@ -57,7 +64,7 @@ export function decodeDatagram(payload: ArrayBuffer | ArrayBufferView): DecodedD
 	}
 
 	if (encoding === structuredEncoding) {
-		return { kind, value: deserialize(data) };
+		return { kind, value: deserialize(data, options) };
 	}
 
 	throw new TypeError("The typed datagram has an unknown payload encoding");

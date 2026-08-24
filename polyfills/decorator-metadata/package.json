@@ -3,11 +3,15 @@
 	"version": "0.1.0",
 	"description": "Installs Symbol.metadata while preserving an existing native symbol",
 	"keywords": [
+		"browser-compatibility",
 		"decorator-metadata",
 		"decorators",
 		"metadata",
 		"polyfill",
-		"symbol-metadata"
+		"symbol-metadata",
+		"tc39-decorators",
+		"typescript",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/polyfills/decorator-metadata#readme",
 	"bugs": {

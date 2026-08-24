@@ -109,6 +109,29 @@ describe("AsyncOperationSubscriber", () => {
 		expect(values).toEqual([1]);
 	});
 
+	test("delivers each value to the subscriber snapshot", async () => {
+		const subscriber = new AsyncOperationSubscriber<number>();
+		const values: string[] = [];
+		let second: Disposable;
+
+		subscriber.subscribe((value) => {
+			values.push(`first:${value}`);
+			second[Symbol.dispose]();
+		});
+		second = subscriber.subscribe((value) => {
+			values.push(`second:${value}`);
+		});
+
+		const operation = new AsyncOperation<number>(async (write) => {
+			await write(1);
+			await write(2);
+		});
+
+		await subscriber.consume(operation);
+
+		expect(values).toEqual(["first:1", "second:1", "first:2"]);
+	});
+
 	test("treats duplicate callback registrations as independent subscriptions", async () => {
 		const subscriber = new AsyncOperationSubscriber<number>();
 		const values: number[] = [];

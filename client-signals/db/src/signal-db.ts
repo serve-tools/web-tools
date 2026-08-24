@@ -40,6 +40,9 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 		let current = Promise.resolve();
 		let disposed = false;
 		let generation = 0;
+		const disposedResult = Promise.withResolvers<never>();
+
+		void disposedResult.promise.catch(() => {});
 
 		const refresh = (options?: DBOperationOptions): Promise<void> => {
 			if (disposed) {
@@ -52,7 +55,7 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 			state.set(pending);
 
 			try {
-				result = read(options).then<QueryState<T>, QueryState<T>>(
+				result = Promise.race([read(options), disposedResult.promise]).then<QueryState<T>, QueryState<T>>(
 					(value) => ({ status: "ready", value }),
 					(error: unknown) => ({ status: "error", error }),
 				);
@@ -60,16 +63,13 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 				result = Promise.resolve({ status: "error", error });
 			}
 
-			let next: Promise<void>;
-
-			next = result.then((nextState) => {
+			current = result.then((nextState) => {
 				if (request !== generation) {
-					return current === next ? undefined : current;
+					return current;
 				}
 
 				state.set(nextState);
 			});
-			current = next;
 
 			return current;
 		};
@@ -86,7 +86,7 @@ class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
 			}
 
 			disposed = true;
-			++generation;
+			disposedResult.reject(new DOMException("Query is disposed", "InvalidStateError"));
 			controller.dispose();
 			onDispose();
 		};
@@ -290,6 +290,38 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		});
 	}
 
+	/** Watches all matching primary keys and refreshes them after committed writes through this wrapper. */
+	watchAllKeys<Name extends StoreName<Schema>>(
+		storeName: Name,
+		options?: WatchAllOptions<Schema[Name]>,
+	): Query<StoreKey<Schema[Name]>[]> {
+		return this.#query(storeName, (operationOptions) => {
+			const count = valueOf(options?.count);
+			const query = valueOf(options?.query);
+
+			return this.getAllKeys(storeName, {
+				...operationOptions,
+				...(count === undefined ? {} : { count }),
+				...(query === undefined ? {} : { query }),
+			});
+		});
+	}
+
+	/** Watches the matching record count and refreshes it after committed writes through this wrapper. */
+	watchCount<Name extends StoreName<Schema>>(
+		storeName: Name,
+		options?: WatchCountOptions<Schema[Name]>,
+	): Query<number> {
+		return this.#query(storeName, (operationOptions) => {
+			const query = valueOf(options?.query);
+
+			return this.count(storeName, {
+				...operationOptions,
+				...(query === undefined ? {} : { query }),
+			});
+		});
+	}
+
 	/** Disposes every query and closes the underlying database connection. */
 	close(): void {
 		const groups = [...this.#queries.values()];
@@ -324,6 +356,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 				this.#queries.delete(storeName);
 			}
 		});
+
 		queries.add(query as ReactiveQuery<unknown>);
 
 		return query;
@@ -367,5 +400,10 @@ type SchemaDefinition<Schema> = { [Name in keyof Schema]: StoreDefinition };
 
 export interface WatchAllOptions<Store extends StoreDefinition> {
 	readonly count?: Watchable<number | undefined>;
+	readonly query?: Watchable<StoreKey<Store> | IDBKeyRange | null | undefined>;
+}
+
+/** Static or signal-backed options for a reactive `watchCount()` query. */
+export interface WatchCountOptions<Store extends StoreDefinition> {
 	readonly query?: Watchable<StoreKey<Store> | IDBKeyRange | null | undefined>;
 }

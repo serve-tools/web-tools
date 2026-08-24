@@ -8,6 +8,8 @@ description: Use @serve-tools/signal-shared-db for signal-backed reactive querie
 Treat the installed package README and public declarations as the API source of truth.
 Read only the references needed for the current task.
 
+Use `watch()`, `watchAll()`, `watchAllKeys()`, or `watchCount()` when the latest asynchronous state should react to signal-backed inputs and shared committed changes.
+
 ## Route by task
 
 - [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.

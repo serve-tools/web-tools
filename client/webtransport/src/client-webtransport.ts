@@ -21,6 +21,8 @@ import type {
 	WebTransportConstructor,
 } from "./lib/types.js";
 
+const defaultMaximumDatagramLength = 64 * 1024;
+
 /** Opens a protocol-owned WebTransport session with reliable operations and typed best-effort datagrams. */
 export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	url: string | URL,
@@ -45,8 +47,17 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 			: { serverCertificateHashes: options.serverCertificateHashes }),
 		protocols: [subprotocol],
 	});
+	const abortSetup = (): void => transport.close({ reason: "Connection aborted" });
 
-	await abortable(transport.ready, options.signal, () => transport.close({ reason: "Connection aborted" }));
+	try {
+		await abortable(transport.ready, options.signal, abortSetup);
+	} catch (error) {
+		if (!options.signal?.aborted) {
+			transport.close({ reason: "Connection setup failed" });
+		}
+
+		throw error;
+	}
 
 	if (transport.protocol !== subprotocol) {
 		transport.close({ closeCode: 1, reason: "Application protocol required" });
@@ -54,178 +65,231 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		throw Object.assign(new Error(`Expected the ${subprotocol} WebTransport protocol`), { name: "ProtocolError" });
 	}
 
-	const operationStream = await abortable(transport.createBidirectionalStream(), options.signal, () =>
-		transport.close({ reason: "Connection aborted" }),
-	);
-	const operationWriter = operationStream.writable.getWriter();
-	const operationDecoder = new FrameDecoder();
-	let client!: ReturnType<typeof createClient<P>>;
+	try {
+		const operationStream = await abortable(transport.createBidirectionalStream(), options.signal, abortSetup);
+		const operationWriter = operationStream.writable.getWriter();
+		const operationDecoder = new FrameDecoder();
+		let client!: ReturnType<typeof createClient<P>>;
 
-	void operationWriter.write(Uint8Array.of(webTransportOperationsRole)).catch((error) => client.disconnect(error));
+		void operationWriter
+			.write(Uint8Array.of(webTransportOperationsRole))
+			.catch((error) => client.disconnect(error));
 
-	client = createClient<P>({
-		send(payload) {
-			void operationWriter.write(encodeFrame(payload)).catch((error) => client.disconnect(error));
-		},
-		close(reason) {
-			transport.close({
-				closeCode: reason instanceof Error && reason.name === "ProtocolError" ? 1 : 0,
-				reason: reason instanceof Error ? reason.message : "",
+		client = createClient<P>({
+			send(payload) {
+				void operationWriter.write(encodeFrame(payload)).catch(client.disconnect);
+			},
+			close(reason) {
+				transport.close({
+					closeCode: reason instanceof Error && reason.name === "ProtocolError" ? 1 : 0,
+					reason: reason instanceof Error ? reason.message : "",
+				});
+			},
+		});
+
+		void pump(
+			operationStream.readable,
+			(chunk) => {
+				for (const frame of operationDecoder.push(chunk)) {
+					client.receive(frame);
+				}
+			},
+			() => operationDecoder.finish(),
+		).then(() => client.fail("The reliable operation stream ended"), client.disconnect);
+
+		const registryStream = await abortable(transport.createBidirectionalStream(), options.signal, abortSetup);
+		const registryWriter = registryStream.writable.getWriter();
+
+		void registryWriter.write(Uint8Array.of(webTransportDatagramRegistryRole)).catch(client.disconnect);
+
+		const registry = new DatagramRegistry((payload) => {
+			void registryWriter.write(payload).catch((error) => registry.fail(error));
+		});
+
+		void pump(
+			registryStream.readable,
+			(chunk) => registry.receive(chunk),
+			() => registry.finish(),
+		)
+			.then(() => {
+				throw connectionClosedError("The reliable datagram registry stream ended");
+			})
+			.catch((error) => {
+				registry.fail(error);
+				client.fail(error);
 			});
-		},
-	});
 
-	void pump(
-		operationStream.readable,
-		(chunk) => {
-			for (const frame of operationDecoder.push(chunk)) {
-				client.receive(frame);
-			}
-		},
-		() => operationDecoder.finish(),
-	).then(
-		() => client.fail("The reliable operation stream ended"),
-		(error) => client.disconnect(error),
-	);
+		const listeners = new Map<string, Set<(value: unknown) => void>>();
+		const subscriptions = new Set<() => void>();
+		const pendingReads = new Set<(reason: unknown) => void>();
+		const sharedDatagramWriter = transport.datagrams.createWritable().getWriter();
+		const maximumDatagramLength =
+			positiveSafeInteger(transport.datagrams.maxDatagramSize) ?? defaultMaximumDatagramLength;
+		let datagramsClosed: Error | undefined;
 
-	const registryStream = await abortable(transport.createBidirectionalStream(), options.signal, () =>
-		transport.close({ reason: "Connection aborted" }),
-	);
-	const registryWriter = registryStream.writable.getWriter();
+		void pump(transport.datagrams.readable, (chunk) => {
+			const { kind, value } = decodeDatagram(chunk, { maximumArrayBufferLength: maximumDatagramLength });
+			const name = registry.name(kind);
 
-	void registryWriter
-		.write(Uint8Array.of(webTransportDatagramRegistryRole))
-		.catch((error) => client.disconnect(error));
-
-	const registry = new DatagramRegistry((payload) => {
-		void registryWriter.write(payload).catch((error) => registry.fail(error));
-	});
-
-	void pump(
-		registryStream.readable,
-		(chunk) => registry.receive(chunk),
-		() => registry.finish(),
-	).then(
-		() => client.fail("The reliable datagram registry stream ended"),
-		(error) => {
-			registry.fail(error);
-			client.disconnect(error);
-		},
-	);
-
-	const listeners = new Map<string, Set<(value: unknown) => void>>();
-	const sharedDatagramWriter = transport.datagrams.createWritable().getWriter();
-
-	void pump(transport.datagrams.readable, (chunk) => {
-		const { kind, value } = decodeDatagram(chunk);
-		const name = registry.name(kind);
-
-		if (!name) {
-			return;
-		}
-
-		for (const listener of listeners.get(name) ?? []) {
-			try {
-				listener(value);
-			} catch (error) {
-				reportError(error);
-			}
-		}
-	}).catch((error) => client.disconnect(error));
-
-	void transport.closed.then(
-		() => client.disconnect(),
-		(error) => client.disconnect(error),
-	);
-
-	const lifetimeAbort = (): void => client.close(options.signal?.reason);
-
-	options.signal?.addEventListener("abort", lifetimeAbort, { once: true });
-
-	void client.closed.then(() => options.signal?.removeEventListener("abort", lifetimeAbort));
-
-	const datagrams = {
-		get maxDatagramSize() {
-			return transport.datagrams.maxDatagramSize;
-		},
-		async write(name: string, value: unknown): Promise<void> {
-			const kind = await registry.register(name);
-
-			await sharedDatagramWriter.write(encodeDatagram(kind, value));
-		},
-		createWritable(name: string, writableOptions?: DatagramWritableOptions): WritableStream<unknown> {
-			const writable = transport.datagrams.createWritable(writableOptions);
-			const writer = writable.getWriter();
-			const kind = registry.register(name);
-
-			return new WritableStream({
-				async write(value) {
-					await writer.write(encodeDatagram(await kind, value));
-				},
-				close: () => writer.close(),
-				abort: (reason) => writer.abort(reason),
-			});
-		},
-		subscribe(name: string, listener: (value: unknown) => void): Subscription {
-			let active = true;
-			let current = listeners.get(name);
-
-			if (!current) {
-				listeners.set(name, (current = new Set()));
+			if (!name) {
+				return;
 			}
 
-			current.add(listener);
+			for (const listener of listeners.get(name) ?? []) {
+				try {
+					listener(value);
+				} catch (error) {
+					reportError(error);
+				}
+			}
+		}).catch(client.fail);
 
-			const unsubscribe = (): void => {
-				if (!active) {
-					return;
+		void transport.closed.then(() => client.disconnect(), client.disconnect);
+
+		const lifetimeAbort = (): void => client.close(options.signal?.reason);
+
+		options.signal?.addEventListener("abort", lifetimeAbort, { once: true });
+
+		const datagrams = {
+			get maxDatagramSize() {
+				return transport.datagrams.maxDatagramSize;
+			},
+			async write(name: string, value: unknown): Promise<void> {
+				if (datagramsClosed) {
+					throw datagramsClosed;
 				}
 
-				active = false;
+				const kind = await registry.register(name);
 
-				current?.delete(listener);
-
-				if (current?.size === 0) {
-					listeners.delete(name);
+				await sharedDatagramWriter.write(encodeDatagram(kind, value));
+			},
+			createWritable(name: string, writableOptions?: DatagramWritableOptions): WritableStream<unknown> {
+				if (datagramsClosed) {
+					throw datagramsClosed;
 				}
-			};
 
-			return {
-				get active() {
-					return active;
-				},
-				unsubscribe,
-				[Symbol.dispose]: unsubscribe,
-			};
-		},
-		read(name: string, readOptions: DatagramReadOptions = {}): Promise<unknown> {
-			if (readOptions.signal?.aborted) {
-				return Promise.reject(readOptions.signal.reason);
-			}
+				const writable = transport.datagrams.createWritable(writableOptions);
+				const writer = writable.getWriter();
+				const kind = registry.register(name);
 
-			return new Promise((resolve, reject) => {
-				let subscription: Subscription;
+				return new WritableStream({
+					async write(value) {
+						if (datagramsClosed) {
+							throw datagramsClosed;
+						}
 
-				const abort = (): void => {
-					subscription.unsubscribe();
+						await writer.write(encodeDatagram(await kind, value));
+					},
+					close: () => writer.close(),
+					abort: (reason) => writer.abort(reason),
+				});
+			},
+			subscribe(name: string, listener: (value: unknown) => void): Subscription {
+				if (datagramsClosed) {
+					throw datagramsClosed;
+				}
 
-					reject(readOptions.signal?.reason);
+				let active = true;
+				let current = listeners.get(name);
+
+				if (!current) {
+					listeners.set(name, (current = new Set()));
+				}
+
+				current.add(listener);
+
+				const unsubscribe = (): void => {
+					if (!active) {
+						return;
+					}
+
+					active = false;
+
+					current?.delete(listener);
+
+					if (current?.size === 0) {
+						listeners.delete(name);
+					}
+
+					subscriptions.delete(unsubscribe);
 				};
 
-				subscription = datagrams.subscribe(name, (value) => {
-					subscription.unsubscribe();
+				subscriptions.add(unsubscribe);
 
-					readOptions.signal?.removeEventListener("abort", abort);
+				return {
+					get active() {
+						return active;
+					},
+					unsubscribe,
+					[Symbol.dispose]: unsubscribe,
+				};
+			},
+			read(name: string, readOptions: DatagramReadOptions = {}): Promise<unknown> {
+				if (datagramsClosed) {
+					return Promise.reject(datagramsClosed);
+				}
 
-					resolve(value);
+				if (readOptions.signal?.aborted) {
+					return Promise.reject(readOptions.signal.reason);
+				}
+
+				return new Promise((resolve, reject) => {
+					let subscription: Subscription;
+
+					const finish = (): void => {
+						subscription.unsubscribe();
+						pendingReads.delete(close);
+						readOptions.signal?.removeEventListener("abort", abort);
+					};
+					const close = (reason: unknown): void => {
+						finish();
+						reject(reason);
+					};
+					const abort = (): void => close(readOptions.signal?.reason);
+
+					subscription = datagrams.subscribe(name, (value) => {
+						finish();
+						resolve(value);
+					});
+
+					pendingReads.add(close);
+					readOptions.signal?.addEventListener("abort", abort, { once: true });
 				});
+			},
+		};
+		const finishDatagrams = (reason?: unknown): void => {
+			if (datagramsClosed) {
+				return;
+			}
 
-				readOptions.signal?.addEventListener("abort", abort, { once: true });
-			});
-		},
-	};
+			datagramsClosed = connectionClosedError(reason);
 
-	return Object.assign(client, { datagrams }) as Client<P>;
+			registry.fail(datagramsClosed);
+
+			for (const close of pendingReads) {
+				close(datagramsClosed);
+			}
+
+			for (const unsubscribe of [...subscriptions]) {
+				unsubscribe();
+			}
+
+			listeners.clear();
+		};
+
+		void client.closed.then(() => {
+			options.signal?.removeEventListener("abort", lifetimeAbort);
+			finishDatagrams();
+		});
+
+		return Object.assign(client, { datagrams }) as Client<P>;
+	} catch (error) {
+		if (!options.signal?.aborted) {
+			transport.close({ reason: "Connection setup failed" });
+		}
+
+		throw error;
+	}
 }
 
 export namespace connect {
@@ -293,3 +357,13 @@ const abortable = async <Value>(
 		promise.then(resolve, reject).finally(() => signal.removeEventListener("abort", cancelled));
 	});
 };
+
+const connectionClosedError = (reason: unknown = "The connection is closed"): Error =>
+	reason instanceof Error
+		? reason
+		: Object.assign(new Error(String(reason)), {
+				name: "ConnectionClosedError",
+			});
+
+const positiveSafeInteger = (value: number): number | undefined =>
+	Number.isSafeInteger(value) && value > 0 ? value : undefined;

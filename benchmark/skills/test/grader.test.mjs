@@ -57,6 +57,32 @@ test("Skill document grading distinguishes same-named recipes from different pac
 	assert.equal(grade.checks.documents, 0);
 });
 
+test("Skill document grading accepts a short composition-reference name", async () => {
+	const grade = await gradeResult({
+		catalog,
+		compile: false,
+		route: {
+			documents: [
+				"client-signals/messaging/skills/serve-tools-signal-messaging/SKILL.md",
+				"client-signals/messaging/skills/serve-tools-signal-messaging/references/own-the-lifecycle.md",
+			],
+			packages: ["@serve-tools/signal-messaging"],
+		},
+		solution: { answer: "", files: [] },
+		task: {
+			expected: {
+				codeTerms: [],
+				documentSuffixes: ["own-the-lifecycle.md"],
+				packages: ["@serve-tools/signal-messaging"],
+			},
+			kind: "usage",
+		},
+		variant: "skill",
+	});
+
+	assert.equal(grade.checks.documents, 1);
+});
+
 test("compiler accepts safe self-contained TypeScript", async () => {
 	const result = await compileFiles(root, [
 		{ content: "const answer: number = 42;\nvoid answer;\n", path: "answer.ts" },

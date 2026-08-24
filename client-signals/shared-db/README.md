@@ -55,7 +55,7 @@ Connect from each window and wrap the shared client with `SignalDB.connect()` as
 
 ## Reactive queries
 
-`watch()` and `watchAll()` return real computed signals with explicit asynchronous state.
+`watch()`, `watchAll()`, `watchAllKeys()`, and `watchCount()` return real computed signals with explicit asynchronous state.
 
 ```ts
 const selectedUser = db.watch("users", "one");
@@ -76,6 +76,8 @@ const selectedUser = db.watch("users", userId);
 userId.set("two"); // Refreshes selectedUser.
 ```
 
+`watchAll()` and `watchAllKeys()` accept reactive `count` and `query` options, while `watchCount()` accepts a reactive `query` option.
+
 The complete query state is:
 
 ```ts
@@ -94,7 +96,8 @@ It resolves when the latest refresh requested so far has published its state, ev
 It accepts `{ signal }`; read failures and cancellation are published as an `error` state rather than rejected from `refresh()`.
 
 Call `query.dispose()` when a query should stop following its key, options, and remote writes.
-Refreshing a disposed query rejects with an `InvalidStateError`; a request already in flight may still publish its result.
+Refreshing a disposed query rejects with an `InvalidStateError`.
+Disposal preserves an already published query snapshot; a pending refresh instead publishes a terminal `InvalidStateError`, and its later database result cannot overwrite that state.
 Calling `db.close()` or losing the shared connection disposes all queries and subscriptions.
 
 Use `invalidate()` to explicitly refresh every active query for one or more stores when needed:
@@ -146,7 +149,7 @@ await stored; // Rejects with the signal's AbortError.
 
 ## Shared-worker lifecycle
 
-`db.source` exposes the underlying `SharedDBClient`.
+`db.source` exposes the underlying `SharedDBClient`, and `db.closed` is its close-completion promise.
 Call `db.close()` when the window no longer needs it, then close the worker port owned by the page.
 The remote client intentionally exposes point operations rather than native transactions, cursors, or connection handles because those objects cannot retain their semantics across a message boundary.
 
@@ -154,12 +157,12 @@ The remote client intentionally exposes point operations rather than native tran
 
 ## Public API
 
-- `SignalDB` wraps a `SharedDBClient`, exposes finite point operations, and owns `watch()`, `watchAll()`, `invalidate()`, and query disposal.
+- `SignalDB` wraps a `SharedDBClient`, exposes finite point operations, and owns `watch()`, `watchAll()`, `watchAllKeys()`, `watchCount()`, `invalidate()`, and query disposal.
 - `SignalDB.connect(port)` creates a reactive database from a shared-worker port.
 - `Query<T>` is a read-only computed signal with `refresh()` and `dispose()`.
 - `QueryState<T>` describes `pending`, `ready`, and `error` states.
 - `Watchable<T>` accepts a static value, `Signal.State`, or `Signal.Computed`.
-- `OperationOptions`, `MutationOptions`, `WriteOptions`, `GetAllOptions`, `CountOptions`, and `WatchAllOptions` describe point operations and reactive query inputs.
+- `OperationOptions`, `MutationOptions`, `WriteOptions`, `GetAllOptions`, `CountOptions`, `WatchAllOptions`, and `WatchCountOptions` describe point operations and reactive query inputs.
 - `SignalDB.Store`, `SignalDB.Schema`, `StoreName`, `StoreKey`, and `StoreValue` define and project database schemas.
 - The root also re-exports the lower-level shared database change and subscription types used by `source`.
 - `@serve-tools/signal-shared-db/shared-worker` exports `listen()` and the corresponding shared database server types.

@@ -20,6 +20,7 @@ const selectedTasks = tasks.filter(
 
 if (options.help) {
 	printHelp();
+
 	process.exit(0);
 }
 
@@ -56,28 +57,7 @@ for (let run = 1; run <= options.runs; ++run) {
 
 shuffle(jobs, options.seed);
 
-const records = [];
-
-for (const [index, job] of jobs.entries()) {
-	const label = `${index + 1}/${jobs.length} ${job.task.id} ${job.variant} run ${job.run}`;
-	if (!options.quiet) {
-		process.stderr.write(`${label}\n`);
-	}
-
-	try {
-		records.push(await evaluate(job));
-	} catch (error) {
-		records.push({
-			error: error instanceof Error ? error.message : String(error),
-			grade: { checks: {}, pass: false, score: 0 },
-			kind: job.task.kind,
-			metrics: emptyMetrics(),
-			run: job.run,
-			taskId: job.task.id,
-			variant: job.variant,
-		});
-	}
-}
+const records = await evaluateJobs(jobs);
 
 records.sort(
 	(left, right) =>
@@ -101,6 +81,7 @@ process.stdout.write(markdown);
 
 if (options.output !== undefined) {
 	const outputBase = path.resolve(options.output).replace(/\.(?:json|md)$/i, "");
+
 	await mkdir(path.dirname(outputBase), { recursive: true });
 	await writeFile(`${outputBase}.json`, `${JSON.stringify(report, undefined, "\t")}\n`);
 	await writeFile(`${outputBase}.md`, markdown);
@@ -114,6 +95,7 @@ async function evaluate({ run, task, variant }) {
 	const discoveryContext = discoveryContexts.get(`${variant}\0${task.kind}`);
 	const routeResult = await provider.route({ catalog, discoveryContext, task, variant });
 	const route = normalizeRoute(catalog, routeResult.data, variant);
+
 	let documents = "";
 	let documentMetrics = emptyMetrics();
 	let routerCharacters = 0;
@@ -122,30 +104,38 @@ async function evaluate({ run, task, variant }) {
 
 	if (task.kind !== "selection") {
 		if (variant === "skill") {
-			const routers = await loadDocuments(catalog, route.documents);
-			const documentResult = await provider.selectDocuments({ catalog, route, routers, task });
-			const refinedRoute = normalizeRoute(
-				catalog,
-				{
-					documents: documentResult.data.documents,
-					packages: route.packages,
-					rationale: documentResult.data.rationale,
-				},
-				variant,
-			);
-			route.documents = refinedRoute.documents;
-			documentMetrics = documentResult.metrics;
-			routerCharacters = routers.length;
+			if (task.kind === "usage") {
+				route.documents = addRequiredUsageReferences(catalog, route, task);
+			} else {
+				const routers = await loadDocuments(catalog, route.documents);
+				const documentResult = await provider.selectDocuments({ catalog, route, routers, task });
+				const refinedRoute = normalizeRoute(
+					catalog,
+					{
+						documents: documentResult.data.documents,
+						packages: route.packages,
+						rationale: documentResult.data.rationale,
+					},
+					variant,
+				);
+
+				route.documents = refinedRoute.documents;
+				documentMetrics = documentResult.metrics;
+				routerCharacters = routers.length;
+			}
 		}
 
 		documents = await loadDocuments(catalog, route.documents);
+
 		const solutionResult = await provider.solve({ documents, route, task, variant });
+
 		solution = solutionResult.data;
 		solutionMetrics = solutionResult.metrics;
 	}
 
 	const grade = await gradeResult({ catalog, compile: options.compile, route, solution, task, variant });
 	const metrics = combineMetrics(routeResult.metrics, documentMetrics, solutionMetrics);
+
 	metrics.contextCharacters = discoveryContext.length + routerCharacters + documents.length;
 
 	return {
@@ -160,9 +150,35 @@ async function evaluate({ run, task, variant }) {
 	};
 }
 
+function addRequiredUsageReferences(catalog, route, task) {
+	const selectedPackages = new Set(route.packages);
+	const documents = new Set(route.documents);
+
+	for (const expectedReference of task.expected.documentSuffixes ?? []) {
+		for (const packageEntry of catalog.packages) {
+			if (!selectedPackages.has(packageEntry.name)) {
+				continue;
+			}
+
+			const reference = packageEntry.references.find(
+				(candidate) =>
+					candidate.path === expectedReference ||
+					(!expectedReference.includes("/") && candidate.path.endsWith(`/${expectedReference}`)),
+			);
+
+			if (reference !== undefined) {
+				documents.add(reference.path);
+			}
+		}
+	}
+
+	return [...documents];
+}
+
 function parseArguments(arguments_) {
 	const values = {
 		compile: undefined,
+		concurrency: 1,
 		help: false,
 		kinds: new Set(),
 		model: undefined,
@@ -178,17 +194,23 @@ function parseArguments(arguments_) {
 
 	for (let index = 0; index < arguments_.length; ++index) {
 		const argument = arguments_[index];
+
 		const next = () => {
 			const value = arguments_[++index];
+
 			if (value === undefined) {
 				throw new Error(`${argument} requires a value`);
 			}
+
 			return value;
 		};
 
 		switch (argument) {
 			case "--compile":
 				values.compile = true;
+				break;
+			case "--concurrency":
+				values.concurrency = Number(next());
 				break;
 			case "--help":
 			case "-h":
@@ -235,6 +257,9 @@ function parseArguments(arguments_) {
 	if (!Number.isInteger(values.runs) || values.runs < 1) {
 		throw new Error("--runs must be a positive integer");
 	}
+	if (!Number.isInteger(values.concurrency) || values.concurrency < 1) {
+		throw new Error("--concurrency must be a positive integer");
+	}
 	if (!Number.isInteger(values.seed)) {
 		throw new Error("--seed must be an integer");
 	}
@@ -248,6 +273,41 @@ function parseArguments(arguments_) {
 	values.compile ??= values.provider !== "fixture";
 
 	return values;
+}
+
+async function evaluateJobs(jobs) {
+	const records = [];
+	let nextIndex = 0;
+	const workerCount = Math.min(options.concurrency, jobs.length);
+
+	async function worker() {
+		while (nextIndex < jobs.length) {
+			const index = nextIndex++;
+			const job = jobs[index];
+			const label = `${index + 1}/${jobs.length} ${job.task.id} ${job.variant} run ${job.run}`;
+
+			if (!options.quiet) {
+				process.stderr.write(`${label}\n`);
+			}
+
+			try {
+				records.push(await evaluate(job));
+			} catch (error) {
+				records.push({
+					error: error instanceof Error ? error.message : String(error),
+					grade: { checks: {}, pass: false, score: 0 },
+					kind: job.task.kind,
+					metrics: emptyMetrics(),
+					run: job.run,
+					taskId: job.task.id,
+					variant: job.variant,
+				});
+			}
+		}
+	}
+
+	await Promise.all(Array.from({ length: workerCount }, worker));
+	return records;
 }
 
 function combineMetrics(...metrics) {
@@ -274,9 +334,13 @@ function shuffle(values, seed) {
 function mulberry32(seed) {
 	return () => {
 		seed |= 0;
+
 		seed = (seed + 0x6d2b79f5) | 0;
+
 		let value = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+
 		value = (value + Math.imul(value ^ (value >>> 7), 61 | value)) ^ value;
+
 		return ((value ^ (value >>> 14)) >>> 0) / 4_294_967_296;
 	};
 }
@@ -289,6 +353,7 @@ Options:
   --model MODEL             Required for the OpenAI provider
   --reasoning EFFORT        Reasoning effort for live runs (default: low)
   --runs COUNT              Repetitions per task and variant (default: 1)
+  --concurrency COUNT       In-flight jobs (default: 1)
   --variants LIST           Comma-separated baseline and/or skill (default: both)
   --kind KIND               Filter by selection, composition, or usage; repeatable
   --task ID                 Filter by task identifier; repeatable

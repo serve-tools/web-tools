@@ -7,11 +7,16 @@
 		"bun",
 		"deno",
 		"node",
+		"nodejs",
+		"real-time",
 		"realtime",
 		"rpc",
 		"server",
 		"subscription",
-		"websocket"
+		"typescript",
+		"web-platform",
+		"websocket",
+		"websockets"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/server/websocket#readme",
 	"bugs": {
@@ -29,7 +34,8 @@
 	"exports": {
 		".": "./dist/server-websocket.js",
 		"./crossws": "./dist/crossws.js",
-		"./runtime/*": "./dist/runtime/*.js"
+		"./runtime/bun": "./dist/runtime/bun.js",
+		"./runtime/node": "./dist/runtime/node.js"
 	},
 	"files": [
 		"dist",

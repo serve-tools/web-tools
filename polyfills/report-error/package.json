@@ -4,11 +4,14 @@
 	"description": "Provides native-aware reportError imports and opt-in global installation",
 	"keywords": [
 		"browser",
+		"browser-compatibility",
 		"error",
 		"node",
 		"polyfill",
 		"report-error",
 		"reporterror",
+		"typescript",
+		"web-platform",
 		"worker"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/polyfills/report-error#readme",

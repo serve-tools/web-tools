@@ -4,10 +4,19 @@
 	"description": "SharedWorker-owned typed WebTransport operations and datagrams",
 	"keywords": [
 		"browser",
+		"cross-tab",
 		"datagram",
+		"datagrams",
+		"http-3",
+		"http3",
 		"quic",
+		"shared-worker",
 		"sharedworker",
 		"subscription",
+		"typescript",
+		"web-api",
+		"web-platform",
+		"web-transport",
 		"webtransport"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/shared-webtransport#readme",
@@ -25,7 +34,8 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/client-shared-webtransport.js",
-		"./scope/*": "./dist/lib/scope/*.js"
+		"./scope/shared-worker": "./dist/lib/scope/shared-worker.js",
+		"./scope/window": "./dist/lib/scope/window.js"
 	},
 	"files": [
 		"dist",

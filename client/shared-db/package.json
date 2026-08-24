@@ -4,12 +4,18 @@
 	"description": "SharedWorker-coordinated IndexedDB operations and change subscriptions",
 	"keywords": [
 		"browser",
+		"cross-tab",
 		"database",
+		"idb",
 		"indexeddb",
 		"messageport",
+		"offline-first",
+		"shared-worker",
 		"sharedworker",
 		"subscription",
-		"typescript"
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/shared-db#readme",
 	"bugs": {
@@ -26,7 +32,8 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/client-shared-db.js",
-		"./scope/*": "./dist/lib/scope/*.js"
+		"./scope/shared-worker": "./dist/lib/scope/shared-worker.js",
+		"./scope/window": "./dist/lib/scope/window.js"
 	},
 	"files": [
 		"dist",

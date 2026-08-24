@@ -42,16 +42,16 @@ interface AppSchema {
 }
 
 await using db = await DB.open<AppSchema>("app", {
-	version: 2,
-	upgrade(database, { oldVersion, transaction }) {
-		if (oldVersion < 1) {
-			const users = database.createObjectStore("users", { keyPath: "id" });
-			users.createIndex("byEmail", "email", { unique: true });
-		}
+		version: 2,
+		upgrade(database, { oldVersion, transaction }) {
+			if (oldVersion < 1) {
+				database.createObjectStore("users", { keyPath: "id" });
+			}
 
-		if (oldVersion < 2) {
-			database.createObjectStore("logs", { autoIncrement: true });
-		}
+			if (oldVersion < 2) {
+				transaction.objectStore("users").createIndex("byEmail", "email", { unique: true });
+				database.createObjectStore("logs", { autoIncrement: true });
+			}
 	},
 });
 ```

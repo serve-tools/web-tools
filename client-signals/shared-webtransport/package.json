@@ -3,10 +3,24 @@
 	"version": "0.2.0",
 	"description": "SharedWorker WebTransport clients with subscription Signal state",
 	"keywords": [
+		"browser",
+		"cross-tab",
+		"datagrams",
+		"fine-grained-reactivity",
+		"http-3",
+		"http3",
+		"quic",
 		"reactive",
+		"shared-worker",
 		"sharedworker",
 		"signal",
+		"signals",
 		"subscription",
+		"tc39-signals",
+		"typescript",
+		"web-api",
+		"web-platform",
+		"web-transport",
 		"webtransport"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/shared-webtransport#readme",
@@ -24,7 +38,8 @@
 	"type": "module",
 	"exports": {
 		".": "./dist/signal-shared-webtransport.js",
-		"./scope/*": "./dist/scope/*.js"
+		"./scope/shared-worker": "./dist/scope/shared-worker.js",
+		"./scope/window": "./dist/scope/window.js"
 	},
 	"files": [
 		"dist",

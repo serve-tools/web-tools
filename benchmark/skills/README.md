@@ -46,12 +46,18 @@ OPENAI_API_KEY=... npm run benchmark:skills -- \
   --model gpt-5.6-luna \
   --reasoning low \
   --runs 10 \
+  --concurrency 4 \
   --output /tmp/serve-tools-skill-eval
 ```
 
 The output path produces `.json` raw evidence and a `.md` summary.
 Raw records include routes, selected documents, generated answers, generated files, deterministic grades, token usage, request count, context characters, and latency.
 API keys and request authorization headers are never written.
+
+Jobs run one at a time by default.
+For a live all-package evaluation, begin with `--concurrency 4` and lower it if the account's rate limits produce retries or failed jobs.
+Concurrency bounds only the number of jobs in flight; the seeded shuffled job queue, paired records, grades, and report ordering remain unchanged.
+Keep `OPENAI_API_KEY` in the environment or a local secret manager, never in a command committed to the repository or in benchmark output.
 
 Use `--task ID` or `--kind selection|composition|usage` repeatedly for narrower experiments.
 Use `--variants baseline`, `--variants skill`, or the default paired conditions.

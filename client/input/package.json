@@ -4,13 +4,15 @@
 	"description": "Abortable pointer and drag-and-drop session observers for browser clients",
 	"keywords": [
 		"abortsignal",
+		"browser",
 		"drag-and-drop",
 		"drop-target",
 		"input",
 		"pointer",
 		"pointer-events",
 		"typescript",
-		"web-api"
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/input#readme",
 	"bugs": {

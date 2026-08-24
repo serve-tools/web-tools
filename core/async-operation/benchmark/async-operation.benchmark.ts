@@ -1,7 +1,7 @@
 import { test } from "vitest";
 
 import { benchmark } from "../../../client/benchmark.js";
-import { AsyncOperation } from "../src/operation.js";
+import { AsyncOperation, AsyncOperationSubscriber } from "../src/operation.js";
 
 let sink = 0;
 
@@ -154,4 +154,52 @@ test("async operation lifecycle", async () => {
 	if (sink === 0) {
 		throw new Error("The benchmark did not consume any operation results.");
 	}
+});
+
+test("subscriber delivery", async () => {
+	await benchmark(
+		"async-operation/subscriber-one-terminal-32-values",
+		async () => {
+			const subscriber = new AsyncOperationSubscriber<number, number>();
+
+			subscriber.subscribe((value) => {
+				sink += value;
+			});
+
+			const operation = new AsyncOperation<number, number>(async (write) => {
+				for (let value = 1; value <= 32; ++value) {
+					await write(value);
+				}
+
+				return 33;
+			});
+
+			sink += await subscriber.consume(operation);
+		},
+		{ iterations: 500, samples: 10, warmup: 3 },
+	);
+
+	await benchmark(
+		"async-operation/subscriber-eight-terminals-32-values",
+		async () => {
+			const subscriber = new AsyncOperationSubscriber<number, number>();
+
+			for (let terminal = 0; terminal < 8; ++terminal) {
+				subscriber.subscribe((value) => {
+					sink += value;
+				});
+			}
+
+			const operation = new AsyncOperation<number, number>(async (write) => {
+				for (let value = 1; value <= 32; ++value) {
+					await write(value);
+				}
+
+				return 33;
+			});
+
+			sink += await subscriber.consume(operation);
+		},
+		{ iterations: 250, samples: 10, warmup: 3 },
+	);
 });

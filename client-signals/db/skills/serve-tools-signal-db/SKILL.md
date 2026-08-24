@@ -11,8 +11,9 @@ Treat the installed package README and public declarations as the API source of 
 
 - [Recipe: watch a database query](references/recipe-quick-start.md): compile-checked schema and query state.
 
-- Use Promise operations for finite work and `watch()` or `watchAll()` for latest asynchronous state.
+- Use Promise operations for finite work and `watch()`, `watchAll()`, `watchAllKeys()`, or `watchCount()` for latest asynchronous state.
 - Handle `pending`, `ready`, and `error` explicitly.
 - Expect writes through the same wrapper to invalidate after commit.
 - Call `invalidate()` for external writes; use the shared database package for coordinated cross-tab changes.
 - Dispose queries and close the owned database connection.
+- Treat disposal as terminal: it preserves a published snapshot or publishes `InvalidStateError` for a pending refresh.

@@ -68,6 +68,7 @@ The adapter requires `serve-tools.realtime.v1` in `WT-Available-Protocols` and s
 Authorization runs during session establishment and its value becomes the typed connection context.
 Authorization, datagram callback, cleanup, formatter, and transport failures that cannot be returned to the client use the runtime's native `reportError()` or `console.error()` when that web API is unavailable.
 Call `realtime.close()` during shutdown.
+Shutdown closes and forgets every owned reliable stream, aborts active operation and datagram handler signals, fails pending datagram registrations and reads, and clears local datagram listeners.
 The current `@http3-server/server` session API does not expose an application close-code method, so this adapter closes its owned reliable streams but cannot forward the core close code to the native session.
 
 ## Build another adapter
@@ -75,10 +76,12 @@ The current `@http3-server/server` session API does not expose an application cl
 `createSession()` accepts separate byte callbacks for reliable operations, the reliable datagram-name registry, and native datagrams.
 Forward stream chunks to `receiveOperations()` and `receiveRegistry()`, call their finish methods at end-of-stream, and forward each complete native datagram to `receiveDatagram()`.
 
-The package does not impose a datagram size limit.
+The package does not impose a second outgoing datagram size limit or pre-reject a send by size.
 It exposes the native maximum when the adapter can observe it, and a native send rejection rejects that write.
+Incoming structured binary allocations are bounded by that native maximum, then `maximumMessageLength` when configured, or a 64 KiB fallback.
 Structured datagrams use the shared serializer; binary views bypass it and arrive as `Uint8Array`.
 An unknown connection-local datagram kind is dropped because it may legitimately arrive before its reliable registry message.
+Clean EOF on either reliable protocol stream ends the session and fails pending work.
 
 ## Boundaries
 

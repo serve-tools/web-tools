@@ -38,6 +38,8 @@ The package sets its required `Accept` and `Content-Type` fields after author he
 
 Optional `headers` may be a `HeadersInit` value or an async provider called for each operation.
 Other standard `RequestInit` fields pass through to Fetch.
+Set the positive `maximumMessageLength` option when the server's response limit differs from the 16 MiB default.
+The client applies it to finite response bytes, subscription frame payloads, and declared resizable-buffer capacity before allocation.
 The connection signal closes all exchanges, while operation signals cancel one request or subscription.
 Ending a subscription response before a protocol `complete`, `reject`, or `close` settlement reports a protocol error.
 
@@ -57,6 +59,7 @@ Client operations are separate POST bodies, and this package does not reconnect,
 ## Public API
 
 `connect<P>()` returns `Client<P>` with `request()`, `subscribe()`, `closed`, and `close()`.
+Its options include Fetch initialization, author headers, connection lifetime signal, custom Fetch implementation, and `maximumMessageLength`.
 `RemoteError`, protocol extraction, request options, subscription options, and subscription handle types are also exported.
 
 ## Agent Skill

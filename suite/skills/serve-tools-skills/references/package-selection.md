@@ -2,63 +2,66 @@
 
 Select the narrowest package that owns the required behavior.
 
-| Need                                            | Package                                       | Distinguishing behavior                                                |
-| ----------------------------------------------- | --------------------------------------------- | ---------------------------------------------------------------------- |
-| Owned async events plus a terminal result       | `@serve-tools/async-operation`                | Backpressure, cancellation, and asynchronous disposal                  |
-| Several browser utilities through namespaces    | `@serve-tools/client`                         | Facade with focused capability subpaths                                |
-| DOM context propagation                         | `@serve-tools/client-context`                 | Provider and consumer lifecycle with late-registration replay          |
-| Direct IndexedDB operations                     | `@serve-tools/client-db`                      | Promise-based databases, transactions, and scans                       |
-| Typed JSON Server-Sent Events                   | `@serve-tools/client-event-source`            | Native EventSource reconnection, named events, and IDs                 |
-| Binary HTTP requests and subscriptions          | `@serve-tools/client-http-stream`             | Author headers, abort signals, and framed streaming responses          |
-| SharedWorker HTTP requests and subscriptions    | `@serve-tools/client-shared-http-stream`      | Worker-owned authorization and Fetch exchange coordination             |
-| Pointer or drag-and-drop sessions               | `@serve-tools/client-input`                   | Explicitly owned input-session lifecycles                              |
-| Clipboard, picker, share, or eyedropper actions | `@serve-tools/client-interaction`             | One-shot browser interactions with explicit outcomes                   |
-| Keyboard chords and accessible labels           | `@serve-tools/client-keyboard`                | Platform-aware matching, symbols, and ARIA shortcuts                   |
-| Worker or port requests and subscriptions       | `@serve-tools/client-messaging`               | Typed finite requests and streaming subscriptions                      |
-| Custom realtime client adapter                  | `@serve-tools/client-realtime`                | Sans-I/O client operation state machine                                |
-| IndexedDB coordinated through a SharedWorker    | `@serve-tools/client-shared-db`               | Cross-tab operations and change subscriptions                          |
-| EventSource shared through a SharedWorker       | `@serve-tools/client-shared-event-source`     | One native EventSource with typed per-page event subscriptions         |
-| WebSocket shared through a SharedWorker         | `@serve-tools/client-shared-websocket`        | One physical socket with per-page logical clients                      |
-| WebTransport shared through a SharedWorker      | `@serve-tools/client-shared-webtransport`     | One physical session for reliable operations and shared datagrams      |
-| Observable local or session storage             | `@serve-tools/client-storage`                 | Storage reads, writes, and watches                                     |
-| Binary WebSocket requests and subscriptions     | `@serve-tools/client-websocket`               | Typed structured-data protocol over WebSocket                          |
-| Reliable operations plus lossy datagrams        | `@serve-tools/client-webtransport`            | WebTransport streams and typed best-effort datagrams                   |
-| Binary HTTP request and stream handlers         | `@serve-tools/server-http-stream`             | WHATWG Fetch handler with HTTP media negotiation                       |
-| JSON Server-Sent Event handlers                 | `@serve-tools/server-event-source`            | Fetch handler with IDs, reconnect cursors, retry, and keepalives       |
-| Custom realtime server adapter                  | `@serve-tools/server-realtime`                | Sans-I/O handler and operation core                                    |
-| WebSocket request and subscription handlers     | `@serve-tools/server-websocket`               | Sans-I/O server core plus runtime adapters                             |
-| WebTransport operation and datagram handlers    | `@serve-tools/server-webtransport`            | Runtime-neutral session core plus Node HTTP/3 adapter                  |
-| Realtime wire format or reliable stream frames  | `@serve-tools/realtime-protocol`              | Shared serializer, message guards, types, and framing                  |
-| Signal-aware DOM templates                      | `@serve-tools/signal-dom`                     | Functional HTML, SVG, and MathML templating                            |
-| EventTarget state as Signals                    | `@serve-tools/signal-event-target`            | Events and media queries exposed as read-only Signals                  |
-| EventSource client with Signals                 | `@serve-tools/signal-event-source`            | Complete client plus latest JSON event state and event ID              |
-| Messaging clients with Signals                  | `@serve-tools/signal-messaging`               | Complete client and scope APIs plus reactive subscription state        |
-| Direct IndexedDB queries as Signals             | `@serve-tools/signal-db`                      | Reactive queries invalidated by same-wrapper committed writes          |
-| HTTP streaming client with Signals              | `@serve-tools/signal-http-stream`             | Complete client plus latest-state subscription observation             |
-| Shared IndexedDB queries as Signals             | `@serve-tools/signal-shared-db`               | Reactive queries over the SharedWorker client                          |
-| Shared EventSource client with Signals          | `@serve-tools/signal-shared-event-source`     | Complete shared lifecycle plus page-owned latest event state and ID    |
-| Shared HTTP client with Signals                 | `@serve-tools/signal-shared-http-stream`      | Complete shared lifecycle plus page-owned subscription state           |
-| WebSocket client with Signals                   | `@serve-tools/signal-websocket`               | Complete client plus latest-state subscription observation             |
-| Shared WebSocket client with Signals            | `@serve-tools/signal-shared-websocket`        | Complete shared lifecycle plus page-owned subscription state           |
-| WebTransport client with Signals                | `@serve-tools/signal-webtransport`            | Complete client plus reliable state; datagrams remain occurrences      |
-| Shared WebTransport client with Signals         | `@serve-tools/signal-shared-webtransport`     | Complete shared lifecycle plus reliable page-owned state               |
-| Web Storage values as Signals                   | `@serve-tools/signal-storage`                 | Reactive storage watches                                               |
-| Signal-aware Lit components                     | `@serve-tools/lit-signals`                    | Templates, directives, decorators, host styles, and lifecycle tracking |
-| Core Signal capabilities together               | `@serve-tools/signals`                        | Flat facade with focused package subpaths                              |
-| Signal-aware maps, sets, and weak collections   | `@serve-tools/signal-collections`             | Native collection interfaces with reactive reads                       |
-| Batched reactive side effects                   | `@serve-tools/signal-effect`                  | Microtask-batched effects                                              |
-| Core Signals primitives                         | `@serve-tools/signal`                         | TC39 Signals proposal implementation                                   |
-| Install the decorator metadata symbol           | `@serve-tools/polyfill-decorator-metadata`    | Native-preserving global `Symbol.metadata` installation                |
-| Import a module-scoped metadata symbol          | `@serve-tools/ponyfill-decorator-metadata`    | Explicit shared identity without global mutation                       |
-| Transform modern decorator syntax               | `@serve-tools/rolldown-decorators`            | Oxc-AST transform for Rolldown and Vite                                |
-| Install idle-callback globals                   | `@serve-tools/polyfill-request-idle-callback` | Global mutation                                                        |
-| Import idle-callback functions                  | `@serve-tools/ponyfill-request-idle-callback` | No global mutation                                                     |
-| Import native-aware error reporting             | `@serve-tools/polyfill-report-error`          | Native function or ponyfill without global mutation                    |
-| Install a missing reportError global            | `@serve-tools/polyfill-report-error/apply`    | Preserves native behavior and installs only the ponyfill when missing  |
-| Import the console-backed reportError fallback  | `@serve-tools/ponyfill-report-error`          | No native selection or global mutation                                 |
-| Install explicit-resource-management globals    | `@serve-tools/polyfill-resource-management`   | Global mutation                                                        |
-| Import explicit-resource-management classes     | `@serve-tools/ponyfill-resource-management`   | No global mutation                                                     |
-| Inject required polyfills during Vite builds    | `@serve-tools/vite-polyfills`                 | Build-time detection and injection                                     |
+- Owned async events, terminal results, backpressure, and cancellation: `@serve-tools/async-operation`.
+- Namespace facade for several browser utilities: `@serve-tools/client`.
+- Namespace facade for several Signal-aware browser clients: `@serve-tools/client-signals`.
+- DOM context providers and consumers with late-registration replay: `@serve-tools/client-context`.
+- Promise-based IndexedDB operations, transactions, and scans: `@serve-tools/client-db`.
+- Native EventSource, typed JSON events, reconnection, and event IDs: `@serve-tools/client-event-source`.
+- Binary HTTP requests, subscriptions, headers, and framed responses: `@serve-tools/client-http-stream`.
+- SharedWorker-owned HTTP requests, subscriptions, and authorization: `@serve-tools/client-shared-http-stream`.
+- Explicitly owned pointer and drag-and-drop sessions: `@serve-tools/client-input`.
+- Clipboard, file picker, sharing, and eyedropper actions: `@serve-tools/client-interaction`.
+- Keyboard chords, accessible labels, platform symbols, and ARIA shortcuts: `@serve-tools/client-keyboard`.
+- Typed worker or MessagePort requests and subscriptions: `@serve-tools/client-messaging`.
+- Sans-I/O custom realtime client operation adapter: `@serve-tools/client-realtime`.
+- SharedWorker-coordinated IndexedDB operations and change subscriptions: `@serve-tools/client-shared-db`.
+- SharedWorker-owned native EventSource and per-page event subscriptions: `@serve-tools/client-shared-event-source`.
+- SharedWorker-owned WebSocket with per-page logical clients: `@serve-tools/client-shared-websocket`.
+- SharedWorker-owned WebTransport operations and datagrams: `@serve-tools/client-shared-webtransport`.
+- Observable localStorage and sessionStorage reads and writes: `@serve-tools/client-storage`.
+- Typed binary WebSocket requests and subscriptions: `@serve-tools/client-websocket`.
+- Typed WebTransport reliable operations and lossy datagrams: `@serve-tools/client-webtransport`.
+- Fetch-compatible binary HTTP request and subscription handlers: `@serve-tools/server-http-stream`.
+- Fetch-compatible JSON Server-Sent Events, IDs, replay cursors, and keepalives: `@serve-tools/server-event-source`.
+- Sans-I/O custom realtime server handler adapter without a client: `@serve-tools/server-realtime`.
+- Typed WebSocket request and subscription server handlers: `@serve-tools/server-websocket`.
+- Typed WebTransport operation and datagram server handlers: `@serve-tools/server-webtransport`.
+- Realtime structured serialization, message guards, and reliable stream framing: `@serve-tools/realtime-protocol`.
+- Signal-aware functional HTML, SVG, and MathML templating: `@serve-tools/signal-dom`.
+- EventTarget state and media queries as disposable read-only Signals: `@serve-tools/signal-event-target`.
+- Complete EventSource client with latest-event Signal state and IDs: `@serve-tools/signal-event-source`.
+- Complete messaging client with reactive subscription Signal state: `@serve-tools/signal-messaging`.
+- Direct IndexedDB queries as invalidated, disposable Signal state: `@serve-tools/signal-db`.
+- Complete HTTP streaming client with subscription Signal state: `@serve-tools/signal-http-stream`.
+- SharedWorker IndexedDB queries as reactive Signal state: `@serve-tools/signal-shared-db`.
+- SharedWorker EventSource client with latest-event Signal state: `@serve-tools/signal-shared-event-source`.
+- SharedWorker HTTP streaming client with subscription Signal state: `@serve-tools/signal-shared-http-stream`.
+- Complete WebSocket client with subscription Signal state: `@serve-tools/signal-websocket`.
+- SharedWorker WebSocket client with subscription Signal state: `@serve-tools/signal-shared-websocket`.
+- Complete WebTransport client with reliable Signal state and occurrence datagrams: `@serve-tools/signal-webtransport`.
+- SharedWorker WebTransport client with reliable subscription Signal state: `@serve-tools/signal-shared-webtransport`.
+- Disposable reactive Web Storage value watches: `@serve-tools/signal-storage`.
+- Signal-aware Lit templates, directives, decorators, styles, and lifecycle: `@serve-tools/lit-signals`.
+- Facade combining Signal primitives, collections, and effects: `@serve-tools/signals`.
+- Signal-aware native Array, Map, Set, and Object collections: `@serve-tools/signal-collections`.
+- Microtask-batched, disposable Signal effects: `@serve-tools/signal-effect`.
+- Core TC39 Signal State, Computed, and Watcher primitives: `@serve-tools/signal`.
+- Install a native-preserving global `Symbol.metadata`: `@serve-tools/polyfill-decorator-metadata`.
+- Import a module-scoped metadata symbol without global mutation: `@serve-tools/ponyfill-decorator-metadata`.
+- Transform modern TC39 decorators in Rolldown and Vite: `@serve-tools/rolldown-decorators`.
+- Install `Uint8Array.prototype.toBase64` in Node.js: `@serve-tools/polyfill-arraybuffer-base64`.
+- Import base64 encoding in Node.js without global mutation: `@serve-tools/ponyfill-arraybuffer-base64`.
+- Install idle-callback globals: `@serve-tools/polyfill-request-idle-callback`.
+- Import idle-callback functions without global mutation: `@serve-tools/ponyfill-request-idle-callback`.
+- Install native-aware prioritized task scheduling globals: `@serve-tools/polyfill-prioritized-task-scheduling`.
+- Import prioritized task scheduling without global mutation: `@serve-tools/ponyfill-prioritized-task-scheduling`.
+- Import native-aware error reporting: `@serve-tools/polyfill-report-error`.
+- Install a missing `reportError` global: `@serve-tools/polyfill-report-error/apply`.
+- Import console-backed error reporting without global mutation: `@serve-tools/ponyfill-report-error`.
+- Install explicit-resource-management globals: `@serve-tools/polyfill-resource-management`.
+- Import resource-management classes without global mutation: `@serve-tools/ponyfill-resource-management`.
+- Detect and inject browser polyfills during Vite builds: `@serve-tools/vite-polyfills`.
 
 `@serve-tools/lit-signals` re-exports its compatible `Signal` runtime.
 Select `@serve-tools/signal` separately only when application code imports it directly.
@@ -67,7 +70,10 @@ Select `@serve-tools/signal` separately only when application code imports it di
 
 - Choose `@serve-tools/async-operation` for runtime-neutral owned work; keep transport framing, reconciliation, persistence, and reactive state in their owning layers.
 - Choose a `client-*` package when imperative state or transport APIs are sufficient.
-- Pair each realtime client with its matching server package.
+- Pair a realtime client with its matching server only when the task explicitly implements both network sides; a client-only or server-only task needs only its owning package.
+- A custom server adapter uses only `@serve-tools/server-realtime`; never add `@serve-tools/client-realtime` unless the task also implements a client.
+- A SharedWorker package's `serve` API owns worker coordination, not an HTTP, EventSource, WebSocket, or WebTransport server.
+- Do not add protocol, effect, primitive, or transport dependencies when the selected package already owns the requested behavior.
 - Choose the `client-realtime` or `server-realtime` core only when building another transport adapter.
 - Choose `@serve-tools/realtime-protocol` directly only for transport integration or protocol infrastructure.
 - Choose a capability-complete `signal-*` counterpart instead when consumers need reactive reads alongside the same client operations.

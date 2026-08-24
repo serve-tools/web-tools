@@ -7,10 +7,16 @@ interface NotesSchema {
 /** A compile-tested schema, migration, transaction, and scan recipe. */
 export async function databaseRecipe(signal: AbortSignal): Promise<void> {
 	await using db = await DB.open<NotesSchema>("notes", {
-		version: 1,
-		upgrade(database) {
-			const notes = database.createObjectStore("notes", { keyPath: "id" });
-			notes.createIndex("byUpdatedAt", "updatedAt");
+		version: 2,
+		upgrade(database, { oldVersion, transaction }) {
+			if (oldVersion < 1) {
+				database.createObjectStore("notes", { keyPath: "id" });
+			}
+
+			if (oldVersion < 2) {
+				const notes = transaction.objectStore("notes");
+				notes.createIndex("byUpdatedAt", "updatedAt");
+			}
 		},
 	});
 

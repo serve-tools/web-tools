@@ -4,6 +4,8 @@ Use this package only after the transport has selected `serve-tools.realtime.v1`
 
 Supply one complete serialized message to `receive()`.
 Frame a byte stream with `FrameDecoder` and `encodeFrame`; do not feed arbitrary chunks directly.
+Pass the transport's positive maximum complete-message length as `createClient()`'s second `maximumMessageLength` option when it differs from the 16 MiB default.
+The client applies that limit before deserializing and to declared resizable-buffer capacity.
 Call `fail()` for invalid peer input, `disconnect()` after physical loss, and `close()` for application shutdown.
 Keep those three receive-side controls on the adapter connection; a network package's public client type should expose only requests, subscriptions, `closed`, and `close()`.
 

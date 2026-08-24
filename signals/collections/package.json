@@ -5,13 +5,22 @@
 	"keywords": [
 		"array",
 		"collection",
+		"fine-grained-reactivity",
 		"map",
 		"object",
 		"reactive",
+		"reactive-array",
+		"reactive-map",
+		"reactive-object",
+		"reactive-set",
 		"reactivity",
 		"set",
 		"signal",
-		"tc39"
+		"signals",
+		"tc39",
+		"tc39-signals",
+		"typescript",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/signals/collections#readme",
 	"bugs": {

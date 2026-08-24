@@ -3,13 +3,21 @@
 	"version": "0.1.1",
 	"description": "EventTarget state and media queries observed as read-only Signals",
 	"keywords": [
+		"browser",
+		"event-target",
 		"eventtarget",
+		"fine-grained-reactivity",
 		"matchmedia",
 		"media-query",
 		"reactive",
 		"signal",
+		"signals",
 		"subscription",
-		"tc39"
+		"tc39",
+		"tc39-signals",
+		"typescript",
+		"web-api",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client-signals/event-target#readme",
 	"bugs": {

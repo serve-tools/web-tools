@@ -12,7 +12,7 @@ import { createConnection } from "@serve-tools/server-realtime";
 import type * as T from "./lib/types.js";
 import type { Connection, FetchHandler, HandlerOptions, Handlers } from "./lib/types.js";
 
-const defaultMaximumMessageLength = 16 * 1024 * 1024;
+const defaultMaximumLength = 16 * 1024 * 1024;
 const messageTooLarge = Symbol("messageTooLarge");
 
 /** Creates a Fetch handler for finite requests and framed binary subscriptions. */
@@ -21,9 +21,15 @@ export function createHandler<const P extends Protocol & ProtocolDefinition<P>, 
 	options: HandlerOptions<Context> = {},
 ): FetchHandler {
 	const connections = new Set<Connection<P, Context>>();
-	const maximumMessageLength = options.maximumMessageLength ?? defaultMaximumMessageLength;
+	const maximumMessageLength = options.maximumMessageLength ?? defaultMaximumLength;
+	const maximumBufferedAmount = options.maximumBufferedAmount ?? defaultMaximumLength;
 
-	if (!Number.isSafeInteger(maximumMessageLength) || maximumMessageLength < 1) {
+	if (
+		!Number.isSafeInteger(maximumMessageLength) ||
+		maximumMessageLength < 1 ||
+		!Number.isSafeInteger(maximumBufferedAmount) ||
+		maximumBufferedAmount < 1
+	) {
 		throw new RangeError("Connection limits must be positive safe integers");
 	}
 
@@ -62,7 +68,7 @@ export function createHandler<const P extends Protocol & ProtocolDefinition<P>, 
 
 		try {
 			payload = await readBody(request, maximumMessageLength);
-			message = deserialize(payload);
+			message = deserialize(payload, { maximumArrayBufferLength: maximumMessageLength });
 		} catch (error) {
 			if (error === messageTooLarge) {
 				return new Response("Content Too Large", { status: 413 });
@@ -80,7 +86,15 @@ export function createHandler<const P extends Protocol & ProtocolDefinition<P>, 
 
 		return message[1] === "request"
 			? serveRequest<P, Context>(handlers, context, options, payload, request.signal, connections)
-			: serveSubscription<P, Context>(handlers, context, options, payload, request.signal, connections);
+			: serveSubscription<P, Context>(
+					handlers,
+					context,
+					options,
+					payload,
+					request.signal,
+					connections,
+					maximumBufferedAmount,
+				);
 	};
 	const handler = handle as FetchHandler;
 	const close = (reason?: unknown): void => {
@@ -223,62 +237,92 @@ const serveSubscription = <P extends Protocol & ProtocolDefinition<P>, Context>(
 	payload: ArrayBuffer,
 	signal: AbortSignal,
 	connections: Set<Connection<P, Context>>,
+	maximumBufferedAmount: number,
 ): Response => {
 	let connection!: Connection<P, Context>;
+	let streamController!: ReadableStreamDefaultController<Uint8Array>;
 	let finished = false;
-	let stopAbort = (): void => {};
 
-	const body = new ReadableStream<Uint8Array>({
-		start(controller) {
-			const finish = (): void => {
-				if (finished) {
-					return;
-				}
-				finished = true;
-				stopAbort();
-				try {
-					controller.close();
-				} catch {}
-			};
-			connection = createConnection<P, Context>(
-				handlers,
-				{
-					send(payload, message) {
-						controller.enqueue(encodeFrame(payload));
+	const finish = (reason?: unknown): void => {
+		if (finished) {
+			return;
+		}
 
-						if (message[1] === "complete" || message[1] === "reject" || message[1] === "close") {
-							finish();
-						}
+		finished = true;
+		signal.removeEventListener("abort", abort);
+
+		try {
+			reason === undefined ? streamController.close() : streamController.error(reason);
+		} catch {}
+	};
+	const abort = (): void => connection.disconnect(signal.reason);
+
+	const body = new ReadableStream<Uint8Array>(
+		{
+			start(controller) {
+				streamController = controller;
+				connection = createConnection<P, Context>(
+					handlers,
+					{
+						send(payload, message) {
+							const frame = encodeFrame(payload);
+
+							if ((controller.desiredSize ?? 0) < frame.byteLength) {
+								const error = Object.assign(
+									new Error("The transport send queue exceeds the configured maximum"),
+									{ name: "BackpressureError" },
+								);
+
+								finish(error);
+
+								throw error;
+							}
+
+							try {
+								controller.enqueue(frame);
+							} catch (error) {
+								finish(error);
+
+								throw error;
+							}
+
+							if (message[1] === "complete" || message[1] === "reject" || message[1] === "close") {
+								finish();
+							}
+						},
+						close: (code, reason) =>
+							finish(
+								code === 1000
+									? undefined
+									: Object.assign(new Error(reason), { name: "TransportError" }),
+							),
 					},
-					close: finish,
-				},
-				context,
-				options,
-			);
+					context,
+					options,
+				);
 
-			connections.add(connection);
+				connections.add(connection);
 
-			void connection.closed.then(() => {
-				connections.delete(connection);
-				finish();
-			});
+				void connection.closed.then(() => {
+					connections.delete(connection);
+					finish();
+				});
 
-			const abort = (): void => connection.disconnect(signal.reason);
+				if (signal.aborted) {
+					abort();
+				} else {
+					signal.addEventListener("abort", abort, { once: true });
+				}
 
-			if (signal.aborted) {
-				abort();
-			} else {
-				signal.addEventListener("abort", abort, { once: true });
-				stopAbort = () => signal.removeEventListener("abort", abort);
-			}
-
-			connection.receive(payload);
+				connection.receive(payload);
+			},
+			cancel(reason) {
+				signal.removeEventListener("abort", abort);
+				connection?.disconnect(reason);
+			},
 		},
-		cancel(reason) {
-			stopAbort();
-			connection?.disconnect(reason);
-		},
-	});
+		{ highWaterMark: maximumBufferedAmount, size: (chunk) => chunk.byteLength },
+	);
 
 	return new Response(body, {
 		headers: {

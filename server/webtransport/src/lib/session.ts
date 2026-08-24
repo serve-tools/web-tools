@@ -16,6 +16,8 @@ import type {
 	SessionTransport,
 } from "./types.js";
 
+const defaultMaximumDatagramLength = 64 * 1024;
+
 /** Creates one protocol server over separated reliable operation, registry, and datagram channels. */
 export function createSession<const P extends Protocol & ProtocolDefinition<P>, Context = undefined>(
 	handlers: Handlers<P, Context>,
@@ -26,7 +28,14 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 	const operationDecoder = new FrameDecoder(options.maximumMessageLength);
 	const registry = new DatagramRegistry((payload) => transport.sendRegistry(payload));
 	const listeners = new Map<string, Set<(value: unknown) => void>>();
+	const subscriptions = new Set<() => void>();
+	const pendingReads = new Set<(reason: unknown) => void>();
 	const controller = new AbortController();
+	const maximumDatagramLength =
+		positiveSafeInteger(transport.maxDatagramSize) ??
+		positiveSafeInteger(options.maximumMessageLength) ??
+		defaultMaximumDatagramLength;
+	let datagramsClosed: Error | undefined;
 	const datagramHandlers = (
 		handlers as { readonly datagrams?: Record<string, (value: unknown, context: unknown) => unknown> }
 	).datagrams;
@@ -44,6 +53,10 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 			return transport.maxDatagramSize ?? Number.POSITIVE_INFINITY;
 		},
 		async write(name: string, value: unknown): Promise<void> {
+			if (datagramsClosed) {
+				throw datagramsClosed;
+			}
+
 			const accepted = await transport.sendDatagram(encodeDatagram(await registry.register(name), value));
 
 			if (accepted === false) {
@@ -51,10 +64,18 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 			}
 		},
 		createWritable(name: string, writableOptions?: DatagramWritableOptions): WritableStream<unknown> {
+			if (datagramsClosed) {
+				throw datagramsClosed;
+			}
+
 			const kind = registry.register(name);
 
 			return new WritableStream({
 				async write(value) {
+					if (datagramsClosed) {
+						throw datagramsClosed;
+					}
+
 					const accepted = await transport.sendDatagram(encodeDatagram(await kind, value), writableOptions);
 
 					if (accepted === false) {
@@ -64,6 +85,10 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 			});
 		},
 		subscribe(name: string, listener: (value: unknown) => void): DatagramSubscription {
+			if (datagramsClosed) {
+				throw datagramsClosed;
+			}
+
 			let active = true;
 			let current = listeners.get(name);
 
@@ -85,7 +110,11 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 				if (current?.size === 0) {
 					listeners.delete(name);
 				}
+
+				subscriptions.delete(unsubscribe);
 			};
+
+			subscriptions.add(unsubscribe);
 
 			return {
 				get active() {
@@ -96,6 +125,10 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 			};
 		},
 		read(name: string, readOptions: DatagramReadOptions = {}): Promise<unknown> {
+			if (datagramsClosed) {
+				return Promise.reject(datagramsClosed);
+			}
+
 			if (readOptions.signal?.aborted) {
 				return Promise.reject(readOptions.signal.reason);
 			}
@@ -103,22 +136,25 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 			return new Promise((resolve, reject) => {
 				let subscription: DatagramSubscription;
 
-				const abort = (): void => {
+				const finish = (): void => {
 					subscription.unsubscribe();
-
-					reject(readOptions.signal?.reason);
+					pendingReads.delete(close);
+					readOptions.signal?.removeEventListener("abort", abort);
 				};
+				const close = (reason: unknown): void => {
+					finish();
+					reject(reason);
+				};
+				const abort = (): void => close(readOptions.signal?.reason);
 
 				subscription = (
 					datagrams.subscribe as (name: string, listener: (value: unknown) => void) => DatagramSubscription
 				)(name, (value) => {
-					subscription.unsubscribe();
-
-					readOptions.signal?.removeEventListener("abort", abort);
-
+					finish();
 					resolve(value);
 				});
 
+				pendingReads.add(close);
 				readOptions.signal?.addEventListener("abort", abort, { once: true });
 			});
 		},
@@ -126,7 +162,7 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 
 	const receiveDatagram = (payload: ArrayBuffer | ArrayBufferView): void => {
 		try {
-			const { kind, value } = decodeDatagram(payload);
+			const { kind, value } = decodeDatagram(payload, { maximumArrayBufferLength: maximumDatagramLength });
 			const name = registry.name(kind) as
 				| import("@serve-tools/realtime-protocol").ClientDatagramName<P>
 				| undefined;
@@ -155,15 +191,38 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 			connection.fail(error);
 		}
 	};
-	const finish = (reason?: unknown): void => {
-		if (!controller.signal.aborted) {
-			controller.abort(reason);
+	const finishDatagrams = (reason?: unknown): Error => {
+		if (datagramsClosed) {
+			return datagramsClosed;
 		}
 
-		registry.fail(reason);
+		datagramsClosed = connectionClosedError(reason);
+		controller.abort(datagramsClosed);
+		registry.fail(datagramsClosed);
 
-		connection.disconnect(reason);
+		for (const close of pendingReads) {
+			close(datagramsClosed);
+		}
+
+		for (const unsubscribe of [...subscriptions]) {
+			unsubscribe();
+		}
+
+		listeners.clear();
+
+		return datagramsClosed;
 	};
+	const finish = (reason?: unknown): void => {
+		const error = finishDatagrams(reason);
+
+		connection.disconnect(error);
+	};
+	const close = (reason?: unknown): void => {
+		finishDatagrams(reason);
+		connection.close(reason);
+	};
+
+	void connection.closed.then(finishDatagrams);
 
 	const session = {
 		context,
@@ -198,17 +257,31 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 			try {
 				registry.finish();
 			} catch (error) {
-				connection.fail(error);
+				finish(error);
+
+				return;
 			}
+
+			finish("The reliable datagram registry stream ended");
 		},
 		receiveDatagram,
-		close: connection.close,
+		close,
 		disconnect: finish,
-		[Symbol.dispose]: connection.close,
+		[Symbol.dispose]: close,
 	} as unknown as Session<P, Context>;
 
 	return session;
 }
+
+const connectionClosedError = (reason: unknown = "The connection is closed"): Error =>
+	reason instanceof Error
+		? reason
+		: Object.assign(new Error(String(reason)), {
+				name: "ConnectionClosedError",
+			});
+
+const positiveSafeInteger = (value: number | undefined): number | undefined =>
+	Number.isSafeInteger(value) && (value as number) > 0 ? value : undefined;
 
 export namespace createSession {
 	export type Handlers<P extends T.Protocol, Context = undefined> = T.Handlers<P, Context>;

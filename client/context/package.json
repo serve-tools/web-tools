@@ -3,14 +3,18 @@
 	"version": "0.1.2",
 	"description": "Interoperable context events, providers, consumers, and late-registration coordination for web components",
 	"keywords": [
+		"browser",
 		"context",
+		"context-api",
 		"context-protocol",
 		"custom-elements",
 		"dependency-injection",
 		"events",
 		"subscriptions",
 		"typescript",
-		"web-components"
+		"web-api",
+		"web-components",
+		"web-platform"
 	],
 	"homepage": "https://github.com/serve-tools/web-tools/tree/main/client/context#readme",
 	"bugs": {
