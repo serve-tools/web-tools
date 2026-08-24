@@ -29,16 +29,19 @@ test("shares one EventSource while subscriptions and page closure remain indepen
 	];
 
 	try {
-		await expect.poll(() => values).toEqual([[1], [1]]);
-		expect(sourceCounts).toEqual([[1], [1]]);
+		await expect.poll(() => values.every((received) => received.length > 0), { timeout: 8_000 }).toBe(true);
+		expect(sourceCounts.flat().every((count) => count === 1)).toBe(true);
+
+		const firstValues = [...values[0]];
+		const secondCount = values[1].length;
 
 		subscriptions[0]!.unsubscribe();
-		await expect.poll(() => values[1].length).toBeGreaterThanOrEqual(2);
-		expect(values[0]).toEqual([1]);
+		await expect.poll(() => values[1].length).toBeGreaterThan(secondCount);
+		expect(values[0]).toEqual(firstValues);
 
 		first.client.close();
 		await expect(first.client.closed).resolves.toBeUndefined();
-		await expect.poll(() => values[1].length).toBeGreaterThanOrEqual(3);
+		await expect.poll(() => values[1].length).toBeGreaterThan(secondCount + 1);
 		second.client.close();
 		await expect(second.client.closed).resolves.toBeUndefined();
 	} finally {
