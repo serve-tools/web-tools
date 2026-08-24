@@ -2,13 +2,19 @@ declare const protocolBrand: unique symbol;
 
 /** A compile-time collection of named request, subscription, and datagram signatures. */
 export type Protocol = {
+	/** Named request operations that resolve with one response. */
 	readonly requests?: object;
+
+	/** Named subscription operations that emit zero or more events. */
 	readonly subscriptions?: object;
+
+	/** Named best-effort datagrams and their permitted directions. */
 	readonly datagrams?: object;
 };
 
 /** A resource retaining a protocol type for later extraction. */
 export interface ProtocolResource<P extends Protocol = Protocol> {
+	/** Compile-time brand retaining the resource's protocol definition. */
 	readonly [protocolBrand]: P;
 }
 
@@ -118,8 +124,13 @@ export type SubscriptionEvent<Value extends Operation> = ReturnType<Value>;
 
 /** A serialized error sent across the protocol. */
 export interface ErrorRecord {
+	/** The original error category, such as `TypeError`. */
 	readonly name: string;
+
+	/** The human-readable error description. */
 	readonly message: string;
+
+	/** The optional stack explicitly included by the sender. */
 	readonly stack?: string;
 }
 

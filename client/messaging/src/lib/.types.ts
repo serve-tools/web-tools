@@ -3,7 +3,10 @@ declare const transferBrand: unique symbol;
 
 /** A compile-time collection of named request and subscription signatures. */
 export type Protocol = {
+	/** Named operations that produce one remote response. */
 	readonly requests?: object;
+
+	/** Named operations that deliver an ongoing stream of remote events. */
 	readonly subscriptions?: object;
 };
 

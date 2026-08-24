@@ -9,6 +9,7 @@ export interface IdleDeadline {
 
 /** A callback invoked during an idle period or after its timeout elapses. */
 export interface IdleRequestCallback {
+	/** Runs with the deadline for the current idle period. */
 	(deadline: IdleDeadline): void;
 }
 

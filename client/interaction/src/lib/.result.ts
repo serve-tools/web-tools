@@ -35,9 +35,9 @@ export const isAbortError = (reason: unknown): boolean =>
 /** Settles a platform promise as an interaction result. */
 export const settle = <Value>(
 	promise: Promise<Value>,
-	isAborted: (reason: unknown) => boolean = () => false,
+	isAborted?: (reason: unknown) => boolean,
 ): Promise<InteractionResult<Value>> =>
-	promise.then(completed, (error) => (isAborted(error) ? aborted : failed(error)));
+	promise.then(completed, (error) => (isAborted?.(error) ? aborted : failed(error)));
 
 /** Returns a failure that distinguishes an insecure context from a missing API. */
 export const unavailable = (name: string): InteractionResult<never> =>

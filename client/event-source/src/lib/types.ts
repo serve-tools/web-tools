@@ -16,9 +16,16 @@ export type EventMapDefinition<Events> = {
 
 /** A parsed Server-Sent Event with its spec event ID and origin. */
 export interface EventMessage<Value extends JSONValue = JSONValue> {
+	/** The native event name used to dispatch this message. */
 	readonly type: string;
+
+	/** The JSON-decoded event payload. */
 	readonly data: Value;
+
+	/** The event ID used by native EventSource reconnection. */
 	readonly lastEventId: string;
+
+	/** The origin that produced the event. */
 	readonly origin: string;
 }
 
@@ -30,18 +37,25 @@ export interface ConnectOptions extends EventSourceInit {
 
 /** Cancellation options for one named event subscription. */
 export interface SubscribeOptions {
+	/** Cancels only this subscription when aborted. */
 	readonly signal?: AbortSignal;
 }
 
 /** A disposable handle for one active event subscription. */
 export interface Subscription extends Disposable {
+	/** Whether the subscription can still receive events. */
 	readonly active: boolean;
+
+	/** Cancels the subscription; repeated calls have no effect. */
 	unsubscribe(): void;
 }
 
 /** The typed named-event surface shared by direct and worker-owned EventSource clients. */
 export interface EventClient<Events extends EventMap = EventMap> {
+	/** Retains the event map without requiring a runtime property. */
 	readonly [eventMapBrand]?: Events;
+
+	/** Subscribes to future JSON-decoded events with the given name. */
 	subscribe<Name extends Extract<keyof Events, string>>(
 		name: Name,
 		listener: (event: EventMessage<Extract<Events[Name], JSONValue>>) => void,
@@ -51,8 +65,13 @@ export interface EventClient<Events extends EventMap = EventMap> {
 
 /** A typed JSON view over a native `EventSource`. */
 export interface Client<Events extends EventMap = EventMap> extends EventClient<Events>, Disposable {
+	/** The owned native EventSource connection. */
 	readonly source: EventSource;
+
+	/** Resolves when the connection and its subscriptions close. */
 	readonly closed: Promise<void>;
+
+	/** Closes the native connection and cancels every subscription. */
 	close(): void;
 }
 

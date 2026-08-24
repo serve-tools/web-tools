@@ -1,4 +1,6 @@
+/** An owned asynchronous operation with ordered values, a terminal result, and cancellation. */
 export class AsyncOperation<T = void, TResult = void> implements AsyncIterable<T>, AsyncDisposable {
+	/** Starts an operation immediately with optional upstream cancellation and buffering. */
 	constructor(executor: AsyncOperationExecutor<T, TResult>, options?: AsyncOperationOptions<T>) {
 		const stream = new TransformStream<T, T>(
 			{
@@ -215,7 +217,9 @@ export interface AsyncOperationOptions<T> {
 	readonly strategy?: QueuingStrategy<T>;
 }
 
+/** Writes ordered operation values while respecting stream backpressure. */
 export interface AsyncOperationWriter<T> {
+	/** Writes one value and resolves when the stream accepts it. */
 	(value: T): Promise<void>;
 }
 

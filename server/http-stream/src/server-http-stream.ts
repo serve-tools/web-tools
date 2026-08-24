@@ -114,11 +114,21 @@ export function createHandler<const P extends Protocol & ProtocolDefinition<P>, 
 	return handler;
 }
 
+/** Types used by {@link createHandler}. */
 export namespace createHandler {
+	/** A disposable Fetch handler for protocol requests and streaming subscriptions. */
 	export type Handler = T.FetchHandler;
+
+	/** Request and subscription handler tables for the declared protocol. */
 	export type Handlers<P extends T.Protocol, Context = undefined> = T.Handlers<P, Context>;
+
+	/** HTTP authorization options and protocol connection limits. */
 	export type Options<Context = undefined> = T.HandlerOptions<Context>;
+
+	/** A compile-time collection of named protocol operation signatures. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the protocol retained by a resolved or pending resource. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
 }
 

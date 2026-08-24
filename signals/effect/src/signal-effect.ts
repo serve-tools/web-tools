@@ -16,7 +16,6 @@ const activeEffects = new WeakSet<object>();
 const schedulerCapacity = 512;
 
 let availableScheduler: Scheduler | undefined;
-let flushScheduled = false;
 let flushingSchedulers: Scheduler[] = [];
 let pendingSchedulers: Scheduler[] = [];
 
@@ -26,11 +25,8 @@ const schedule = (scheduler: Scheduler): void => {
 	}
 
 	scheduler.queued = true;
-	pendingSchedulers.push(scheduler);
 
-	if (!flushScheduled) {
-		flushScheduled = true;
-
+	if (pendingSchedulers.push(scheduler) === 1) {
 		queueMicrotask(flush);
 	}
 };
@@ -40,7 +36,6 @@ const flush = (): void => {
 
 	let errors: unknown[] | undefined;
 
-	flushScheduled = false;
 	pendingSchedulers = flushingSchedulers;
 	flushingSchedulers = schedulers;
 	pendingSchedulers.length = 0;
@@ -84,7 +79,7 @@ const flush = (): void => {
 };
 
 const acquireScheduler = (): Scheduler => {
-	const scheduler = availableScheduler ?? createScheduler();
+	const scheduler = (availableScheduler ??= createScheduler());
 
 	++scheduler.size;
 
@@ -92,8 +87,6 @@ const acquireScheduler = (): Scheduler => {
 		availableScheduler = scheduler.next;
 
 		scheduler.next = undefined;
-	} else {
-		availableScheduler = scheduler;
 	}
 
 	return scheduler;
@@ -117,6 +110,7 @@ const releaseScheduler = (scheduler: Scheduler): void => {
 
 const startEffect = (computed: InstanceType<typeof Signal.Computed>, scheduler: Scheduler): void => {
 	activeEffects.add(computed);
+
 	scheduler.watcher.watch(computed);
 
 	try {

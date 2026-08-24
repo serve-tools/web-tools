@@ -18,6 +18,7 @@ export interface HandleUpgradeOptions<Context = undefined> extends ConnectionOpt
 
 /** A disposable `node:http` upgrade listener owning every accepted protocol connection. */
 export interface UpgradeHandler extends Disposable {
+	/** Handles one `node:http` upgrade event. */
 	(request: IncomingMessage, socket: Duplex, head: Buffer): void;
 
 	/** Closes every accepted protocol connection and rejects future upgrades. */
@@ -117,12 +118,25 @@ export function handleUpgrade<const P extends Protocol & ProtocolDefinition<P>, 
 
 /** Types used by {@link handleUpgrade}. */
 export namespace handleUpgrade {
+	/** The upgrade listener returned by {@link handleUpgrade}. */
 	export type Handler = UpgradeHandler;
+
+	/** Handler definitions accepted by {@link handleUpgrade}. */
 	export type Handlers<P extends T.Protocol, Context = undefined> = T.Handlers<P, Context>;
+
+	/** Adapter options accepted by {@link handleUpgrade}. */
 	export type Options<Context = undefined> = HandleUpgradeOptions<Context>;
+
+	/** The protocol shape accepted by {@link handleUpgrade}. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the declared value type for a protocol member. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** Context supplied to request handlers. */
 	export type RequestContext<Context = undefined> = T.RequestContext<Context>;
+
+	/** Context supplied to subscription handlers. */
 	export type SubscriptionContext<Value, Context = undefined> = T.SubscriptionContext<Value, Context>;
 }
 

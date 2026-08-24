@@ -100,6 +100,12 @@ export const callSafely = <Value>(callback: (value: Value) => void, value: Value
 	}
 };
 
+export const enum ConnectionState {
+	Awaiting = 0,
+	Ready = 1,
+	Closed = 2,
+}
+
 export const enum MessagePart {
 	Protocol = 0,
 	Type = 1,

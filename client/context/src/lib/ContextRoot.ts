@@ -9,18 +9,15 @@ interface PendingRequest {
 	active: boolean;
 }
 
-interface PendingContext {
-	readonly requests: Set<PendingRequest>;
-}
-
 const roots = new WeakMap<Document, ContextRoot>();
 
 /** Retains unanswered subscriptions and replays them when a matching provider announces itself. */
 export class ContextRoot {
 	readonly #attachments = new Set<EventTarget>();
-	readonly #pending = new Map<UnknownContext, PendingContext>();
+	readonly #pending = new Map<UnknownContext, Set<PendingRequest>>();
 	#pendingByConsumer = new WeakMap<Element, Map<UnknownContext, Map<ContextCallback<unknown>, PendingRequest>>>();
 
+	/** Creates a context coordinator and optionally attaches it to an event boundary. */
 	constructor(root?: EventTarget) {
 		if (root !== undefined) {
 			this.attach(root);
@@ -68,7 +65,7 @@ export class ContextRoot {
 		this.#attachments.clear();
 
 		for (const pending of this.#pending.values()) {
-			for (const request of pending.requests) {
+			for (const request of pending) {
 				request.active = false;
 			}
 		}
@@ -117,7 +114,7 @@ export class ContextRoot {
 		let pending = this.#pending.get(request.context);
 
 		if (pending === undefined) {
-			pending = { requests: new Set() };
+			pending = new Set();
 
 			this.#pending.set(request.context, pending);
 		}
@@ -130,7 +127,7 @@ export class ContextRoot {
 		};
 
 		callbacks.set(request.callback, pendingRequest);
-		pending.requests.add(pendingRequest);
+		pending.add(pendingRequest);
 	};
 
 	readonly #onContextProvider: EventListener = (event): void => {
@@ -145,7 +142,7 @@ export class ContextRoot {
 			return;
 		}
 
-		const requests = [...pending.requests];
+		const requests = [...pending];
 
 		for (const request of requests) {
 			const callback = request.callbackRef.deref();
@@ -168,9 +165,9 @@ export class ContextRoot {
 
 		const pending = this.#pending.get(request.context);
 
-		pending?.requests.delete(request);
+		pending?.delete(request);
 
-		if (pending?.requests.size === 0) {
+		if (pending?.size === 0) {
 			this.#pending.delete(request.context);
 		}
 

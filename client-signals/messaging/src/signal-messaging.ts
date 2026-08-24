@@ -78,8 +78,8 @@ class ReactiveObservation<Value> extends Signal.Computed<ObservationState<Value>
 			};
 
 			const subscriptionOptions = {
-				...(signal === undefined ? {} : { signal }),
-				...(options?.transfer === undefined ? {} : { transfer: options.transfer }),
+				...(signal && { signal }),
+				...(options?.transfer && { transfer: options.transfer }),
 				onComplete: () => settle(complete),
 				onError: (error: Error) => settle({ status: "error", error }),
 			};

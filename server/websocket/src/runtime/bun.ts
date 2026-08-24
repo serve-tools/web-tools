@@ -12,24 +12,43 @@ interface SocketData<P extends Protocol, Context> {
 
 /** The Bun server methods required to accept a WebSocket. */
 export interface BunServerLike<Data> {
+	/** Attempts to upgrade a request and associates data with the accepted WebSocket. */
 	upgrade(request: Request, options: { readonly data: Data; readonly headers?: HeadersInit }): boolean;
 }
 
 /** The Bun server WebSocket methods required by the adapter. */
 export interface BunWebSocketLike<Data> {
+	/** Returns the data associated with this accepted WebSocket. */
 	readonly data: Data;
+
+	/** Sends one complete binary protocol message. */
 	send(data: ArrayBuffer): number | undefined;
+
+	/** Returns the number of queued outbound bytes. */
 	getBufferedAmount(): number;
+
+	/** Closes the WebSocket with an optional close code and reason. */
 	close(code?: number, reason?: string): void;
 }
 
 /** Callback object accepted by `Bun.serve({ websocket })`. */
 export interface BunWebSocketHandler<Data> {
+	/** Declares the data shape supplied to WebSocket callbacks. */
 	readonly data: Data;
+
+	/** Requests ArrayBuffer delivery for binary messages. */
 	readonly binaryType: "arraybuffer";
+
+	/** Opens the protocol connection for an accepted WebSocket. */
 	open(socket: BunWebSocketLike<Data>): void;
+
+	/** Forwards an incoming WebSocket message. */
 	message(socket: BunWebSocketLike<Data>, message: string | ArrayBuffer | Uint8Array): void;
+
+	/** Disconnects the protocol connection after WebSocket closure. */
 	close(socket: BunWebSocketLike<Data>, code: number, reason: string): void;
+
+	/** Fails the protocol connection after a WebSocket error. */
 	error(socket: BunWebSocketLike<Data>, error: Error): void;
 }
 
@@ -41,8 +60,13 @@ export interface BunAdapterOptions<Context = undefined> extends ConnectionOption
 
 /** A Bun upgrade helper and callback object owning every accepted protocol connection. */
 export interface BunAdapter<P extends Protocol, Context> extends Disposable {
+	/** Provides the callback object passed to `Bun.serve({ websocket })`. */
 	readonly websocket: BunWebSocketHandler<SocketData<P, Context>>;
+
+	/** Accepts a WebSocket upgrade or returns an HTTP response that rejects it. */
 	upgrade(request: Request, server: BunServerLike<SocketData<P, Context>>): Promise<Response | undefined>;
+
+	/** Closes active protocol connections and rejects later upgrades. */
 	close(reason?: unknown): void;
 }
 
@@ -165,12 +189,25 @@ export function createBunAdapter<const P extends Protocol & ProtocolDefinition<P
 
 /** Types used by {@link createBunAdapter}. */
 export namespace createBunAdapter {
+	/** The adapter returned by {@link createBunAdapter}. */
 	export type Adapter<P extends T.Protocol, Context = undefined> = BunAdapter<P, Context>;
+
+	/** Handler definitions accepted by {@link createBunAdapter}. */
 	export type Handlers<P extends T.Protocol, Context = undefined> = T.Handlers<P, Context>;
+
+	/** Adapter options accepted by {@link createBunAdapter}. */
 	export type Options<Context = undefined> = BunAdapterOptions<Context>;
+
+	/** The protocol shape accepted by {@link createBunAdapter}. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the declared value type for a protocol member. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** Context supplied to request handlers. */
 	export type RequestContext<Context = undefined> = T.RequestContext<Context>;
+
+	/** Context supplied to subscription handlers. */
 	export type SubscriptionContext<Value, Context = undefined> = T.SubscriptionContext<Value, Context>;
 }
 

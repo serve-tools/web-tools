@@ -1,4 +1,5 @@
 import {
+	ConnectionState,
 	connectionClosedError,
 	errorRecord,
 	isTransferResult,
@@ -69,8 +70,7 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 		readonly subscriptions?: Record<string, AnyHandler | undefined>;
 	};
 
-	let isClosed = false;
-	let isReady = false;
+	let state: ConnectionState = ConnectionState.Awaiting;
 	let leaseController: AbortController | undefined;
 
 	const send = (message: WireMessage, transfer?: readonly Transferable[]): SendResult => {
@@ -203,11 +203,11 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 	};
 
 	const finish = (): void => {
-		if (isClosed) {
+		if (state === ConnectionState.Closed) {
 			return;
 		}
 
-		isClosed = true;
+		state = ConnectionState.Closed;
 
 		endpoint.removeEventListener("message", receive);
 
@@ -221,7 +221,7 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 	};
 
 	const receive = ({ data }: MessageEventLike): void => {
-		if (isClosed) {
+		if (state === ConnectionState.Closed) {
 			return;
 		}
 
@@ -231,14 +231,16 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 			return;
 		}
 
-		if (data[MessagePart.Type] === "hello") {
-			if (isReady) {
+		const type = data[MessagePart.Type];
+
+		if (type === "hello") {
+			if (state === ConnectionState.Ready) {
 				close(protocolError("The client sent more than one hello"));
 
 				return;
 			}
 
-			isReady = true;
+			state = ConnectionState.Ready;
 
 			const result = send([protocol, "welcome"]);
 
@@ -250,28 +252,28 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 			return;
 		}
 
-		if (data[MessagePart.Type] === "welcome") {
+		if (type === "welcome") {
 			close(protocolError("The client sent a server welcome"));
 
 			return;
 		}
 
-		if (!isReady && data[MessagePart.Type] !== "close") {
+		if (state !== ConnectionState.Ready && type !== "close") {
 			close(protocolError("The client sent a message before its hello"));
 
 			return;
 		}
 
-		if (data[MessagePart.Type] === "request" || data[MessagePart.Type] === "subscription") {
+		if (type === "request" || type === "subscription") {
 			open(data);
-		} else if (data[MessagePart.Type] === "cancel") {
+		} else if (type === "cancel") {
 			const id = data[MessagePart.Name];
 			const operation = operations.get(id);
 
 			if (operation) {
 				settle(id, operation);
 			}
-		} else if (data[MessagePart.Type] === "lease") {
+		} else if (type === "lease") {
 			const { locks } = navigator;
 
 			if (!leaseController && locks) {
@@ -279,13 +281,13 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 
 				void locks.request(data[MessagePart.Name], { signal: leaseController.signal }, finish).catch(noop);
 			}
-		} else if (data[MessagePart.Type] === "close") {
+		} else if (type === "close") {
 			finish();
 		}
 	};
 
 	const close = (reason?: unknown): void => {
-		if (isClosed) {
+		if (state === ConnectionState.Closed) {
 			return;
 		}
 

@@ -32,6 +32,7 @@ export class ContextProvider<ProvidedContext extends Context<unknown, unknown>> 
 	#active = false;
 	#value: ContextType<ProvidedContext>;
 
+	/** Creates a provider for one context and its initial value on the given element. */
 	constructor(host: Element, { context, initialValue }: ContextProviderOptions<ProvidedContext>) {
 		if (isInvalidContext(context)) {
 			throw new TypeError("A context key cannot be NaN.");

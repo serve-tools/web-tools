@@ -7,6 +7,14 @@ const RUNTIME_ID = "virtual:@serve-tools/rolldown-decorators/runtime";
 const RESOLVED_RUNTIME_ID = `\0${RUNTIME_ID}`;
 const SCRIPT_MODULE_TYPES = new Set(["js", "jsx", "ts", "tsx"]);
 
+const enum Helper {
+	CreatePrivate = 1,
+	InitClass = 2,
+	InitExtra = 4,
+	InitInstance = 8,
+	InitValue = 16,
+}
+
 const enum Kind {
 	CLASS,
 	METHOD,
@@ -59,30 +67,25 @@ type TransformState = {
 	readonly helpers: Helpers;
 	readonly magicString: RolldownMagicString;
 	readonly names: Set<string>;
-	needsApply: boolean;
-	needsCreatePrivate: boolean;
-	needsInitClass: boolean;
-	needsInitExtra: boolean;
-	needsInitInstance: boolean;
-	needsInitValue: boolean;
+	neededHelpers: number;
 };
 
-/** A Rolldown and Vite plugin that lowers current TC39 decorator syntax with the Oxc AST. */
+/** A Rolldown and Vite plugin that lowers standard TC39 decorator syntax. */
 export interface RolldownDecoratorsPlugin {
-	/** Stable plugin name reported to Rolldown and Vite. */
+	/** Stable `rolldown-decorators` plugin name reported to Rolldown and Vite. */
 	readonly name: typeof PLUGIN_NAME;
 
-	/** Load the package-owned decorator runtime through an internal virtual module. */
+	/** Return decorator runtime source for its resolved virtual module, or `null`. */
 	load(id: string): string | null;
 
-	/** Resolve the internal decorator runtime. */
+	/** Resolve the decorator runtime's virtual module, or return `null`. */
 	resolveId(id: string): string | null;
 
-	/** Cross-compatible transform hook backed by {@link rolldownTransform}. */
+	/** Cross-compatible pre-transform hook that lowers decorators in script modules. */
 	readonly transform: ReturnType<typeof rolldownTransform>;
 }
 
-/** Transform current TC39 decorators for Rolldown and Vite without invoking Babel or TypeScript. */
+/** Create a Rolldown and Vite plugin that transforms standard TC39 decorators. */
 export function rolldownDecorators(): RolldownDecoratorsPlugin {
 	return {
 		name: PLUGIN_NAME,
@@ -126,12 +129,7 @@ export function rolldownDecorators(): RolldownDecoratorsPlugin {
 					helpers,
 					magicString: meta.magicString,
 					names,
-					needsApply: false,
-					needsCreatePrivate: false,
-					needsInitClass: false,
-					needsInitExtra: false,
-					needsInitInstance: false,
-					needsInitValue: false,
+					neededHelpers: 0,
 				};
 
 				for (const record of decorated) {
@@ -195,7 +193,7 @@ function transformClass({ node, parent }: ClassRecord, state: TransformState): v
 
 			declarations.push(`const ${controller}=${helpers.createPrivate}(${kind});`);
 
-			state.needsCreatePrivate = true;
+			state.neededHelpers |= Helper.CreatePrivate;
 		}
 
 		entries.push(
@@ -226,15 +224,13 @@ function transformClass({ node, parent }: ClassRecord, state: TransformState): v
 		return;
 	}
 
-	state.needsApply = true;
-
 	const staticBlock = `static{${seeds.join("")}${owner}=${helpers.apply}(this,${entries.join(",")});}`;
 	const instanceInitializer = needsInstanceInitializers
 		? `#${uniquePrivateName(names, "__decorators_init")}=${helpers.initInstance}(this,${owner});`
 		: "";
 
 	if (needsInstanceInitializers) {
-		state.needsInitInstance = true;
+		state.neededHelpers |= Helper.InitInstance;
 	}
 
 	magicString.appendLeft(node.body.start + 1, staticBlock + instanceInitializer);
@@ -247,7 +243,7 @@ function transformClass({ node, parent }: ClassRecord, state: TransformState): v
 	magicString.prependLeft(insertionStart, prelude);
 
 	if (node.decorators.length > 0) {
-		state.needsInitClass = true;
+		state.neededHelpers |= Helper.InitClass;
 
 		if (className) {
 			magicString.appendRight(node.end, `${className}=${helpers.initClass}(${className});`);
@@ -269,7 +265,7 @@ function transformField(
 	const value = member.value ? `(${code.slice(member.value.start, member.value.end)})` : "void 0";
 	const initialized = `${helpers.initValue}(this,${controller ?? name.expression},${value},${owner},${member.static})`;
 
-	state.needsInitValue = true;
+	state.neededHelpers |= Helper.InitValue;
 
 	if (controller) {
 		const staticKeyword = member.static ? "static " : "";
@@ -307,7 +303,7 @@ function transformField(
 		`;${staticKeyword}#${extraName}=${helpers.initExtra}(this,${name.expression},${owner},${member.static});`,
 	);
 
-	state.needsInitExtra = true;
+	state.neededHelpers |= Helper.InitExtra;
 }
 
 function transformAutoAccessor(
@@ -323,7 +319,7 @@ function transformAutoAccessor(
 	const staticKeyword = member.static ? "static " : "";
 	const key = name.syntax;
 
-	state.needsInitValue = true;
+	state.neededHelpers |= Helper.InitValue;
 
 	if (controller) {
 		const initName = uniquePrivateName(names, "__decorators_value");
@@ -346,7 +342,7 @@ function transformAutoAccessor(
 		`${staticKeyword}#${backing}=${initialized};${staticKeyword}#${extra}=${helpers.initExtra}(this,${name.expression},${owner},${member.static});${staticKeyword}get ${key}(){return this.#${backing};}${staticKeyword}set ${key}(value){this.#${backing}=value;}`,
 	);
 
-	state.needsInitExtra = true;
+	state.neededHelpers |= Helper.InitExtra;
 }
 
 function transformPrivateCallable(member: Member, controller: string, state: TransformState): void {
@@ -538,19 +534,24 @@ function uniquePrivateName(names: Set<string>, base: string): string {
 
 function createRuntimeImport(state: TransformState): string {
 	const imports = [`_apply_decorators as ${state.helpers.apply}`];
-	if (state.needsCreatePrivate) {
+
+	if (state.neededHelpers & Helper.CreatePrivate) {
 		imports.push(`_create_private as ${state.helpers.createPrivate}`);
 	}
-	if (state.needsInitClass) {
+
+	if (state.neededHelpers & Helper.InitClass) {
 		imports.push(`_init_class as ${state.helpers.initClass}`);
 	}
-	if (state.needsInitExtra) {
+
+	if (state.neededHelpers & Helper.InitExtra) {
 		imports.push(`_init_extra as ${state.helpers.initExtra}`);
 	}
-	if (state.needsInitInstance) {
+
+	if (state.neededHelpers & Helper.InitInstance) {
 		imports.push(`_init_instance as ${state.helpers.initInstance}`);
 	}
-	if (state.needsInitValue) {
+
+	if (state.neededHelpers & Helper.InitValue) {
 		imports.push(`_init_value as ${state.helpers.initValue}`);
 	}
 

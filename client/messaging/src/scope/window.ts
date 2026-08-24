@@ -21,6 +21,7 @@ export class SharedWorker<
 	/** The typed client connected to the worker's port. */
 	readonly client: T.Client<P>;
 
+	/** Creates a shared worker and immediately connects its typed messaging client. */
 	constructor(scriptURL: string | URL, options?: string | WorkerOptions) {
 		super(scriptURL, options);
 

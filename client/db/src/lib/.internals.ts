@@ -6,16 +6,6 @@ export const completion = (transaction: IDBTransaction, signal?: AbortSignal): P
 	new Promise((resolve, reject) => {
 		let abortReason: unknown;
 
-		const complete = () => {
-			signal?.removeEventListener("abort", abort);
-			resolve();
-		};
-
-		const aborted = () => {
-			signal?.removeEventListener("abort", abort);
-			reject(abortReason ?? transaction.error ?? new DOMException("Transaction aborted", "AbortError"));
-		};
-
 		const abort = () => {
 			abortReason = signal?.reason;
 
@@ -24,8 +14,15 @@ export const completion = (transaction: IDBTransaction, signal?: AbortSignal): P
 			} catch {}
 		};
 
-		transaction.oncomplete = complete;
-		transaction.onabort = aborted;
+		transaction.oncomplete = () => {
+			signal?.removeEventListener("abort", abort);
+			resolve();
+		};
+
+		transaction.onabort = () => {
+			signal?.removeEventListener("abort", abort);
+			reject(abortReason ?? transaction.error ?? new DOMException("Transaction aborted", "AbortError"));
+		};
 
 		if (signal?.aborted) {
 			abort();

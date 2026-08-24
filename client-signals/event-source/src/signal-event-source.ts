@@ -61,13 +61,25 @@ export const observe = <const Events extends EventMap, const Name extends Extrac
 
 /** The current state of an observed EventSource event. */
 export type ObservationState<Value extends JSONValue> =
-	| { readonly status: "pending" }
-	| { readonly status: "ready"; readonly event: EventMessage<Value> };
+	| {
+			/** Identifies an observation waiting for its first matching event. */
+			readonly status: "pending";
+	  }
+	| {
+			/** Identifies an observation containing its latest matching event. */
+			readonly status: "ready";
+
+			/** The complete latest event, including its parsed data and EventSource ID. */
+			readonly event: EventMessage<Value>;
+	  };
 
 /** A read-only Signal containing the latest typed EventSource event and ID. */
 export type Observation<Value extends JSONValue> = InstanceType<typeof Signal.Computed<ObservationState<Value>>> &
 	Disposable & {
+		/** Whether the underlying event subscription can still receive matching events. */
 		readonly active: boolean;
+
+		/** Unsubscribes once and freezes the latest observed event state. */
 		dispose(): void;
 	};
 

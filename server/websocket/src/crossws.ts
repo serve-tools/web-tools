@@ -110,12 +110,25 @@ export function createHooks<const P extends Protocol & ProtocolDefinition<P>, Co
 
 /** Types used by {@link createHooks}. */
 export namespace createHooks {
+	/** Handler definitions accepted by {@link createHooks}. */
 	export type Handlers<P extends T.Protocol, Context = undefined> = T.Handlers<P, Context>;
+
+	/** The hooks returned by {@link createHooks}. */
 	export type Hooks = CrosswsHooks;
+
+	/** Adapter options accepted by {@link createHooks}. */
 	export type Options<Context = undefined> = CrosswsOptions<Context>;
+
+	/** The protocol shape accepted by {@link createHooks}. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the declared value type for a protocol member. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** Context supplied to request handlers. */
 	export type RequestContext<Context = undefined> = T.RequestContext<Context>;
+
+	/** Context supplied to subscription handlers. */
 	export type SubscriptionContext<Value, Context = undefined> = T.SubscriptionContext<Value, Context>;
 }
 

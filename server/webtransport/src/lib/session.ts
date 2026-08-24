@@ -129,8 +129,10 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 				return Promise.reject(datagramsClosed);
 			}
 
-			if (readOptions.signal?.aborted) {
-				return Promise.reject(readOptions.signal.reason);
+			const signal = readOptions.signal;
+
+			if (signal?.aborted) {
+				return Promise.reject(signal.reason);
 			}
 
 			return new Promise((resolve, reject) => {
@@ -139,13 +141,13 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 				const finish = (): void => {
 					subscription.unsubscribe();
 					pendingReads.delete(close);
-					readOptions.signal?.removeEventListener("abort", abort);
+					signal?.removeEventListener("abort", abort);
 				};
 				const close = (reason: unknown): void => {
 					finish();
 					reject(reason);
 				};
-				const abort = (): void => close(readOptions.signal?.reason);
+				const abort = (): void => close(signal?.reason);
 
 				subscription = (
 					datagrams.subscribe as (name: string, listener: (value: unknown) => void) => DatagramSubscription
@@ -155,7 +157,7 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 				});
 
 				pendingReads.add(close);
-				readOptions.signal?.addEventListener("abort", abort, { once: true });
+				signal?.addEventListener("abort", abort, { once: true });
 			});
 		},
 	} as ServerDatagrams<P>;
@@ -204,7 +206,7 @@ export function createSession<const P extends Protocol & ProtocolDefinition<P>, 
 			close(datagramsClosed);
 		}
 
-		for (const unsubscribe of [...subscriptions]) {
+		for (const unsubscribe of subscriptions) {
 			unsubscribe();
 		}
 
@@ -283,11 +285,23 @@ const connectionClosedError = (reason: unknown = "The connection is closed"): Er
 const positiveSafeInteger = (value: number | undefined): number | undefined =>
 	Number.isSafeInteger(value) && (value as number) > 0 ? value : undefined;
 
+/** Types used by {@link createSession}. */
 export namespace createSession {
+	/** Request, subscription, and incoming datagram handler tables. */
 	export type Handlers<P extends T.Protocol, Context = undefined> = T.Handlers<P, Context>;
+
+	/** Protocol limits and failure-formatting hooks for one session. */
 	export type Options = T.SessionOptions;
+
+	/** A compile-time collection of named operations and directional datagrams. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the protocol retained by a resolved or pending resource. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** A typed WebTransport session and its reliable and best-effort channels. */
 	export type Session<P extends T.Protocol = T.Protocol, Context = undefined> = T.Session<P, Context>;
+
+	/** Reliable-stream, datagram, and physical-close operations supplied by a transport. */
 	export type Transport = T.SessionTransport;
 }

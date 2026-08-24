@@ -36,9 +36,12 @@ export const callbackRef = <TElement extends Element>(
 	};
 
 	return {
+		/** Returns the element currently assigned to the callback ref. */
 		get value(): TElement | undefined {
 			return value;
 		},
+
+		/** Replaces the current element and cleans up the previous callback. */
 		set value(element: TElement | undefined) {
 			if (value === element) {
 				return;
@@ -71,6 +74,7 @@ export const callbackRef = <TElement extends Element>(
 	} as callbackRef.Result<TElement>;
 };
 
+/** Callback, cleanup, configuration, and result types for {@link callbackRef}. */
 export namespace callbackRef {
 	/** Sets up work for an element and optionally returns its cleanup. */
 	export type Callback<TElement extends Element = Element> = (element: TElement) => Cleanup | undefined;
@@ -80,12 +84,13 @@ export namespace callbackRef {
 
 	/** Configures when a callback ref invokes its callback. */
 	export type Options = {
-		/** Waits until the current element is connected before invoking the callback. */
+		/** Waits until the current element is connected before invoking the callback. @default false */
 		waitUntilConnected?: boolean;
 	};
 
 	/** Holds the current element for Lit's `ref()` directive. */
 	export type Result<TElement extends Element = Element> = {
+		/** The currently assigned element, if any. */
 		readonly value?: TElement;
 	};
 }

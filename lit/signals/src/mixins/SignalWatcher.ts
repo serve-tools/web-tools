@@ -51,9 +51,10 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 				this.#collectPendingEffects();
 				this.#effectWatcher.watch();
 
-				const errors = this.#flushEffects("before-update", !this.#isConnected);
+				const errors = this.#flushEffects(InternalEffectPhase.BeforeUpdate, !this.#isConnected);
 
-				errors.push(...this.#flushEffects("after-update", !this.#isConnected));
+				errors.push(...this.#flushEffects(InternalEffectPhase.AfterUpdate, !this.#isConnected));
+
 				this.#throwErrors(errors);
 			},
 		};
@@ -66,16 +67,19 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 			}
 		});
 
+		/** Runs a lifecycle-aware signal effect and returns an idempotent disposer. */
 		updateEffect(callback: EffectCallback, options: EffectOptions = {}): EffectCleanup {
 			const effect: EffectRecord = {
 				active: false,
 				callback,
 				cleanup: undefined,
 				computed: undefined,
-				disposed: false,
 				manualDispose: options.manualDispose ?? false,
 				pending: true,
-				phase: options.phase ?? "after-update",
+				phase:
+					options.phase === "before-update"
+						? InternalEffectPhase.BeforeUpdate
+						: InternalEffectPhase.AfterUpdate,
 			};
 
 			this.#effects.add(effect);
@@ -86,16 +90,15 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 			}
 
 			return (): void => {
-				if (effect.disposed) {
+				if (!this.#effects.delete(effect)) {
 					return;
 				}
 
-				effect.disposed = true;
-				this.#effects.delete(effect);
 				this.#deactivateEffect(effect);
 			};
 		}
 
+		/** Performs the Lit update between its before-update and after-update effects. */
 		protected override performUpdate(): void {
 			if (!this.isUpdatePending) {
 				return;
@@ -106,7 +109,7 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 			this.#effectWatcher.watch();
 			this.#updateWatcher.watch();
 
-			const errors = this.#flushEffects("before-update");
+			const errors = this.#flushEffects(InternalEffectPhase.BeforeUpdate);
 
 			this.#isForcingUpdate = true;
 
@@ -122,18 +125,22 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 				errors.push(error);
 			}
 
-			errors.push(...this.#flushEffects("after-update"));
+			errors.push(...this.#flushEffects(InternalEffectPhase.AfterUpdate));
+
 			this.#effectWatcher.watch();
 			this.#updateWatcher.watch();
 
 			this.#throwErrors(errors);
 		}
 
+		/** Restores signal tracking and host-owned effects when the element connects. */
 		connectedCallback(): void {
 			super.connectedCallback();
 
 			this.#isConnected = true;
+
 			++this.#disconnectVersion;
+
 			this.#ensureUpdateSignal();
 
 			for (const effect of this.#effects) {
@@ -143,6 +150,7 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 			this.requestUpdate();
 		}
 
+		/** Suspends signal tracking and schedules cleanup for disconnected host effects. */
 		disconnectedCallback(): void {
 			this.#isConnected = false;
 
@@ -150,6 +158,7 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 
 			if (this.#updateSignal !== undefined) {
 				this.#updateWatcher.unwatch(this.#updateSignal);
+
 				this.#updateSignal = undefined;
 			}
 
@@ -177,7 +186,7 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 		}
 
 		#activateEffect(effect: EffectRecord): void {
-			if (effect.active || effect.disposed) {
+			if (effect.active) {
 				return;
 			}
 
@@ -186,6 +195,7 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 				const cleanup = effect.cleanup;
 
 				effect.cleanup = undefined;
+
 				cleanup?.();
 
 				const nextCleanup = effect.callback();
@@ -211,6 +221,7 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 
 			this.#effectWatcher.unwatch(computed);
 			this.#effectForSignal.delete(computed);
+
 			effect.active = false;
 			effect.computed = undefined;
 			effect.pending = true;
@@ -218,6 +229,7 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 			const cleanup = effect.cleanup;
 
 			effect.cleanup = undefined;
+
 			cleanup?.();
 		}
 
@@ -237,6 +249,7 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 			}
 
 			this.#effectTaskPending = true;
+
 			enqueueMicrotask(this.#effectTask);
 		}
 
@@ -253,7 +266,7 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 			this.#updateWatcher.watch(this.#updateSignal);
 		}
 
-		#flushEffects(phase: EffectPhase, manualOnly = false): unknown[] {
+		#flushEffects(phase: InternalEffectPhase, manualOnly = false): unknown[] {
 			const errors: unknown[] = [];
 
 			for (const effect of this.#effects) {
@@ -302,18 +315,24 @@ export const SignalWatcher = <Base extends LitElementConstructor>(
 	return SignalWatcherElement as unknown as Base & SignalWatcherConstructor;
 };
 
+const enum InternalEffectPhase {
+	BeforeUpdate = 0,
+	AfterUpdate = 1,
+}
+
 interface EffectRecord {
 	active: boolean;
 	callback: EffectCallback;
 	cleanup: EffectCleanup | undefined;
 	computed: Signal.Computed<void> | undefined;
-	disposed: boolean;
 	manualDispose: boolean;
 	pending: boolean;
-	phase: EffectPhase;
+	phase: InternalEffectPhase;
 }
 
+/** Constructs a Lit element augmented with the {@link SignalWatcherApi}. */
 export interface SignalWatcherConstructor {
+	/** Creates a signal-aware Lit element using the wrapped constructor arguments. */
 	new (...args: any[]): LitElement & SignalWatcherApi;
 }
 

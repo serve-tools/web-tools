@@ -8,7 +8,7 @@ const VIRTUAL_PREFIX = "virtual:@serve-tools/vite-polyfill/";
 const NULL_BYTE = "\0";
 const NODE_MODULES_SEGMENT = /(?:^|[/\\])node_modules[/\\]/;
 
-/** Polyfills bundled with the plugin and enabled by default. */
+/** Ordered built-in polyfill definitions enabled when no explicit list is provided. */
 export const builtinPolyfills: readonly Polyfill[] = await Promise.all([
 	import("../polyfills/async-disposable-stack-polyfill.js"),
 	import("../polyfills/cancel-idle-callback-polyfill.js"),
@@ -31,7 +31,8 @@ export interface VitePolyfillsOptions {
 	 * The polyfills to detect and inject. Defaults to {@link builtinPolyfills}.
 	 *
 	 * Pass an explicit array to add custom polyfills, reorder them, or omit
-	 * built-ins. Spread `builtinPolyfills` to extend the default set:
+	 * built-ins. An empty array disables every built-in polyfill.
+	 * Spread `builtinPolyfills` to extend the default set:
 	 *
 	 * ```ts
 	 * vitePolyfills({ polyfills: [...builtinPolyfills, myCustomPolyfill] });
@@ -43,6 +44,10 @@ export interface VitePolyfillsOptions {
 /**
  * Vite plugin that detects polyfillable language features in transformed
  * source files and prepends imports for matching virtual polyfill modules.
+ *
+ * @param options - Selects and orders the polyfill definitions to detect.
+ * @returns A Vite pre-transform plugin that injects matching runtime imports.
+ * @throws {Error} When multiple polyfill definitions have the same identifier.
  *
  * @example
  * ```ts
@@ -88,7 +93,7 @@ export function vitePolyfills(options: VitePolyfillsOptions = {}): Plugin {
 					return null;
 				}
 
-				const matched: Polyfill[] = [];
+				let imports = "";
 
 				for (const polyfill of polyfills) {
 					let found = false;
@@ -100,17 +105,15 @@ export function vitePolyfills(options: VitePolyfillsOptions = {}): Plugin {
 					new Visitor(visitor).visit(meta.ast);
 
 					if (found) {
-						matched.push(polyfill);
+						imports += `import"${VIRTUAL_PREFIX}${polyfill.id}";`;
 					}
 				}
 
-				if (matched.length === 0) {
+				if (!imports) {
 					return null;
 				}
 
-				meta.magicString.prepend(
-					matched.map((polyfill) => `import"${VIRTUAL_PREFIX}${polyfill.id}";`).join(""),
-				);
+				meta.magicString.prepend(imports);
 
 				return meta.magicString.hasChanged() ? { code: meta.magicString } : null;
 			},

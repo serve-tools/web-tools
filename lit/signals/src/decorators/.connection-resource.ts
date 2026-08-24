@@ -2,9 +2,12 @@
 
 import type { ReactiveController, ReactiveControllerHost } from "lit";
 
+/** A synchronously or asynchronously disposable host-owned resource. */
 export type ConnectionResource = Disposable | AsyncDisposable;
 
+/** Configures how long a resource survives host disconnection. */
 export interface ConnectedResourceOptions {
+	/** Milliseconds, or a delay supplier, before disposing a disconnected resource. */
 	readonly disconnectDelay?: number | (() => number);
 }
 
@@ -13,6 +16,7 @@ export class ConnectionResourceController<Host extends ReactiveControllerHost> i
 	#resource: ConnectionResource | undefined;
 	#timer: ReturnType<typeof setTimeout> | undefined;
 
+	/** Registers a host-owned resource factory and its disconnection policy. */
 	constructor(host: Host, create: (host: Host) => ConnectionResource, options: ConnectedResourceOptions) {
 		this.#create = create;
 		this.#host = host;
@@ -24,6 +28,7 @@ export class ConnectionResourceController<Host extends ReactiveControllerHost> i
 	readonly #host: Host;
 	readonly #options: ConnectedResourceOptions;
 
+	/** Restores or creates the resource when its host connects. */
 	hostConnected(): void {
 		if (this.#timer !== undefined) {
 			clearTimeout(this.#timer);
@@ -33,6 +38,7 @@ export class ConnectionResourceController<Host extends ReactiveControllerHost> i
 		this.#resource ??= this.#create(this.#host);
 	}
 
+	/** Disposes the resource immediately or after the configured disconnection delay. */
 	hostDisconnected(): void {
 		if (this.#resource === undefined || this.#timer !== undefined) {
 			return;

@@ -5,6 +5,7 @@ export type { PropertyDeclaration } from "lit";
 
 const alwaysChanged = () => true;
 
+/** Wraps a Lit accessor in signal state with optional lifecycle-aware updates. */
 export const signalAccessor = <This extends ReactiveElement, Value>(
 	target: ClassAccessorDecoratorTarget<This, Value>,
 	{ name, metadata }: ClassAccessorDecoratorContext<This, Value>,
@@ -55,21 +56,23 @@ export const signalAccessor = <This extends ReactiveElement, Value>(
 /** Metadata for signal element properties. */
 const litPropertyMetadata = ((globalThis as any).litPropertyMetadata ??= new WeakMap());
 
+/** The reactive host interface required by signal-backed property decorators. */
 export type ReactiveElement = {
+	/** Requests a Lit update for an optional property and its previous value. */
 	requestUpdate(
-		/** Represents the name of the requesting property. */
+		/** The name of the property requesting an update. */
 		name?: PropertyKey,
 
-		/** Represents the old value of the requesting property. */
+		/** The property's value before the update. */
 		oldValue?: unknown,
 
-		/** Represents the property options to use instead of the previously configured options */
+		/** Property options overriding the previously configured declaration. */
 		options?: PropertyDeclaration,
 
-		/** Represents whether the newValue argument is used instead of reading the property value. */
+		/** Whether to use the supplied new value instead of reading the property. */
 		useNewValue?: boolean,
 
-		/** Represents the new value of the property. This is only used if `useNewValue` is true. */
+		/** The new property value when `useNewValue` is enabled. */
 		newValue?: unknown,
 	): void;
 };

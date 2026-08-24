@@ -27,12 +27,16 @@ export interface Polyfill {
 	/**
 	 * Builds a Vite OXC visitor that calls `found` when the AST references
 	 * the feature this polyfill provides.
+	 *
+	 * @param found - Marks this polyfill as required by the current module.
 	 */
 	readonly detect: (found: () => void) => VisitorObject;
 }
 
 /**
- * Identity helper that preserves the literal type of a polyfill definition
- * while validating its shape at the use site.
+ * Return a polyfill definition unchanged after TypeScript validates its shape.
+ *
+ * @param polyfill - The polyfill definition to validate.
+ * @returns The same polyfill definition.
  */
 export const definePolyfill = (polyfill: Polyfill): Polyfill => polyfill;

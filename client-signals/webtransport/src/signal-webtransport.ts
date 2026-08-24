@@ -8,6 +8,7 @@ export type { Observation, ObservationState } from "@serve-tools/signal-messagin
 /** Eagerly observes one typed reliable WebTransport subscription as a read-only Signal. */
 export const observe = observeMessaging as unknown as Observe;
 
+/** Cancellation options for an observed WebTransport subscription. */
 export type ObserveOptions = RequestOptions;
 
 type Operation = (...arguments_: any[]) => unknown;

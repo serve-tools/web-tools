@@ -16,8 +16,9 @@ export const connect = <const P extends Protocol & ProtocolDefinition<P>>(
 ): SharedWebTransportClient<P> => {
 	const client = connectPort<SharedWebTransportBridgeProtocol>(port);
 	const pendingReads = new Set<(reason: unknown) => void>();
-	let datagramsClosed: Error | undefined;
 	const maxDatagramSize = client.request("datagramMaximumSize");
+
+	let datagramsClosed: Error | undefined;
 
 	void maxDatagramSize.catch(() => undefined);
 
@@ -36,8 +37,6 @@ export const connect = <const P extends Protocol & ProtocolDefinition<P>>(
 			}
 
 			return new Promise((resolve, reject) => {
-				let subscription: Subscription;
-
 				const finish = (): void => {
 					subscription.unsubscribe();
 					pendingReads.delete(close);
@@ -49,19 +48,20 @@ export const connect = <const P extends Protocol & ProtocolDefinition<P>>(
 				};
 				const abort = (): void => close(options.signal?.reason);
 
-				subscription = datagrams.subscribe(name, (value) => {
+				const subscription: Subscription = datagrams.subscribe(name, (value) => {
 					finish();
 					resolve(value);
 				});
 
 				pendingReads.add(close);
+
 				options.signal?.addEventListener("abort", abort, { once: true });
 			});
 		},
 	};
 
 	void client.closed.then(() => {
-		datagramsClosed = connectionClosedError();
+		datagramsClosed = Object.assign(new Error("The connection is closed"), { name: "ConnectionClosedError" });
 
 		for (const close of pendingReads) {
 			close(datagramsClosed);
@@ -92,19 +92,26 @@ export const connect = <const P extends Protocol & ProtocolDefinition<P>>(
 	} as SharedWebTransportClient<P>;
 };
 
-const connectionClosedError = (reason: unknown = "The connection is closed"): Error =>
-	reason instanceof Error
-		? reason
-		: Object.assign(new Error(String(reason)), {
-				name: "ConnectionClosedError",
-			});
-
+/** Types used by {@link connect}. */
 export namespace connect {
+	/** A typed page client for a worker-owned WebTransport session. */
 	export type Client<P extends T.Protocol = T.Protocol> = T.SharedWebTransportClient<P>;
+
+	/** Typed best-effort datagrams routed through the worker-owned session. */
 	export type Datagrams<P extends T.Protocol> = T.SharedClientDatagrams<P>;
+
+	/** A compile-time collection of reliable operations and datagram channels. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the protocol retained by a shared WebTransport client or server. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** Options for sending and cancelling a reliable request. */
 	export type RequestOptions = T.RequestOptions;
+
+	/** Options for cancelling or observing a reliable subscription. */
 	export type SubscribeOptions = T.SubscribeOptions;
+
+	/** A disposable handle for one active page-local subscription. */
 	export type Subscription = T.Subscription;
 }

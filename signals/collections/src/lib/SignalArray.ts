@@ -6,7 +6,7 @@ import { arrayIndexOf, versionSignal } from "./.internals.js";
 export const SignalArray = function SignalArray<Value = unknown>(values: readonly Value[] = []): SignalArray<Value> {
 	return new Proxy(values.slice(), new SignalArrayHandler());
 } as unknown as {
-	/** Creates a signal-backed shallow copy of an array-like sequence. */
+	/** Creates a signal-backed shallow copy of the provided array values. */
 	new <Value = unknown>(values?: readonly Value[]): SignalArray<Value>;
 
 	/** The prototype shared by SignalArray instances. */
@@ -106,13 +106,13 @@ class SignalArrayHandler<Value> implements ProxyHandler<ArrayTarget<Value>> {
 		let method = methods.get(key);
 
 		if (method === undefined) {
-			const ownerIndex = callbackOwnerIndexes.get(key);
+			const ownerIndex = callbackOwnerIndexes[key];
 			const source = target[key] as ArrayMethod;
 
 			method = (...args: unknown[]): unknown => {
 				this.#consume(collectionKey);
 
-				if (ownerIndex === 2 && typeof args[0] === "function") {
+				if (ownerIndex === CallbackOwnerIndex.Item && typeof args[0] === "function") {
 					const callback = args[0] as ArrayMethod;
 
 					if (args[1] === undefined) {
@@ -122,7 +122,7 @@ class SignalArrayHandler<Value> implements ProxyHandler<ArrayTarget<Value>> {
 							return callback.call(this, value, index, receiver);
 						};
 					}
-				} else if (ownerIndex === 3 && typeof args[0] === "function") {
+				} else if (ownerIndex === CallbackOwnerIndex.Reduce && typeof args[0] === "function") {
 					const callback = args[0] as ArrayMethod;
 
 					args[0] = (previous: unknown, value: unknown, index: unknown): unknown => {
@@ -219,20 +219,26 @@ const collectionMethods = new Set<Key>([
 	"values",
 	"with",
 ]);
-const callbackOwnerIndexes = new Map<Key, number>([
-	["every", 2],
-	["filter", 2],
-	["find", 2],
-	["findIndex", 2],
-	["findLast", 2],
-	["findLastIndex", 2],
-	["flatMap", 2],
-	["forEach", 2],
-	["map", 2],
-	["reduce", 3],
-	["reduceRight", 3],
-	["some", 2],
-]);
+
+const enum CallbackOwnerIndex {
+	Item = 2,
+	Reduce = 3,
+}
+
+const callbackOwnerIndexes: Partial<Record<Key, CallbackOwnerIndex>> = {
+	every: CallbackOwnerIndex.Item,
+	filter: CallbackOwnerIndex.Item,
+	find: CallbackOwnerIndex.Item,
+	findIndex: CallbackOwnerIndex.Item,
+	findLast: CallbackOwnerIndex.Item,
+	findLastIndex: CallbackOwnerIndex.Item,
+	flatMap: CallbackOwnerIndex.Item,
+	forEach: CallbackOwnerIndex.Item,
+	map: CallbackOwnerIndex.Item,
+	reduce: CallbackOwnerIndex.Reduce,
+	reduceRight: CallbackOwnerIndex.Reduce,
+	some: CallbackOwnerIndex.Item,
+};
 const collectionKey = Symbol();
 
 type ArrayMethod = (...args: unknown[]) => unknown;

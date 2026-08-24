@@ -239,27 +239,51 @@ export type NativeTransaction<Schema extends SchemaDefinition<Schema>, Names ext
 	objectStore<Name extends Names>(name: Name): NativeObjectStore<Schema[Name]>;
 };
 
+/** A native object store whose request methods preserve the schema's key and value types. */
 export type NativeObjectStore<Store extends StoreDefinition> = Omit<
 	IDBObjectStore,
 	"add" | "delete" | "get" | "getAll" | "getAllKeys" | "getKey" | "index" | "put"
 > & {
+	/** Requests insertion of a new record and returns its primary key as the result. */
 	add(value: StoreValue<Store>, key?: StoreKey<Store>): IDBRequest<StoreKey<Store>>;
+
+	/** Requests deletion of records matching a primary key or range. */
 	delete(query: StoreKey<Store> | IDBKeyRange): IDBRequest<undefined>;
+
+	/** Requests the first stored value matching a primary key or range. */
 	get(query: StoreKey<Store> | IDBKeyRange): IDBRequest<StoreValue<Store> | undefined>;
+
+	/** Requests stored values matching an optional primary-key query and count. */
 	getAll(query?: StoreKey<Store> | IDBKeyRange | null, count?: number): IDBRequest<StoreValue<Store>[]>;
+
+	/** Requests primary keys matching an optional query and count. */
 	getAllKeys(query?: StoreKey<Store> | IDBKeyRange | null, count?: number): IDBRequest<StoreKey<Store>[]>;
+
+	/** Requests the first primary key matching a primary key or range. */
 	getKey(query: StoreKey<Store> | IDBKeyRange): IDBRequest<StoreKey<Store> | undefined>;
+
+	/** Opens a schema-declared index in the same transaction. */
 	index<Name extends IndexName<Store>>(name: Name): NativeIndex<Store, Name>;
+
+	/** Requests insertion or replacement of a record and returns its primary key as the result. */
 	put(value: StoreValue<Store>, key?: StoreKey<Store>): IDBRequest<StoreKey<Store>>;
 };
 
+/** A native index whose request methods preserve the schema's index, key, and value types. */
 export type NativeIndex<Store extends StoreDefinition, Name extends IndexName<Store>> = Omit<
 	IDBIndex,
 	"get" | "getAll" | "getAllKeys" | "getKey"
 > & {
+	/** Requests the first stored value matching an index key or range. */
 	get(query: Indexes<Store>[Name] | IDBKeyRange): IDBRequest<StoreValue<Store> | undefined>;
+
+	/** Requests stored values matching an optional index-key query and count. */
 	getAll(query?: Indexes<Store>[Name] | IDBKeyRange | null, count?: number): IDBRequest<StoreValue<Store>[]>;
+
+	/** Requests primary keys matching an optional index-key query and count. */
 	getAllKeys(query?: Indexes<Store>[Name] | IDBKeyRange | null, count?: number): IDBRequest<StoreKey<Store>[]>;
+
+	/** Requests the first primary key matching an index key or range. */
 	getKey(query: Indexes<Store>[Name] | IDBKeyRange): IDBRequest<StoreKey<Store> | undefined>;
 };
 

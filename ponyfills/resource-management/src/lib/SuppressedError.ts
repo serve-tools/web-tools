@@ -3,14 +3,10 @@
  * Used to chain multiple errors that occur during resource cleanup.
  */
 export class SuppressedError extends Error {
-	/**
-	 * The error that was thrown during disposal.
-	 */
+	/** The error that was thrown during disposal. */
 	declare error: unknown;
 
-	/**
-	 * The error that was suppressed.
-	 */
+	/** The earlier error that was suppressed by the latest failure. */
 	declare suppressed: unknown;
 
 	/** Creates an error that retains both the latest disposal failure and the failure it suppressed. */

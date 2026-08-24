@@ -28,6 +28,12 @@ import type {
 } from "./.types.js";
 import { DBTransaction } from "./DBTransaction.js";
 
+const enum ScanOutput {
+	Entries = 0,
+	Keys = 1,
+	Values = 2,
+}
+
 /** A promise-based, typed IndexedDB connection. */
 export class DB<Schema extends SchemaDefinition<Schema> = DBSchema> implements Disposable {
 	readonly #source: IDBDatabase;
@@ -107,6 +113,7 @@ export class DB<Schema extends SchemaDefinition<Schema> = DBSchema> implements D
 		options?: DBTransactionOptions,
 	): DBTransactionInterface<Schema, Names>;
 
+	/** Runs a callback inside a transaction and resolves with its result after the transaction commits. */
 	transaction<const Names extends StoreName<Schema>, Result>(
 		storeNames: Names | readonly Names[],
 		options: DBTransactionOptions,
@@ -211,7 +218,11 @@ export class DB<Schema extends SchemaDefinition<Schema> = DBSchema> implements D
 		storeName: Name,
 		options?: DBScanOptions<Schema[Name]>,
 	): AsyncGenerator<DBEntry<Schema[Name]>, void, undefined> {
-		return this.#scan(storeName, options) as AsyncGenerator<DBEntry<Schema[Name]>, void, undefined>;
+		return this.#scan(storeName, options, ScanOutput.Entries) as AsyncGenerator<
+			DBEntry<Schema[Name]>,
+			void,
+			undefined
+		>;
 	}
 
 	/** Scans keys in independently committed pages. */
@@ -219,7 +230,11 @@ export class DB<Schema extends SchemaDefinition<Schema> = DBSchema> implements D
 		storeName: Name,
 		options?: DBScanOptions<Schema[Name]>,
 	): AsyncGenerator<StoreKey<Schema[Name]>, void, undefined> {
-		return this.#scan(storeName, options, "key") as AsyncGenerator<StoreKey<Schema[Name]>, void, undefined>;
+		return this.#scan(storeName, options, ScanOutput.Keys) as AsyncGenerator<
+			StoreKey<Schema[Name]>,
+			void,
+			undefined
+		>;
 	}
 
 	/** Scans values in independently committed pages. */
@@ -227,7 +242,11 @@ export class DB<Schema extends SchemaDefinition<Schema> = DBSchema> implements D
 		storeName: Name,
 		options?: DBScanOptions<Schema[Name]>,
 	): AsyncGenerator<StoreValue<Schema[Name]>, void, undefined> {
-		return this.#scan(storeName, options, "value") as AsyncGenerator<StoreValue<Schema[Name]>, void, undefined>;
+		return this.#scan(storeName, options, ScanOutput.Values) as AsyncGenerator<
+			StoreValue<Schema[Name]>,
+			void,
+			undefined
+		>;
 	}
 
 	#operation<Result>(
@@ -252,12 +271,12 @@ export class DB<Schema extends SchemaDefinition<Schema> = DBSchema> implements D
 	async *#scan(
 		storeName: StoreName<Schema>,
 		options: DBScanOptions<StoreDefinition> | undefined,
-		output?: "key" | "value",
+		output: ScanOutput,
 	): AsyncGenerator<unknown, void, undefined> {
 		const direction = options?.direction ?? "next";
 		const size = Math.max(1, options?.batchSize ?? 100);
 		const signal = options?.signal;
-		const keysOnly = output === "key";
+		const keysOnly = output === ScanOutput.Keys;
 		const initialQuery = options?.query;
 
 		let query =

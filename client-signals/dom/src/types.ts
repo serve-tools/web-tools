@@ -6,6 +6,7 @@ declare global {
 		/** Any HTML, MathML, or SVG element accepted by Signal DOM. */
 		type Element = HTML.Element | MathML.Element | SVG.Element;
 
+		/** Tag-name declarations shared by supported DOM element types. */
 		namespace Element {
 			/** Any HTML, MathML, or SVG tag name accepted by Signal DOM. */
 			type Name = HTML.Element.Name | MathML.Element.Name | SVG.Element.Name;
@@ -32,6 +33,7 @@ declare global {
 			| Related<T, DOM.MathML.Element, DOM.MathML.ElementMap, DOM.MathML.PropertyMap>
 			| Related<T, DOM.SVG.Element, DOM.SVG.ElementMap, DOM.SVG.PropertyMap>;
 
+		/** HTML element, attribute, and writable-property declarations. */
 		namespace HTML {
 			/** HTML elements keyed by tag name. */
 			interface ElementMap extends HTMLElementTagNameMap {}
@@ -45,6 +47,7 @@ declare global {
 			/** Any HTML element accepted by Signal DOM. */
 			type Element = ElementMap[Element.Name];
 
+			/** HTML tag-name and writable element-internals declarations. */
 			namespace Element {
 				/** An HTML tag name accepted by Signal DOM. */
 				type Name = keyof ElementMap;
@@ -54,6 +57,7 @@ declare global {
 			}
 		}
 
+		/** MathML element, attribute, and writable-property declarations. */
 		namespace MathML {
 			/** MathML elements keyed by tag name. */
 			interface ElementMap extends MathMLElementTagNameMap {}
@@ -67,12 +71,14 @@ declare global {
 			/** Any MathML element accepted by Signal DOM. */
 			type Element = ElementMap[Element.Name];
 
+			/** MathML tag-name declarations. */
 			namespace Element {
 				/** A MathML tag name accepted by Signal DOM. */
 				type Name = keyof ElementMap;
 			}
 		}
 
+		/** SVG element, attribute, and writable-property declarations. */
 		namespace SVG {
 			/** SVG elements keyed by tag name. */
 			interface ElementMap extends SVGElementTagNameMap {}
@@ -86,6 +92,7 @@ declare global {
 			/** Any SVG element accepted by Signal DOM. */
 			type Element = ElementMap[Element.Name];
 
+			/** SVG tag-name declarations. */
 			namespace Element {
 				/** An SVG tag name accepted by Signal DOM. */
 				type Name = keyof ElementMap;

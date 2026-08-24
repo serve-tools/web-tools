@@ -11,14 +11,16 @@ import type {
 	TaskSignal as TaskSignalType,
 } from "./types.js";
 
-const priorities = new Set<TaskPriority>(["background", "user-visible", "user-blocking"]);
 const taskSignalStates = new WeakMap<object, TaskSignalState>();
 const priorityChangeHandlers = new WeakMap<object, TaskSignalType["onprioritychange"]>();
 
+const isTaskPriority = (value: unknown): value is TaskPriority =>
+	value === "background" || value === "user-visible" || value === "user-blocking";
+
 /** Returns a validated TaskPriority. */
 export function toTaskPriority(value: unknown): TaskPriority {
-	if (typeof value === "string" && priorities.has(value as TaskPriority)) {
-		return value as TaskPriority;
+	if (isTaskPriority(value)) {
+		return value;
 	}
 
 	throw new TypeError(`${String(value)} is not a valid TaskPriority`);
@@ -31,7 +33,7 @@ export function isTaskSignal(signal: AbortSignal): signal is TaskSignalType {
 	}
 
 	try {
-		return priorities.has(Reflect.get(signal, "priority") as TaskPriority);
+		return isTaskPriority(Reflect.get(signal, "priority"));
 	} catch {
 		return false;
 	}
@@ -57,8 +59,10 @@ export function addTaskPriorityChangeAlgorithm(signal: TaskSignalType, algorithm
 }
 
 class TaskPriorityChangeEventImpl extends Event implements TaskPriorityChangeEventType {
+	/** The priority held by the signal before this change. */
 	readonly previousPriority: TaskPriority;
 
+	/** Creates an event that reports the signal's previous priority. */
 	constructor(type: string, init: TaskPriorityChangeEventInit) {
 		if (init === undefined || init === null || !("previousPriority" in init)) {
 			throw new TypeError("TaskPriorityChangeEvent requires previousPriority");
@@ -77,6 +81,7 @@ class TaskSignalImpl extends EventTarget {
 		throw new TypeError("Illegal constructor");
 	}
 
+	/** Combines abort signals with a fixed or inherited task priority. */
 	static any(signals: readonly AbortSignal[], init: TaskSignalAnyInit = {}): TaskSignalType {
 		const inputSignals = Array.from(signals);
 		const controller = new AbortController();
@@ -129,6 +134,7 @@ class TaskSignalImpl extends EventTarget {
 		return signal;
 	}
 
+	/** The event handler invoked when this signal's priority changes. */
 	get onprioritychange(): TaskSignalType["onprioritychange"] {
 		return priorityChangeHandlers.get(this) ?? null;
 	}
@@ -150,6 +156,7 @@ class TaskSignalImpl extends EventTarget {
 		}
 	}
 
+	/** The current priority associated with this signal. */
 	get priority(): TaskPriority {
 		const state = taskSignalStates.get(this);
 
@@ -202,14 +209,17 @@ function changeTaskPriority(signal: TaskSignalType, priority: TaskPriority): voi
 }
 
 class TaskControllerImpl extends AbortController implements TaskControllerType {
+	/** The abort signal whose priority is controlled by this instance. */
 	declare readonly signal: TaskSignalType;
 
+	/** Creates a controller with the requested initial task priority. */
 	constructor(init: TaskControllerInit = {}) {
 		super();
 
 		initializeTaskSignal(this.signal, toTaskPriority(init.priority ?? "user-visible"), false);
 	}
 
+	/** Updates the priority shared by tasks using this controller's signal. */
 	setPriority(priority: TaskPriority): void {
 		changeTaskPriority(this.signal, toTaskPriority(priority));
 	}
@@ -225,14 +235,17 @@ interface TaskSignalState {
 /** An AbortController whose signal also controls task priority. */
 export const TaskController = TaskControllerImpl as TaskControllerConstructor;
 
+/** An abort controller whose signal carries a mutable task priority. */
 export type TaskController = TaskControllerType;
 
 /** The TaskSignal interface object and its static composition operation. */
 export const TaskSignal = TaskSignalImpl as unknown as TaskSignalConstructor;
 
+/** An abort signal that carries a task priority. */
 export type TaskSignal = TaskSignalType;
 
 /** An event describing a TaskSignal priority change. */
 export const TaskPriorityChangeEvent = TaskPriorityChangeEventImpl as TaskPriorityChangeEventConstructor;
 
+/** An event that retains the priority before a task signal changed. */
 export type TaskPriorityChangeEvent = TaskPriorityChangeEventType;

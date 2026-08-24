@@ -23,6 +23,7 @@ export abstract class ReactiveDirective<Value = unknown> extends AsyncDirective 
 		}
 	});
 
+	/** Applies the latest observed signal value during the shared microtask flush. */
 	run(): void {
 		this.#isPending = false;
 		this.#watcher.watch();
@@ -32,6 +33,7 @@ export abstract class ReactiveDirective<Value = unknown> extends AsyncDirective 
 		}
 	}
 
+	/** Replaces the observed signal and returns its current untracked value. */
 	protected observe(signal: Signal.Any<Value> | undefined): Value {
 		if (signal !== this.#signal) {
 			if (this.#signal !== undefined) {
@@ -48,10 +50,12 @@ export abstract class ReactiveDirective<Value = unknown> extends AsyncDirective 
 		return this.read();
 	}
 
+	/** Returns the current observed value without creating an outer signal dependency. */
 	protected read(): Value {
 		return this.#signal === undefined ? (nothing as Value) : Signal.subtle.untrack(() => this.#signal!.get());
 	}
 
+	/** Reuses the current computation unless the directive arguments change. */
 	protected observeArguments(arguments_: readonly unknown[], compute: () => Value): Value {
 		if (
 			this.#arguments === undefined ||
@@ -66,12 +70,14 @@ export abstract class ReactiveDirective<Value = unknown> extends AsyncDirective 
 		return this.read();
 	}
 
+	/** Stops observing its signal while the directive is disconnected. */
 	disconnected(): void {
 		if (this.#signal !== undefined) {
 			this.#watcher.unwatch(this.#signal);
 		}
 	}
 
+	/** Resumes observation and refreshes the directive after reconnection. */
 	reconnected(): void {
 		if (this.#signal !== undefined) {
 			this.#watcher.watch(this.#signal);

@@ -44,6 +44,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		throw new RangeError("The maximum message length must be a positive safe integer");
 	}
 
+	const deserializeOptions = { maximumArrayBufferLength: maximumMessageLength } as const;
 	const closed = Promise.withResolvers<void>();
 	const active = new Set<AbortController>();
 
@@ -150,7 +151,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 					throw protocolError("The response exceeds the configured maximum message length");
 				}
 
-				const message = deserialize(payload, { maximumArrayBufferLength: maximumMessageLength });
+				const message = deserialize(payload, deserializeOptions);
 
 				if (
 					!isServerMessage(message) ||
@@ -236,9 +237,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 							}
 
 							for (const payload of decoder.push(result.value)) {
-								const message = deserialize(payload, {
-									maximumArrayBufferLength: maximumMessageLength,
-								});
+								const message = deserialize(payload, deserializeOptions);
 
 								if (
 									!isServerMessage(message) ||
@@ -304,13 +303,27 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	} as Client<P>;
 }
 
+/** Types used by {@link connect}. */
 export namespace connect {
+	/** A typed request and streaming-subscription client over HTTP. */
 	export type Client<P extends T.Protocol = T.Protocol> = T.Client<P>;
+
+	/** Fetch configuration and resource limits for an HTTP-stream client. */
 	export type Options = T.ConnectOptions;
+
+	/** A compile-time map of named requests and subscriptions. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the protocol associated with a typed realtime client. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** Cancellation options for one HTTP request. */
 	export type RequestOptions = T.RequestOptions;
+
+	/** Cancellation and lifecycle options for one streaming subscription. */
 	export type SubscribeOptions = T.SubscribeOptions;
+
+	/** A disposable handle for one active streaming subscription. */
 	export type Subscription = T.Subscription;
 }
 

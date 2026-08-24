@@ -131,10 +131,13 @@ const renderRepeatRow = directive(RepeatRowDirective);
 
 /** Reconciles a reactive iterable by key and independently tracks every rendered item. */
 export const repeat = directive(RepeatSignalDirective) as {
+	/** Reconciles rendered items by their current iterable indexes. */
 	<Value, Result>(
 		source: ReactiveSource<Iterable<Value>>,
 		template: RepeatItem<Value, Result>,
 	): DirectiveResult<typeof RepeatSignalDirective<Value, Result>>;
+
+	/** Reconciles rendered items by stable caller-provided keys. */
 	<Value, Result>(
 		source: ReactiveSource<Iterable<Value>>,
 		key: RepeatKey<Value>,

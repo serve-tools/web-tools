@@ -69,8 +69,10 @@ export interface SubscriptionContext<Value, Context = undefined> extends Request
 
 /** Handler tables implementing every operation declared by a protocol. */
 export type Handlers<P extends Protocol, Context = undefined> = {
+	/** Request handlers keyed by the protocol's declared request names. */
 	readonly requests: P extends { readonly requests: infer Operations } ? RequestHandlers<Operations, Context> : never;
 } & {
+	/** Subscription handlers keyed by the protocol's declared subscription names. */
 	readonly subscriptions: P extends { readonly subscriptions: infer Operations }
 		? SubscriptionHandlers<Operations, Context>
 		: never;
@@ -120,6 +122,7 @@ export interface Connection<P extends Protocol = Protocol, Context = undefined>
 	readonly context: Context;
 }
 
+/** A protocol handler whose operation input, output, and connection context are unknown. */
 export type AnyHandler = (
 	input: unknown,
 	context: RequestContext<unknown> | SubscriptionContext<unknown, unknown>,

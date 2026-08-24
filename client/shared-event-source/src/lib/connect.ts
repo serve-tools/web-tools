@@ -33,11 +33,24 @@ export const connect = <const Events extends EventMap & EventMapDefinition<Event
 
 /** Types used by {@link connect}. */
 export namespace connect {
+	/** A typed page client for the worker-owned EventSource. */
 	export type Client<Events extends T.EventMap = T.EventMap> = T.SharedEventSourceClient<Events>;
+
+	/** A compile-time map from event names to JSON payloads. */
 	export type EventMap = T.EventMap;
+
+	/** Extracts the event map retained by an EventSource client or server. */
 	export type EventMapType<Value> = T.EventMapType<Value>;
+
+	/** One typed event received from the worker-owned EventSource. */
 	export type EventMessage<Value extends T.JSONValue = T.JSONValue> = T.EventMessage<Value>;
+
+	/** A JSON-compatible event payload. */
 	export type JSONValue = T.JSONValue;
+
+	/** Options for cancelling or observing a page-local event subscription. */
 	export type SubscribeOptions = T.SubscribeOptions;
+
+	/** A disposable handle for one page-local event subscription. */
 	export type Subscription = T.Subscription;
 }

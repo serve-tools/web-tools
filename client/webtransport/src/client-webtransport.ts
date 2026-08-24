@@ -35,6 +35,7 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	if (!Constructor) {
 		throw new TypeError("WebTransport is not available in this runtime");
 	}
+
 	if (options.signal?.aborted) {
 		throw options.signal.reason;
 	}
@@ -47,6 +48,7 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 			: { serverCertificateHashes: options.serverCertificateHashes }),
 		protocols: [subprotocol],
 	});
+
 	const abortSetup = (): void => transport.close({ reason: "Connection aborted" });
 
 	try {
@@ -69,6 +71,7 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		const operationStream = await abortable(transport.createBidirectionalStream(), options.signal, abortSetup);
 		const operationWriter = operationStream.writable.getWriter();
 		const operationDecoder = new FrameDecoder();
+
 		let client!: ReturnType<typeof createClient<P>>;
 
 		void operationWriter
@@ -123,12 +126,15 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		const subscriptions = new Set<() => void>();
 		const pendingReads = new Set<(reason: unknown) => void>();
 		const sharedDatagramWriter = transport.datagrams.createWritable().getWriter();
-		const maximumDatagramLength =
-			positiveSafeInteger(transport.datagrams.maxDatagramSize) ?? defaultMaximumDatagramLength;
+		const datagramDecodeOptions = {
+			maximumArrayBufferLength:
+				positiveSafeInteger(transport.datagrams.maxDatagramSize) ?? defaultMaximumDatagramLength,
+		};
+
 		let datagramsClosed: Error | undefined;
 
 		void pump(transport.datagrams.readable, (chunk) => {
-			const { kind, value } = decodeDatagram(chunk, { maximumArrayBufferLength: maximumDatagramLength });
+			const { kind, value } = decodeDatagram(chunk, datagramDecodeOptions);
 			const name = registry.name(kind);
 
 			if (!name) {
@@ -270,7 +276,7 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 				close(datagramsClosed);
 			}
 
-			for (const unsubscribe of [...subscriptions]) {
+			for (const unsubscribe of subscriptions) {
 				unsubscribe();
 			}
 
@@ -292,14 +298,30 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 	}
 }
 
+/** Types used by {@link connect}. */
 export namespace connect {
+	/** A typed client with reliable operations and best-effort datagrams. */
 	export type Client<P extends T.Protocol = T.Protocol> = T.Client<P>;
+
+	/** Typed best-effort datagram operations for a WebTransport session. */
 	export type Datagrams<P extends T.Protocol> = T.ClientDatagrams<P>;
+
+	/** Native session configuration and connection cancellation options. */
 	export type Options = T.ConnectOptions;
+
+	/** A compile-time map of reliable operations and named datagrams. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the protocol associated with a typed realtime client. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** Cancellation options for one reliable WebTransport request. */
 	export type RequestOptions = T.RequestOptions;
+
+	/** Cancellation and lifecycle options for one reliable subscription. */
 	export type SubscribeOptions = T.SubscribeOptions;
+
+	/** A disposable handle for one reliable or datagram subscription. */
 	export type Subscription = T.Subscription;
 }
 

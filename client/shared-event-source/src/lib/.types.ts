@@ -19,20 +19,32 @@ export type { ConnectOptions, EventClient, EventMap, EventMessage, JSONValue, Su
 /** A typed EventSource client whose physical connection is owned by a `SharedWorker`. */
 export interface SharedEventSourceClient<Events extends EventMap = EventMap> extends EventClient<Events>, Disposable {
 	readonly [clientBrand]?: Events;
+
+	/** Resolves after either side closes this page's worker protocol connection. */
 	readonly closed: Promise<void>;
+
+	/** Subscribes this page to typed events from the worker-owned EventSource. */
 	subscribe<Name extends Extract<keyof Events, string>>(
 		name: Name,
 		listener: (event: EventMessage<Extract<Events[Name], JSONValue>>) => void,
 		options?: SubscribeOptions,
 	): Subscription;
+
+	/** Closes this page's protocol connection without closing the shared EventSource. */
 	close(reason?: unknown): void;
 }
 
 /** Owns one native EventSource and every page client connected to the current `SharedWorker`. */
 export interface SharedEventSourceServer<Events extends EventMap = EventMap> extends Disposable {
 	readonly [serverBrand]?: Events;
+
+	/** The native EventSource client opened and owned by this worker server. */
 	readonly eventSource: EventSourceClient<Events>;
+
+	/** Resolves after the worker server and its EventSource close. */
 	readonly closed: Promise<void>;
+
+	/** Stops accepting ports and closes the worker-owned EventSource. */
 	close(reason?: unknown): void;
 }
 

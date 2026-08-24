@@ -177,6 +177,7 @@ class HostStyle<Declarations extends StyleDeclarations> implements ReactiveContr
 
 // #region Types
 
+/** Declaration, source, and value types for the {@link style} decorator. */
 export namespace style {
 	/** CSS property names and values applied to a host style's `:host` rule. */
 	export type Declarations = StyleDeclarations;

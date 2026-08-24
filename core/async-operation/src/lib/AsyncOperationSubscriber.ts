@@ -8,10 +8,13 @@ type Task = () => Awaitable<void>;
 
 /** A composable projection over an AsyncOperation subscription. */
 export interface OperationView<T> {
+	/** Creates a narrowed view containing values accepted by the type predicate. */
 	filter<TPart extends T>(predicate: (value: T, index: number) => value is TPart): OperationView<TPart>;
 
+	/** Creates a view containing values accepted by the predicate. */
 	filter(predicate: (value: T, index: number) => unknown): OperationView<T>;
 
+	/** Creates a view containing each synchronously or asynchronously transformed value. */
 	map<TPart>(callback: (value: T, index: number) => Awaitable<TPart>): OperationView<TPart>;
 
 	/** Attaches a terminal consumer that observes future values from this view. */
@@ -23,6 +26,7 @@ export interface OperationView<T> {
  * a shared filter/map projection graph.
  */
 export class AsyncOperationSubscriber<T, TResult = void> implements AsyncDisposable {
+	/** Creates a subscriber that can consume one operation through a shared projection graph. */
 	constructor() {
 		this.#view = new OperationViewImplementation(
 			this.#root,
@@ -36,18 +40,23 @@ export class AsyncOperationSubscriber<T, TResult = void> implements AsyncDisposa
 		return this.#active;
 	}
 
+	/** Creates a narrowed view containing values accepted by the type predicate. */
 	filter<TPart extends T>(predicate: (value: T, index: number) => value is TPart): OperationView<TPart>;
 
+	/** Creates a view containing values accepted by the predicate. */
 	filter(predicate: (value: T, index: number) => unknown): OperationView<T>;
 
+	/** Creates a view containing values accepted by the predicate. */
 	filter<TPart extends T = T>(predicate: (value: T, index: number) => unknown): OperationView<TPart> {
 		return this.#view.filter(predicate) as OperationView<TPart>;
 	}
 
+	/** Creates a view containing each synchronously or asynchronously transformed value. */
 	map<TPart>(callback: (value: T, index: number) => Awaitable<TPart>): OperationView<TPart> {
 		return this.#view.map(callback);
 	}
 
+	/** Attaches a terminal consumer that observes future values from the root view. */
 	subscribe(callback: ViewCallback<T>): Disposable {
 		return this.#view.subscribe(callback);
 	}
@@ -63,11 +72,10 @@ export class AsyncOperationSubscriber<T, TResult = void> implements AsyncDisposa
 			throw new DOMException("The subscriber has been disposed.", "InvalidStateError");
 		}
 
-		if (this.#started) {
+		if (this.#operation) {
 			throw new DOMException("The subscriber has already consumed an operation.", "InvalidStateError");
 		}
 
-		this.#started = true;
 		this.#active = true;
 		this.#operation = operation;
 
@@ -82,6 +90,7 @@ export class AsyncOperationSubscriber<T, TResult = void> implements AsyncDisposa
 		return consuming;
 	}
 
+	/** Cancels the owned operation and waits for consumption and producer cleanup to finish. */
 	[Symbol.asyncDispose](): Promise<void> {
 		this.#disposePromise ??= this.#dispose();
 
@@ -145,7 +154,7 @@ export class AsyncOperationSubscriber<T, TResult = void> implements AsyncDisposa
 	}
 
 	#assertConfigurable(): void {
-		if (this.#started || this.#disposed) {
+		if (this.#operation || this.#disposed) {
 			throw new DOMException("The subscriber can no longer be configured.", "InvalidStateError");
 		}
 	}
@@ -164,7 +173,6 @@ export class AsyncOperationSubscriber<T, TResult = void> implements AsyncDisposa
 	#disposed = false;
 	#disposePromise: Promise<void> | undefined;
 	#operation: AsyncOperation<T, TResult> | undefined;
-	#started = false;
 }
 
 class OperationViewImplementation<T> implements OperationView<T> {

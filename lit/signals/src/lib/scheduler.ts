@@ -4,11 +4,8 @@ interface Task {
 
 let pendingTasks: Task[] = [];
 let flushingTasks: Task[] = [];
-let isScheduled = false;
 
 const flush = (): void => {
-	isScheduled = false;
-
 	const tasks = pendingTasks;
 
 	pendingTasks = flushingTasks;
@@ -37,11 +34,7 @@ const flush = (): void => {
 
 /** Adds a task to the package-wide microtask flush. */
 export const enqueueMicrotask = (task: Task): void => {
-	pendingTasks.push(task);
-
-	if (!isScheduled) {
-		isScheduled = true;
-
+	if (pendingTasks.push(task) === 1) {
 		queueMicrotask(flush);
 	}
 };

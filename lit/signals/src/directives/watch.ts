@@ -37,7 +37,12 @@ class WatchDirective<T = unknown> extends ReactiveDirective<T> {
 
 /** Renders a signal or reactive callback and updates its Lit part when its signals change. */
 export const watch = directive(WatchDirective) as {
+	/** Renders a Signal, or nothing when no Signal is supplied. */
 	<Value>(signal?: Signal.Any<Value>): DirectiveResult<typeof WatchDirective<Value>>;
+
+	/** Renders a tracked callback and observes its Signal dependencies. */
 	<Value>(callback: WatchCallback<Value>): DirectiveResult<typeof WatchDirective<Value>>;
+
+	/** Renders either a Signal or a tracked callback. */
 	<Value>(source: WatchSource<Value>): DirectiveResult<typeof WatchDirective<Value>>;
 };

@@ -29,7 +29,7 @@ export const css = (strings: TemplateStringsArray, ...values: Array<Watchable<CS
 	return sheet;
 };
 
-/** Adopts a constructed stylesheet. */
+/** Adopts a constructed stylesheet and ties its reactive bindings to the root's disposal lifecycle. */
 export const adoptedCSS =
 	<T extends DOM.Root = DOM.Root>(sheet: CSSStyleSheet): adoptedCSS.Template<T> =>
 	(root) => {

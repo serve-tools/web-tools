@@ -32,6 +32,7 @@ export class FrameDecoder {
 	#end = 0;
 	#expectedLength: number | undefined;
 
+	/** Creates a decoder with an optional maximum payload length in bytes. */
 	constructor(maximumFrameLength = defaultMaximumFrameLength) {
 		if (
 			!Number.isSafeInteger(maximumFrameLength) ||

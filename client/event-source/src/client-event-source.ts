@@ -39,7 +39,7 @@ export const connect = <const Events extends EventMap & EventMapDefinition<Event
 
 		source.removeEventListener("error", closeIfFailed);
 
-		for (const unsubscribe of [...subscriptions]) {
+		for (const unsubscribe of subscriptions) {
 			unsubscribe();
 		}
 
@@ -120,13 +120,28 @@ export const connect = <const Events extends EventMap & EventMapDefinition<Event
 
 /** Types used by {@link connect}. */
 export namespace connect {
+	/** A typed, disposable native EventSource client. */
 	export type Client<Events extends T.EventMap = T.EventMap> = T.Client<Events>;
+
+	/** A compile-time map from event names to JSON-compatible payloads. */
 	export type EventMap = T.EventMap;
+
+	/** Extracts the event map associated with an EventSource client. */
 	export type EventMapType<Value> = T.EventMapType<Value>;
+
+	/** A parsed event with its native name, origin, and replay ID. */
 	export type EventMessage<Value extends T.JSONValue = T.JSONValue> = T.EventMessage<Value>;
+
+	/** A value representable without loss by JSON. */
 	export type JSONValue = T.JSONValue;
+
+	/** Native EventSource configuration and connection cancellation options. */
 	export type Options = T.ConnectOptions;
+
+	/** Cancellation options for one named event subscription. */
 	export type SubscribeOptions = T.SubscribeOptions;
+
+	/** A disposable handle for one named event subscription. */
 	export type Subscription = T.Subscription;
 }
 

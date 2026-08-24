@@ -2,6 +2,7 @@ import type { ComplexAttributeConverter } from "lit";
 
 /** Lit-compatible default conversion between attribute strings and property values. */
 export const defaultAttributeConverter: ComplexAttributeConverter<unknown, TypeHint> = {
+	/** Converts an attribute string into a property value using its constructor hint. */
 	fromAttribute(value, type): unknown {
 		switch (type) {
 			case Array:
@@ -19,6 +20,8 @@ export const defaultAttributeConverter: ComplexAttributeConverter<unknown, TypeH
 				return value;
 		}
 	},
+
+	/** Converts a property value into an attribute string using its constructor hint. */
 	toAttribute(value, type): string | null {
 		switch (type) {
 			case Array:

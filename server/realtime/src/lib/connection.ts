@@ -18,14 +18,18 @@ import type {
 	SubscriptionContext,
 } from "./types.js";
 
-const defaultMaximumMessageLength = 16 * 1024 * 1024;
-const defaultMaximumBufferedAmount = 16 * 1024 * 1024;
+const defaultMaximumLength = 16 * 1024 * 1024;
 const defaultMaximumOperations = 1_024;
 const cancelled = Object.assign(new Error("The operation was cancelled"), { name: "AbortError" });
 const unknownErrorMessage = "An unknown error occurred";
 
+const enum DeliveryPhase {
+	Serialize = 0,
+	Transport = 1,
+}
+
 interface DeliveryFailure {
-	readonly phase: "serialize" | "transport";
+	readonly phase: DeliveryPhase;
 	readonly error: unknown;
 }
 
@@ -97,9 +101,9 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 	context: Context,
 	options: ConnectionOptions = {},
 ): Connection<P, Context> {
-	const maximumMessageLength = positiveLimit(options.maximumMessageLength, defaultMaximumMessageLength);
+	const maximumMessageLength = positiveLimit(options.maximumMessageLength, defaultMaximumLength);
 	const maximumOperations = positiveLimit(options.maximumOperations, defaultMaximumOperations);
-	const maximumBufferedAmount = positiveLimit(options.maximumBufferedAmount, defaultMaximumBufferedAmount);
+	const maximumBufferedAmount = positiveLimit(options.maximumBufferedAmount, defaultMaximumLength);
 	const operations = new Map<number, ServerOperation>();
 	const closed = Promise.withResolvers<void>();
 	const tables = handlers as {
@@ -143,7 +147,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		try {
 			payload = serialize(message);
 		} catch (error) {
-			return { phase: "serialize", error };
+			return { phase: DeliveryPhase.Serialize, error };
 		}
 
 		try {
@@ -161,7 +165,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 
 			transport.send(payload, message);
 		} catch (error) {
-			return { phase: "transport", error };
+			return { phase: DeliveryPhase.Transport, error };
 		}
 	};
 
@@ -217,7 +221,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 	};
 
 	const handleDeliveryFailure = (failure: DeliveryFailure): void => {
-		if (failure.phase === "transport") {
+		if (failure.phase === DeliveryPhase.Transport) {
 			transportFailed(failure.error);
 		} else {
 			reportFailure(failure.error);
@@ -244,7 +248,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 				const failure = deliver(message);
 
 				if (failure) {
-					if (failure.phase === "serialize" && outcome.ok) {
+					if (failure.phase === DeliveryPhase.Serialize && outcome.ok) {
 						const fallback = deliver([protocol, "reject", id, formatError(failure.error)]);
 
 						if (fallback) {
@@ -272,7 +276,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 
 		const failure = deliver([protocol, "close", formatError(error)]);
 
-		if (failure?.phase === "transport") {
+		if (failure?.phase === DeliveryPhase.Transport) {
 			reportFailure(failure.error);
 		}
 
@@ -297,7 +301,8 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 			return;
 		}
 
-		const table = kind === "request" ? tables.requests : tables.subscriptions;
+		const request = kind === "request";
+		const table = request ? tables.requests : tables.subscriptions;
 		const handler = table && Object.hasOwn(table, name) ? table[name] : undefined;
 
 		if (typeof handler !== "function") {
@@ -321,62 +326,61 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 
 		operations.set(id, operation);
 
-		const handlerContext: RequestContext<Context> | SubscriptionContext<unknown, Context> =
-			kind === "request"
-				? {
-						get signal() {
-							return operation.signal;
-						},
-						connection: context,
-					}
-				: {
-						get signal() {
-							return operation.signal;
-						},
-						connection: context,
-						emit(value): void {
-							if (operations.get(id) !== operation) {
-								return;
-							}
+		const handlerContext: RequestContext<Context> | SubscriptionContext<unknown, Context> = request
+			? {
+					get signal() {
+						return operation.signal;
+					},
+					connection: context,
+				}
+			: {
+					get signal() {
+						return operation.signal;
+					},
+					connection: context,
+					emit(value): void {
+						if (operations.get(id) !== operation) {
+							return;
+						}
 
-							const failure = deliver([protocol, "event", id, value]);
+						const failure = deliver([protocol, "event", id, value]);
+
+						if (failure) {
+							if (failure.phase === DeliveryPhase.Serialize) {
+								settle(id, operation, { ok: false, reason: failure.error });
+							} else {
+								transportFailed(failure.error);
+							}
+						}
+					},
+					complete(): void {
+						if (operations.get(id) !== operation) {
+							return;
+						}
+
+						operations.delete(id);
+						operation.abort(cancelled);
+
+						try {
+							const failure = deliver([protocol, "complete", id]);
 
 							if (failure) {
-								if (failure.phase === "serialize") {
-									settle(id, operation, { ok: false, reason: failure.error });
-								} else {
-									transportFailed(failure.error);
-								}
+								handleDeliveryFailure(failure);
 							}
-						},
-						complete(): void {
-							if (operations.get(id) !== operation) {
-								return;
-							}
-
-							operations.delete(id);
-							operation.abort(cancelled);
-
-							try {
-								const failure = deliver([protocol, "complete", id]);
-
-								if (failure) {
-									handleDeliveryFailure(failure);
-								}
-							} finally {
-								runCleanup(operation);
-							}
-						},
-						error(reason): void {
-							settle(id, operation, { ok: false, reason });
-						},
-					};
+						} finally {
+							runCleanup(operation);
+						}
+					},
+					error(reason): void {
+						settle(id, operation, { ok: false, reason });
+					},
+				};
 
 		const handlerTask = Promise.resolve()
 			.then(() => handler(input, handlerContext as never))
 			.then(
 				(result) => {
-					if (kind === "request") {
+					if (request) {
 						settle(id, operation, { ok: true, value: result });
 					} else if (typeof result === "function") {
 						operation.cleanup = result as () => T.Awaitable<void>;
@@ -445,7 +449,7 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 		);
 		const failure = deliver([protocol, "close", formatError(error)]);
 
-		if (failure?.phase === "transport") {
+		if (failure?.phase === DeliveryPhase.Transport) {
 			reportFailure(failure.error);
 		}
 
@@ -468,13 +472,28 @@ export function createConnection<const P extends Protocol & ProtocolDefinition<P
 
 /** Types used by {@link createConnection}. */
 export namespace createConnection {
+	/** A typed protocol server for one physical transport connection. */
 	export type Connection<P extends T.Protocol = T.Protocol, Context = undefined> = T.Connection<P, Context>;
+
+	/** Request and subscription handler tables for the declared protocol. */
 	export type Handlers<P extends T.Protocol, Context = undefined> = T.Handlers<P, Context>;
+
+	/** Per-connection protocol limits and failure-formatting hooks. */
 	export type Options = T.ConnectionOptions;
+
+	/** A compile-time collection of named protocol operation signatures. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the protocol retained by a resolved or pending resource. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** Cancellation signal and application context supplied to a request handler. */
 	export type RequestContext<Context = undefined> = T.RequestContext<Context>;
+
+	/** Event delivery, settlement, and cancellation controls supplied to a subscription handler. */
 	export type SubscriptionContext<Value, Context = undefined> = T.SubscriptionContext<Value, Context>;
+
+	/** Byte-oriented message delivery and physical-close operations. */
 	export type Transport = T.ConnectionTransport;
 }
 

@@ -8,7 +8,7 @@ import { ConnectionResourceController } from "./.connection-resource.js";
 
 /** Configures the connection lifetime of an operation-view accessor. */
 export interface OperationOptions {
-	/** Delays unsubscription after disconnection, allowing brief moves to retain the subscription. */
+	/** Milliseconds, or a delay supplier, before unsubscribing after host disconnection. */
 	readonly disconnectDelay?: number | (() => number);
 }
 

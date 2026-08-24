@@ -15,9 +15,8 @@ export type {
 } from "@serve-tools/client-shared-db/scope/window";
 
 const pending = { status: "pending" } as const;
-const Computed = Signal.Computed;
 
-class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
+class ReactiveQuery<T> extends Signal.Computed<QueryState<T>> implements Query<T> {
 	readonly #fail: (error: unknown) => void;
 	readonly #invalidate: () => void;
 	readonly #refresh: (options?: OperationOptions) => Promise<void>;
@@ -255,8 +254,8 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 			const query = valueOf(options?.query);
 			const getAllOptions = {
 				...operationOptions,
-				...(count === undefined ? {} : { count }),
-				...(query === undefined ? {} : { query }),
+				...(count !== undefined && { count }),
+				...(query !== undefined && { query }),
 			};
 
 			return ready.then(() => this.getAll(storeName, getAllOptions));
@@ -273,8 +272,8 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 			const query = valueOf(options?.query);
 			const getAllOptions = {
 				...operationOptions,
-				...(count === undefined ? {} : { count }),
-				...(query === undefined ? {} : { query }),
+				...(count !== undefined && { count }),
+				...(query !== undefined && { query }),
 			};
 
 			return ready.then(() => this.getAllKeys(storeName, getAllOptions));
@@ -290,7 +289,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 			const query = valueOf(options?.query);
 			const countOptions = {
 				...operationOptions,
-				...(query === undefined ? {} : { query }),
+				...(query !== undefined && { query }),
 			};
 
 			return ready.then(() => this.count(storeName, countOptions));
@@ -491,7 +490,7 @@ export interface CountOptions<Store extends StoreDefinition> extends OperationOp
 	query?: StoreKey<Store> | IDBKeyRange | null;
 }
 
-/** Static or signal-backed options for a reactive `watchAll()` query. */
+/** Static or signal-backed options for reactive `watchAll()` and `watchAllKeys()` queries. */
 export interface WatchAllOptions<Store extends StoreDefinition> {
 	/** The static or reactive maximum number of matching records. */
 	count?: Watchable<number | undefined>;

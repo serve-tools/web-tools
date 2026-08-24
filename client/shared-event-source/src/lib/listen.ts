@@ -50,8 +50,15 @@ export const listen = <const Events extends EventMap & EventMapDefinition<Events
 
 /** Types used by {@link listen}. */
 export namespace listen {
+	/** A compile-time map from event names to JSON payloads. */
 	export type EventMap = T.EventMap;
+
+	/** Extracts the event map retained by an EventSource client or server. */
 	export type EventMapType<Value> = T.EventMapType<Value>;
+
+	/** Options for opening the worker-owned EventSource. */
 	export type Options = T.ConnectOptions;
+
+	/** A worker-owned EventSource and its attached page connections. */
 	export type Server<Events extends T.EventMap = T.EventMap> = T.SharedEventSourceServer<Events>;
 }

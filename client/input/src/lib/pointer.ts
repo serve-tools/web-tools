@@ -201,19 +201,37 @@ type PointerListener = (event: PointerEvent) => void;
 
 /** A point in viewport coordinates or a two-dimensional difference. */
 export interface Point {
+	/** The horizontal viewport coordinate or difference. */
 	readonly x: number;
+
+	/** The vertical viewport coordinate or difference. */
 	readonly y: number;
 }
 
 /** A snapshot of the observed element's viewport bounds when an interaction started. */
 export interface PointerBounds {
+	/** The horizontal viewport coordinate of the bounds origin. */
 	readonly x: number;
+
+	/** The vertical viewport coordinate of the bounds origin. */
 	readonly y: number;
+
+	/** The width of the observed element's bounds. */
 	readonly width: number;
+
+	/** The height of the observed element's bounds. */
 	readonly height: number;
+
+	/** The viewport coordinate of the upper edge. */
 	readonly top: number;
+
+	/** The viewport coordinate of the right edge. */
 	readonly right: number;
+
+	/** The viewport coordinate of the lower edge. */
 	readonly bottom: number;
+
+	/** The viewport coordinate of the left edge. */
 	readonly left: number;
 }
 

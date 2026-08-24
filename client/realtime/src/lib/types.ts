@@ -43,12 +43,16 @@ export interface ClientOptions {
 
 /** Options for sending and cancelling a request. */
 export interface RequestOptions {
+	/** Cancels only this operation when aborted. */
 	readonly signal?: AbortSignal;
 }
 
 /** Options for sending, cancelling, and observing a subscription. */
 export interface SubscribeOptions extends RequestOptions {
+	/** Runs when the peer completes the subscription successfully. */
 	readonly onComplete?: () => void;
+
+	/** Receives remote, transport, or protocol failures for this subscription. */
 	readonly onError?: (error: Error) => void;
 }
 
@@ -94,18 +98,30 @@ export interface ClientConnection<P extends Protocol = Protocol> extends Client<
 	disconnect(reason?: unknown): void;
 }
 
+/** Input and cancellation arguments accepted by a typed request. */
 export type RequestArguments<Value extends Operation> = [OperationInput<Value>] extends [undefined]
 	? [input?: undefined, options?: RequestOptions]
 	: [input: OperationInput<Value>, options?: RequestOptions];
 
+/** Input, event listener, and lifecycle arguments accepted by a typed subscription. */
 export type SubscribeArguments<Value extends Operation> = [OperationInput<Value>] extends [undefined]
 	? [onEvent: (event: SubscriptionEvent<Value>) => void, options?: SubscribeOptions]
 	: [input: OperationInput<Value>, onEvent: (event: SubscriptionEvent<Value>) => void, options?: SubscribeOptions];
 
+/** The lifecycle callbacks associated with one active realtime operation. */
 export interface ClientOperation {
+	/** Whether this operation is a request or subscription. */
 	readonly kind: "request" | "subscription";
+
+	/** Delivers the next subscription event. */
 	readonly next: (value: unknown) => void;
+
+	/** Settles the operation with its successful result or failure. */
 	readonly settle: (ok: boolean, value: unknown) => void;
+
+	/** Cancels the operation with the supplied reason. */
 	readonly cancel: (reason: unknown) => void;
+
+	/** Removes the operation's cancellation listener. */
 	readonly off: () => void;
 }

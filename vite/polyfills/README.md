@@ -114,7 +114,7 @@ Each virtual module is served from memory by the plugin's `load` hook and contai
 
 - `vitePolyfills(options?)` creates the Vite plugin.
 - `builtinPolyfills` contains the definitions enabled by default.
-- `definePolyfill(definition)` validates and preserves a custom definition's literal type.
+- `definePolyfill(definition)` type-checks a custom definition and returns it unchanged.
 - `Polyfill` describes a stable ID, self-guarding runtime source, and OXC detection visitor.
 - `VitePolyfillsOptions` selects and orders the polyfill definitions to detect.
 - `@serve-tools/vite-polyfills/types` exposes all shipped ambient declarations, while focused `./types/*` subpaths expose one declaration group.

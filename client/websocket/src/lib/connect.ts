@@ -77,12 +77,25 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 /** Types used by {@link connect}. */
 export namespace connect {
+	/** A typed, disposable WebSocket realtime client. */
 	export type Client<P extends T.Protocol = T.Protocol> = T.Client<P>;
+
+	/** Connection lifetime options for a WebSocket client. */
 	export type Options = T.ConnectOptions;
+
+	/** A compile-time map of named requests and subscriptions. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the protocol associated with a typed realtime client. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** Cancellation options for one WebSocket request. */
 	export type RequestOptions = T.RequestOptions;
+
+	/** Cancellation and lifecycle options for one WebSocket subscription. */
 	export type SubscribeOptions = T.SubscribeOptions;
+
+	/** A disposable handle for one active WebSocket subscription. */
 	export type Subscription = T.Subscription;
 }
 

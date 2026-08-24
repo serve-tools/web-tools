@@ -17,6 +17,9 @@ export const collection =
 
 /** A native-shaped signal collection constructor accepted by {@link collection}. */
 export interface CollectionConstructor {
+	/** Creates a signal-backed collection instance. */
 	new (): object;
+
+	/** The prototype shared by constructed collection instances. */
 	readonly prototype: object;
 }

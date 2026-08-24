@@ -83,11 +83,7 @@ const getMethod = <Result>(value: object, key: symbol): (() => Result) | undefin
 };
 
 const throwErrors = (errors: unknown[], SuppressedError: SuppressedErrorConstructor) => {
-	if (errors.length === 1) {
-		throw errors[0];
-	}
-
-	if (errors.length > 1) {
+	if (errors.length) {
 		throw errors.reduce((suppressed, error) => new SuppressedError(error, suppressed));
 	}
 };

@@ -4,6 +4,8 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
+- Reduce runtime allocations, redundant lifecycle state, dispatch lookups, and shipped JavaScript across client, server, Signal, scheduling, and build-plugin packages without changing public contracts.
+- Document public methods, properties, options, and lifecycle behavior across published package APIs, and correct inaccurate Vite polyfill helper documentation.
 - Release refreshed, dependency-aligned versions of all 60 published packages with explicit minimum internal dependency versions and improved npm discovery keywords.
 - Add configurable, 16 MiB-default inbound message limits to `@serve-tools/client-http-stream@0.2.0` and `@serve-tools/client-realtime@0.2.0`, and reject oversized structured binary allocations before decoding.
 - Harden `@serve-tools/realtime-protocol@0.2.0` with configurable datagram registration, UTF-8 name, and control-frame limits.

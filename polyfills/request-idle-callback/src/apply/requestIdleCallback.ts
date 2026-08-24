@@ -15,6 +15,7 @@ declare global {
 
 	/** A callback invoked during an idle period or after its timeout elapses. */
 	interface IdleRequestCallback {
+		/** Runs with the deadline for the current idle period. */
 		(deadline: IdleDeadline): void;
 	}
 

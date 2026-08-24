@@ -2,8 +2,11 @@ import type { DeserializeOptions } from "./realtime-protocol.js";
 import { deserialize, serialize } from "./realtime-protocol.js";
 
 const headerLength = 5;
-const binaryEncoding = 0;
-const structuredEncoding = 1;
+
+const enum DatagramEncoding {
+	Binary = 0,
+	Structured = 1,
+}
 
 /** One decoded typed datagram envelope. */
 export interface DecodedDatagram {
@@ -35,7 +38,7 @@ export function encodeDatagram(kind: number, value: unknown): Uint8Array<ArrayBu
 	output[1] = kind >>> 16;
 	output[2] = kind >>> 8;
 	output[3] = kind;
-	output[4] = binary ? binaryEncoding : structuredEncoding;
+	output[4] = binary ? DatagramEncoding.Binary : DatagramEncoding.Structured;
 
 	output.set(payload, headerLength);
 
@@ -59,11 +62,11 @@ export function decodeDatagram(
 	const encoding = bytes[4];
 	const data = bytes.subarray(headerLength);
 
-	if (encoding === binaryEncoding) {
+	if (encoding === DatagramEncoding.Binary) {
 		return { kind, value: data };
 	}
 
-	if (encoding === structuredEncoding) {
+	if (encoding === DatagramEncoding.Structured) {
 		return { kind, value: deserialize(data, options) };
 	}
 

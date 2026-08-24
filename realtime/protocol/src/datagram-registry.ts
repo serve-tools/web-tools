@@ -28,6 +28,7 @@ export interface DatagramRegistryOptions {
 	readonly maximumControlFrameLength?: number;
 }
 
+/** Coordinates connection-local datagram names and numeric identifiers with a remote peer. */
 export class DatagramRegistry {
 	readonly #send: (payload: Uint8Array<ArrayBuffer>) => void;
 	readonly #decoder: FrameDecoder;
@@ -40,6 +41,7 @@ export class DatagramRegistry {
 	readonly #pending = new Map<number, ReturnType<typeof Promise.withResolvers<number>>>();
 	#nextRequest = 0;
 
+	/** Creates a registry that sends framed registration messages through the provided callback. */
 	constructor(send: (payload: Uint8Array<ArrayBuffer>) => void, options?: DatagramRegistryOptions) {
 		this.#send = send;
 		const maximumPeerRegistrations = options?.maximumPeerRegistrations ?? defaultMaximumPeerRegistrations;
@@ -63,10 +65,12 @@ export class DatagramRegistry {
 		this.#maximumControlFrameLength = maximumControlFrameLength;
 	}
 
+	/** Returns the peer-registered name associated with a connection-local datagram identifier. */
 	name(kind: number): string | undefined {
 		return this.#incomingNames.get(kind);
 	}
 
+	/** Registers a local datagram name and resolves with the peer-assigned identifier. */
 	register(name: string): Promise<number> {
 		this.#validateName(name);
 
@@ -99,6 +103,7 @@ export class DatagramRegistry {
 		return pending.promise;
 	}
 
+	/** Processes a chunk from the reliable datagram-registration control stream. */
 	receive(chunk: ArrayBuffer | ArrayBufferView): void {
 		for (const frame of this.#decoder.push(chunk)) {
 			const message = deserialize(frame, { maximumArrayBufferLength: 0 });
@@ -142,10 +147,12 @@ export class DatagramRegistry {
 		}
 	}
 
+	/** Verifies that the registration control stream ended on a complete frame. */
 	finish(): void {
 		this.#decoder.finish();
 	}
 
+	/** Rejects every pending local datagram registration with the supplied failure. */
 	fail(reason: unknown): void {
 		for (const pending of this.#pending.values()) {
 			pending.reject(reason);

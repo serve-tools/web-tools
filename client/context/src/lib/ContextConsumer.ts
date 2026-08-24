@@ -25,6 +25,7 @@ export class ContextConsumer<RequestedContext extends Context<unknown, unknown>>
 	#root: ContextRoot | undefined;
 	#unsubscribe: (() => void) | undefined;
 
+	/** Creates a context consumer owned by the requesting element. */
 	constructor(host: Element, { callback, context, subscribe = false }: ContextConsumerOptions<RequestedContext>) {
 		this.#host = host;
 		this.#context = context;

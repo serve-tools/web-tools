@@ -62,12 +62,27 @@ export function attach<const P extends Protocol & ProtocolDefinition<P>, Context
 
 /** Types used by {@link attach}. */
 export namespace attach {
+	/** The connection returned by {@link attach}. */
 	export type Connection<P extends T.Protocol = T.Protocol, Context = undefined> = T.Connection<P, Context>;
+
+	/** Handler definitions accepted by {@link attach}. */
 	export type Handlers<P extends T.Protocol, Context = undefined> = T.Handlers<P, Context>;
+
+	/** Connection options accepted by {@link attach}. */
 	export type Options = T.ConnectionOptions;
+
+	/** The protocol shape accepted by {@link attach}. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the declared value type for a protocol member. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** Context supplied to request handlers. */
 	export type RequestContext<Context = undefined> = T.RequestContext<Context>;
+
+	/** Context supplied to subscription handlers. */
 	export type SubscriptionContext<Value, Context = undefined> = T.SubscriptionContext<Value, Context>;
+
+	/** The accepted WHATWG-compatible WebSocket shape. */
 	export type WebSocket = T.WebSocketLike;
 }

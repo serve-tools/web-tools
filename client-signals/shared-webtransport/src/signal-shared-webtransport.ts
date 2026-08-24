@@ -9,7 +9,10 @@ import { observe as observeMessaging } from "@serve-tools/signal-messaging";
 export * from "@serve-tools/client-shared-webtransport/scope/window";
 export type { Observation, ObservationState } from "@serve-tools/signal-messaging";
 
+/** Eagerly observes one typed reliable shared WebTransport subscription as a read-only Signal. */
 export const observe = observeMessaging as unknown as Observe;
+
+/** Cancellation options for an observed shared WebTransport subscription. */
 export type ObserveOptions = RequestOptions;
 
 type Operation = (...arguments_: any[]) => unknown;

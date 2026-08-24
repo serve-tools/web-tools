@@ -24,6 +24,15 @@ import type {
 	Subscription,
 } from "./types.js";
 
+const enum OperationKind {
+	Request = 0,
+	Subscription = 1,
+}
+
+type OperationRecord = Omit<ClientOperation, "kind"> & {
+	readonly kind: OperationKind;
+};
+
 const inactiveSubscription: Subscription = Object.freeze({
 	active: false,
 	unsubscribe: noop,
@@ -41,7 +50,8 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 		throw new RangeError("The maximum message length must be a positive safe integer");
 	}
 
-	const operations = new Map<number, ClientOperation>();
+	const deserializeOptions = { maximumArrayBufferLength: maximumMessageLength } as const;
+	const operations = new Map<number, OperationRecord>();
 	const closed = Promise.withResolvers<void>();
 
 	let nextId = 0;
@@ -65,7 +75,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 			operations.delete(id);
 			operation.off();
 
-			if (operation.kind === "request" || remote) {
+			if (operation.kind === OperationKind.Request || remote) {
 				operation.settle(false, error);
 			} else {
 				operation.cancel(error);
@@ -83,6 +93,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 		} catch {}
 
 		finish(error, true);
+
 		transport.close(error);
 	};
 
@@ -100,7 +111,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 		let message: unknown;
 
 		try {
-			message = deserialize(payload, { maximumArrayBufferLength: maximumMessageLength });
+			message = deserialize(payload, deserializeOptions);
 		} catch (error) {
 			fail(error);
 
@@ -117,6 +128,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 			const error = remoteError(message[MessagePart.Id]);
 
 			finish(error, true);
+
 			transport.close(error);
 
 			return;
@@ -129,7 +141,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 		}
 
 		if (message[MessagePart.Type] === "event") {
-			if (operation.kind !== "subscription") {
+			if (operation.kind !== OperationKind.Subscription) {
 				fail("A request received a subscription event");
 
 				return;
@@ -141,8 +153,8 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 		}
 
 		if (
-			(message[MessagePart.Type] === "resolve" && operation.kind !== "request") ||
-			(message[MessagePart.Type] === "complete" && operation.kind !== "subscription")
+			(message[MessagePart.Type] === "resolve" && operation.kind !== OperationKind.Request) ||
+			(message[MessagePart.Type] === "complete" && operation.kind !== OperationKind.Subscription)
 		) {
 			fail("The operation received an incompatible settlement");
 
@@ -179,10 +191,10 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 	};
 
 	const open = (
-		kind: "request" | "subscription",
+		kind: OperationKind,
 		name: string,
 		input: unknown,
-		options: RequestOptions,
+		options: RequestOptions | undefined,
 		next: (value: unknown) => void,
 		settle: (ok: boolean, value: unknown) => void,
 		onAbort: (reason: unknown) => void,
@@ -192,7 +204,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 		}
 
 		const id = ++nextId;
-		const signal = options.signal;
+		const signal = options?.signal;
 		const abort = signal
 			? (): void => {
 					if (cancel(id)) {
@@ -207,10 +219,12 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 		operations.set(id, { kind, next, settle, cancel: onAbort, off });
 
 		try {
-			send([protocol, kind === "request" ? "request" : "subscribe", id, name, input]);
+			send([protocol, kind === OperationKind.Request ? "request" : "subscribe", id, name, input]);
 		} catch (error) {
 			operations.delete(id);
+
 			off();
+
 			throw error;
 		}
 
@@ -229,6 +243,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 		} catch {}
 
 		finish(error, false);
+
 		transport.close(error);
 	};
 
@@ -244,7 +259,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 
 			return new Promise((resolve, reject) => {
 				open(
-					"request",
+					OperationKind.Request,
 					name,
 					input,
 					options,
@@ -268,6 +283,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 			const input = noInput ? undefined : inputOrListener;
 			const listener = (noInput ? inputOrListener : listenerOrOptions) as (value: unknown) => void;
 			const options = (noInput ? listenerOrOptions : maybeOptions) as SubscribeOptions | undefined;
+
 			let active = !options?.signal?.aborted;
 
 			if (!active) {
@@ -275,13 +291,14 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 			}
 
 			const id = open(
-				"subscription",
+				OperationKind.Subscription,
 				name,
 				input,
-				Object(options),
+				options,
 				listener,
 				(ok, value) => {
 					active = false;
+
 					if (ok) {
 						callSafely(() => options?.onComplete?.(), undefined);
 					} else if (options?.onError) {
@@ -294,6 +311,7 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 					active = false;
 				},
 			);
+
 			const unsubscribe = (): void => {
 				if (cancel(id)) {
 					active = false;
@@ -317,13 +335,29 @@ export function createClient<const P extends Protocol & ProtocolDefinition<P>>(
 	} as ClientConnection<P>;
 }
 
+/** Types used by {@link createClient}. */
 export namespace createClient {
+	/** A typed client with receive-side controls for a transport adapter. */
 	export type Connection<P extends T.Protocol = T.Protocol> = T.ClientConnection<P>;
+
+	/** A compile-time map of named requests and subscriptions. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the protocol associated with a typed realtime client. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
+
+	/** Resource limits for a transport-neutral realtime client. */
 	export type Options = T.ClientOptions;
+
+	/** Cancellation options for one realtime request. */
 	export type RequestOptions = T.RequestOptions;
+
+	/** Cancellation and lifecycle options for one realtime subscription. */
 	export type SubscribeOptions = T.SubscribeOptions;
+
+	/** A disposable handle for one active realtime subscription. */
 	export type Subscription = T.Subscription;
+
+	/** Byte-oriented send and close operations supplied by a transport adapter. */
 	export type Transport = T.ClientTransport;
 }

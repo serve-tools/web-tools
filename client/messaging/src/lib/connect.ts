@@ -1,4 +1,5 @@
 import {
+	ConnectionState,
 	callSafely,
 	connectionClosedError,
 	errorRecord,
@@ -40,8 +41,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 	const ready = Promise.withResolvers<void>();
 
 	let nextId = 0;
-	let isClosed = false;
-	let isReady = false;
+	let state: ConnectionState = ConnectionState.Awaiting;
 	let releaseLease: (() => void) | undefined;
 	const hidden = (): void => close("The page was hidden");
 	const pageEvents = "onpagehide" in globalThis ? globalThis : undefined;
@@ -53,42 +53,40 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 			return;
 		}
 
-		if (data[MessagePart.Type] === "welcome") {
-			if (isReady) {
+		const type = data[MessagePart.Type];
+
+		if (type === "welcome") {
+			if (state === ConnectionState.Ready) {
 				closeProtocol(protocolError("The serving peer sent more than one welcome"));
 
 				return;
 			}
 
-			isReady = true;
+			state = ConnectionState.Ready;
 			ready.resolve();
 
 			return;
 		}
 
-		if (data[MessagePart.Type] === "hello") {
+		if (type === "hello") {
 			closeProtocol(protocolError("The serving peer sent a client hello"));
 
 			return;
 		}
 
-		if (!isReady && data[MessagePart.Type] !== "close") {
+		if (state !== ConnectionState.Ready && type !== "close") {
 			closeProtocol(protocolError("The serving peer sent a message before welcoming the client"));
 
 			return;
 		}
 
-		if (data[MessagePart.Type] === "close") {
+		if (type === "close") {
 			finish(remoteError(data[MessagePart.Name]), true);
 
 			return;
 		}
 
-		if (
-			data[MessagePart.Type] !== "next" &&
-			data[MessagePart.Type] !== "resolve" &&
-			data[MessagePart.Type] !== "reject"
-		) {
+		if (type !== "next" && type !== "resolve" && type !== "reject") {
 			return;
 		}
 
@@ -99,7 +97,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 			return;
 		}
 
-		if (data[MessagePart.Type] === "next") {
+		if (type === "next") {
 			try {
 				operation.next(data[MessagePart.Data]);
 			} catch (error) {
@@ -109,8 +107,8 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 			operations.delete(id);
 			operation.off();
 			operation.settle(
-				data[MessagePart.Type] === "resolve",
-				data[MessagePart.Type] === "resolve" ? data[MessagePart.Data] : remoteError(data[MessagePart.Data]),
+				type === "resolve",
+				type === "resolve" ? data[MessagePart.Data] : remoteError(data[MessagePart.Data]),
 			);
 		}
 	};
@@ -160,7 +158,9 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 			post(endpoint, [protocol, kind, id, name, input], options.transfer);
 		} catch (error) {
 			operations.delete(id);
+
 			off();
+
 			throw error;
 		}
 
@@ -168,15 +168,15 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 	};
 
 	const finish = (error: unknown, remote: boolean): void => {
-		if (isClosed) {
+		if (state === ConnectionState.Closed) {
 			return;
 		}
 
-		isClosed = true;
-
-		if (!isReady) {
+		if (state === ConnectionState.Awaiting) {
 			ready.reject(error);
 		}
+
+		state = ConnectionState.Closed;
 
 		endpoint.removeEventListener("message", receive);
 		pageEvents?.removeEventListener("pagehide", hidden);
@@ -205,7 +205,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 	};
 
 	const close = (reason?: unknown): void => {
-		if (isClosed) {
+		if (state === ConnectionState.Closed) {
 			return;
 		}
 
@@ -219,7 +219,9 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 	};
 
 	endpoint.addEventListener("message", receive);
+
 	endpoint.start?.();
+
 	pageEvents?.addEventListener("pagehide", hidden);
 
 	void ready.promise.catch(noop);
@@ -253,7 +255,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 		ready: ready.promise,
 
 		request(name: string, input?: unknown, options: RequestOptions = {}): Promise<unknown> {
-			if (isClosed) {
+			if (state === ConnectionState.Closed) {
 				return Promise.reject(connectionClosedError());
 			}
 
@@ -280,7 +282,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 			listenerOrOptions?: EventListener | SubscribeOptions,
 			maybeOptions?: SubscribeOptions,
 		): Subscription {
-			if (isClosed) {
+			if (state === ConnectionState.Closed) {
 				throw connectionClosedError();
 			}
 
@@ -316,6 +318,7 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 					active = false;
 				},
 			);
+
 			const unsubscribe = (): void => {
 				if (cancel(id)) {
 					active = false;

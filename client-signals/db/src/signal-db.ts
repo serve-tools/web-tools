@@ -24,9 +24,8 @@ import { createEffect } from "@serve-tools/signal-effect";
 export type * from "@serve-tools/client-db";
 
 const pending = { status: "pending" } as const;
-const Computed = Signal.Computed;
 
-class ReactiveQuery<T> extends Computed<QueryState<T>> implements Query<T> {
+class ReactiveQuery<T> extends Signal.Computed<QueryState<T>> implements Query<T> {
 	readonly #invalidate: () => void;
 	readonly #refresh: (options?: DBOperationOptions) => Promise<void>;
 	readonly #stop: () => void;
@@ -116,7 +115,10 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 	readonly #queries = new Map<StoreName<Schema>, Set<ReactiveQuery<unknown>>>();
 
 	/** Wraps an existing database connection and owns the reactive queries created through it. */
-	constructor(readonly source: DB<Schema>) {}
+	constructor(
+		/** The underlying typed IndexedDB connection. */
+		readonly source: DB<Schema>,
+	) {}
 
 	/** Opens a database and wraps it with signal-backed queries. */
 	static async open<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>(
@@ -126,6 +128,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		return new this<Schema>(await DB.open<Schema>(name, options));
 	}
 
+	/** Returns the value for a primary key or range, or `undefined` when no record matches. */
 	get<Name extends StoreName<Schema>>(
 		storeName: Name,
 		key: StoreKey<Schema[Name]> | IDBKeyRange,
@@ -134,6 +137,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		return this.source.get(storeName, key, options);
 	}
 
+	/** Returns values matching an optional primary-key query after the read transaction commits. */
 	getAll<Name extends StoreName<Schema>>(
 		storeName: Name,
 		options?: DBGetAllOptions<Schema[Name]>,
@@ -141,6 +145,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		return this.source.getAll(storeName, options);
 	}
 
+	/** Returns primary keys matching an optional query after the read transaction commits. */
 	getAllKeys<Name extends StoreName<Schema>>(
 		storeName: Name,
 		options?: DBGetAllOptions<Schema[Name]>,
@@ -148,6 +153,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		return this.source.getAllKeys(storeName, options);
 	}
 
+	/** Returns whether a primary key or range matches at least one record. */
 	has<Name extends StoreName<Schema>>(
 		storeName: Name,
 		key: StoreKey<Schema[Name]> | IDBKeyRange,
@@ -156,10 +162,12 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		return this.source.has(storeName, key, options);
 	}
 
+	/** Counts records matching an optional primary-key query. */
 	count<Name extends StoreName<Schema>>(storeName: Name, options?: DBCountOptions<Schema[Name]>): Promise<number> {
 		return this.source.count(storeName, options);
 	}
 
+	/** Adds a record and refreshes the store's active queries after the write commits. */
 	add<Name extends StoreName<Schema>>(
 		storeName: Name,
 		value: StoreValue<Schema[Name]>,
@@ -172,6 +180,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		});
 	}
 
+	/** Adds or replaces a record and refreshes the store's active queries after the write commits. */
 	put<Name extends StoreName<Schema>>(
 		storeName: Name,
 		value: StoreValue<Schema[Name]>,
@@ -184,6 +193,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		});
 	}
 
+	/** Deletes matching records and refreshes the store's active queries after the write commits. */
 	delete<Name extends StoreName<Schema>>(
 		storeName: Name,
 		key: StoreKey<Schema[Name]> | IDBKeyRange,
@@ -192,15 +202,18 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		return this.source.delete(storeName, key, options).then(() => this.invalidate(storeName));
 	}
 
+	/** Removes every store record and refreshes its active queries after the write commits. */
 	clear<Name extends StoreName<Schema>>(storeName: Name, options?: DBMutationOptions): Promise<void> {
 		return this.source.clear(storeName, options).then(() => this.invalidate(storeName));
 	}
 
+	/** Opens a typed transaction and refreshes affected queries when a read/write transaction commits. */
 	transaction<const Names extends StoreName<Schema>>(
 		storeNames: Names | readonly Names[],
 		options?: DBTransactionOptions,
 	): DBTransaction<Schema, Names>;
 
+	/** Runs a transaction callback and refreshes affected queries after a successful read/write commit. */
 	transaction<const Names extends StoreName<Schema>, Result>(
 		storeNames: Names | readonly Names[],
 		options: DBTransactionOptions,
@@ -233,6 +246,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		return transaction;
 	}
 
+	/** Scans key/value entries in independently committed pages. */
 	scan<Name extends StoreName<Schema>>(
 		storeName: Name,
 		options?: DBScanOptions<Schema[Name]>,
@@ -240,6 +254,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		return this.source.scan(storeName, options);
 	}
 
+	/** Scans primary keys in independently committed pages. */
 	scanKeys<Name extends StoreName<Schema>>(
 		storeName: Name,
 		options?: DBScanOptions<Schema[Name]>,
@@ -247,6 +262,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		return this.source.scanKeys(storeName, options);
 	}
 
+	/** Scans record values in independently committed pages. */
 	scanValues<Name extends StoreName<Schema>>(
 		storeName: Name,
 		options?: DBScanOptions<Schema[Name]>,
@@ -284,8 +300,8 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 
 			return this.getAll(storeName, {
 				...operationOptions,
-				...(count === undefined ? {} : { count }),
-				...(query === undefined ? {} : { query }),
+				...(count !== undefined && { count }),
+				...(query !== undefined && { query }),
 			});
 		});
 	}
@@ -301,8 +317,8 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 
 			return this.getAllKeys(storeName, {
 				...operationOptions,
-				...(count === undefined ? {} : { count }),
-				...(query === undefined ? {} : { query }),
+				...(count !== undefined && { count }),
+				...(query !== undefined && { query }),
 			});
 		});
 	}
@@ -317,7 +333,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 
 			return this.count(storeName, {
 				...operationOptions,
-				...(query === undefined ? {} : { query }),
+				...(query !== undefined && { query }),
 			});
 		});
 	}
@@ -337,6 +353,7 @@ export class SignalDB<Schema extends SchemaDefinition<Schema> = SignalDB.Schema>
 		this.source.close();
 	}
 
+	/** Disposes all reactive queries and closes the underlying database connection. */
 	[Symbol.dispose](): void {
 		this.close();
 	}
@@ -369,41 +386,76 @@ function valueOf<T>(value: Watchable<T> | undefined): T | undefined {
 	return Signal.isState(value) || Signal.isComputed(value) ? (value.get() as T) : value;
 }
 
+/** The latest pending, successful, or failed state of a reactive database query. */
 export type QueryState<T> =
-	| { readonly status: "pending" }
-	| { readonly status: "ready"; readonly value: T }
-	| { readonly status: "error"; readonly error: unknown };
+	| {
+			/** Identifies a query waiting for its current database read. */
+			readonly status: "pending";
+	  }
+	| {
+			/** Identifies a query containing its latest successful result. */
+			readonly status: "ready";
 
+			/** The latest value returned by the database query. */
+			readonly value: T;
+	  }
+	| {
+			/** Identifies a query whose latest read failed or was cancelled. */
+			readonly status: "error";
+
+			/** The failure reported by the latest database read. */
+			readonly error: unknown;
+	  };
+
+/** A read-only computed database query with explicit refresh and disposal controls. */
 export type Query<T> = InstanceType<typeof Signal.Computed<QueryState<T>>> &
 	Disposable & {
+		/** Reruns the query and resolves after its latest requested result has been published. */
 		refresh(options?: DBOperationOptions): Promise<void>;
+
+		/** Stops reactive refreshes and settles any pending read with a disposal error. */
 		dispose(): void;
 	};
 
+/** A static value or readable signal accepted by a reactive database query. */
 export type Watchable<T> = T | AnySignal<T>;
 
+/** Schema declarations used by {@link SignalDB}. */
 export namespace SignalDB {
+	/** Describes the values, primary keys, and optional indexes of one object store. */
 	export interface Store<
 		Value = unknown,
 		Key extends IDBValidKey = IDBValidKey,
 		Indexes extends Record<string, IDBValidKey> = never,
 	> {
+		/** The object store's primary-key type. */
 		key: Key;
+
+		/** The object store's stored-value type. */
 		value: Value;
+
+		/** Secondary index names and their corresponding key types. */
 		indexes?: Indexes;
 	}
+
+	/** An unrestricted mapping of object-store names to their schema declarations. */
 	export type Schema = Record<string, Store<unknown, IDBValidKey, Record<string, IDBValidKey>>>;
 }
 
 type StoreDefinition = SignalDB.Store<unknown, IDBValidKey, Record<string, IDBValidKey>>;
 type SchemaDefinition<Schema> = { [Name in keyof Schema]: StoreDefinition };
 
+/** Static or signal-backed filters for a reactive `watchAll()` or `watchAllKeys()` query. */
 export interface WatchAllOptions<Store extends StoreDefinition> {
+	/** The maximum number of matching records or keys to return. */
 	readonly count?: Watchable<number | undefined>;
+
+	/** The primary key or range used to filter matching records. */
 	readonly query?: Watchable<StoreKey<Store> | IDBKeyRange | null | undefined>;
 }
 
 /** Static or signal-backed options for a reactive `watchCount()` query. */
 export interface WatchCountOptions<Store extends StoreDefinition> {
+	/** The primary key or range used to filter counted records. */
 	readonly query?: Watchable<StoreKey<Store> | IDBKeyRange | null | undefined>;
 }

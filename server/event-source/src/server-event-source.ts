@@ -46,21 +46,23 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 			return new Response("Method Not Allowed", { status: 405, headers: { Allow: "GET" } });
 		}
 
-		request.signal.throwIfAborted();
+		const signal = request.signal;
+
+		signal.throwIfAborted();
 
 		let context: Context | Response;
 
 		try {
 			context = options.authorize ? await options.authorize(request) : (undefined as Context);
 		} catch (error) {
-			request.signal.throwIfAborted();
+			signal.throwIfAborted();
 
 			reportError(error);
 
 			return error instanceof Response ? error : new Response("Internal Server Error", { status: 500 });
 		}
 
-		request.signal.throwIfAborted();
+		signal.throwIfAborted();
 
 		if (context instanceof Response) {
 			return context;
@@ -73,7 +75,7 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 		const controller = new AbortController();
 
 		let streamController: ReadableStreamDefaultController<Uint8Array>;
-		let cleanup = (): void => {};
+		let cleanup: (() => void) | undefined;
 		let active = true;
 
 		const write = (value: string): void => {
@@ -103,14 +105,14 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 
 			active = false;
 
-			request.signal.removeEventListener("abort", close);
+			signal.removeEventListener("abort", close);
 
 			connections.delete(connection);
 
 			controller.abort(reason);
 
 			try {
-				cleanup();
+				cleanup?.();
 			} catch (error) {
 				reportError(error);
 			}
@@ -146,18 +148,19 @@ export const createHandler = <const Events extends EventMap & EventMapDefinition
 
 		connections.add(connection);
 
-		request.signal.addEventListener("abort", close, { once: true });
-		if (request.signal.aborted) {
+		signal.addEventListener("abort", close, { once: true });
+
+		if (signal.aborted) {
 			close();
 
-			request.signal.throwIfAborted();
+			signal.throwIfAborted();
 		}
 
 		try {
 			const connectedCleanup = await options.connect?.(connection);
 
 			if (active) {
-				cleanup = connectedCleanup ?? cleanup;
+				cleanup = connectedCleanup;
 			} else {
 				connectedCleanup?.();
 			}

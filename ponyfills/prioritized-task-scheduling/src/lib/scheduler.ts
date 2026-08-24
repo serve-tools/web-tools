@@ -12,12 +12,20 @@ import type {
 
 const backgroundTimeout = 10_000;
 const maximumDelay = 2 ** 64 - 1;
-const priorityValues: Record<TaskPriority, number> = {
-	background: 0,
-	"user-visible": 1,
-	"user-blocking": 2,
-};
 const schedulerKey = {};
+
+const enum QueuePriority {
+	Background = 0,
+	UserVisible = 1,
+	UserBlocking = 2,
+}
+
+const getQueuePriority = (priority: TaskPriority): QueuePriority =>
+	priority === "background"
+		? QueuePriority.Background
+		: priority === "user-blocking"
+			? QueuePriority.UserBlocking
+			: QueuePriority.UserVisible;
 
 const SchedulerImplementation = class Scheduler implements SchedulerType {
 	#allQueues = new Set<TaskQueue>();
@@ -36,6 +44,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 		}
 	}
 
+	/** Schedules a prioritized callback and resolves with its return value. */
 	postTask<T>(callback: SchedulerPostTaskCallback<T>, options: SchedulerPostTaskOptions = {}): Promise<T> {
 		if (typeof callback !== "function") {
 			throw new TypeError("Scheduler.postTask requires a callback");
@@ -59,6 +68,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 		return this.#scheduleTask(callback, state, false, toDelay(normalizedOptions.delay), true);
 	}
 
+	/** Yields to the event loop before continuing the current prioritized task. */
 	yield(): Promise<void> {
 		const inheritedState = this.#currentState;
 		const state: SchedulingState = inheritedState ?? {
@@ -84,7 +94,6 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 
 		return new Promise<T>((resolve, reject) => {
 			const task: ScheduledTask = {
-				continuation,
 				delayHandle: undefined,
 				done: false,
 				enqueueOrder: 0,
@@ -183,11 +192,12 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 		}
 
 		const signal = source.signal;
+
 		let queues = this.#dynamicQueues.get(signal);
 
 		if (!queues) {
 			const update = () => {
-				const priority = toTaskPriority(Reflect.get(signal, "priority"));
+				const priority = getQueuePriority(toTaskPriority(Reflect.get(signal, "priority")));
 
 				if (queues?.task) {
 					queues.task.priority = priority;
@@ -204,6 +214,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 				: addPriorityChangeListener(signal, update);
 
 			queues = { cleanup };
+
 			this.#dynamicQueues.set(signal, queues);
 		}
 
@@ -233,7 +244,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 	}
 
 	#createQueue(priority: TaskPriority, continuation: boolean, remove: () => void): TaskQueue {
-		const queue = { continuation, priority, remove, tasks: new Set<ScheduledTask>() };
+		const queue = { continuation, priority: getQueuePriority(priority), remove, tasks: new Set<ScheduledTask>() };
 
 		this.#allQueues.add(queue);
 
@@ -248,6 +259,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 		}
 
 		queue.tasks.delete(task);
+
 		task.queue = undefined;
 
 		if (!queue.tasks.size) {
@@ -261,7 +273,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 		let selectedPriority = -1;
 
 		for (const queue of this.#allQueues) {
-			if (background !== undefined && (queue.priority === "background") !== background) {
+			if (background !== undefined && (queue.priority === QueuePriority.Background) !== background) {
 				continue;
 			}
 
@@ -271,7 +283,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 				return task;
 			}
 
-			const effectivePriority = priorityValues[queue.priority] * 2 + Number(queue.continuation);
+			const effectivePriority = queue.priority * 2 + Number(queue.continuation);
 
 			if (
 				effectivePriority > selectedPriority ||
@@ -293,6 +305,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 		}
 
 		this.#removeTask(task);
+
 		task.run();
 	}
 
@@ -303,6 +316,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 		if (this.#isWindowHost) {
 			if (foregroundTask && !this.#channelScheduled) {
 				this.#channelScheduled = true;
+
 				this.#getChannel().port2.postMessage(null);
 			}
 
@@ -310,6 +324,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 				this.#backgroundHandle = requestIdleCallback(this.#runBackground, { timeout: backgroundTimeout });
 			} else if ((foregroundTask || !backgroundTask) && this.#backgroundHandle !== undefined) {
 				cancelIdleCallback(this.#backgroundHandle);
+
 				this.#backgroundHandle = undefined;
 			}
 
@@ -318,6 +333,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 
 		if ((foregroundTask || backgroundTask) && !this.#channelScheduled) {
 			this.#channelScheduled = true;
+
 			this.#getChannel().port2.postMessage(null);
 		}
 	}
@@ -330,6 +346,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 		const channel = new MessageChannel();
 
 		channel.port1.onmessage = this.#runChannel;
+
 		unref(channel.port1);
 		unref(channel.port2);
 
@@ -340,6 +357,7 @@ const SchedulerImplementation = class Scheduler implements SchedulerType {
 
 	#runChannel = () => {
 		this.#channelScheduled = false;
+
 		this.#runOne(this.#isWindowHost ? false : undefined);
 		this.#schedule();
 	};
@@ -404,7 +422,6 @@ interface DynamicQueues {
 }
 
 interface ScheduledTask {
-	continuation: boolean;
 	delayHandle: ReturnType<typeof setTimeout> | undefined;
 	done: boolean;
 	enqueueOrder: number;
@@ -421,7 +438,7 @@ type PrioritySource = { priority: TaskPriority } | { signal: TaskSignal };
 
 interface TaskQueue {
 	continuation: boolean;
-	priority: TaskPriority;
+	priority: QueuePriority;
 	remove(): void;
 	tasks: Set<ScheduledTask>;
 }
@@ -432,4 +449,5 @@ export const scheduler: SchedulerType = new SchedulerImplementation(schedulerKey
 /** The non-constructible Scheduler interface object. */
 export const Scheduler = SchedulerImplementation as unknown as SchedulerConstructor;
 
+/** The interface implemented by the prioritized task scheduler. */
 export type Scheduler = SchedulerType;

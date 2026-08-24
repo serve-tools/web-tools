@@ -10,33 +10,63 @@ import { createSession } from "../lib/session.js";
 import type * as T from "../lib/types.js";
 import type { Awaitable, DatagramWritableOptions, Handlers, Session, SessionOptions } from "../lib/types.js";
 
+/** The native WebTransport session operations required by the Node adapter. */
 export interface NodeWebTransportSessionLike {
+	/** Request headers supplied with the incoming WebTransport session. */
 	readonly headers: Readonly<Record<string, string | readonly string[] | undefined>>;
+
+	/** Request path associated with the incoming WebTransport session. */
 	readonly path: string;
 
+	/** Sends one best-effort datagram and reports whether the native session accepted it. */
 	sendDatagram(data: Uint8Array): boolean;
 }
 
+/** The native reliable-stream operations required by the Node WebTransport adapter. */
 export interface NodeWebTransportStreamLike {
+	/** The native WebTransport session that owns this reliable stream. */
 	readonly session: NodeWebTransportSessionLike;
 
-	send(data: Uint8Array, options?: { readonly fin?: boolean }): boolean;
+	/** Sends reliable stream bytes and optionally marks the stream as finished. */
+	send(
+		data: Uint8Array,
+		options?: {
+			/** Signals that this chunk completes the sending side of the stream. */
+			readonly fin?: boolean;
+		},
+	): boolean;
+
+	/** Closes the stream, optionally sending one final chunk. */
 	close(data?: Uint8Array): boolean;
 }
 
+/** Authorization and protocol limits applied to native Node WebTransport sessions. */
 export interface NodeAdapterOptions<Context = undefined> extends SessionOptions {
+	/** Establishes session context or returns an HTTP response rejecting the incoming session. */
 	readonly authorize?: (session: NodeWebTransportSessionLike) => Awaitable<Context | Response>;
 }
 
+/** Native Node WebTransport lifecycle callbacks implemented by the adapter. */
 export interface NodeHandlers {
+	/** Authorizes and opens one incoming native WebTransport session. */
 	session(session: NodeWebTransportSessionLike): Promise<Response | false>;
+
+	/** Dispatches one incoming best-effort datagram to its owning session. */
 	datagram(session: NodeWebTransportSessionLike, data: Uint8Array): void;
+
+	/** Registers a newly opened reliable WebTransport stream. */
 	webTransportStream(stream: NodeWebTransportStreamLike): void;
+
+	/** Assigns the stream role when necessary and dispatches incoming reliable bytes. */
 	webTransportData(stream: NodeWebTransportStreamLike, data: Uint8Array): void;
+
+	/** Finishes or aborts a reliable stream and updates its owning protocol session. */
 	webTransportStreamEnd(stream: NodeWebTransportStreamLike, reason: "finished" | "aborted", errorCode?: number): void;
 }
 
+/** Disposable native WebTransport callbacks owning every accepted protocol session. */
 export interface NodeAdapter extends NodeHandlers, Disposable {
+	/** Closes every active protocol session and rejects subsequent incoming sessions. */
 	close(reason?: unknown): void;
 }
 
@@ -162,6 +192,7 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 				return;
 			}
 
+			const state = streamState.state;
 			let chunk = data;
 
 			if (streamState.role === undefined) {
@@ -173,12 +204,12 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 
 				chunk = data.subarray(1);
 
-				if (streamState.role === webTransportOperationsRole && !streamState.state.operations) {
-					streamState.state.operations = stream;
-				} else if (streamState.role === webTransportDatagramRegistryRole && !streamState.state.registry) {
-					streamState.state.registry = stream;
+				if (streamState.role === webTransportOperationsRole && !state.operations) {
+					state.operations = stream;
+				} else if (streamState.role === webTransportDatagramRegistryRole && !state.registry) {
+					state.registry = stream;
 				} else {
-					streamState.state.session.close("Invalid or duplicate WebTransport stream role");
+					state.session.close("Invalid or duplicate WebTransport stream role");
 
 					return;
 				}
@@ -189,9 +220,9 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 			}
 
 			if (streamState.role === webTransportOperationsRole) {
-				streamState.state.session.receiveOperations(chunk);
+				state.session.receiveOperations(chunk);
 			} else {
-				streamState.state.session.receiveRegistry(chunk);
+				state.session.receiveRegistry(chunk);
 			}
 		},
 		webTransportStreamEnd(stream, reason, errorCode) {
@@ -204,19 +235,19 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 				return;
 			}
 
+			const session = streamState.state.session;
+
 			if (streamState.role === webTransportOperationsRole) {
 				if (reason === "finished") {
-					streamState.state.session.finishOperations();
+					session.finishOperations();
 				} else {
-					streamState.state.session.disconnect(`Operation stream aborted with code ${errorCode ?? 0}`);
+					session.disconnect(`Operation stream aborted with code ${errorCode ?? 0}`);
 				}
 			} else if (streamState.role === webTransportDatagramRegistryRole) {
 				if (reason === "finished") {
-					streamState.state.session.finishRegistry();
+					session.finishRegistry();
 				} else {
-					streamState.state.session.disconnect(
-						`Datagram registry stream aborted with code ${errorCode ?? 0}`,
-					);
+					session.disconnect(`Datagram registry stream aborted with code ${errorCode ?? 0}`);
 				}
 			}
 		},
@@ -242,11 +273,21 @@ export function createNodeAdapter<const P extends Protocol & ProtocolDefinition<
 	return adapter;
 }
 
+/** Types used by {@link createNodeAdapter}. */
 export namespace createNodeAdapter {
+	/** Disposable native WebTransport callbacks owning active protocol sessions. */
 	export type Adapter = NodeAdapter;
+
+	/** Request, subscription, and incoming datagram handler tables. */
 	export type Handlers<P extends T.Protocol, Context = undefined> = T.Handlers<P, Context>;
+
+	/** Native session authorization options and protocol connection limits. */
 	export type Options<Context = undefined> = NodeAdapterOptions<Context>;
+
+	/** A compile-time collection of named operations and directional datagrams. */
 	export type Protocol = T.Protocol;
+
+	/** Extracts the protocol retained by a resolved or pending resource. */
 	export type ProtocolType<Value> = T.ProtocolType<Value>;
 }
 

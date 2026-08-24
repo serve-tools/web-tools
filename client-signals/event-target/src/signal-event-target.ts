@@ -87,6 +87,7 @@ export class EventTargetSignal<Value> extends Signal.Computed<Value> implements 
 		this.#abortSignal?.removeEventListener("abort", this.#abort);
 	}
 
+	/** Stops observation and freezes the last value through explicit resource management. */
 	[Symbol.dispose](): void {
 		this.dispose();
 	}
@@ -96,11 +97,13 @@ export class EventTargetSignal<Value> extends Signal.Computed<Value> implements 
 
 /** Read-only Signal state containing whether one media query currently matches. */
 export class MatchMediaSignal<const Query extends string = string> extends EventTargetSignal<boolean> {
+	/** The platform media-query list being observed. */
 	declare readonly target: MediaQueryList;
 
 	/** The exact media query passed to `matchMedia()`. */
 	readonly query: Query;
 
+	/** Creates an eager observation for the current match state of one media query. */
 	constructor(query: Query, options?: EventTargetSignalOptions<boolean>) {
 		const target = matchMedia(query);
 

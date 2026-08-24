@@ -15,6 +15,7 @@ export interface SchedulerPostTaskOptions {
 
 /** A callback scheduled through Scheduler.postTask. */
 export interface SchedulerPostTaskCallback<T> {
+	/** Returns the task result or a promise-like value for that result. */
 	(): PromiseLike<T> | T;
 }
 
@@ -29,6 +30,7 @@ export interface Scheduler {
 
 /** Provides the non-constructible Scheduler interface object. */
 export interface SchedulerConstructor {
+	/** The methods shared by scheduler instances. */
 	readonly prototype: Scheduler;
 }
 
@@ -40,6 +42,7 @@ export interface TaskControllerInit {
 
 /** An AbortController whose signal also carries a mutable task priority. */
 export interface TaskController extends AbortController {
+	/** The abort signal whose priority is controlled by this instance. */
 	readonly signal: TaskSignal;
 
 	/** Changes the priority shared by tasks using this controller's signal. */
@@ -48,7 +51,10 @@ export interface TaskController extends AbortController {
 
 /** Constructs TaskController objects. */
 export interface TaskControllerConstructor {
+	/** The methods shared by task controller instances. */
 	readonly prototype: TaskController;
+
+	/** Creates a task controller with the provided initial priority. */
 	new (init?: TaskControllerInit): TaskController;
 }
 
@@ -69,6 +75,7 @@ export interface TaskSignal extends AbortSignal {
 
 /** Provides TaskSignal static operations. TaskSignal is not constructible. */
 export interface TaskSignalConstructor {
+	/** The properties shared by task signal instances. */
 	readonly prototype: TaskSignal;
 
 	/** Creates a TaskSignal aborted by any input signal and with a fixed or inherited priority. */
@@ -89,6 +96,9 @@ export interface TaskPriorityChangeEvent extends Event {
 
 /** Constructs TaskPriorityChangeEvent objects. */
 export interface TaskPriorityChangeEventConstructor {
+	/** The properties shared by task priority change events. */
 	readonly prototype: TaskPriorityChangeEvent;
+
+	/** Creates an event that retains the priority before the change. */
 	new (type: string, init: TaskPriorityChangeEventInit): TaskPriorityChangeEvent;
 }
