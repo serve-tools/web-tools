@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools URLPattern Polyfill"
+  short_description: "Install URLPattern without replacing native globals"
+  default_prompt: "Use $serve-tools-polyfill-urlpattern to safely install the native-aware URLPattern constructor."

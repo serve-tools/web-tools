@@ -13,11 +13,13 @@ const restore = () => {
 describe("reportError polyfill", () => {
 	beforeEach(() => {
 		vi.resetModules();
+
 		Reflect.deleteProperty(globalThis, "reportError");
 	});
 
 	afterEach(() => {
 		vi.restoreAllMocks();
+
 		restore();
 	});
 
@@ -33,6 +35,7 @@ describe("reportError polyfill", () => {
 		});
 
 		const { reportError } = await import("../src/polyfill-report-error.js");
+
 		reportError("failure");
 
 		expect(nativeReportError).toHaveBeenCalledExactlyOnceWith("failure");

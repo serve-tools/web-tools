@@ -275,6 +275,16 @@ const selections = [
 		"@serve-tools/ponyfill-resource-management",
 	],
 	[
+		"urlpattern-global",
+		"Third-party routing code expects globalThis.URLPattern. Install a compatible constructor without replacing a native implementation.",
+		"@serve-tools/polyfill-urlpattern",
+	],
+	[
+		"urlpattern-import",
+		"Match URL components and capture named pathname groups through an imported URLPattern constructor without modifying globals.",
+		"@serve-tools/ponyfill-urlpattern",
+	],
+	[
 		"vite-target-polyfills",
 		"A Vite build should inspect source usage and configured browser targets, then inject only the required feature polyfills.",
 		"@serve-tools/vite-polyfills",
@@ -800,6 +810,14 @@ const remainingUsageTasks = [
 		],
 	),
 	usage(
+		"polyfill-urlpattern",
+		"Install a native-preserving URLPattern global, match a pathname, and read its named capture group.",
+		["@serve-tools/polyfill-urlpattern"],
+		"polyfills/urlpattern/test/polyfill-urlpattern.recipes.ts",
+		["globalThis.URLPattern", "new URLPattern", "pathname", "pattern.exec", "pathname.groups.id"],
+		["polyfills/urlpattern/skills/serve-tools-polyfill-urlpattern/references/recipe-quick-start.md"],
+	),
+	usage(
 		"ponyfill-arraybuffer-base64",
 		"Use the explicit Node base64 ponyfill to encode a URL-safe unpadded identifier without mutating Uint8Array.",
 		["@serve-tools/ponyfill-arraybuffer-base64"],
@@ -856,6 +874,14 @@ const remainingUsageTasks = [
 		[
 			"ponyfills/resource-management/skills/serve-tools-ponyfill-resource-management/references/recipe-quick-start.md",
 		],
+	),
+	usage(
+		"ponyfill-urlpattern",
+		"Match a URL pathname and read its named capture group through an explicitly imported URLPattern constructor.",
+		["@serve-tools/ponyfill-urlpattern"],
+		"ponyfills/urlpattern/test/ponyfill-urlpattern.recipes.ts",
+		["import { URLPattern }", "new URLPattern", "pathname", ".exec(", "pathname.groups.id"],
+		["ponyfills/urlpattern/skills/serve-tools-ponyfill-urlpattern/references/recipe-quick-start.md"],
 	),
 	usage(
 		"realtime-protocol-framing",

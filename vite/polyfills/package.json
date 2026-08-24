@@ -59,7 +59,7 @@
 		"build:assets": "mkdir -p dist/types && cp -R src/types/. dist/types/",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
-		"test": "npm run build --workspace @serve-tools/polyfill-decorator-metadata --workspace @serve-tools/polyfill-resource-management --workspace @serve-tools/polyfill-request-idle-callback && vitest run",
+		"test": "npm run build --workspace @serve-tools/polyfill-decorator-metadata --workspace @serve-tools/polyfill-resource-management --workspace @serve-tools/polyfill-request-idle-callback --workspace @serve-tools/polyfill-urlpattern && vitest run",
 		"typecheck": "tsc --project tsconfig.json --noEmit"
 	},
 	"dependencies": {
@@ -68,7 +68,7 @@
 		"@serve-tools/polyfill-prioritized-task-scheduling": "^0.1.1",
 		"@serve-tools/polyfill-request-idle-callback": "^0.1.4",
 		"@serve-tools/polyfill-resource-management": "^0.1.4",
-		"urlpattern-polyfill": "^10.1.0"
+		"@serve-tools/polyfill-urlpattern": "^0.1.0"
 	},
 	"peerDependencies": {
 		"vite": "^8.2"

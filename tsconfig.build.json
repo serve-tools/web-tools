@@ -124,6 +124,9 @@
 			"path": "./polyfills/resource-management/tsconfig.json"
 		},
 		{
+			"path": "./polyfills/urlpattern/tsconfig.json"
+		},
+		{
 			"path": "./ponyfills/decorator-metadata/tsconfig.json"
 		},
 		{
@@ -137,6 +140,9 @@
 		},
 		{
 			"path": "./ponyfills/resource-management/tsconfig.build.json"
+		},
+		{
+			"path": "./ponyfills/urlpattern/tsconfig.json"
 		},
 		{
 			"path": "./realtime/protocol/tsconfig.json"

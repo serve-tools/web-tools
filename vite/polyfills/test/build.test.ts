@@ -103,6 +103,24 @@ describe("build integration", () => {
 		});
 	});
 
+	describe("URLPattern polyfill", () => {
+		it("injects the owned native-preserving polyfill when URLPattern is constructed", async () => {
+			const result = await buildTest({
+				files: {
+					"index.js": 'export const pattern = new URLPattern({ pathname: "/:id" });',
+				},
+				plugins: [vitePolyfills()],
+			});
+
+			const code = result.getChunk("index");
+
+			expect(code).toBeDefined();
+			expect(code).toMatch(/URLPattern(?:\$\d+)? = class \{/);
+			expect(code).toContain('Reflect.get(globalThis, "URLPattern")');
+			expect(code).toMatch(/if \(nativeValue == null\) Object\.defineProperty\(globalThis, "URLPattern"/);
+		});
+	});
+
 	describe("Map upsert polyfill", () => {
 		it("injects polyfill when getOrInsert is referenced", async () => {
 			const result = await buildTest({

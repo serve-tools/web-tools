@@ -11,3 +11,4 @@ Each immediate subdirectory is an independently versioned npm workspace.
 - [`@serve-tools/polyfill-request-idle-callback`](./request-idle-callback/) installs the `requestIdleCallback` and `cancelIdleCallback` globals.
 - [`@serve-tools/polyfill-report-error`](./report-error/) selects the native `reportError()` or its ponyfill and can install the missing global explicitly.
 - [`@serve-tools/polyfill-resource-management`](./resource-management/) installs ECMAScript Explicit Resource Management globals.
+- [`@serve-tools/polyfill-urlpattern`](./urlpattern/) installs `URLPattern` while preserving a native implementation.

@@ -83,12 +83,14 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/polyfill-report-error`](./polyfills/report-error/) provides native-aware `reportError` imports and opt-in global installation.
 - [`@serve-tools/polyfill-request-idle-callback`](./polyfills/request-idle-callback/) installs the `requestIdleCallback` and `cancelIdleCallback` globals.
 - [`@serve-tools/polyfill-resource-management`](./polyfills/resource-management/) installs ECMAScript Explicit Resource Management globals.
+- [`@serve-tools/polyfill-urlpattern`](./polyfills/urlpattern/) installs `URLPattern` while preserving a native implementation.
 - [`@serve-tools/ponyfill-arraybuffer-base64`](./ponyfills/arraybuffer-base64/) encodes `Uint8Array` values as base64 in Node.js without global mutation.
 - [`@serve-tools/ponyfill-decorator-metadata`](./ponyfills/decorator-metadata/) provides a stable module-scoped metadata symbol without global mutation.
 - [`@serve-tools/ponyfill-prioritized-task-scheduling`](./ponyfills/prioritized-task-scheduling/) provides prioritized tasks, continuations, and task controls without global mutation.
 - [`@serve-tools/ponyfill-report-error`](./ponyfills/report-error/) provides a console-backed `reportError` implementation without global mutation.
 - [`@serve-tools/ponyfill-request-idle-callback`](./ponyfills/request-idle-callback/) provides `requestIdleCallback` and `cancelIdleCallback` without global mutation.
 - [`@serve-tools/ponyfill-resource-management`](./ponyfills/resource-management/) provides a side-effect-free implementation of ECMAScript Explicit Resource Management.
+- [`@serve-tools/ponyfill-urlpattern`](./ponyfills/urlpattern/) provides the `URLPattern` API without global mutation.
 - [`@serve-tools/signal-collections`](./signals/collections/) provides signal-aware native collections.
 - [`@serve-tools/signal-effect`](./signals/effect/) provides microtask-batched effects.
 - [`@serve-tools/signal`](./signals/signal/) implements the TC39 Signals proposal.

@@ -1,0 +1,51 @@
+{
+	"name": "@serve-tools/polyfill-urlpattern",
+	"version": "0.1.0",
+	"description": "Implements URLPattern with global mutation",
+	"keywords": [
+		"browser-compatibility",
+		"pattern-matching",
+		"polyfill",
+		"routing",
+		"typescript",
+		"url",
+		"url-pattern",
+		"urlpattern",
+		"web-platform"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/polyfills/urlpattern#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "polyfills/urlpattern"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": [
+		"./dist/polyfill-urlpattern.js",
+		"./dist/apply/URLPattern.js"
+	],
+	"type": "module",
+	"exports": {
+		".": "./dist/polyfill-urlpattern.js",
+		"./URLPattern": "./dist/exports/URLPattern.js",
+		"./apply/URLPattern": "./dist/apply/URLPattern.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build --workspace @serve-tools/ponyfill-urlpattern && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build --workspace @serve-tools/ponyfill-urlpattern && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/ponyfill-urlpattern": "^0.1.0"
+	}
+}

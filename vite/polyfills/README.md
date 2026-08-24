@@ -40,6 +40,7 @@ Install it in the same project as this plugin.
 
 Detection matches member expressions like `Symbol.dispose`, `Symbol.metadata`, or `cache.getOrInsert(...)`, plus global constructor references like `new DisposableStack()` or `new URLPattern(...)`, and calls to `requestIdleCallback(...)` or `cancelIdleCallback(...)`.
 References inside string literals or comments are ignored because detection runs on the AST.
+The `url-pattern` feature uses `@serve-tools/polyfill-urlpattern` and preserves an existing native `URLPattern`.
 
 ## TypeScript
 

@@ -113,7 +113,7 @@ describe("vitePolyfills", () => {
 			const load = plugin.load as (id: string) => string | null;
 
 			const code = load(RESOLVED_URL_PATTERN_VIRTUAL_MODULE_ID);
-			expect(code).toBe('import"urlpattern-polyfill";');
+			expect(code).toBe('import"@serve-tools/polyfill-urlpattern";');
 			expect(load("other-module")).toBeNull();
 		});
 

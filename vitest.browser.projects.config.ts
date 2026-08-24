@@ -26,6 +26,7 @@ const projects = [
 	"lit/signals/vitest.browser.config.ts",
 	"ponyfills/prioritized-task-scheduling/vitest.browser.config.ts",
 	"ponyfills/request-idle-callback/vitest.browser.config.ts",
+	"ponyfills/urlpattern/vitest.browser.config.ts",
 	"realtime/protocol/vitest.browser.config.ts",
 	"signals/collections/vitest.browser.config.ts",
 	"signals/effect/vitest.browser.config.ts",

@@ -61,6 +61,8 @@ Select the narrowest package that owns the required behavior.
 - Import console-backed error reporting without global mutation: `@serve-tools/ponyfill-report-error`.
 - Install explicit-resource-management globals: `@serve-tools/polyfill-resource-management`.
 - Import resource-management classes without global mutation: `@serve-tools/ponyfill-resource-management`.
+- Install a native-preserving `URLPattern` global: `@serve-tools/polyfill-urlpattern`.
+- Import `URLPattern` without global mutation: `@serve-tools/ponyfill-urlpattern`.
 - Detect and inject browser polyfills during Vite builds: `@serve-tools/vite-polyfills`.
 
 `@serve-tools/lit-signals` re-exports its compatible `Signal` runtime.

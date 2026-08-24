@@ -1,6 +1,6 @@
 import { definePolyfill } from "../plugin/define-polyfill.js";
 
-const RUNTIME_CODE = `import"urlpattern-polyfill";`;
+const RUNTIME_CODE = `import"@serve-tools/polyfill-urlpattern";`;
 
 /**
  * Polyfills the `URLPattern` global.

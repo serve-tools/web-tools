@@ -1,6 +1,5 @@
-import { reportError as fallback } from "@serve-tools/ponyfill-report-error";
-
-const nativeValue = Reflect.get(globalThis, "reportError") as typeof fallback | undefined;
+import { reportError as _reportError } from "@serve-tools/ponyfill-report-error";
 
 /** The native `reportError` function when available, otherwise the module-scoped ponyfill. */
-export const reportError: typeof fallback = nativeValue ? nativeValue.bind(globalThis) : fallback;
+export const reportError: typeof globalThis extends { onmessage: any; reportError: infer T } ? T : typeof _reportError =
+	globalThis.reportError ?? _reportError;

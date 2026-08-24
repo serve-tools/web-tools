@@ -27,12 +27,18 @@
 	},
 	"license": "MIT-0",
 	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
-	"sideEffects": true,
+	"sideEffects": [
+		"./dist/polyfill-request-idle-callback.js",
+		"./dist/apply/cancelIdleCallback.js",
+		"./dist/apply/requestIdleCallback.js"
+	],
 	"type": "module",
 	"exports": {
 		".": "./dist/polyfill-request-idle-callback.js",
-		"./*": "./dist/exports/*.js",
-		"./apply/*": "./dist/apply/*.js"
+		"./cancelIdleCallback": "./dist/exports/cancelIdleCallback.js",
+		"./requestIdleCallback": "./dist/exports/requestIdleCallback.js",
+		"./apply/cancelIdleCallback": "./dist/apply/cancelIdleCallback.js",
+		"./apply/requestIdleCallback": "./dist/apply/requestIdleCallback.js"
 	},
 	"files": [
 		"dist",
@@ -42,8 +48,8 @@
 		"build": "tsc --build tsconfig.json",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
-		"test": "npm run build --workspace @serve-tools/ponyfill-request-idle-callback && vitest run",
-		"typecheck": "npm run build --workspace @serve-tools/ponyfill-request-idle-callback && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+		"test": "npm run build --workspace @serve-tools/ponyfill-request-idle-callback && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build --workspace @serve-tools/ponyfill-request-idle-callback && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
 		"@serve-tools/ponyfill-request-idle-callback": "^0.1.4"

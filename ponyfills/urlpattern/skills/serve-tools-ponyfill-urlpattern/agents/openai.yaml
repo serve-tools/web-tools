@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools URLPattern Ponyfill"
+  short_description: "Match URL patterns without global mutation"
+  default_prompt: "Use $serve-tools-ponyfill-urlpattern to match URLs without global mutation."
