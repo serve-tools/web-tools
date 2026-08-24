@@ -13,7 +13,7 @@
 		"typecheck:local": "tsc --project tsconfig.json"
 	},
 	"dependencies": {
-		"@serve-tools/lit-signals": "^0.4"
+		"@serve-tools/lit-signals": "^0.4.1"
 	},
 	"devDependencies": {
 		"typescript": "7.0.2",

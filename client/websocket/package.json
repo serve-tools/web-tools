@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-websocket",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Typed requests and subscriptions over binary structured-data WebSockets",
 	"keywords": [
 		"binary",
@@ -47,7 +47,7 @@
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-realtime": "^0.1",
-		"@serve-tools/realtime-protocol": "^0.1"
+		"@serve-tools/client-realtime": "^0.2.0",
+		"@serve-tools/realtime-protocol": "^0.2.0"
 	}
 }

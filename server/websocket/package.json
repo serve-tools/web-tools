@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/server-websocket",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Typed request and subscription servers over binary WebSockets",
 	"keywords": [
 		"binary",
@@ -52,9 +52,9 @@
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/polyfill-report-error": "^0.1",
-		"@serve-tools/realtime-protocol": "^0.1",
-		"@serve-tools/server-realtime": "^0.1"
+		"@serve-tools/polyfill-report-error": "^0.1.1",
+		"@serve-tools/realtime-protocol": "^0.2.0",
+		"@serve-tools/server-realtime": "^0.1.2"
 	},
 	"peerDependencies": {
 		"crossws": "^0.4",

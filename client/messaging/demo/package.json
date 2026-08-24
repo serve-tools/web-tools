@@ -13,7 +13,7 @@
 		"typecheck:local": "tsc --project tsconfig.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-messaging": "^0.2"
+		"@serve-tools/client-messaging": "^0.2.2"
 	},
 	"devDependencies": {
 		"typescript": "7.0.2",

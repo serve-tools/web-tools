@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/ponyfill-prioritized-task-scheduling",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Implements the Prioritized Task Scheduling API without global mutation",
 	"keywords": [
 		"background-tasks",
@@ -49,6 +49,6 @@
 		"typecheck": "tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-request-idle-callback": "^0.1"
+		"@serve-tools/ponyfill-request-idle-callback": "^0.1.4"
 	}
 }

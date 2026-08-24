@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/rolldown-decorators",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Transform modern TC39 decorators in Rolldown and Vite",
 	"keywords": [
 		"decorator-transform",
@@ -46,6 +46,6 @@
 	},
 	"dependencies": {
 		"@jsxtools/rolldown-transform": "^0.1",
-		"@serve-tools/polyfill-decorator-metadata": "^0.1"
+		"@serve-tools/polyfill-decorator-metadata": "^0.1.1"
 	}
 }

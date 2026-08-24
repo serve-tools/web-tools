@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/vite-polyfills",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Detects and injects polyfills for unsupported JavaScript features in Vite",
 	"keywords": [
 		"browser-compatibility",
@@ -64,10 +64,10 @@
 	},
 	"dependencies": {
 		"@jsxtools/rolldown-transform": "^0.1",
-		"@serve-tools/polyfill-decorator-metadata": "^0.1",
-		"@serve-tools/polyfill-prioritized-task-scheduling": "^0.1",
-		"@serve-tools/polyfill-request-idle-callback": "^0.1",
-		"@serve-tools/polyfill-resource-management": "^0.1",
+		"@serve-tools/polyfill-decorator-metadata": "^0.1.1",
+		"@serve-tools/polyfill-prioritized-task-scheduling": "^0.1.1",
+		"@serve-tools/polyfill-request-idle-callback": "^0.1.4",
+		"@serve-tools/polyfill-resource-management": "^0.1.4",
 		"urlpattern-polyfill": "^10.1.0"
 	},
 	"peerDependencies": {

@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-http-stream",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Typed HTTP streaming clients with subscription Signal state",
 	"keywords": [
 		"browser",
@@ -48,7 +48,7 @@
 		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-http-stream": "^0.1",
-		"@serve-tools/signal-messaging": "^0.3"
+		"@serve-tools/client-http-stream": "^0.2.0",
+		"@serve-tools/signal-messaging": "^0.3.1"
 	}
 }

@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/realtime-protocol",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Binary structured values and typed realtime protocol messages",
 	"keywords": [
 		"binary",

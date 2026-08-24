@@ -4,6 +4,16 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
+- Release refreshed, dependency-aligned versions of all 60 published packages with explicit minimum internal dependency versions and improved npm discovery keywords.
+- Add configurable, 16 MiB-default inbound message limits to `@serve-tools/client-http-stream@0.2.0` and `@serve-tools/client-realtime@0.2.0`, and reject oversized structured binary allocations before decoding.
+- Harden `@serve-tools/realtime-protocol@0.2.0` with configurable datagram registration, UTF-8 name, and control-frame limits.
+- Add typed, reactive `watchCount()` and `watchAllKeys()` queries to `@serve-tools/signal-db@0.2.0` and `@serve-tools/signal-shared-db@0.3.0`; expose the shared database's `closed` lifetime promise.
+- Add custom, SSE-safe response headers to `@serve-tools/server-event-source@0.2.0`.
+- Close failed WebTransport setup resources, retire datagram subscription handles when sessions end, and reduce high-concurrency server shutdown latency through session-owned stream indexes.
+- Replace accidental wildcard public exports with explicit, consumer-compatible entrypoints across client facades, SharedWorker scopes, runtime adapters, and decorator metadata.
+- Add real Chromium, Firefox, and WebKit integration coverage for reactive databases and SharedWorker-backed EventSource and HTTP streams.
+- Expand compile-checked agent integration evaluations to all 59 runtime packages, remove unnecessary document-selection calls, and improve package selection and migration recipes.
+- Publish coordinated releases with one dependency-ordered, resumable GitHub Actions workflow, one repository verification, and one protected npm approval.
 - Add `@serve-tools/polyfill-decorator-metadata@0.1.0` for native-preserving `Symbol.metadata` installation and selection.
 - Add `@serve-tools/ponyfill-decorator-metadata@0.1.0` with a stable module-scoped decorator metadata symbol.
 - Add `@serve-tools/rolldown-decorators@0.1.0` with an Oxc-AST-native modern TC39 decorator transform and package-owned runtime for Rolldown and Vite, backed by the shared decorator metadata polyfill.

@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-event-target",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "EventTarget state and media queries observed as read-only Signals",
 	"keywords": [
 		"browser",
@@ -51,6 +51,6 @@
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/signal": "^0.1"
+		"@serve-tools/signal": "^0.1.3"
 	}
 }

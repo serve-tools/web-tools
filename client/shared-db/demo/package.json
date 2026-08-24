@@ -13,8 +13,8 @@
 		"typecheck:local": "tsc --project tsconfig.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-db": "^0.1",
-		"@serve-tools/client-shared-db": "^0.2"
+		"@serve-tools/client-db": "^0.1.3",
+		"@serve-tools/client-shared-db": "^0.2.1"
 	},
 	"devDependencies": {
 		"typescript": "7.0.2",

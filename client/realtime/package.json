@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-realtime",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Sans-I/O typed request and subscription client core",
 	"keywords": [
 		"browser",
@@ -42,6 +42,6 @@
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/realtime-protocol": "^0.1"
+		"@serve-tools/realtime-protocol": "^0.2.0"
 	}
 }

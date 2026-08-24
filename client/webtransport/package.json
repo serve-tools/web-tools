@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-webtransport",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Typed requests, subscriptions, and datagrams over WebTransport",
 	"keywords": [
 		"browser",
@@ -50,7 +50,7 @@
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-realtime": "^0.1",
-		"@serve-tools/realtime-protocol": "^0.1"
+		"@serve-tools/client-realtime": "^0.2.0",
+		"@serve-tools/realtime-protocol": "^0.2.0"
 	}
 }

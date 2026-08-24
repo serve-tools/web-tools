@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-input",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Abortable pointer and drag-and-drop session observers for browser clients",
 	"keywords": [
 		"abortsignal",

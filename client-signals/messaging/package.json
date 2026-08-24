@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-messaging",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"description": "Typed messaging clients and servers with subscription Signal state",
 	"keywords": [
 		"browser",
@@ -56,7 +56,7 @@
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-messaging": "^0.2",
-		"@serve-tools/signal": "^0.1"
+		"@serve-tools/client-messaging": "^0.2.2",
+		"@serve-tools/signal": "^0.1.3"
 	}
 }

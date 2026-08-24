@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/ponyfill-decorator-metadata",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Provides a module-scoped Symbol.metadata fallback without global mutation",
 	"keywords": [
 		"decorator-metadata",

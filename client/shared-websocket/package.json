@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-shared-websocket",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "SharedWorker-coordinated typed WebSocket requests and subscriptions",
 	"keywords": [
 		"browser",
@@ -50,7 +50,7 @@
 		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-messaging": "^0.2",
-		"@serve-tools/client-websocket": "^0.1"
+		"@serve-tools/client-messaging": "^0.2.2",
+		"@serve-tools/client-websocket": "^0.1.2"
 	}
 }

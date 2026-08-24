@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-prioritized-task-scheduling",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Provides native-aware Prioritized Task Scheduling imports and global installation",
 	"keywords": [
 		"browser",
@@ -56,6 +56,6 @@
 		"typecheck": "npm run build --workspace @serve-tools/ponyfill-prioritized-task-scheduling && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-prioritized-task-scheduling": "^0.1"
+		"@serve-tools/ponyfill-prioritized-task-scheduling": "^0.1.1"
 	}
 }

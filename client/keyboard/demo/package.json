@@ -13,7 +13,7 @@
 		"typecheck:local": "tsc --project tsconfig.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-keyboard": "^0.1"
+		"@serve-tools/client-keyboard": "^0.1.2"
 	},
 	"devDependencies": {
 		"typescript": "7.0.2",

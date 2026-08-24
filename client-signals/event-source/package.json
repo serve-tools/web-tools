@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-event-source",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Typed JSON EventSource clients with latest-event Signal state",
 	"keywords": [
 		"browser",
@@ -48,7 +48,7 @@
 		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/client-event-source": "^0.1",
-		"@serve-tools/signal": "^0.1"
+		"@serve-tools/client-event-source": "^0.1.1",
+		"@serve-tools/signal": "^0.1.3"
 	}
 }

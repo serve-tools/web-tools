@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-arraybuffer-base64",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Installs Uint8Array.prototype.toBase64 in Node.js",
 	"keywords": [
 		"arraybuffer",
@@ -42,7 +42,7 @@
 		"typecheck": "tsc --project tsconfig.json --noEmit"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-arraybuffer-base64": "^0.1"
+		"@serve-tools/ponyfill-arraybuffer-base64": "^0.1.1"
 	},
 	"engines": {
 		"node": ">=22.14.0"
