@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/rolldown-decorators",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Transform modern TC39 decorators in Rolldown and Vite",
 	"keywords": [
 		"decorator-transform",

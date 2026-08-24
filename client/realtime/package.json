@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-realtime",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Sans-I/O typed request and subscription client core",
 	"keywords": [
 		"browser",

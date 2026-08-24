@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/ponyfill-arraybuffer-base64",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Encodes Uint8Array values as base64 in Node.js without global mutation",
 	"keywords": [
 		"arraybuffer",

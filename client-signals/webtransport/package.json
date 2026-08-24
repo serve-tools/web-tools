@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-webtransport",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "Typed WebTransport clients with subscription Signal state",
 	"keywords": [
 		"browser",

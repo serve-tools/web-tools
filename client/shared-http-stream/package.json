@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-shared-http-stream",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "SharedWorker-coordinated typed HTTP requests and streaming subscriptions",
 	"keywords": [
 		"browser",

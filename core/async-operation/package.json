@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/async-operation",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Owned asynchronous operations with typed value streams and terminal results",
 	"keywords": [
 		"abort-controller",

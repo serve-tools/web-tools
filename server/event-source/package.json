@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/server-event-source",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Fetch-compatible JSON Server-Sent Events",
 	"keywords": [
 		"event-source",

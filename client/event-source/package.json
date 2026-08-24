@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-event-source",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Typed JSON events over the native EventSource API",
 	"keywords": [
 		"browser",

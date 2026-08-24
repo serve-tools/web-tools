@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-shared-webtransport",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "SharedWorker-owned typed WebTransport operations and datagrams",
 	"keywords": [
 		"browser",

@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/ponyfill-prioritized-task-scheduling",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Implements the Prioritized Task Scheduling API without global mutation",
 	"keywords": [
 		"background-tasks",

@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/signal-db",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Typed IndexedDB access with signal-backed reactive queries",
 	"keywords": [
 		"browser",

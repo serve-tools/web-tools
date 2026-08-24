@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/lit-signals",
-	"version": "0.4.1",
+	"version": "0.4.2",
 	"description": "Signal-native Lit templates, styles, directives, and decorators",
 	"keywords": [
 		"async-operation",
