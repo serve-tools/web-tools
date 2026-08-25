@@ -228,7 +228,12 @@
 			"client/shared-http-stream": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
-				]
+				],
+				"ignoreIssues": {
+					"test/browser/shared-http-stream.ts": [
+						"unlisted"
+					]
+				}
 			},
 			"client/shared-websocket": {
 				"entry": [
@@ -450,6 +455,7 @@
 			},
 			"server/webtransport": {
 				"entry": [
+					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"
 				]
 			},

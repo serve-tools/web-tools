@@ -6,7 +6,7 @@
 		"rootDir": ".",
 		"types": ["node", "vitest/globals"]
 	},
-	"include": ["src/**/*.ts", "test/**/*.ts"],
+	"include": ["benchmark/**/*.ts", "src/**/*.ts", "test/**/*.ts", "vitest.benchmark.config.ts"],
 	"references": [
 		{
 			"path": "../../polyfills/report-error/tsconfig.json"
