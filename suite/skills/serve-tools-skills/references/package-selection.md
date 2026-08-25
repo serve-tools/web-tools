@@ -3,6 +3,7 @@
 Select the narrowest package that owns the required behavior.
 
 - Owned async events, terminal results, backpressure, and cancellation: `@serve-tools/async-operation`.
+- Typed JSON HTTP contracts, schema-free Fetch clients, validated handlers, and optional OpenAPI: `@serve-tools/http-contract`.
 - Runtime-neutral typed route declarations, matching, and URL construction: `@serve-tools/router`.
 - Namespace facade for several browser utilities: `@serve-tools/client`.
 - Namespace facade for several Signal-aware browser clients: `@serve-tools/client-signals`.
@@ -74,6 +75,7 @@ Select `@serve-tools/signal` separately only when application code imports it di
 ## Selection rules
 
 - Choose `@serve-tools/async-operation` for runtime-neutral owned work; keep transport framing, reconciliation, persistence, and reactive state in their owning layers.
+- Choose `@serve-tools/http-contract` for request/response JSON APIs and the existing HTTP-stream packages for binary operations or streaming subscriptions.
 - Choose `@serve-tools/router` for shared route declarations and `@serve-tools/client-router` when the browser owns navigation and rendering.
 - Choose a `client-*` package when imperative state or transport APIs are sufficient.
 - Pair a realtime client with its matching server only when the task explicitly implements both network sides; a client-only or server-only task needs only its owning package.

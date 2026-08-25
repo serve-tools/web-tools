@@ -5,6 +5,11 @@ const selections = [
 		"@serve-tools/async-operation",
 	],
 	[
+		"typed-json-http-contract",
+		"Declare one typed JSON HTTP API with shared route codecs, schema-free browser Fetch calls, trusted Standard Schema validation, and optional derived OpenAPI.",
+		"@serve-tools/http-contract",
+	],
+	[
 		"typed-universal-routes",
 		"Declare runtime-neutral URL routes with reusable typed codecs for pathname and search values, reversible href construction, and matching shared by browser and server environments.",
 		"@serve-tools/router",
@@ -414,6 +419,14 @@ const compositionTasks = [
 ];
 
 const usageTasks = [
+	usage(
+		"typed-json-http-operation",
+		"Declare a typed JSON HTTP operation on a reusable route, validate request and response values, call it from a schema-free Fetch client, and narrow its declared status explicitly.",
+		["@serve-tools/http-contract", "@serve-tools/router"],
+		"core/http-contract/test/http-contract.recipes.ts",
+		["defineAPI(", "route(", "createClient<", "isStatus("],
+		["core/http-contract/skills/serve-tools-http-contract/references/recipe-quick-start.md"],
+	),
 	usage(
 		"typed-universal-route-declaration",
 		"Declare a reusable route with unified typed integer, enumerated, optional, and repeated codecs, then construct its typed URL without adding browser-specific navigation ownership.",

@@ -66,7 +66,7 @@ test("route URL generation and matching", async () => {
 		() => {
 			href = home.href();
 		},
-		{ ...measurement, iterations: 9_000 },
+		{ ...measurement, iterations: 90_000 },
 	);
 
 	expect(href).toBe("/projects");
@@ -86,10 +86,20 @@ test("route URL generation and matching", async () => {
 		() => {
 			matched = home.match("https://example.test/projects");
 		},
-		{ ...measurement, iterations: 2_000 },
+		{ ...measurement, iterations: 10_000 },
 	);
 
 	expect(matched).toMatchObject({ route: home });
+
+	await benchmark(
+		"router/match/static-miss",
+		() => {
+			matched = home.match("https://example.test/missing");
+		},
+		{ ...measurement, iterations: 10_000 },
+	);
+
+	expect(matched).toBeNull();
 
 	await benchmark(
 		"router/match/typed-search-hit",

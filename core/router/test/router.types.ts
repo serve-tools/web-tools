@@ -53,6 +53,12 @@ const custom = route("/custom/:value", {
 	params: { value: uppercase },
 	search: { related: uppercase.optional() },
 });
+const requiredSearch = route("/required", {
+	search: { page: codec.integer(), query: codec.string().optional() },
+});
+const optionalSearch = route("/optional", {
+	search: { page: codec.integer().default(1), query: codec.string().optional() },
+});
 const anyRoute: AnyRoute = project;
 const scalarCodec: Codec<number> = id;
 const match: RouteMatch<typeof project> | null = project.match("/projects/1/readme?page=2");
@@ -70,6 +76,9 @@ browse.href({ params: { kind: "new" }, search: { related: "popular" } });
 repeated.href();
 repeated.href({ search: { tags: ["one"], optionalTags: ["two"], defaults: [3] } });
 custom.href({ params: { value: "VALUE" }, search: { related: "RELATED" } });
+requiredSearch.href({ search: { page: 1 } });
+optionalSearch.href();
+optionalSearch.href({ search: { page: 2 } });
 
 export type PublicInference = [
 	Route,
@@ -97,6 +106,13 @@ export type PublicInference = [
 	Expect<Equal<RouteParams<typeof custom>, { value: Uppercase<string> }>>,
 	Expect<Equal<RouteSearch<typeof custom>, { related: Uppercase<string> | undefined }>>,
 	Expect<Equal<RouteData<typeof project>, { id: number; page: number }>>,
+	Expect<Equal<RouteInput<typeof project>["search"]["page"], number>>,
+	Expect<Equal<RouteInput<typeof project>["search"]["tab"], "overview" | "files" | undefined>>,
+	Expect<Equal<RouteInput<typeof project>["search"]["tag"], string[] | undefined>>,
+	Expect<Equal<NonNullable<RouteInput<typeof optionalSearch>["search"]>["page"], number | undefined>>,
+	Expect<
+		Equal<RouteParams<typeof project | typeof browse>, { id: number; slug: string } | { kind: "new" | "popular" }>
+	>,
 	RouteInput<typeof project>,
 ];
 
@@ -126,6 +142,16 @@ browse.href({ params: { kind: "unknown" } });
 repeated.href({ search: { tags: "one" } });
 // @ts-expect-error repeated defaults must preserve the scalar value type
 codec.integer().many().default(["one"]);
+// @ts-expect-error required search schemas still require a route input
+requiredSearch.href();
+// @ts-expect-error required search schemas still require their non-optional keys
+requiredSearch.href({ search: { query: "missing page" } });
+
+if (match !== null) {
+	const sameRoute: typeof project = match.route;
+
+	void sameRoute;
+}
 
 void anyRoute;
 void scalarCodec;

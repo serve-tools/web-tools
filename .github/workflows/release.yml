@@ -30,6 +30,7 @@ on:
           - "@serve-tools/client-webtransport"
           - "@serve-tools/client"
           - "@serve-tools/client-signals"
+          - "@serve-tools/http-contract"
           - "@serve-tools/lit-signals"
           - "@serve-tools/polyfill-arraybuffer-base64"
           - "@serve-tools/polyfill-decorator-metadata"

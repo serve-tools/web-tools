@@ -55,6 +55,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-storage`](./client/storage/) provides observable access to local and session storage.
 - [`@serve-tools/client-websocket`](./client/websocket/) provides typed requests and subscriptions over binary structured-data WebSockets.
 - [`@serve-tools/client-webtransport`](./client/webtransport/) combines reliable typed operations with typed best-effort WebTransport datagrams.
+- [`@serve-tools/http-contract`](./core/http-contract/) defines typed JSON HTTP operations with shared routes, schema-free Fetch clients, validated handlers, and optional OpenAPI projection.
 - [`@serve-tools/realtime-protocol`](./realtime/protocol/) provides the shared binary serializer, wire messages, guards, types, and reliable-stream framing.
 - [`@serve-tools/rolldown-decorators`](./rolldown/decorators/) transforms modern TC39 decorators in Rolldown and Vite builds.
 - [`@serve-tools/router`](./core/router/) provides runtime-neutral typed route declarations, URL matching, and reusable codecs for pathname and search values.

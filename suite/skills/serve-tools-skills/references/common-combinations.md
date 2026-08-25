@@ -6,6 +6,13 @@ Use `@serve-tools/router` for route declarations shared between browser and serv
 Use `@serve-tools/client-router` for native browser navigation, installed route arrays, rendering, and automatic View Transitions.
 The browser router re-exports the shared route helpers, so add `@serve-tools/router` as a direct dependency only when another application module imports the environment-neutral package directly.
 
+## Typed JSON HTTP contracts and shared routes
+
+Use `@serve-tools/router` for schema-free pathname and search declarations shared between application entrypoints.
+Use `@serve-tools/http-contract` to bind those routes to explicit JSON operations and Standard Schema request/response validators.
+Import application contract values only into trusted handlers and optional OpenAPI generation; browser clients import application contracts only as types and use `@serve-tools/http-contract/client` for runtime calls.
+Use existing binary HTTP-stream packages instead when requests require streaming subscriptions or non-JSON payloads.
+
 ## Typed realtime client and server
 
 Use `@serve-tools/client-websocket` for each browser-owned connection and `@serve-tools/server-websocket` for typed handlers and runtime integration when reactive subscription state is unnecessary.

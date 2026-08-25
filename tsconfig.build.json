@@ -109,6 +109,9 @@
 			"path": "./core/async-operation/tsconfig.json"
 		},
 		{
+			"path": "./core/http-contract/tsconfig.json"
+		},
+		{
 			"path": "./core/router/tsconfig.json"
 		},
 		{

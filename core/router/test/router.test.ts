@@ -63,6 +63,20 @@ describe("route", () => {
 		expect(localized.match(href)?.params.item).toBe("crème brûlée");
 	});
 
+	it("canonicalizes static paths without skipping route or input validation", () => {
+		const localized = route("/café menu");
+		const normalized = route("/catalog/../projects");
+
+		expect(localized.href()).toBe("/caf%C3%A9%20menu");
+		expect(localized.match("https://example.test/caf%C3%A9%20menu")?.route).toBe(localized);
+		expect(localized.match("https://example.test/caf%C3%A9%20menu/")).toBeNull();
+		expect(normalized.href()).toBe("/projects");
+		expect(normalized.match("/projects")?.route).toBe(normalized);
+		expect(() => localized.href({ params: { extra: "invalid" } } as never)).toThrow(TypeError);
+		expect(() => localized.href({ search: { extra: "invalid" } } as never)).toThrow(TypeError);
+		expect(() => route("/literal+value")).toThrow(TypeError);
+	});
+
 	it("matches encoded URL objects independently of their authority, search, and hash", () => {
 		const localized = route("/café menu/:item", {
 			search: { filter: codec.string().optional() },

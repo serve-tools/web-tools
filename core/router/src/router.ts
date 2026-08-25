@@ -51,14 +51,10 @@ type PathParameterName<Path extends string> = Path extends `${string}:${infer Re
 	? TakePathParameter<Rest> | PathParameterName<Rest>
 	: never;
 
-type CodecValue<Value> =
-	Value extends Codec<infer Output, infer _Input, infer _Required, infer _Multiple> ? Output : never;
-type CodecInput<Value> =
-	Value extends Codec<infer _Output, infer Input, infer _Required, infer _Multiple> ? Input : never;
+type CodecValue<Value> = Value extends { readonly value?: infer Output } ? Output : never;
+type CodecInput<Value> = Value extends { readonly input?: infer Input } ? Input : never;
 type RequiredQueryKey<Definition extends QueryDefinition> = {
-	[Key in keyof Definition]-?: Definition[Key] extends Codec<infer _Output, infer _Input, true, infer _Multiple>
-		? Key
-		: never;
+	[Key in keyof Definition]-?: Definition[Key] extends { readonly required?: true } ? Key : never;
 }[keyof Definition];
 
 type ParameterValues<Path extends string, Definition extends ParameterDefinition<Path>> = {
@@ -69,10 +65,10 @@ type SearchValues<Definition extends QueryDefinition> = {
 	-readonly [Name in keyof Definition]: CodecValue<Definition[Name]>;
 };
 
-type SearchInput<Definition extends QueryDefinition> = {
-	-readonly [Name in RequiredQueryKey<Definition>]: CodecInput<Definition[Name]>;
+type SearchInput<Definition extends QueryDefinition, Required extends keyof Definition> = {
+	-readonly [Name in Required]: CodecInput<Definition[Name]>;
 } & {
-	-readonly [Name in Exclude<keyof Definition, RequiredQueryKey<Definition>>]?: CodecInput<Definition[Name]>;
+	-readonly [Name in Exclude<keyof Definition, Required>]?: CodecInput<Definition[Name]>;
 };
 
 type InputSection<Name extends string, Value, Required extends boolean> = Required extends true
@@ -83,12 +79,9 @@ type RouteInputValue<
 	Path extends string,
 	Parameters extends ParameterDefinition<Path>,
 	Search extends QueryDefinition,
+	Required extends keyof Search = RequiredQueryKey<Search>,
 > = InputSection<"params", ParameterValues<Path, Parameters>, PathParameterName<Path> extends never ? false : true> &
-	InputSection<
-		"search",
-		SearchInput<Search>,
-		keyof Search extends never ? false : RequiredQueryKey<Search> extends never ? false : true
-	>;
+	InputSection<"search", SearchInput<Search, Required>, [Required] extends [never] ? false : true>;
 
 type RequiredInputKey<Input> = {
 	[Key in keyof Input]-?: EmptyDefinition extends Pick<Input, Key> ? never : Key;
@@ -283,7 +276,9 @@ export function route<
 		invalid();
 	}
 
-	const pattern = new URLPattern({ pathname: path });
+	const patternInput: URLPatternInit = { pathname: path };
+	const pattern = new URLPattern(patternInput);
+	const staticPathname = parameterNames.length === 0 && pattern.pathname;
 	const parameterCodecs = codecMap(options.params, parameterNames);
 	const queryCodecs = codecMap(options.search);
 
@@ -293,23 +288,27 @@ export function route<
 		href(input?: RouteInputValue<Path, Parameters, Search>) {
 			const value = inputObject(input, ["params", "search"]);
 			const params = inputObject(value.params, parameterNames);
-			const pathname = new URL(
-				path.replace(PATH_PARAMETER_PATTERN, (_token, name: string) => {
-					if (!Object.hasOwn(params, name)) {
-						invalid();
-					}
+			const pathname =
+				staticPathname ||
+				new URL(
+					path.replace(PATH_PARAMETER_PATTERN, (_token, name: string) => {
+						if (!Object.hasOwn(params, name)) {
+							invalid();
+						}
 
-					const codec = parameterCodecs.get(name);
-					const parameter = params[name];
+						const codec = parameterCodecs.get(name);
+						const parameter = params[name];
 
-					if (codec === undefined && typeof parameter !== "string") {
-						invalid();
-					}
+						if (codec === undefined && typeof parameter !== "string") {
+							invalid();
+						}
 
-					return encodeURIComponent(codec === undefined ? (parameter as string) : codec[0].format(parameter));
-				}),
-				ROUTE_BASE_URL,
-			).pathname;
+						return encodeURIComponent(
+							codec === undefined ? (parameter as string) : codec[0].format(parameter),
+						);
+					}),
+					ROUTE_BASE_URL,
+				).pathname;
 
 			const search = inputObject(value.search, [...queryCodecs.keys()]);
 			const searchParams = new URLSearchParams();
@@ -355,16 +354,21 @@ export function route<
 				return null;
 			}
 
-			const groups = pattern.exec({ pathname: url.pathname })?.pathname.groups;
+			patternInput.pathname = url.pathname;
 
-			if (groups === undefined) {
+			const groups = staticPathname
+				? patternInput.pathname === staticPathname && {}
+				: pattern.exec(patternInput)?.pathname.groups;
+
+			if (!groups) {
 				return null;
 			}
 
 			const params = [];
 
 			for (const name of parameterNames) {
-				const parameter = parse(parameterCodecs.get(name)?.[0], groups[name]!, true);
+				const value = groups[name]!;
+				const parameter = parse(parameterCodecs.get(name)?.[0], value, value.includes("%"));
 
 				if (parameter === INVALID) {
 					return null;
@@ -374,13 +378,14 @@ export function route<
 			}
 
 			const search = [];
+			const hasSearch = url.search !== "";
 
 			for (const [name, codec] of queryCodecs) {
-				const values = url.searchParams.getAll(name);
+				const values = hasSearch ? url.searchParams.getAll(name) : undefined;
 
 				let value = Array.isArray(codec[2]) ? [...codec[2]] : codec[2];
 
-				if (values.length !== 0) {
+				if (values?.length) {
 					if (!codec[1] && values.length !== 1) {
 						return null;
 					}
@@ -438,9 +443,11 @@ function createCodec<Value>(schema: ValueSchema<Value>, multiple = false, ...mis
 
 function parse(schema: ValueSchema<unknown> | undefined, value: string, encoded = false): unknown | Invalid {
 	try {
-		const decoded = encoded ? decodeURIComponent(value) : value;
+		if (encoded) {
+			value = decodeURIComponent(value);
+		}
 
-		return schema ? schema.parse(decoded) : decoded;
+		return schema ? schema.parse(value) : value;
 	} catch {
 		return INVALID;
 	}

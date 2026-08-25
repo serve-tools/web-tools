@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools HTTP Contract"
+  short_description: "Declare validated JSON HTTP APIs"
+  default_prompt: "Use $serve-tools-http-contract to declare and consume a typed JSON HTTP API."

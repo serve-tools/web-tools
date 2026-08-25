@@ -1,30 +1,34 @@
 {
-	"name": "@serve-tools/router",
+	"name": "@serve-tools/http-contract",
 	"version": "0.1.0",
-	"description": "Declares unnamed strongly typed routes shared across runtimes",
+	"description": "Defines typed JSON HTTP contracts shared by native Fetch clients and validated handlers",
 	"keywords": [
-		"routing",
-		"schema",
+		"fetch",
+		"http",
+		"json",
+		"openapi",
+		"standard-schema",
 		"typescript",
-		"url",
-		"urlpattern",
 		"web-platform"
 	],
-	"homepage": "https://github.com/serve-tools/web-tools/tree/main/core/router#readme",
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/core/http-contract#readme",
 	"bugs": {
 		"url": "https://github.com/serve-tools/web-tools/issues"
 	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/serve-tools/web-tools.git",
-		"directory": "core/router"
+		"directory": "core/http-contract"
 	},
 	"license": "MIT-0",
 	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
 	"sideEffects": false,
 	"type": "module",
 	"exports": {
-		".": "./dist/router.js"
+		".": "./dist/http-contract.js",
+		"./client": "./dist/client.js",
+		"./server": "./dist/server.js",
+		"./openapi": "./dist/openapi.js"
 	},
 	"files": [
 		"dist",
@@ -35,9 +39,12 @@
 		"benchmark:types": "node benchmark/types.mjs",
 		"build": "tsc --build tsconfig.json",
 		"check:package": "publint && attw --pack . --profile esm-only",
-		"clean": "rm -rf dist",
 		"test": "vitest run --config vitest.config.ts",
 		"typecheck": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/router": "^0.1.0",
+		"@standard-schema/spec": "^1.1.0"
 	},
 	"devDependencies": {
 		"@serve-tools/polyfill-urlpattern": "^0.1.0"

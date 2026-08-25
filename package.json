@@ -59,6 +59,7 @@
 		"client-signals/websocket",
 		"client-signals/webtransport",
 		"core/async-operation",
+		"core/http-contract",
 		"core/router",
 		"lit/signals",
 		"lit/signals/demo",
@@ -353,6 +354,12 @@
 			"core/async-operation": {
 				"entry": [
 					"benchmark/*.benchmark.ts"
+				]
+			},
+			"core/http-contract": {
+				"entry": [
+					"benchmark/*.benchmark.ts",
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"core/router": {
