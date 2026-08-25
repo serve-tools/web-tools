@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-arraybuffer-base64",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Installs Uint8Array.prototype.toBase64 in Node.js",
 	"keywords": [
 		"arraybuffer",
@@ -27,7 +27,9 @@
 	},
 	"license": "MIT-0",
 	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
-	"sideEffects": true,
+	"sideEffects": [
+		"./runtime/node.js"
+	],
 	"type": "module",
 	"exports": {
 		"./runtime/node": "./runtime/node.js"
@@ -42,7 +44,7 @@
 		"typecheck": "tsc --project tsconfig.json --noEmit"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-arraybuffer-base64": "^0.1.1"
+		"@serve-tools/ponyfill-arraybuffer-base64": "^0.1.2"
 	},
 	"engines": {
 		"node": ">=22.14.0"

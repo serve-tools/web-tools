@@ -23,39 +23,17 @@ describe("reportError polyfill", () => {
 		restore();
 	});
 
-	it("exports the native function without modifying the global", async () => {
-		const nativeReportError = vi.fn(function (this: typeof globalThis) {
-			expect(this).toBe(globalThis);
-		});
+	it("installs the ponyfill when the global is missing", async () => {
+		await import("../src/polyfill-report-error.js");
 
-		Object.defineProperty(globalThis, "reportError", {
-			value: nativeReportError,
-			configurable: true,
-			writable: true,
-		});
+		const { reportError: ponyfill } = await import("@serve-tools/ponyfill-report-error");
 
-		const { reportError } = await import("../src/polyfill-report-error.js");
-
-		reportError("failure");
-
-		expect(nativeReportError).toHaveBeenCalledExactlyOnceWith("failure");
-		expect(Reflect.get(globalThis, "reportError")).toBe(nativeReportError);
+		expect(globalThis.reportError).toBe(ponyfill);
 	});
 
-	it("exports the ponyfill without modifying a missing global", async () => {
-		const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
-		const { reportError } = await import("../src/polyfill-report-error.js");
+	it("preserves the global assignment property descriptor", async () => {
+		await import("../src/polyfill-report-error.js");
 
-		reportError("failure");
-
-		expect(consoleError).toHaveBeenCalledExactlyOnceWith("failure");
-		expect(Reflect.has(globalThis, "reportError")).toBe(false);
-	});
-
-	it("apply installs the ponyfill when the global is missing", async () => {
-		await import("../src/apply/index.js");
-
-		expect(Reflect.get(globalThis, "reportError")).toBeTypeOf("function");
 		expect(Object.getOwnPropertyDescriptor(globalThis, "reportError")).toMatchObject({
 			configurable: true,
 			enumerable: true,
@@ -63,7 +41,7 @@ describe("reportError polyfill", () => {
 		});
 	});
 
-	it("apply preserves the native global", async () => {
+	it("preserves an existing native function", async () => {
 		const nativeReportError = vi.fn();
 
 		Object.defineProperty(globalThis, "reportError", {
@@ -72,8 +50,85 @@ describe("reportError polyfill", () => {
 			writable: true,
 		});
 
-		await import("../src/apply/index.js");
+		const descriptor = Object.getOwnPropertyDescriptor(globalThis, "reportError");
 
-		expect(Reflect.get(globalThis, "reportError")).toBe(nativeReportError);
+		await import("../src/polyfill-report-error.js");
+
+		expect(globalThis.reportError).toBe(nativeReportError);
+		expect(Object.getOwnPropertyDescriptor(globalThis, "reportError")).toEqual(descriptor);
+	});
+
+	it("replaces an explicitly undefined global", async () => {
+		Object.defineProperty(globalThis, "reportError", {
+			value: undefined,
+			configurable: true,
+			writable: true,
+		});
+
+		await import("../src/polyfill-report-error.js");
+
+		const { reportError: ponyfill } = await import("@serve-tools/ponyfill-report-error");
+
+		expect(globalThis.reportError).toBe(ponyfill);
+	});
+
+	it("replaces an explicitly null global", async () => {
+		Object.defineProperty(globalThis, "reportError", {
+			value: null,
+			configurable: true,
+			writable: true,
+		});
+
+		await import("../src/polyfill-report-error.js");
+
+		const { reportError: ponyfill } = await import("@serve-tools/ponyfill-report-error");
+
+		expect(globalThis.reportError).toBe(ponyfill);
+	});
+
+	it("supports selective global installation", async () => {
+		await import("../src/apply/reportError.js");
+
+		const { reportError: ponyfill } = await import("@serve-tools/ponyfill-report-error");
+
+		expect(globalThis.reportError).toBe(ponyfill);
+	});
+
+	it("supports fallback imports without global mutation", async () => {
+		const { reportError } = await import("../src/exports/reportError.js");
+		const { reportError: ponyfill } = await import("@serve-tools/ponyfill-report-error");
+
+		expect(reportError).toBe(ponyfill);
+		expect(Reflect.has(globalThis, "reportError")).toBe(false);
+	});
+
+	it("exports an existing native function without modifying the global", async () => {
+		const nativeReportError = vi.fn();
+
+		Object.defineProperty(globalThis, "reportError", {
+			value: nativeReportError,
+			configurable: true,
+			writable: true,
+		});
+
+		const descriptor = Object.getOwnPropertyDescriptor(globalThis, "reportError");
+		const { reportError } = await import("../src/exports/reportError.js");
+
+		reportError("failure");
+
+		expect(nativeReportError).toHaveBeenCalledExactlyOnceWith("failure");
+		expect(reportError).toBe(nativeReportError);
+		expect(globalThis.reportError).toBe(nativeReportError);
+		expect(Object.getOwnPropertyDescriptor(globalThis, "reportError")).toEqual(descriptor);
+	});
+
+	it("reports errors through the fallback without modifying a missing global", async () => {
+		const consoleError = vi.spyOn(console, "error").mockImplementation(() => undefined);
+		const { reportError } = await import("../src/exports/reportError.js");
+
+		reportError("failure");
+
+		expect(consoleError).toHaveBeenCalledExactlyOnceWith("failure");
+		expect(Reflect.has(globalThis, "reportError")).toBe(false);
 	});
 });

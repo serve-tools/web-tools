@@ -22,7 +22,7 @@ npm install @serve-tools/polyfill-request-idle-callback
 
 Import the package for its side effects to install both functions.
 
-This package intentionally declares `sideEffects: true`.
+The package explicitly marks its root and selective installers as side-effectful.
 Do not remove its imports as unused.
 
 ### Install individual globals

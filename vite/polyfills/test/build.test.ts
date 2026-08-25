@@ -3,6 +3,166 @@ import { vitePolyfills } from "../src/vite-polyfills.js";
 import { buildTest } from "./helpers.js";
 
 describe("build integration", () => {
+	describe("polyfill package side effects", () => {
+		const installCases = [
+			[
+				"decorator metadata root",
+				"@serve-tools/polyfill-decorator-metadata",
+				['Object.defineProperty(Symbol, "metadata"'],
+			],
+			[
+				"selective decorator metadata",
+				"@serve-tools/polyfill-decorator-metadata/apply/Symbol/metadata",
+				['Object.defineProperty(Symbol, "metadata"'],
+			],
+			[
+				"prioritized task scheduling root",
+				"@serve-tools/polyfill-prioritized-task-scheduling",
+				[
+					"globalThis.scheduler",
+					"globalThis.TaskController",
+					"globalThis.TaskSignal",
+					"globalThis.TaskPriorityChangeEvent",
+				],
+			],
+			[
+				"selective scheduler",
+				"@serve-tools/polyfill-prioritized-task-scheduling/apply/scheduler",
+				["globalThis.scheduler"],
+			],
+			[
+				"selective task controller",
+				"@serve-tools/polyfill-prioritized-task-scheduling/apply/TaskController",
+				["globalThis.TaskController"],
+			],
+			[
+				"selective task signal",
+				"@serve-tools/polyfill-prioritized-task-scheduling/apply/TaskSignal",
+				["globalThis.TaskSignal"],
+			],
+			[
+				"selective task priority change event",
+				"@serve-tools/polyfill-prioritized-task-scheduling/apply/TaskPriorityChangeEvent",
+				["globalThis.TaskPriorityChangeEvent"],
+			],
+			[
+				"idle callback root",
+				"@serve-tools/polyfill-request-idle-callback",
+				["globalThis.requestIdleCallback", "globalThis.cancelIdleCallback"],
+			],
+			[
+				"selective request idle callback",
+				"@serve-tools/polyfill-request-idle-callback/apply/requestIdleCallback",
+				["globalThis.requestIdleCallback"],
+			],
+			[
+				"selective cancel idle callback",
+				"@serve-tools/polyfill-request-idle-callback/apply/cancelIdleCallback",
+				["globalThis.cancelIdleCallback"],
+			],
+			[
+				"resource management root",
+				"@serve-tools/polyfill-resource-management",
+				[
+					'Object.defineProperty(Symbol, "dispose"',
+					'Object.defineProperty(Symbol, "asyncDispose"',
+					"globalThis.DisposableStack",
+					"globalThis.AsyncDisposableStack",
+					"globalThis.SuppressedError",
+				],
+			],
+			[
+				"selective async disposable stack and its dependencies",
+				"@serve-tools/polyfill-resource-management/apply/AsyncDisposableStack",
+				[
+					'Object.defineProperty(Symbol, "dispose"',
+					'Object.defineProperty(Symbol, "asyncDispose"',
+					"globalThis.AsyncDisposableStack",
+					"globalThis.SuppressedError",
+				],
+			],
+			[
+				"selective disposable stack and its dependencies",
+				"@serve-tools/polyfill-resource-management/apply/DisposableStack",
+				['Object.defineProperty(Symbol, "dispose"', "globalThis.DisposableStack", "globalThis.SuppressedError"],
+			],
+			[
+				"selective suppressed error",
+				"@serve-tools/polyfill-resource-management/apply/SuppressedError",
+				["globalThis.SuppressedError"],
+			],
+			[
+				"selective async dispose symbol",
+				"@serve-tools/polyfill-resource-management/apply/Symbol/asyncDispose",
+				['Object.defineProperty(Symbol, "asyncDispose"'],
+			],
+			[
+				"selective dispose symbol",
+				"@serve-tools/polyfill-resource-management/apply/Symbol/dispose",
+				['Object.defineProperty(Symbol, "dispose"'],
+			],
+			["URLPattern root", "@serve-tools/polyfill-urlpattern", ["globalThis.URLPattern"]],
+			["selective URLPattern", "@serve-tools/polyfill-urlpattern/apply/URLPattern", ["globalThis.URLPattern"]],
+		] as const;
+
+		it.each(installCases)("retains the %s installer during tree shaking", async (_name, specifier, expected) => {
+			const result = await buildTest({
+				files: {
+					"index.js": `import ${JSON.stringify(specifier)}; export const retained = true;`,
+				},
+			});
+
+			const code = result.getChunk("index");
+
+			expect(code).toBeDefined();
+
+			for (const installation of expected) {
+				expect(code).toContain(installation);
+			}
+		});
+
+		const pureCases = [
+			["decorator metadata", "@serve-tools/polyfill-decorator-metadata", ["Symbol/metadata"]],
+			[
+				"prioritized task scheduling",
+				"@serve-tools/polyfill-prioritized-task-scheduling",
+				["scheduler", "TaskController", "TaskSignal", "TaskPriorityChangeEvent"],
+			],
+			[
+				"idle callbacks",
+				"@serve-tools/polyfill-request-idle-callback",
+				["requestIdleCallback", "cancelIdleCallback"],
+			],
+			[
+				"resource management",
+				"@serve-tools/polyfill-resource-management",
+				["AsyncDisposableStack", "DisposableStack", "SuppressedError", "Symbol/asyncDispose", "Symbol/dispose"],
+			],
+			["URLPattern", "@serve-tools/polyfill-urlpattern", ["URLPattern"]],
+		] as const;
+
+		it.each(pureCases)(
+			"removes unused %s feature imports during tree shaking",
+			async (_name, packageName, features) => {
+				const imports = features
+					.map((feature) => `import ${JSON.stringify(`${packageName}/${feature}`)};`)
+					.join("\n");
+				const result = await buildTest({
+					files: {
+						"index.js": `${imports}\nexport const retained = true;`,
+					},
+				});
+
+				const code = result.getChunk("index");
+
+				expect(code).toBeDefined();
+				expect(code?.replace(/\/\/.*$/gm, "").trim()).toMatch(
+					/^(?:const|let|var)\s+retained\s*=\s*true;\s*export\s*\{\s*retained\s*\};?$/,
+				);
+			},
+		);
+	});
+
 	describe("Symbol.dispose polyfill", () => {
 		it("injects polyfill when Symbol.dispose is referenced", async () => {
 			const result = await buildTest({
@@ -116,8 +276,7 @@ describe("build integration", () => {
 
 			expect(code).toBeDefined();
 			expect(code).toMatch(/URLPattern(?:\$\d+)? = class \{/);
-			expect(code).toContain('Reflect.get(globalThis, "URLPattern")');
-			expect(code).toMatch(/if \(nativeValue == null\) Object\.defineProperty\(globalThis, "URLPattern"/);
+			expect(code).toContain('globalThis.URLPattern ?? Object.defineProperty(globalThis, "URLPattern"');
 		});
 	});
 

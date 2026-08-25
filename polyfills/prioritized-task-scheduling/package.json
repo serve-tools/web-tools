@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-prioritized-task-scheduling",
-	"version": "0.1.2",
+	"version": "0.2.0",
 	"description": "Provides native-aware Prioritized Task Scheduling imports and global installation",
 	"keywords": [
 		"browser",
@@ -31,8 +31,11 @@
 	"license": "MIT-0",
 	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
 	"sideEffects": [
-		"./dist/apply/*.js",
-		"./dist/polyfill-prioritized-task-scheduling.js"
+		"./dist/polyfill-prioritized-task-scheduling.js",
+		"./dist/apply/scheduler.js",
+		"./dist/apply/TaskController.js",
+		"./dist/apply/TaskSignal.js",
+		"./dist/apply/TaskPriorityChangeEvent.js"
 	],
 	"type": "module",
 	"exports": {
@@ -41,8 +44,10 @@
 		"./TaskController": "./dist/exports/TaskController.js",
 		"./TaskSignal": "./dist/exports/TaskSignal.js",
 		"./TaskPriorityChangeEvent": "./dist/exports/TaskPriorityChangeEvent.js",
-		"./apply": "./dist/polyfill-prioritized-task-scheduling.js",
-		"./apply/*": "./dist/apply/*.js"
+		"./apply/scheduler": "./dist/apply/scheduler.js",
+		"./apply/TaskController": "./dist/apply/TaskController.js",
+		"./apply/TaskSignal": "./dist/apply/TaskSignal.js",
+		"./apply/TaskPriorityChangeEvent": "./dist/apply/TaskPriorityChangeEvent.js"
 	},
 	"files": [
 		"dist",
@@ -56,6 +61,6 @@
 		"typecheck": "npm run build --workspace @serve-tools/ponyfill-prioritized-task-scheduling && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-prioritized-task-scheduling": "^0.1.1"
+		"@serve-tools/ponyfill-prioritized-task-scheduling": "^0.1.2"
 	}
 }

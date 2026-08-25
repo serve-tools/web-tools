@@ -4,6 +4,13 @@ All notable changes to this package collection are documented here.
 
 ## Unreleased
 
+- Add `@serve-tools/ponyfill-urlpattern@0.1.0` and `@serve-tools/polyfill-urlpattern@0.1.0` with owned URLPattern matching, native-preserving global installation, and automatic Vite polyfill integration.
+- Align every polyfill around side-effectful package-root installation, mutation-free native-aware feature exports, and focused `/apply/Feature` installers.
+- Declare installer modules precisely through package `sideEffects` metadata, enforce those boundaries during package verification, and cover installer retention and pure-export tree shaking in bundled integration tests.
+- Move the native-aware `reportError` export to `@serve-tools/polyfill-report-error/reportError`, make its package root install the global, and provide `@serve-tools/polyfill-report-error/apply/reportError` for focused installation.
+- Remove the legacy prioritized-task-scheduling `/apply` entrypoint in favor of package-root installation and focused feature installers.
+- Update server packages to consume the canonical `reportError` export and align their minimum internal dependency versions with the coordinated polyfill releases.
+- Prepare a dependency-ordered, coordinated release of 16 affected polyfill, ponyfill, server, Vite, and package-Skill workspaces.
 - Reduce runtime allocations, redundant lifecycle state, dispatch lookups, and shipped JavaScript across client, server, Signal, scheduling, and build-plugin packages without changing public contracts.
 - Document public methods, properties, options, and lifecycle behavior across published package APIs, and correct inaccurate Vite polyfill helper documentation.
 - Release refreshed, dependency-aligned versions of all 60 published packages with explicit minimum internal dependency versions and improved npm discovery keywords.

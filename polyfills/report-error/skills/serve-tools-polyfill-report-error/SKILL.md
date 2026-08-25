@@ -1,6 +1,6 @@
 ---
 name: serve-tools-polyfill-report-error
-description: Use @serve-tools/polyfill-report-error for native-aware imported reporting or opt-in global reportError installation.
+description: Use @serve-tools/polyfill-report-error for native-aware global reporting or mutation-free reportError imports.
 ---
 
 # Use @serve-tools/polyfill-report-error

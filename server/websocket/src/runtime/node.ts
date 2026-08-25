@@ -1,6 +1,6 @@
 import type { IncomingMessage } from "node:http";
 import type { Duplex } from "node:stream";
-import { reportError } from "@serve-tools/polyfill-report-error";
+import { reportError } from "@serve-tools/polyfill-report-error/reportError";
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
 import { offersWebSocketSubprotocol, subprotocol } from "@serve-tools/realtime-protocol";
 import { WebSocketServer } from "ws";

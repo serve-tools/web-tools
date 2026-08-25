@@ -3,7 +3,8 @@
 This public-import example is generated from the compile-checked `test/polyfill-urlpattern.recipes.ts` fixture in the package source.
 
 ```ts
-import { URLPattern } from "@serve-tools/polyfill-urlpattern";
+import "@serve-tools/polyfill-urlpattern";
+import { URLPattern } from "@serve-tools/polyfill-urlpattern/URLPattern";
 
 const pattern = new URLPattern({ pathname: "/books/:id" });
 

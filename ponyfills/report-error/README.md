@@ -15,7 +15,7 @@ npm install @serve-tools/ponyfill-report-error
 ```
 
 This is the fallback implementation rather than the native-aware selection layer.
-Use [`@serve-tools/polyfill-report-error`](../../polyfills/report-error/) when an imported function should preserve the native platform implementation where available, or its `./apply` subpath when a missing global should be installed.
+Use [`@serve-tools/polyfill-report-error`](../../polyfills/report-error/) when a missing global should be installed, or its `./reportError` subpath when an imported function should preserve the native platform implementation without changing globals.
 
 ## Agent Skill
 

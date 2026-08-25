@@ -246,7 +246,7 @@ const selections = [
 	],
 	[
 		"cross-runtime-report-error",
-		"Report otherwise-unobservable failures from shared web and server code while preserving native reportError behavior where available, working in Node.js, and avoiding injected callbacks or global mutation.",
+		"Report otherwise-unobservable failures from shared web and server code through the mutation-free reportError subpath while preserving native behavior, working in Node.js, and avoiding injected callbacks or global mutation.",
 		"@serve-tools/polyfill-report-error",
 	],
 	[
@@ -783,10 +783,10 @@ const remainingUsageTasks = [
 	),
 	usage(
 		"polyfill-report-error",
-		"Report a failure through the native-aware API, then explicitly install the application-level global when compatibility requires it.",
+		"Report a failure through the mutation-free native-aware API, then selectively install the application-level global when compatibility requires it.",
 		["@serve-tools/polyfill-report-error"],
 		"polyfills/report-error/test/polyfill-report-error.recipes.ts",
-		["reportError(error)", "reportFailure", "await import", "applyReportError"],
+		["reportError(error)", "reportFailure", "await import", "apply/reportError", "applyReportError"],
 		["polyfills/report-error/skills/serve-tools-polyfill-report-error/references/recipe-quick-start.md"],
 	),
 	usage(

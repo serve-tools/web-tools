@@ -80,7 +80,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/polyfill-arraybuffer-base64`](./polyfills/arraybuffer-base64/) installs `Uint8Array.prototype.toBase64` in Node.js.
 - [`@serve-tools/polyfill-decorator-metadata`](./polyfills/decorator-metadata/) installs the proposal's `Symbol.metadata` global while preserving a native symbol.
 - [`@serve-tools/polyfill-prioritized-task-scheduling`](./polyfills/prioritized-task-scheduling/) installs missing Prioritized Task Scheduling globals and scheduler methods while preserving native implementations.
-- [`@serve-tools/polyfill-report-error`](./polyfills/report-error/) provides native-aware `reportError` imports and opt-in global installation.
+- [`@serve-tools/polyfill-report-error`](./polyfills/report-error/) installs a missing `reportError` global and provides native-aware imports.
 - [`@serve-tools/polyfill-request-idle-callback`](./polyfills/request-idle-callback/) installs the `requestIdleCallback` and `cancelIdleCallback` globals.
 - [`@serve-tools/polyfill-resource-management`](./polyfills/resource-management/) installs ECMAScript Explicit Resource Management globals.
 - [`@serve-tools/polyfill-urlpattern`](./polyfills/urlpattern/) installs `URLPattern` while preserving a native implementation.

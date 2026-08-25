@@ -56,8 +56,9 @@ Select the narrowest package that owns the required behavior.
 - Import idle-callback functions without global mutation: `@serve-tools/ponyfill-request-idle-callback`.
 - Install native-aware prioritized task scheduling globals: `@serve-tools/polyfill-prioritized-task-scheduling`.
 - Import prioritized task scheduling without global mutation: `@serve-tools/ponyfill-prioritized-task-scheduling`.
-- Import native-aware error reporting: `@serve-tools/polyfill-report-error`.
-- Install a missing `reportError` global: `@serve-tools/polyfill-report-error/apply`.
+- Install a native-preserving `reportError` global: `@serve-tools/polyfill-report-error`.
+- Import native-aware error reporting without global mutation: `@serve-tools/polyfill-report-error/reportError`.
+- Selectively install a missing `reportError` global: `@serve-tools/polyfill-report-error/apply/reportError`.
 - Import console-backed error reporting without global mutation: `@serve-tools/ponyfill-report-error`.
 - Install explicit-resource-management globals: `@serve-tools/polyfill-resource-management`.
 - Import resource-management classes without global mutation: `@serve-tools/ponyfill-resource-management`.

@@ -1,3 +1,4 @@
+import "../src/polyfill-urlpattern.js";
 import { URLPattern } from "../src/exports/URLPattern.js";
 
 const pattern = new URLPattern({ pathname: "/books/:id" });

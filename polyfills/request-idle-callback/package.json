@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-request-idle-callback",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"description": "Implements requestIdleCallback and cancelIdleCallback with global mutation",
 	"keywords": [
 		"browser",
@@ -52,6 +52,6 @@
 		"typecheck": "npm run build --workspace @serve-tools/ponyfill-request-idle-callback && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-request-idle-callback": "^0.1.4"
+		"@serve-tools/ponyfill-request-idle-callback": "^0.1.5"
 	}
 }

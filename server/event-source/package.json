@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/server-event-source",
-	"version": "0.2.1",
+	"version": "0.2.2",
 	"description": "Fetch-compatible JSON Server-Sent Events",
 	"keywords": [
 		"event-source",
@@ -44,6 +44,6 @@
 		"typecheck": "npm run build:dependencies && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/polyfill-report-error": "^0.1.1"
+		"@serve-tools/polyfill-report-error": "^0.2.0"
 	}
 }

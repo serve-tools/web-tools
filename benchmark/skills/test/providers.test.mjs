@@ -11,7 +11,7 @@ test("Fixture provider publicizes apply, decorators, and stream recipe imports",
 		[
 			"polyfills/report-error/test/polyfill-report-error.recipes.ts",
 			"@serve-tools/polyfill-report-error",
-			'await import("@serve-tools/polyfill-report-error/apply");',
+			'await import("@serve-tools/polyfill-report-error/apply/reportError");',
 		],
 		[
 			"lit/signals/test/lit-signals.recipes.ts",
@@ -29,8 +29,15 @@ test("Fixture provider publicizes apply, decorators, and stream recipe imports",
 		const result = await provider.solve({ task: { expected: { packages: [packageName] }, goldenRecipe } });
 
 		assert.match(result.data.files[0].content, new RegExp(expectedImport.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
-		assert.doesNotMatch(result.data.files[0].content, /\.\.\/src\/(apply\/index|decorators|stream)\.js/);
+		assert.doesNotMatch(result.data.files[0].content, /\.\.\/src\/(?:apply\/[^"']+|decorators|stream)\.js/);
 	}
+});
+
+test("recipe publicizing preserves nested apply entrypoints", () => {
+	const source = 'await import("../src/apply/Symbol/metadata.js");\n';
+	const publicSource = publicizeRecipe(source, "@serve-tools/example");
+
+	assert.equal(publicSource, 'await import("@serve-tools/example/apply/Symbol/metadata");\n');
 });
 
 test("recipe publicizing preserves a literal escaped tab", () => {

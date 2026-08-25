@@ -1,6 +1,6 @@
 /// <reference lib="esnext.disposable" />
 
-import { reportError } from "@serve-tools/polyfill-report-error";
+import { reportError } from "@serve-tools/polyfill-report-error/reportError";
 import type * as T from "./lib/types.js";
 import type {
 	EventConnection,

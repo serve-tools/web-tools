@@ -20,8 +20,8 @@ npm install @serve-tools/polyfill-decorator-metadata
 
 Import the package for its side effects to install every supported global, as shown above.
 
-This package intentionally declares `sideEffects: true`.
-Do not remove its imports as unused.
+The package marks its root and selective installer as side-effectful.
+Do not remove those imports as unused.
 
 ### Install individual globals
 

@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-decorator-metadata",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "Installs Symbol.metadata while preserving an existing native symbol",
 	"keywords": [
 		"browser-compatibility",
@@ -24,12 +24,15 @@
 	},
 	"license": "MIT-0",
 	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
-	"sideEffects": true,
+	"sideEffects": [
+		"./dist/polyfill-decorator-metadata.js",
+		"./dist/apply/Symbol/metadata.js"
+	],
 	"type": "module",
 	"exports": {
 		".": "./dist/polyfill-decorator-metadata.js",
-		"./*": "./dist/exports/*.js",
-		"./apply/*": "./dist/apply/*.js"
+		"./Symbol/metadata": "./dist/exports/Symbol/metadata.js",
+		"./apply/Symbol/metadata": "./dist/apply/Symbol/metadata.js"
 	},
 	"files": [
 		"dist",

@@ -1,4 +1,4 @@
-import { reportError } from "@serve-tools/polyfill-report-error";
+import { reportError } from "@serve-tools/polyfill-report-error/reportError";
 import type {
 	ClientMessage,
 	ErrorRecord,

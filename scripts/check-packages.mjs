@@ -38,8 +38,12 @@ try {
 				: "filename" in packResult
 					? [packResult]
 					: Object.values(packResult);
-			const [{ filename }] = packEntries;
+			const [{ filename, files }] = packEntries;
 			const tarball = path.join(temporaryRoot, filename);
+
+			if (workspace.startsWith("polyfills/")) {
+				validatePolyfillSideEffects(packageJSON, files);
+			}
 
 			await run("publint", [tarball, "--pack=false"], root);
 			await run("attw", [tarball, "--profile", "esm-only"], root);
@@ -54,6 +58,62 @@ try {
 
 if (failed) {
 	process.exitCode = 1;
+}
+
+function validatePolyfillSideEffects(packageJSON, files) {
+	if (!Array.isArray(packageJSON.sideEffects)) {
+		throw new Error(`${packageJSON.name}: sideEffects must explicitly list every global installer`);
+	}
+
+	const declared = new Set(packageJSON.sideEffects);
+
+	if (declared.size !== packageJSON.sideEffects.length) {
+		throw new Error(`${packageJSON.name}: sideEffects must not contain duplicate paths`);
+	}
+
+	const expected = new Set();
+
+	for (const [specifier, target] of Object.entries(packageJSON.exports ?? {})) {
+		if (specifier === "." || specifier.startsWith("./apply/") || specifier.startsWith("./runtime/")) {
+			if (typeof target !== "string") {
+				throw new Error(
+					`${packageJSON.name}: installer ${specifier} must resolve to one explicit JavaScript file`,
+				);
+			}
+
+			expected.add(target);
+		}
+	}
+
+	const packedFiles = new Set(files.map(({ path: file }) => `./${file}`));
+
+	for (const installer of packedFiles) {
+		if (!installer.startsWith("./dist/apply/") || !installer.endsWith(".js")) {
+			continue;
+		}
+
+		if (!expected.has(installer)) {
+			throw new Error(
+				`${packageJSON.name}: generated installer ${installer} is not publicly exported; run npm run build:fresh`,
+			);
+		}
+	}
+
+	for (const installer of expected) {
+		if (!declared.has(installer)) {
+			throw new Error(`${packageJSON.name}: sideEffects is missing installer ${installer}`);
+		}
+
+		if (!packedFiles.has(installer)) {
+			throw new Error(`${packageJSON.name}: declared installer ${installer} is missing from the package`);
+		}
+	}
+
+	for (const effect of declared) {
+		if (!expected.has(effect)) {
+			throw new Error(`${packageJSON.name}: sideEffects incorrectly includes ${effect}`);
+		}
+	}
 }
 
 function run(command, arguments_, cwd, capture = false) {

@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/vite-polyfills",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"description": "Detects and injects polyfills for unsupported JavaScript features in Vite",
 	"keywords": [
 		"browser-compatibility",
@@ -59,15 +59,15 @@
 		"build:assets": "mkdir -p dist/types && cp -R src/types/. dist/types/",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
-		"test": "npm run build --workspace @serve-tools/polyfill-decorator-metadata --workspace @serve-tools/polyfill-resource-management --workspace @serve-tools/polyfill-request-idle-callback --workspace @serve-tools/polyfill-urlpattern && vitest run",
+		"test": "npm run build --workspace @serve-tools/polyfill-decorator-metadata --workspace @serve-tools/polyfill-prioritized-task-scheduling --workspace @serve-tools/polyfill-resource-management --workspace @serve-tools/polyfill-request-idle-callback --workspace @serve-tools/polyfill-urlpattern && vitest run",
 		"typecheck": "tsc --project tsconfig.json --noEmit"
 	},
 	"dependencies": {
 		"@jsxtools/rolldown-transform": "^0.1",
-		"@serve-tools/polyfill-decorator-metadata": "^0.1.1",
-		"@serve-tools/polyfill-prioritized-task-scheduling": "^0.1.1",
-		"@serve-tools/polyfill-request-idle-callback": "^0.1.4",
-		"@serve-tools/polyfill-resource-management": "^0.1.4",
+		"@serve-tools/polyfill-decorator-metadata": "^0.1.2",
+		"@serve-tools/polyfill-prioritized-task-scheduling": "^0.2.0",
+		"@serve-tools/polyfill-request-idle-callback": "^0.1.6",
+		"@serve-tools/polyfill-resource-management": "^0.1.6",
 		"@serve-tools/polyfill-urlpattern": "^0.1.0"
 	},
 	"peerDependencies": {

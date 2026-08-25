@@ -1,4 +1,4 @@
-import { reportError } from "@serve-tools/polyfill-report-error";
+import { reportError } from "@serve-tools/polyfill-report-error/reportError";
 import type { Protocol, ProtocolDefinition } from "@serve-tools/realtime-protocol";
 import { deserialize, isClientMessage } from "@serve-tools/realtime-protocol";
 import {

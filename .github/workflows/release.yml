@@ -157,6 +157,7 @@ jobs:
           path: ${{ runner.temp }}/release
       - name: Verify and publish artifact
         env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           RELEASE_TAG: ${{ inputs.tag }}
         run: |
           cd "$RUNNER_TEMP/release"
@@ -171,5 +172,5 @@ jobs:
           NODE
           while IFS= read -r TARBALL; do
             test -f "$TARBALL"
-            npm publish "$TARBALL" --access public --tag "$RELEASE_TAG"
+            npm publish "$TARBALL" --access public --provenance --tag "$RELEASE_TAG"
           done < "$RUNNER_TEMP/release-tarballs"

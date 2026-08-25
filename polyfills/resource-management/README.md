@@ -22,12 +22,12 @@ npm install @serve-tools/polyfill-resource-management
 
 Import the package for its side effects to install every supported global, as shown above.
 
-This package intentionally declares `sideEffects: true`.
-Do not remove its imports as unused.
+The package explicitly marks its root and global installers as side-effectful.
+Do not remove those imports as unused.
 
 ### Install individual globals
 
-Import a `./apply/*` subpath to install only the globals an application needs:
+Import a documented `./apply/...` subpath to install only the globals an application needs:
 
 ```js
 import "@serve-tools/polyfill-resource-management/apply/Symbol/dispose";

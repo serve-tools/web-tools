@@ -18,7 +18,6 @@ npm install @serve-tools/polyfill-prioritized-task-scheduling
 ## Choose the import boundary
 
 - Import the package root for side effects that install the Scheduling API when it is missing.
-- Import `./apply` for the same explicit installation boundary.
 - Import `./apply/scheduler`, `./apply/TaskController`, `./apply/TaskSignal`, or `./apply/TaskPriorityChangeEvent` for selective installation.
 - Import `./scheduler` for the native-aware `scheduler` and `Scheduler` values, or import `./TaskController`, `./TaskSignal`, or `./TaskPriorityChangeEvent` for the other interface objects without changing globals.
 

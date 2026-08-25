@@ -23,19 +23,19 @@ Import the package before code that expects `globalThis.URLPattern` to exist.
 The installed global is writable, configurable, and non-enumerable, matching the native constructor's property descriptor.
 Native implementations are never replaced.
 
-The named export always resolves to the same native or fallback constructor available through `globalThis.URLPattern`:
+Import the `./URLPattern` subpath to select the native constructor when available or the fallback otherwise without modifying the global environment:
 
 ```ts
-import { URLPattern } from "@serve-tools/polyfill-urlpattern";
+import { URLPattern } from "@serve-tools/polyfill-urlpattern/URLPattern";
 
 const pattern = new URLPattern("/books/:id", "https://example.com");
 
 pattern.test("https://example.com/books/42"); // true
 ```
 
-The package also exports `URLPatternInput`, `URLPatternOptions`, `URLPatternInit`, `URLPatternResult`, and `URLPatternComponentResult` types.
+Import `@serve-tools/polyfill-urlpattern/apply/URLPattern` when global installation should use the explicit selective entrypoint.
 
-Use [`@serve-tools/ponyfill-urlpattern`](../../ponyfills/urlpattern/) instead when the global environment must remain unchanged.
+Use [`@serve-tools/ponyfill-urlpattern`](../../ponyfills/urlpattern/) instead when the fallback implementation or its exported `URLPatternInput`, `URLPatternOptions`, `URLPatternInit`, `URLPatternResult`, and `URLPatternComponentResult` types are needed directly.
 
 ## Agent Skill
 

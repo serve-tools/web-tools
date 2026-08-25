@@ -1,7 +1,7 @@
 {
 	"name": "@serve-tools/polyfill-report-error",
-	"version": "0.1.1",
-	"description": "Provides native-aware reportError imports and opt-in global installation",
+	"version": "0.2.0",
+	"description": "Implements reportError with global mutation",
 	"keywords": [
 		"browser",
 		"browser-compatibility",
@@ -26,12 +26,14 @@
 	"license": "MIT-0",
 	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
 	"sideEffects": [
-		"./dist/apply/*.js"
+		"./dist/polyfill-report-error.js",
+		"./dist/apply/reportError.js"
 	],
 	"type": "module",
 	"exports": {
 		".": "./dist/polyfill-report-error.js",
-		"./apply": "./dist/apply/index.js"
+		"./reportError": "./dist/exports/reportError.js",
+		"./apply/reportError": "./dist/apply/reportError.js"
 	},
 	"files": [
 		"dist",
@@ -45,6 +47,6 @@
 		"typecheck": "npm run build --workspace @serve-tools/ponyfill-report-error && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-report-error": "^0.1.1"
+		"@serve-tools/ponyfill-report-error": "^0.1.2"
 	}
 }

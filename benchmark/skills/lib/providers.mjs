@@ -213,7 +213,7 @@ export function publicizeRecipe(source, packageName) {
 		.replace(/(["'])\.\.\/src\/lib\/scope\/([^"']+)\.js\1/g, `$1${packageName}/scope/$2$1`)
 		.replace(/(["'])\.\.\/src\/exports\/Symbol\/([^"']+)\.js\1/g, `$1${packageName}/Symbol/$2$1`)
 		.replace(/(["'])\.\.\/src\/exports\/([^"']+)\.js\1/g, `$1${packageName}/$2$1`)
-		.replace(/(["'])\.\.\/src\/apply\/index\.js\1/g, `$1${packageName}/apply$1`)
+		.replace(/(["'])\.\.\/src\/apply\/([^"']+)\.js\1/g, `$1${packageName}/apply/$2$1`)
 		.replace(/(["'])\.\.\/src\/decorators\.js\1/g, `$1${packageName}/decorators$1`)
 		.replace(/(["'])\.\.\/src\/stream\.js\1/g, `$1${packageName}/stream$1`)
 		.replace(/(["'])\.\.\/src\/[^"']+\.js\1/g, `$1${packageName}$1`);

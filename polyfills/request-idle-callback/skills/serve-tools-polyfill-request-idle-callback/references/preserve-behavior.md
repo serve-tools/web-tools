@@ -1,7 +1,7 @@
 # Preserve behavior
 
 - Keep side-effect imports intact.
-  The package intentionally declares `sideEffects: true`.
+  The package explicitly marks its root and selective installers as side-effectful.
 - Leave native implementations unchanged; every installer is self-guarding.
 - Treat the fallback deadline as an approximation.
   It cannot observe the browser's internal rendering or input queues.
