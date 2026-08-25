@@ -6,12 +6,28 @@ export * from "@serve-tools/router";
  * Creates a typed browser router on top of the current realm's Navigation API.
  *
  * ```ts
+ * import { createRouter, route } from "@serve-tools/client-router";
  *
+ * const router = createRouter({
+ * 	routes: [
+ * 		route("/"),
+ * 		route("/login"),
+ * 		route("/projects/:projectId", {
+ * 			params: { projectId: codec.integer() },
+ * 		}),
+ * 	],
+ * 	render({ current }) {
+ * 		// ...
+ * 	},
+ * });
+ *
+ * // intercepts navigation and calls `render` with the current route
+ * await router.start();
  * ```
  */
 export function createRouter<const Routes extends readonly AnyRoute[]>(
-	options: BrowserRouterOptions<Routes>,
-): BrowserRouter<Routes[number]> {
+	options: ClientRouterOptions<Routes>,
+): ClientRouter<Routes[number]> {
 	type Value = Routes[number];
 
 	const { navigation, document } = globalThis;
@@ -433,7 +449,7 @@ export type RouterUnmatched<Value extends AnyRoute> =
 	| RouterRedirectFallback<Value>;
 
 /** Browser-router construction options. */
-export interface BrowserRouterOptions<Routes extends readonly AnyRoute[]> {
+export interface ClientRouterOptions<Routes extends readonly AnyRoute[]> {
 	readonly routes: Routes;
 	readonly unmatched?: NoInfer<RouterUnmatched<Routes[number]>>;
 	readonly render?: NoInfer<RouterRender<Routes[number]>>;
@@ -445,7 +461,7 @@ export interface SetRoutesOptions<Value extends AnyRoute> {
 }
 
 /** A browser router that delegates history and navigation phases to the Navigation API. */
-export interface BrowserRouter<Value extends AnyRoute = AnyRoute> {
+export interface ClientRouter<Value extends AnyRoute = AnyRoute> {
 	readonly current: RouterCurrent<Value> | null;
 	readonly transition: NavigationTransition | null;
 
