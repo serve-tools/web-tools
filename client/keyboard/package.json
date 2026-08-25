@@ -38,6 +38,7 @@
 	],
 	"scripts": {
 		"benchmark": "vitest run --config vitest.benchmark.config.ts",
+		"benchmark:types": "node benchmark/types.mjs",
 		"build": "tsc --build tsconfig.json",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",

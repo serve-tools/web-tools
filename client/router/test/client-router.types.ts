@@ -18,6 +18,13 @@ const project = route("/projects/:projectId", {
 	},
 });
 const settings = route("/settings");
+const incompatibleProject = route("/projects/:projectId", {
+	params: { projectId: codec.string() },
+	search: {
+		parentId: codec.string().optional(),
+		tab: codec.enum("recent", "archived").default("recent"),
+	},
+});
 const publicRoutes = [home] as const;
 const privateRoutes = [home, project] as const;
 const authenticated = true as boolean;
@@ -42,6 +49,7 @@ const result: RouterNavigationResult = router.navigate(
 router.setRoutes(authenticated ? privateRoutes : publicRoutes);
 router.setRoutes(publicRoutes, { unmatched: { mode: "redirect", route: home } });
 router.match("/projects/42");
+router.navigate(authenticated ? home : project, { params: { projectId: 42 } });
 
 // @ts-expect-error Project identifiers use the integer codec.
 router.navigate(project, { params: { projectId: "42" } });
@@ -49,6 +57,10 @@ router.navigate(project, { params: { projectId: "42" } });
 router.setRoutes([settings]);
 // @ts-expect-error Routes outside the inferred conditional route-list union cannot be navigated to.
 router.navigate(settings);
+// @ts-expect-error An identical pathname does not make incompatible parameter and search codecs an installed route.
+router.navigate(incompatibleProject, { params: { projectId: "42" }, search: { tab: "recent" } });
+// @ts-expect-error Route unions that contain an uninstalled route cannot be navigated to.
+router.navigate(authenticated ? home : settings);
 // @ts-expect-error Router construction accepts only a route list.
 createRouter({ routes: { home, project } });
 // @ts-expect-error Navigation belongs to the current global realm and cannot be supplied as a router option.

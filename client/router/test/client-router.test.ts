@@ -150,7 +150,8 @@ describe("browser router", () => {
 	it("uses genuine precommit loading for blocking routes when the platform exposes it", async () => {
 		Object.defineProperty(globalThis, "NavigationPrecommitController", { configurable: true, value: class {} });
 		const prepared = Promise.withResolvers<string>();
-		const page = route("/page", { loading: { mode: "blocking", load: () => prepared.promise } });
+		const load = vi.fn(() => prepared.promise);
+		const page = route("/page", { loading: { mode: "blocking", load } });
 		const navigation = fakeNavigation();
 		const rendered = vi.fn();
 		const router = createRouter({ routes: [page], render: rendered });
@@ -165,7 +166,54 @@ describe("browser router", () => {
 		prepared.resolve("prepared");
 		expect(new URL((await result.committed).url!).pathname).toBe("/page");
 		await result.finished;
+		expect(load).toHaveBeenCalledOnce();
 		expect(rendered).toHaveBeenCalledWith(expect.objectContaining({ data: "prepared" }));
+	});
+
+	it.each(["blocking", "deferred"] as const)(
+		"presents a %s route without a loader as ready without a precommit handler",
+		async (mode) => {
+			Object.defineProperty(globalThis, "NavigationPrecommitController", { configurable: true, value: class {} });
+			const page = route("/page", { loading: { mode } });
+			const navigation = fakeNavigation();
+			const statuses: string[] = [];
+			const router = createRouter({
+				routes: [page],
+				render: ({ current }) => {
+					statuses.push(current.status);
+				},
+			});
+
+			await router.start();
+			await router.navigate(page).finished;
+
+			expect(statuses).toEqual(["ready"]);
+			expect(router.current).toMatchObject({ status: "ready", data: undefined });
+			expect(Object.isFrozen(router.current)).toBe(true);
+			expect(navigation.events[0]?.interceptOptions?.precommitHandler).toBeUndefined();
+			expect(navigation.events[0]?.scrollCalls).toBe(1);
+		},
+	);
+
+	it("restarts an initial route without a loader after being stopped", async () => {
+		const page = route("/page");
+		fakeNavigation("https://example.test/page");
+		const render = vi.fn();
+		const router = createRouter({ routes: [page], render });
+		const initial = router.start();
+
+		expect(router.start()).toBe(initial);
+		await initial;
+		expect(router.current).toMatchObject({ status: "ready", data: undefined });
+
+		router.stop();
+
+		const restarted = router.start();
+
+		expect(restarted).not.toBe(initial);
+		await restarted;
+		expect(render).toHaveBeenCalledTimes(2);
+		expect(router.current?.match.route).toBe(page);
 	});
 
 	it("prepares a blocking redirect target before committing its redirected URL", async () => {

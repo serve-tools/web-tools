@@ -6,9 +6,7 @@ const VALID_PATH_PATTERN = /^\/(?!\/)(?:[^:%\\?#{()*\x00-\x1f\x7f]|:[A-Za-z_$][\
 
 type Invalid = typeof INVALID;
 type EmptyDefinition = Record<never, never>;
-type PathParameterCharacter =
-	| "$"
-	| "_"
+type LowercaseLetter =
 	| "a"
 	| "b"
 	| "c"
@@ -34,43 +32,14 @@ type PathParameterCharacter =
 	| "w"
 	| "x"
 	| "y"
-	| "z"
-	| "A"
-	| "B"
-	| "C"
-	| "D"
-	| "E"
-	| "F"
-	| "G"
-	| "H"
-	| "I"
-	| "J"
-	| "K"
-	| "L"
-	| "M"
-	| "N"
-	| "O"
-	| "P"
-	| "Q"
-	| "R"
-	| "S"
-	| "T"
-	| "U"
-	| "V"
-	| "W"
-	| "X"
-	| "Y"
-	| "Z"
-	| "0"
-	| "1"
-	| "2"
-	| "3"
-	| "4"
-	| "5"
-	| "6"
-	| "7"
-	| "8"
-	| "9";
+	| "z";
+
+type PathParameterCharacter =
+	| "$"
+	| "_"
+	| LowercaseLetter
+	| Uppercase<LowercaseLetter>
+	| `${0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`;
 
 type TakePathParameter<Value extends string, Name extends string = ""> = Value extends `${infer Character}${infer Rest}`
 	? Character extends PathParameterCharacter
@@ -78,13 +47,9 @@ type TakePathParameter<Value extends string, Name extends string = ""> = Value e
 		: Name
 	: Name;
 
-type SegmentParameter<Segment extends string> = Segment extends `${string}:${infer Rest}`
-	? TakePathParameter<Rest> | SegmentParameter<Rest>
+type PathParameterName<Path extends string> = Path extends `${string}:${infer Rest}`
+	? TakePathParameter<Rest> | PathParameterName<Rest>
 	: never;
-
-type PathParameterName<Path extends string> = Path extends `${infer Segment}/${infer Rest}`
-	? SegmentParameter<Segment> | PathParameterName<Rest>
-	: SegmentParameter<Path>;
 
 type CodecValue<Value> =
 	Value extends Codec<infer Output, infer _Input, infer _Required, infer _Multiple> ? Output : never;
@@ -129,9 +94,7 @@ type RequiredInputKey<Input> = {
 	[Key in keyof Input]-?: EmptyDefinition extends Pick<Input, Key> ? never : Key;
 }[keyof Input];
 
-type OptionalHref<Input> = (input?: Input) => string;
-type RequiredHref<Input> = (input: Input) => string;
-type RouteHref<Input> = RequiredInputKey<Input> extends never ? OptionalHref<Input> : RequiredHref<Input>;
+type RouteHref<Input> = RequiredInputKey<Input> extends never ? (input?: Input) => string : (input: Input) => string;
 
 /** Converts one URL component between its serialized and typed forms. */
 export interface ValueSchema<Value> {
@@ -401,13 +364,7 @@ export function route<
 			const params = [];
 
 			for (const name of parameterNames) {
-				const group = groups[name];
-
-				if (group === undefined) {
-					return null;
-				}
-
-				const parameter = parse(parameterCodecs.get(name)?.[0], group, true);
+				const parameter = parse(parameterCodecs.get(name)?.[0], groups[name]!, true);
 
 				if (parameter === INVALID) {
 					return null;
@@ -452,7 +409,7 @@ export function route<
 }
 
 function createCodec<Value>(schema: ValueSchema<Value>, multiple = false, ...missing: [] | [unknown]): Codec<Value> {
-	return Object.assign([schema, multiple, missing.length === 0 ? INVALID : missing[0], INVALID] as const, {
+	return Object.assign([schema, multiple, missing.length ? missing[0] : INVALID, INVALID] as const, {
 		optional: () => createCodec(schema, multiple, undefined),
 		default: (value: Value) => {
 			const values = multiple ? value : [value];
@@ -470,7 +427,7 @@ function createCodec<Value>(schema: ValueSchema<Value>, multiple = false, ...mis
 			return createCodec(schema, multiple, Array.isArray(value) ? Object.freeze([...value]) : value);
 		},
 		many: () => {
-			if (multiple || missing.length !== 0) {
+			if (multiple || missing.length) {
 				invalid();
 			}
 
@@ -483,7 +440,7 @@ function parse(schema: ValueSchema<unknown> | undefined, value: string, encoded 
 	try {
 		const decoded = encoded ? decodeURIComponent(value) : value;
 
-		return schema === undefined ? decoded : schema.parse(decoded);
+		return schema ? schema.parse(decoded) : decoded;
 	} catch {
 		return INVALID;
 	}

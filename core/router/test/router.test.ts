@@ -63,6 +63,21 @@ describe("route", () => {
 		expect(localized.match(href)?.params.item).toBe("crème brûlée");
 	});
 
+	it("matches encoded URL objects independently of their authority, search, and hash", () => {
+		const localized = route("/café menu/:item", {
+			search: { filter: codec.string().optional() },
+		});
+		const input = new URL(
+			"https://name:secret@example.test:8443/caf%C3%A9%20menu/folder%2Fname?filter=red+blue#details",
+		);
+		const match = localized.match(input)!;
+
+		expect(match.url).not.toBe(input);
+		expect(match.url.href).toBe(input.href);
+		expect(match.params).toEqual({ item: "folder/name" });
+		expect(match.search).toEqual({ filter: "red blue" });
+	});
+
 	it("supports argument-free hrefs when all inputs are optional", () => {
 		const home = route("/");
 		const listing = route("/projects", {
@@ -155,6 +170,18 @@ describe("route", () => {
 		expect(() => item.href({ params: { id: "one" }, search: { extra: "value" } } as never)).toThrow(TypeError);
 	});
 
+	it("accepts null-prototype inputs while rejecting inherited and unexpected properties", () => {
+		const item = route("/items/:id", { search: { constructor: codec.string().optional() } });
+		const params = Object.assign(Object.create(null), { id: "one" });
+		const search = Object.assign(Object.create(null), { constructor: "value" });
+		const input = Object.assign(Object.create(null), { params, search });
+
+		expect(item.href(input)).toBe("/items/one?constructor=value");
+		expect(() => item.href({ params: Object.create({ id: "one" }) })).toThrow(TypeError);
+		expect(() => item.href({ params: { id: "one", extra: "value" } as never })).toThrow(TypeError);
+		expect(() => item.href({ params: [] as never })).toThrow(TypeError);
+	});
+
 	it("matches only HTTP and HTTPS URLs", () => {
 		const project = route("/projects/:id");
 
@@ -219,6 +246,7 @@ describe("route", () => {
 		expect(browse.match("/browse/other")).toBeNull();
 		expect(browse.match("/browse/new?related=other")).toBeNull();
 		expect(() => browse.href({ params: { kind: "other" as never } })).toThrow(TypeError);
+		expect(() => kind.default("other" as never)).toThrow(TypeError);
 		expect(() => codec.enum("duplicate", "duplicate")).toThrow(TypeError);
 	});
 

@@ -2,114 +2,13 @@ import type { AnyRoute, RouteData, RouteInput, RouteMatch } from "@serve-tools/r
 
 export * from "@serve-tools/router";
 
-const claimedEvents = new WeakSet<Event>();
-const noop = (): void => undefined;
-
-/** The native navigation result with both platform promises known to be present. */
-export type RouterNavigationResult = NavigationResult & Required<Pick<NavigationResult, "committed" | "finished">>;
-
-/** The route and fulfilled data currently presented by a browser router. */
-export type RouterCurrent<Value extends AnyRoute = AnyRoute> = Value extends AnyRoute
-	? Readonly<
-			| {
-					match: RouteMatch<Value>;
-					status: "loading";
-					data: undefined;
-			  }
-			| {
-					match: RouteMatch<Value>;
-					status: "ready";
-					data: RouteData<Value>;
-			  }
-		>
-	: never;
-
-/** Values supplied when a browser router presents a matched route. */
-export interface RouterRenderOptions<Value extends AnyRoute = AnyRoute> {
-	readonly current: RouterCurrent<Value>;
-	readonly match: RouteMatch<Value>;
-	readonly data: RouteData<Value> | undefined;
-	readonly signal: AbortSignal;
-}
-
-/** Presents a matched route inside the current document. */
-export type RouterRender<Value extends AnyRoute = AnyRoute> = (
-	options: RouterRenderOptions<Value>,
-) => void | PromiseLike<void>;
-
-/** Leaves an unmatched navigation to normal document navigation. */
-export interface RouterDocumentFallback {
-	readonly mode: "document";
-}
-
-/** Converts an unmatched navigation to same-document navigation while preserving the current presentation. */
-export interface RouterPreserveFallback {
-	readonly mode: "preserve";
-}
-
-/** Redirects an unmatched navigation to one installed route. */
-export type RouterRedirectFallback<Value extends AnyRoute> = Value extends AnyRoute
-	? Readonly<
-			{ mode: "redirect"; route: Value } & (Record<never, never> extends RouteInput<Value>
-				? { input?: RouteInput<Value> }
-				: { input: RouteInput<Value> })
-		>
-	: never;
-
-/** The behavior used when no installed route matches a destination. */
-export type RouterUnmatched<Value extends AnyRoute> =
-	| RouterDocumentFallback
-	| RouterPreserveFallback
-	| RouterRedirectFallback<Value>;
-
-/** Browser-router construction options. */
-export interface BrowserRouterOptions<Routes extends readonly AnyRoute[]> {
-	readonly routes: Routes;
-	readonly unmatched?: NoInfer<RouterUnmatched<Routes[number]>>;
-	readonly render?: NoInfer<RouterRender<Routes[number]>>;
-}
-
-/** Options for replacing the installed routes. */
-export interface SetRoutesOptions<Value extends AnyRoute> {
-	readonly unmatched: RouterUnmatched<Value>;
-}
-
-/** A browser router that delegates history and navigation phases to the Navigation API. */
-export interface BrowserRouter<Value extends AnyRoute = AnyRoute> {
-	readonly current: RouterCurrent<Value> | null;
-	readonly transition: NavigationTransition | null;
-
-	/** Starts navigation interception and presents the current entry. */
-	start(): Promise<void>;
-
-	/** Stops navigation interception and cancels router-owned work. */
-	stop(): void;
-
-	/** Stops this router permanently and removes its subscriptions. */
-	dispose(): void;
-
-	/** Matches a URL against the installed routes in list order. */
-	match(url: string | URL): RouteMatch<Value> | null;
-
-	/** Navigates through the current realm's native Navigation object. */
-	navigate<RouteValue extends Value>(
-		route: RouteValue,
-		...arguments_: Record<never, never> extends RouteInput<RouteValue>
-			? [input?: RouteInput<RouteValue>, options?: NavigationNavigateOptions]
-			: [input: RouteInput<RouteValue>, options?: NavigationNavigateOptions]
-	): RouterNavigationResult;
-
-	/** Replaces the identity-based list of routes installed in this router. */
-	setRoutes(routes: readonly Value[], options?: SetRoutesOptions<Value>): void;
-
-	/** Observes presented route changes. */
-	subscribe(
-		subscriber: (current: RouterCurrent<Value> | null) => void,
-		options?: { signal?: AbortSignal },
-	): () => void;
-}
-
-/** Creates a typed browser router on top of the current realm's Navigation API. */
+/**
+ * Creates a typed browser router on top of the current realm's Navigation API.
+ *
+ * ```ts
+ *
+ * ```
+ */
 export function createRouter<const Routes extends readonly AnyRoute[]>(
 	options: BrowserRouterOptions<Routes>,
 ): BrowserRouter<Routes[number]> {
@@ -232,25 +131,24 @@ export function createRouter<const Routes extends readonly AnyRoute[]>(
 		event?: NavigateEvent,
 		redirectHref?: string,
 	): Promise<void> | void => {
-		const loader = matched.route.options.loading?.load;
+		const loading = matched.route.options.loading;
+		const loader = loading?.load;
+		const blocking = loader !== undefined && loading?.mode === "blocking";
 
 		let data: Promise<RouteData<Value>> | undefined;
 
-		const load = (): Promise<RouteData<Value>> =>
-			(data ??= (async () => {
-				const value =
-					loader === undefined
-						? undefined
-						: await loader({ params: matched.params, search: matched.search, url: matched.url, signal });
-				signal.throwIfAborted();
+		const load = async (): Promise<RouteData<Value>> => {
+			const value = await loader?.({ params: matched.params, search: matched.search, url: matched.url, signal });
 
-				return value as RouteData<Value>;
-			})());
+			signal.throwIfAborted();
+
+			return value as RouteData<Value>;
+		};
 
 		const handler = async (): Promise<void> => {
-			const pending = load();
+			const pending = loader === undefined ? undefined : (data ??= load());
 
-			if (loader !== undefined && matched.route.options.loading?.mode === "deferred") {
+			if (pending !== undefined && loading?.mode === "deferred") {
 				void pending.catch(noop);
 
 				await present(state(matched, "loading", undefined), signal, event);
@@ -265,7 +163,10 @@ export function createRouter<const Routes extends readonly AnyRoute[]>(
 			return handler();
 		}
 
-		const canPrecommit = event.cancelable && "NavigationPrecommitController" in globalThis;
+		const canPrecommit =
+			event.cancelable &&
+			(redirectHref !== undefined || blocking) &&
+			"NavigationPrecommitController" in globalThis;
 
 		if (redirectHref !== undefined && !canPrecommit) {
 			if (event.cancelable) {
@@ -283,19 +184,17 @@ export function createRouter<const Routes extends readonly AnyRoute[]>(
 
 		event.intercept({
 			handler,
-			precommitHandler:
-				canPrecommit &&
-				(redirectHref !== undefined ||
-					(loader !== undefined && matched.route.options.loading?.mode === "blocking"))
-					? async (controller): Promise<void> => {
-							if (loader !== undefined && matched.route.options.loading?.mode === "blocking") {
-								await load();
-							}
-							if (redirectHref !== undefined) {
-								controller.redirect(redirectHref, { history: "replace" });
-							}
+			precommitHandler: canPrecommit
+				? async (controller): Promise<void> => {
+						if (blocking) {
+							await (data ??= load());
 						}
-					: undefined,
+
+						if (redirectHref !== undefined) {
+							controller.redirect(redirectHref, { history: "replace" });
+						}
+					}
+				: undefined,
 			scroll: "manual",
 		} as NavigationInterceptOptions);
 	};
@@ -471,4 +370,111 @@ export function createRouter<const Routes extends readonly AnyRoute[]>(
 			return unsubscribe;
 		},
 	};
+}
+
+const claimedEvents = new WeakSet<Event>();
+const noop = (): void => undefined;
+
+/** The native navigation result with both platform promises known to be present. */
+export type RouterNavigationResult = NavigationResult & Required<Pick<NavigationResult, "committed" | "finished">>;
+
+/** The route and fulfilled data currently presented by a browser router. */
+export type RouterCurrent<Value extends AnyRoute = AnyRoute> = Value extends AnyRoute
+	? Readonly<
+			| {
+					match: RouteMatch<Value>;
+					status: "loading";
+					data: undefined;
+			  }
+			| {
+					match: RouteMatch<Value>;
+					status: "ready";
+					data: RouteData<Value>;
+			  }
+		>
+	: never;
+
+/** Values supplied when a browser router presents a matched route. */
+export interface RouterRenderOptions<Value extends AnyRoute = AnyRoute> {
+	readonly current: RouterCurrent<Value>;
+	readonly match: RouteMatch<Value>;
+	readonly data: RouteData<Value> | undefined;
+	readonly signal: AbortSignal;
+}
+
+/** Presents a matched route inside the current document. */
+export type RouterRender<Value extends AnyRoute = AnyRoute> = (
+	options: RouterRenderOptions<Value>,
+) => void | PromiseLike<void>;
+
+/** Leaves an unmatched navigation to normal document navigation. */
+export interface RouterDocumentFallback {
+	readonly mode: "document";
+}
+
+/** Converts an unmatched navigation to same-document navigation while preserving the current presentation. */
+export interface RouterPreserveFallback {
+	readonly mode: "preserve";
+}
+
+/** Redirects an unmatched navigation to one installed route. */
+export type RouterRedirectFallback<Value extends AnyRoute> = Value extends AnyRoute
+	? Readonly<
+			{ mode: "redirect"; route: Value } & (Record<never, never> extends RouteInput<Value>
+				? { input?: RouteInput<Value> }
+				: { input: RouteInput<Value> })
+		>
+	: never;
+
+/** The behavior used when no installed route matches a destination. */
+export type RouterUnmatched<Value extends AnyRoute> =
+	| RouterDocumentFallback
+	| RouterPreserveFallback
+	| RouterRedirectFallback<Value>;
+
+/** Browser-router construction options. */
+export interface BrowserRouterOptions<Routes extends readonly AnyRoute[]> {
+	readonly routes: Routes;
+	readonly unmatched?: NoInfer<RouterUnmatched<Routes[number]>>;
+	readonly render?: NoInfer<RouterRender<Routes[number]>>;
+}
+
+/** Options for replacing the installed routes. */
+export interface SetRoutesOptions<Value extends AnyRoute> {
+	readonly unmatched: RouterUnmatched<Value>;
+}
+
+/** A browser router that delegates history and navigation phases to the Navigation API. */
+export interface BrowserRouter<Value extends AnyRoute = AnyRoute> {
+	readonly current: RouterCurrent<Value> | null;
+	readonly transition: NavigationTransition | null;
+
+	/** Starts navigation interception and presents the current entry. */
+	start(): Promise<void>;
+
+	/** Stops navigation interception and cancels router-owned work. */
+	stop(): void;
+
+	/** Stops this router permanently and removes its subscriptions. */
+	dispose(): void;
+
+	/** Matches a URL against the installed routes in list order. */
+	match(url: string | URL): RouteMatch<Value> | null;
+
+	/** Navigates through the current realm's native Navigation object. */
+	navigate<RouteValue extends AnyRoute>(
+		route: RouteValue extends Value ? RouteValue : never,
+		...arguments_: Record<never, never> extends RouteInput<RouteValue>
+			? [input?: RouteInput<RouteValue>, options?: NavigationNavigateOptions]
+			: [input: RouteInput<RouteValue>, options?: NavigationNavigateOptions]
+	): RouterNavigationResult;
+
+	/** Replaces the identity-based list of routes installed in this router. */
+	setRoutes(routes: readonly Value[], options?: SetRoutesOptions<Value>): void;
+
+	/** Observes presented route changes. */
+	subscribe(
+		subscriber: (current: RouterCurrent<Value> | null) => void,
+		options?: { signal?: AbortSignal },
+	): () => void;
 }

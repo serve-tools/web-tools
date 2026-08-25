@@ -32,6 +32,7 @@ const project = route("/projects/:id/:slug", {
 
 const home = route("/");
 const affixed = route("/assets/:id.:format-:variant");
+const identifiers = route("/values/:$first/:_second/:third9/:CAPITAL");
 const kind = codec.enum("new", "popular");
 const browse = route("/browse/:kind", {
 	params: { kind },
@@ -64,6 +65,7 @@ project.href({
 home.href();
 home.href({});
 affixed.href({ params: { id: "logo", format: "svg", variant: "dark" } });
+identifiers.href({ params: { $first: "one", _second: "two", third9: "three", CAPITAL: "four" } });
 browse.href({ params: { kind: "new" }, search: { related: "popular" } });
 repeated.href();
 repeated.href({ search: { tags: ["one"], optionalTags: ["two"], defaults: [3] } });
@@ -83,6 +85,9 @@ export type PublicInference = [
 				parentId: number | undefined;
 			}
 		>
+	>,
+	Expect<
+		Equal<RouteParams<typeof identifiers>, { $first: string; _second: string; third9: string; CAPITAL: string }>
 	>,
 	Expect<Equal<RouteParams<typeof browse>, { kind: "new" | "popular" }>>,
 	Expect<Equal<RouteSearch<typeof browse>, { related: "new" | "popular" | undefined }>>,

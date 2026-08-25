@@ -224,6 +224,7 @@
 			},
 			"client/router": {
 				"entry": [
+					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"
 				]
 			},
@@ -350,6 +351,7 @@
 			},
 			"core/router": {
 				"entry": [
+					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"
 				]
 			},
