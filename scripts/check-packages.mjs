@@ -45,7 +45,13 @@ try {
 			}
 
 			await run("publint", [tarball, "--pack=false"], root);
-			await run("attw", [tarball, "--profile", "esm-only"], root);
+
+			try {
+				await run("attw", [tarball, "--profile", "esm-only", "--quiet"], root);
+			} catch (error) {
+				await run("attw", [tarball, "--profile", "esm-only"], root);
+				throw error;
+			}
 		} catch (error) {
 			failed = true;
 			console.error(error instanceof Error ? error.message : error);

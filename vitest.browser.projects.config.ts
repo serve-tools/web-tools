@@ -1,4 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defaultBrowserPort, defineConfig } from "vitest/config";
 
 const projects = [
 	"client/client/vitest.browser.config.ts",
@@ -40,7 +40,19 @@ if (!Number.isInteger(shard) || !Number.isInteger(shardCount) || shard < 0 || sh
 	throw new Error(`Invalid VITEST_BROWSER_PROJECT_SHARD: ${process.env.VITEST_BROWSER_PROJECT_SHARD}`);
 }
 
-const selectedProjects = projects.filter((_, index) => index % shardCount === shard);
+const selectedProjects = projects.flatMap((project, index) => {
+	if (index % shardCount !== shard) {
+		return [];
+	}
+
+	return [
+		{
+			extends: project,
+			root: project.slice(0, project.lastIndexOf("/")),
+			test: { browser: { api: { port: defaultBrowserPort + index } } },
+		},
+	];
+});
 
 // @vitest/browser-playwright installs one temporary SIGTERM listener per browser instance in each project.
 process.setMaxListeners(process.getMaxListeners() + selectedProjects.length * 3);
