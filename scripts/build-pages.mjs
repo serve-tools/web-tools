@@ -1,14 +1,15 @@
 import { execFileSync } from "node:child_process";
-import { cp, mkdir, readFile, rm } from "node:fs/promises";
+import { cp, mkdir, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readWorkspaceInventory } from "./workspaces.mjs";
 
 const repositoryDirectory = fileURLToPath(new URL("../", import.meta.url));
 const landingDirectory = join(repositoryDirectory, "demo");
 const pagesDirectory = join(repositoryDirectory, "dist/pages");
-const rootPackage = JSON.parse(await readFile(join(repositoryDirectory, "package.json"), "utf8"));
-const demoLocations = rootPackage.workspaces.filter((location) =>
-	/^(?:client|client-signals|lit)\/[^/]+\/demo$/.test(location),
+const workspaceInventory = await readWorkspaceInventory(repositoryDirectory);
+const demos = workspaceInventory.workspaces.filter((workspace) =>
+	/^(?:client|client-signals|lit)\/[^/]+\/demo$/.test(workspace.location),
 );
 const npmPath = process.env.npm_execpath;
 
@@ -20,23 +21,38 @@ await rm(pagesDirectory, { force: true, recursive: true });
 await mkdir(dirname(pagesDirectory), { recursive: true });
 await cp(landingDirectory, pagesDirectory, { recursive: true });
 
-for (const location of demoLocations) {
-	const demoPackage = JSON.parse(await readFile(join(repositoryDirectory, location, "package.json"), "utf8"));
-
-	if (!demoPackage.private || typeof demoPackage.name !== "string") {
-		throw new Error(`Pages demo must be a named private workspace: ${location}`);
+for (const demo of demos) {
+	if (!demo.manifest.private || typeof demo.name !== "string") {
+		throw new Error(`Pages demo must be a named private workspace: ${demo.location}`);
 	}
-
-	console.log(`Building ${demoPackage.name}…`);
-	execFileSync(process.execPath, [npmPath, "run", "build", "--workspace", demoPackage.name], {
-		cwd: repositoryDirectory,
-		stdio: "inherit",
-	});
-
-	const destination = join(pagesDirectory, location.slice(0, -"/demo".length));
-
-	await mkdir(dirname(destination), { recursive: true });
-	await cp(join(repositoryDirectory, location, "dist"), destination, { recursive: true });
 }
 
-console.log(`Built ${demoLocations.length} demos in ${pagesDirectory}`);
+const demoNames = demos.map((demo) => demo.name);
+const workspaceArguments = demoNames.flatMap((name) => ["--workspace", name]);
+
+console.log("Building the shared TypeScript project graph…");
+execFileSync(process.execPath, [npmPath, "run", "build:typescript"], {
+	cwd: repositoryDirectory,
+	stdio: "inherit",
+});
+
+console.log(`Typechecking ${demos.length} demos against the shared graph…`);
+execFileSync(process.execPath, [npmPath, "run", "typecheck:local", ...workspaceArguments], {
+	cwd: repositoryDirectory,
+	stdio: "inherit",
+});
+
+console.log(`Bundling ${demos.length} demos…`);
+execFileSync(process.execPath, [npmPath, "run", "build:bundle", ...workspaceArguments], {
+	cwd: repositoryDirectory,
+	stdio: "inherit",
+});
+
+for (const demo of demos) {
+	const destination = join(pagesDirectory, demo.location.slice(0, -"/demo".length));
+
+	await mkdir(dirname(destination), { recursive: true });
+	await cp(join(demo.root, "dist"), destination, { recursive: true });
+}
+
+console.log(`Built ${demos.length} demos in ${pagesDirectory}`);

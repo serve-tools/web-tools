@@ -1,6 +1,7 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readWorkspaceInventory } from "./workspaces.mjs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const write = process.argv.includes("--write");
@@ -10,24 +11,17 @@ if (unknownArguments.length > 0) {
 	throw new Error(`Unknown argument${unknownArguments.length === 1 ? "" : "s"}: ${unknownArguments.join(", ")}`);
 }
 
-const rootPackage = await readJSON(path.join(root, "package.json"));
-const workspacePaths = getWorkspacePaths(rootPackage.workspaces);
+const { workspaces: inventory } = await readWorkspaceInventory(root);
 const workspaces = [];
 const workspacesByName = new Map();
 
-for (const workspacePath of workspacePaths) {
-	const workspaceRoot = path.join(root, workspacePath);
-	const packageJSON = await readJSON(path.join(workspaceRoot, "package.json"));
+for (const { manifest: packageJSON, root: workspaceRoot } of inventory) {
 	const workspace = {
 		name: packageJSON.name,
 		packageJSON,
 		projectConfig: await getProjectConfig(workspaceRoot, packageJSON),
 		root: workspaceRoot,
 	};
-
-	if (workspacesByName.has(workspace.name)) {
-		throw new Error(`Duplicate workspace package name: ${workspace.name}`);
-	}
 
 	workspaces.push(workspace);
 	workspacesByName.set(workspace.name, workspace);
@@ -113,20 +107,6 @@ if (changes.length === 0) {
 
 	console.error("\nRun `npm run sync:tsconfig-references` to update them.");
 	process.exitCode = 1;
-}
-
-function getWorkspacePaths(workspacePatterns) {
-	if (!Array.isArray(workspacePatterns)) {
-		throw new TypeError("package.json workspaces must be an array");
-	}
-
-	for (const workspacePattern of workspacePatterns) {
-		if (workspacePattern.includes("*")) {
-			throw new Error(`Workspace globs are not supported: ${workspacePattern}`);
-		}
-	}
-
-	return workspacePatterns;
 }
 
 async function getProjectConfig(workspaceRoot, packageJSON) {
@@ -295,8 +275,4 @@ function validateProductionGraph() {
 		visiting.delete(workspace.name);
 		visited.add(workspace.name);
 	}
-}
-
-async function readJSON(file) {
-	return JSON.parse(await readFile(file, "utf8"));
 }

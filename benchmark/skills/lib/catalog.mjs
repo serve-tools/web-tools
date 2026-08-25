@@ -1,15 +1,13 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
+import { readWorkspaceInventory } from "../../../scripts/workspaces.mjs";
 
 export async function loadCatalog(root) {
-	const rootPackage = await readJSON(path.join(root, "package.json"));
+	const { publicWorkspaces } = await readWorkspaceInventory(root);
 	const packages = [];
 
-	for (const workspace of rootPackage.workspaces) {
-		const packageRoot = path.join(root, workspace);
-		const packageJSON = await readJSON(path.join(packageRoot, "package.json"));
-
-		if (packageJSON.private || packageJSON.name === "@serve-tools/skills") {
+	for (const { location: workspace, manifest: packageJSON, root: packageRoot } of publicWorkspaces) {
+		if (packageJSON.name === "@serve-tools/skills") {
 			continue;
 		}
 
@@ -141,10 +139,6 @@ export function normalizeRoute(catalog, route, variant) {
 	}
 
 	return { documents, packages, rationale: typeof route.rationale === "string" ? route.rationale : "" };
-}
-
-async function readJSON(file) {
-	return JSON.parse(await readFile(file, "utf8"));
 }
 
 function parseFrontmatter(source) {

@@ -10,7 +10,7 @@ description: Maintain packages in the serve-tools/web-tools repository. Use when
 1. Read the repository `AGENTS.md` and preserve unrelated changes.
 2. Identify every affected workspace from the root `package.json` and internal dependency graph.
 3. Read the package README, `package.json`, public source entrypoints, declarations, tests, and its package-owned Skill.
-4. For package locations and Skill paths, consult [the package map](references/package-map.md).
+4. Derive the package Skill path from its workspace and package name: `<workspace>/skills/<name-without-leading-@-and-with-slashes-replaced-by-hyphens>/SKILL.md`.
 
 ## Keep contract surfaces aligned
 

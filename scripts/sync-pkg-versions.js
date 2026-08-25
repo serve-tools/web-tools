@@ -1,63 +1,58 @@
 // @ts-check
-import { glob, readFile, writeFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { readWorkspaceInventory } from "./workspaces.mjs";
 
-/** @type {Map<string, [string, PartialPackage]>} */
-const pkgs = new Map();
+const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
+const check = process.argv.includes("--check");
+const unknownArguments = process.argv.slice(2).filter((argument) => argument !== "--check");
 
-/** @type {AsyncOperation[]} */
-const readOps = [];
-
-/** @type {AsyncOperation[]} */
-const writeOpts = [];
-
-for await (const path of glob(["./*/*/package.json"])) {
-	readOps.push(async () => {
-		// console.log("Reading", path)
-
-		/** @type {PartialPackage} */
-		const pkg = JSON.parse(await readFile(resolve(path), "utf8"));
-
-		pkgs.set(pkg.name, [path, pkg]);
-	});
+if (unknownArguments.length > 0) {
+	throw new Error(`Unknown argument${unknownArguments.length === 1 ? "" : "s"}: ${unknownArguments.join(", ")}`);
 }
 
-await Promise.all(readOps.map((op) => op()));
+const { workspaces, workspacesByName } = await readWorkspaceInventory(root);
+const changes = [];
+const changedWorkspaces = new Set();
 
-for (const [, [path, pkg]] of pkgs) {
-	// console.log("Checking", path)
+for (const workspace of workspaces) {
+	for (const dependencyType of /** @type {const} */ (["dependencies", "devDependencies"])) {
+		for (const [dependencyName, version] of Object.entries(workspace.manifest[dependencyType] ?? {})) {
+			const dependency = workspacesByName.get(dependencyName);
 
-	/** @type {Map<string, [string, string]>} */
-	const shouldUpdatePkgs = new Map();
-
-	for (const depType of /** @type {["dependencies", "devDependencies"]} */ (["dependencies", "devDependencies"])) {
-		for (const [dep, version] of Object.entries(pkg[depType] ?? {})) {
-			const latestVersion = `^${pkgs.get(dep)?.[1].version ?? ""}`;
-
-			if (latestVersion === "^") {
+			if (dependency === undefined) {
 				continue;
 			}
 
-			if (version !== latestVersion) {
-				shouldUpdatePkgs.set(dep, [version, latestVersion]);
+			const expectedVersion = `^${dependency.manifest.version}`;
 
-				pkg[depType][dep] = latestVersion;
+			if (version === expectedVersion) {
+				continue;
 			}
+
+			changes.push({ dependencyName, dependencyType, expectedVersion, version, workspace });
+			changedWorkspaces.add(workspace);
+			workspace.manifest[dependencyType][dependencyName] = expectedVersion;
 		}
-	}
-
-	if (shouldUpdatePkgs.size) {
-		writeOpts.push(async () => {
-			for (const [dep, [version, latestVersion]] of shouldUpdatePkgs) {
-				console.log(`Updating ${path}#devDependencies#${dep} from ${version} to ${latestVersion}.`);
-			}
-
-			await writeFile(path, `${JSON.stringify(pkg, null, "\t")}\n`);
-		});
 	}
 }
 
-await Promise.all(writeOpts.map((op) => op()));
+for (const { dependencyName, dependencyType, expectedVersion, version, workspace } of changes) {
+	const message = `${workspace.location}/package.json#${dependencyType}#${dependencyName} from ${version} to ${expectedVersion}`;
+	console[check ? "error" : "log"](`${check ? "Expected" : "Updating"} ${message}.`);
+}
 
-/** @typedef {{ name: string; version: string; dependencies: Record<string, string>; devDependencies: Record<string, string> }} PartialPackage */
-/** @typedef {() => Promise<void>} AsyncOperation */
+if (check && changes.length > 0) {
+	process.exitCode = 1;
+} else if (!check) {
+	await Promise.all(
+		[...changedWorkspaces].map(({ manifest, root: workspaceRoot }) =>
+			writeFile(path.join(workspaceRoot, "package.json"), `${JSON.stringify(manifest, null, "\t")}\n`),
+		),
+	);
+}
+
+if (changes.length === 0) {
+	console.log(`Validated internal dependency versions in ${workspaces.length} workspaces.`);
+}

@@ -1,32 +1,46 @@
-import { spawnSync } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import { tmpdir } from "node:os";
+import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+	compileTypeScript,
+	parseBenchmarkOptions,
+	readNativeHeap,
+	resolveTypeScript,
+	timeEditorRequest,
+	withNativeEditor,
+	withTemporaryRoot,
+} from "../../../benchmark/typescript/harness.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
-const require = createRequire(import.meta.url);
-const typescriptRoot = path.dirname(require.resolve("typescript/package.json"));
-const typescriptVersion = require("typescript/package.json").version;
-const compiler = path.join(typescriptRoot, "bin", "tsc");
+const typescript = resolveTypeScript(root);
+const typescriptVersion = typescript.version;
 const coreSource = path.join(root, "core", "router", "src", "router.js");
 const clientSource = path.join(root, "client", "router", "src", "client-router.js");
-const options = parseOptions(process.argv.slice(2));
-const temporaryRoot = await mkdtemp(path.join(tmpdir(), "serve-tools-router-types-"));
+const { counts: routes, editor } = parseBenchmarkOptions({
+	arguments_: process.argv.slice(2),
+	countFlag: "--routes",
+	defaultCounts: "25,100,250",
+	environment: "ROUTER_BENCHMARK_ROUTES",
+	help: "Usage: npm run benchmark:types -- [--routes 25,100,250] [--editor]",
+	label: "route counts",
+});
 
-try {
-	for (const routes of options.routes) {
+await withTemporaryRoot("router", async (temporaryRoot) => {
+	for (const routeCount of routes) {
 		const results = new Map();
 
 		for (const scenario of ["declarations", "installed", "navigation"]) {
-			const fixture = await createFixture(routes, scenario);
-			const metrics = compile(fixture.configuration);
+			const fixture = await createFixture(temporaryRoot, routeCount, scenario);
+			const metrics = compileTypeScript({
+				compiler: typescript.compiler,
+				configuration: fixture.configuration,
+				root,
+			});
 			const installed = results.get("installed");
 			const record = {
 				name: `client-router/types/${scenario}`,
 				scenario,
-				routes,
+				routes: routeCount,
 				typescript: typescriptVersion,
 				...metrics,
 				...(scenario === "navigation" && installed !== undefined
@@ -42,61 +56,14 @@ try {
 			results.set(scenario, record);
 			console.log(`[benchmark:types] ${JSON.stringify(record)}`);
 
-			if (options.editor && scenario === "navigation") {
-				await benchmarkEditor(fixture, routes);
+			if (editor && scenario === "navigation") {
+				await benchmarkEditor(temporaryRoot, fixture, routeCount);
 			}
 		}
 	}
-} finally {
-	await rm(temporaryRoot, { recursive: true, force: true });
-}
+});
 
-function parseOptions(arguments_) {
-	const options = {
-		editor: false,
-		routes: parseRouteCounts(process.env.ROUTER_BENCHMARK_ROUTES ?? "25,100,250"),
-	};
-
-	for (let index = 0; index < arguments_.length; ++index) {
-		const argument = arguments_[index];
-
-		if (argument === "--editor") {
-			options.editor = true;
-			continue;
-		}
-
-		if (argument === "--routes") {
-			const value = arguments_[++index];
-			if (value === undefined) {
-				throw new TypeError("--routes requires comma-separated positive route counts");
-			}
-
-			options.routes = parseRouteCounts(value);
-			continue;
-		}
-
-		if (argument === "--help" || argument === "-h") {
-			console.log("Usage: npm run benchmark:types -- [--routes 25,100,250] [--editor]");
-			process.exit(0);
-		}
-
-		throw new TypeError(`Unknown benchmark option: ${argument}`);
-	}
-
-	return options;
-}
-
-function parseRouteCounts(value) {
-	const counts = value.split(",").map((count) => Number(count.trim()));
-
-	if (counts.length === 0 || counts.some((count) => !Number.isSafeInteger(count) || count < 1)) {
-		throw new TypeError("Route counts must be comma-separated positive integers");
-	}
-
-	return counts;
-}
-
-async function createFixture(count, scenario) {
+async function createFixture(temporaryRoot, count, scenario) {
 	const stem = `${scenario}-${count}`;
 	const source = path.join(temporaryRoot, `${stem}.ts`);
 	const configuration = path.join(temporaryRoot, `${stem}.json`);
@@ -170,112 +137,45 @@ async function createFixture(count, scenario) {
 	return { configuration, contents, source };
 }
 
-function compile(configuration) {
-	const result = spawnSync(
-		process.execPath,
-		[compiler, "--project", configuration, "--noEmit", "--extendedDiagnostics", "--pretty", "false"],
-		{ cwd: root, encoding: "utf8" },
-	);
+async function benchmarkEditor(temporaryRoot, fixture, routes) {
+	const record = await withNativeEditor({
+		editor: typescript.editor,
+		fixture,
+		projectError: "The TypeScript editor did not load the benchmark project",
+		root,
+		run: ({ api, project }) => {
+			const { result: diagnostics, timing: diagnosticTiming } = timeEditorRequest(api, () =>
+				project.program.getSemanticDiagnostics(fixture.source),
+			);
+			if (diagnostics.length !== 0) {
+				throw new Error(`The TypeScript editor reported ${diagnostics.length} semantic diagnostics`);
+			}
 
-	if (result.error !== undefined) {
-		throw result.error;
-	}
-	if (result.status !== 0) {
-		throw new Error(`TypeScript benchmark failed:\n${result.stdout}${result.stderr}`);
-	}
+			const position = fixture.contents.indexOf("/* editor-completion */");
+			const { result: completions, timing: completionTiming } = timeEditorRequest(api, () =>
+				project.checker.getCompletionsAtPosition(fixture.source, position),
+			);
+			if (!completions?.entries.some((entry) => entry.name === "navigate")) {
+				throw new Error("The TypeScript editor did not provide the expected router completion");
+			}
 
-	return {
-		instantiations: readDiagnostic(result.stdout, "Instantiations"),
-		memoryAllocations: readDiagnostic(result.stdout, "Memory allocs"),
-		memoryKilobytes: readDiagnostic(result.stdout, "Memory used"),
-		checkMilliseconds: readDiagnostic(result.stdout, "Check time") * 1_000,
-	};
-}
-
-function readDiagnostic(output, name) {
-	const match = new RegExp(`^${name}:\\s*([\\d,.]+)(?:K|s)?\\s*$`, "m").exec(output);
-
-	if (match === null) {
-		throw new Error(`TypeScript did not report the expected ${name} diagnostic`);
-	}
-
-	return Number(match[1].replaceAll(",", ""));
-}
-
-async function benchmarkEditor(fixture, routes) {
-	const { API } = await import("typescript/unstable/sync");
-	const api = new API({ cwd: root, collectTiming: true });
-	let snapshot;
-
-	try {
-		snapshot = api.updateSnapshot({ openProjects: [fixture.configuration], openFiles: [fixture.source] });
-		const project = snapshot.getProject(fixture.configuration);
-		if (project === undefined) {
-			throw new Error("The TypeScript editor did not load the benchmark project");
-		}
-
-		api.resetTimingInfo();
-		const diagnostics = project.program.getSemanticDiagnostics(fixture.source);
-		const diagnosticTiming = api.getTimingInfo();
-		if (diagnostics.length !== 0) {
-			throw new Error(`The TypeScript editor reported ${diagnostics.length} semantic diagnostics`);
-		}
-
-		api.resetTimingInfo();
-		const position = fixture.contents.indexOf("/* editor-completion */");
-		const completions = project.checker.getCompletionsAtPosition(fixture.source, position);
-		const completionTiming = api.getTimingInfo();
-		if (!completions?.entries.some((entry) => entry.name === "navigate")) {
-			throw new Error("The TypeScript editor did not provide the expected router completion");
-		}
-
-		const profile = api.internal.saveHeapProfile(temporaryRoot);
-		const nativeHeapBytes = readNativeHeap(profile, "inuse_space");
-		const nativeAllocatedBytes = readNativeHeap(profile, "alloc_space");
-		const record = {
-			name: "client-router/types/editor",
-			routes,
-			typescript: typescriptVersion,
-			diagnosticServerMilliseconds: diagnosticTiming.totals.serverTimeMs,
-			diagnosticRoundTripMilliseconds: diagnosticTiming.totals.roundTripMs,
-			completionServerMilliseconds: completionTiming.totals.serverTimeMs,
-			completionRoundTripMilliseconds: completionTiming.totals.roundTripMs,
-			completionCount: completions.entries.length,
-			nativeHeapBytes,
-			nativeAllocatedBytes,
-		};
-
-		console.log(`[benchmark:types] ${JSON.stringify(record)}`);
-	} finally {
-		snapshot?.dispose();
-		api.close();
-	}
-}
-
-function readNativeHeap(profile, sample) {
-	const result = spawnSync(
-		"go",
-		["tool", "pprof", "-top", "-nodecount=1", "-unit=B", `-sample_index=${sample}`, profile],
-		{
-			cwd: root,
-			encoding: "utf8",
+			const profile = api.internal.saveHeapProfile(temporaryRoot);
+			const nativeHeapBytes = readNativeHeap({ profile, root, sample: "inuse_space" });
+			const nativeAllocatedBytes = readNativeHeap({ profile, root, sample: "alloc_space" });
+			return {
+				name: "client-router/types/editor",
+				routes,
+				typescript: typescriptVersion,
+				diagnosticServerMilliseconds: diagnosticTiming.totals.serverTimeMs,
+				diagnosticRoundTripMilliseconds: diagnosticTiming.totals.roundTripMs,
+				completionServerMilliseconds: completionTiming.totals.serverTimeMs,
+				completionRoundTripMilliseconds: completionTiming.totals.roundTripMs,
+				completionCount: completions.entries.length,
+				nativeHeapBytes,
+				nativeAllocatedBytes,
+			};
 		},
-	);
+	});
 
-	if (result.error?.code === "ENOENT") {
-		return null;
-	}
-	if (result.error !== undefined) {
-		throw result.error;
-	}
-	if (result.status !== 0) {
-		throw new Error(`Could not inspect the TypeScript server heap:\n${result.stderr}`);
-	}
-
-	const match = /of\s+([\d,]+)B\s+total/.exec(result.stdout);
-	if (match === null) {
-		throw new Error("Could not locate native heap bytes in the Go heap profile");
-	}
-
-	return Number(match[1].replaceAll(",", ""));
+	console.log(`[benchmark:types] ${JSON.stringify(record)}`);
 }

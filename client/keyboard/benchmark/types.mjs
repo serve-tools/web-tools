@@ -1,15 +1,19 @@
-import { spawnSync } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { createRequire } from "node:module";
-import { tmpdir } from "node:os";
+import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+	compileTypeScript,
+	parseBenchmarkOptions,
+	readNativeHeap,
+	resolveTypeScript,
+	timeEditorRequest,
+	withNativeEditor,
+	withTemporaryRoot,
+} from "../../../benchmark/typescript/harness.mjs";
 
 const root = fileURLToPath(new URL("../../../", import.meta.url));
-const require = createRequire(import.meta.url);
-const typescriptRoot = path.dirname(require.resolve("typescript/package.json"));
-const typescriptVersion = require("typescript/package.json").version;
-const compiler = path.join(typescriptRoot, "bin", "tsc");
+const typescript = resolveTypeScript(root);
+const typescriptVersion = typescript.version;
 const keyboardSource = path.join(root, "client", "keyboard", "src", "client-keyboard.js");
 const scenarios = [
 	"control",
@@ -54,23 +58,33 @@ const shortcuts = [
 const prefixes = Array.from({ length: 16 }, (_, bits) =>
 	[bits & 8 ? "Mod+" : "", bits & 4 ? "Aux+" : "", bits & 2 ? "Alt+" : "", bits & 1 ? "Shift+" : ""].join(""),
 );
-const options = parseOptions(process.argv.slice(2));
-const temporaryRoot = await mkdtemp(path.join(tmpdir(), "serve-tools-keyboard-types-"));
+const { counts: usages, editor } = parseBenchmarkOptions({
+	arguments_: process.argv.slice(2),
+	countFlag: "--usages",
+	defaultCounts: "25,100,250",
+	environment: "KEYBOARD_BENCHMARK_USAGES",
+	help: "Usage: npm run benchmark:types -- [--usages 25,100,250] [--editor]",
+	label: "usage counts",
+});
 
-try {
-	for (const usages of options.usages) {
+await withTemporaryRoot("keyboard", async (temporaryRoot) => {
+	for (const usage of usages) {
 		const results = new Map();
 
 		for (const scenario of scenarios) {
-			const fixture = await createFixture(usages, scenario);
-			const metrics = compile(fixture.configuration);
+			const fixture = await createFixture(temporaryRoot, usage, scenario);
+			const metrics = compileTypeScript({
+				compiler: typescript.compiler,
+				configuration: fixture.configuration,
+				root,
+			});
 			const control = results.get("control");
 			const openHandlers = results.get("open-handlers");
 			const record = {
 				name: `client-keyboard/types/${scenario}`,
 				scenario,
-				usages,
-				workload: usages > 100 ? "synthetic" : "representative",
+				usages: usage,
+				workload: usage > 100 ? "synthetic" : "representative",
 				typescript: typescriptVersion,
 				...metrics,
 				...(control === undefined
@@ -94,61 +108,14 @@ try {
 			results.set(scenario, record);
 			console.log(`[benchmark:types] ${JSON.stringify(record)}`);
 
-			if (options.editor && (scenario === "open-handlers" || scenario === "known-handlers")) {
-				await benchmarkEditor(fixture, usages, scenario);
+			if (editor && (scenario === "open-handlers" || scenario === "known-handlers")) {
+				await benchmarkEditor(temporaryRoot, fixture, usage, scenario);
 			}
 		}
 	}
-} finally {
-	await rm(temporaryRoot, { recursive: true, force: true });
-}
+});
 
-function parseOptions(arguments_) {
-	const options = {
-		editor: false,
-		usages: parseUsageCounts(process.env.KEYBOARD_BENCHMARK_USAGES ?? "25,100,250"),
-	};
-
-	for (let index = 0; index < arguments_.length; ++index) {
-		const argument = arguments_[index];
-
-		if (argument === "--editor") {
-			options.editor = true;
-			continue;
-		}
-
-		if (argument === "--usages") {
-			const value = arguments_[++index];
-			if (value === undefined) {
-				throw new TypeError("--usages requires comma-separated positive usage counts");
-			}
-
-			options.usages = parseUsageCounts(value);
-			continue;
-		}
-
-		if (argument === "--help" || argument === "-h") {
-			console.log("Usage: npm run benchmark:types -- [--usages 25,100,250] [--editor]");
-			process.exit(0);
-		}
-
-		throw new TypeError(`Unknown benchmark option: ${argument}`);
-	}
-
-	return options;
-}
-
-function parseUsageCounts(value) {
-	const counts = value.split(",").map((count) => Number(count.trim()));
-
-	if (counts.length === 0 || counts.some((count) => !Number.isSafeInteger(count) || count < 1)) {
-		throw new TypeError("Usage counts must be comma-separated positive integers");
-	}
-
-	return counts;
-}
-
-async function createFixture(count, scenario) {
+async function createFixture(temporaryRoot, count, scenario) {
 	const stem = `${scenario}-${count}`;
 	const source = path.join(temporaryRoot, `${stem}.ts`);
 	const configuration = path.join(temporaryRoot, `${stem}.json`);
@@ -235,90 +202,47 @@ async function createFixture(count, scenario) {
 	return { configuration, contents, source };
 }
 
-function compile(configuration) {
-	const result = spawnSync(
-		process.execPath,
-		[compiler, "--project", configuration, "--noEmit", "--extendedDiagnostics", "--pretty", "false"],
-		{
-			cwd: root,
-			encoding: "utf8",
-			env: { ...process.env, GOMEMLIMIT: process.env.GOMEMLIMIT ?? "768MiB" },
+async function benchmarkEditor(temporaryRoot, fixture, usages, scenario) {
+	const record = await withNativeEditor({
+		editor: typescript.editor,
+		fixture,
+		projectError: "The TypeScript editor did not load the keyboard benchmark project",
+		root,
+		run: ({ api, project }) => {
+			const { result: diagnostics, timing: diagnosticTiming } = timeEditorRequest(api, () =>
+				project.program.getSemanticDiagnostics(fixture.source),
+			);
+			if (diagnostics.length !== 0) {
+				throw new Error(`The TypeScript editor reported ${diagnostics.length} semantic diagnostics`);
+			}
+
+			const completions = [
+				readCompletion(api, project, fixture, "physical", "KeyA"),
+				readCompletion(api, project, fixture, "known-key", "Enter"),
+				readCompletion(api, project, fixture, "open-key", "Enter"),
+				readCompletion(api, project, fixture, "known-chord", "Mod+AudioVolumeUp"),
+				readCompletion(api, project, fixture, "open-chord", "Mod+AudioVolumeUp"),
+			];
+			if (completions[3].entries !== completions[4].entries || completions[3].entries < 100) {
+				throw new Error("Open and strict keyboard chords did not provide matching known-key completions");
+			}
+			const profile = api.internal.saveHeapProfile(temporaryRoot);
+			return {
+				name: "client-keyboard/types/editor",
+				scenario,
+				usages,
+				workload: usages > 100 ? "synthetic" : "representative",
+				typescript: typescriptVersion,
+				diagnosticServerMilliseconds: diagnosticTiming.totals.serverTimeMs,
+				diagnosticRoundTripMilliseconds: diagnosticTiming.totals.roundTripMs,
+				completions,
+				nativeHeapBytes: readNativeHeap({ profile, root, sample: "inuse_space" }),
+				nativeAllocatedBytes: readNativeHeap({ profile, root, sample: "alloc_space" }),
+			};
 		},
-	);
+	});
 
-	if (result.error !== undefined) {
-		throw result.error;
-	}
-	if (result.status !== 0) {
-		throw new Error(`TypeScript benchmark failed:\n${result.stdout}${result.stderr}`);
-	}
-
-	return {
-		instantiations: readDiagnostic(result.stdout, "Instantiations"),
-		memoryAllocations: readDiagnostic(result.stdout, "Memory allocs"),
-		memoryKilobytes: readDiagnostic(result.stdout, "Memory used"),
-		checkMilliseconds: readDiagnostic(result.stdout, "Check time") * 1_000,
-	};
-}
-
-function readDiagnostic(output, name) {
-	const match = new RegExp(`^${name}:\\s*([\\d,.]+)(?:K|s)?\\s*$`, "m").exec(output);
-
-	if (match === null) {
-		throw new Error(`TypeScript did not report the expected ${name} diagnostic`);
-	}
-
-	return Number(match[1].replaceAll(",", ""));
-}
-
-async function benchmarkEditor(fixture, usages, scenario) {
-	const { API } = await import("typescript/unstable/sync");
-	const api = new API({ cwd: root, collectTiming: true });
-	let snapshot;
-
-	try {
-		snapshot = api.updateSnapshot({ openProjects: [fixture.configuration], openFiles: [fixture.source] });
-		const project = snapshot.getProject(fixture.configuration);
-		if (project === undefined) {
-			throw new Error("The TypeScript editor did not load the keyboard benchmark project");
-		}
-
-		api.resetTimingInfo();
-		const diagnostics = project.program.getSemanticDiagnostics(fixture.source);
-		const diagnosticTiming = api.getTimingInfo();
-		if (diagnostics.length !== 0) {
-			throw new Error(`The TypeScript editor reported ${diagnostics.length} semantic diagnostics`);
-		}
-
-		const completions = [
-			readCompletion(api, project, fixture, "physical", "KeyA"),
-			readCompletion(api, project, fixture, "known-key", "Enter"),
-			readCompletion(api, project, fixture, "open-key", "Enter"),
-			readCompletion(api, project, fixture, "known-chord", "Mod+AudioVolumeUp"),
-			readCompletion(api, project, fixture, "open-chord", "Mod+AudioVolumeUp"),
-		];
-		if (completions[3].entries !== completions[4].entries || completions[3].entries < 100) {
-			throw new Error("Open and strict keyboard chords did not provide matching known-key completions");
-		}
-		const profile = api.internal.saveHeapProfile(temporaryRoot);
-		const record = {
-			name: "client-keyboard/types/editor",
-			scenario,
-			usages,
-			workload: usages > 100 ? "synthetic" : "representative",
-			typescript: typescriptVersion,
-			diagnosticServerMilliseconds: diagnosticTiming.totals.serverTimeMs,
-			diagnosticRoundTripMilliseconds: diagnosticTiming.totals.roundTripMs,
-			completions,
-			nativeHeapBytes: readNativeHeap(profile, "inuse_space"),
-			nativeAllocatedBytes: readNativeHeap(profile, "alloc_space"),
-		};
-
-		console.log(`[benchmark:types] ${JSON.stringify(record)}`);
-	} finally {
-		snapshot?.dispose();
-		api.close();
-	}
+	console.log(`[benchmark:types] ${JSON.stringify(record)}`);
 }
 
 function readCompletion(api, project, fixture, name, expected) {
@@ -328,9 +252,9 @@ function readCompletion(api, project, fixture, name, expected) {
 		throw new Error(`The TypeScript benchmark is missing the ${name} completion marker`);
 	}
 
-	api.resetTimingInfo();
-	const completions = project.checker.getCompletionsAtPosition(fixture.source, markerPosition + marker.length + 1);
-	const timing = api.getTimingInfo();
+	const { result: completions, timing } = timeEditorRequest(api, () =>
+		project.checker.getCompletionsAtPosition(fixture.source, markerPosition + marker.length + 1),
+	);
 	if (!completions?.entries.some((entry) => entry.name === expected)) {
 		throw new Error(`The TypeScript editor did not provide the expected ${name} completion: ${expected}`);
 	}
@@ -341,29 +265,4 @@ function readCompletion(api, project, fixture, name, expected) {
 		roundTripMilliseconds: timing.totals.roundTripMs,
 		entries: completions.entries.length,
 	};
-}
-
-function readNativeHeap(profile, sample) {
-	const result = spawnSync(
-		"go",
-		["tool", "pprof", "-top", "-nodecount=1", "-unit=B", `-sample_index=${sample}`, profile],
-		{ cwd: root, encoding: "utf8" },
-	);
-
-	if (result.error?.code === "ENOENT") {
-		return null;
-	}
-	if (result.error !== undefined) {
-		throw result.error;
-	}
-	if (result.status !== 0) {
-		throw new Error(`Could not inspect the TypeScript server heap:\n${result.stderr}`);
-	}
-
-	const match = /of\s+([\d,]+)B\s+total/.exec(result.stdout);
-	if (match === null) {
-		throw new Error("Could not locate native heap bytes in the Go heap profile");
-	}
-
-	return Number(match[1].replaceAll(",", ""));
 }

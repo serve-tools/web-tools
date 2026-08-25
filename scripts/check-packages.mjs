@@ -1,18 +1,17 @@
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readWorkspaceInventory } from "./workspaces.mjs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const rootPackage = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+const { workspaces } = await readWorkspaceInventory(root);
 const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), "serve-tools-packages-"));
 let failed = false;
 
 try {
-	for (const workspace of rootPackage.workspaces) {
-		const packageRoot = path.join(root, workspace);
-		const packageJSON = JSON.parse(await readFile(path.join(packageRoot, "package.json"), "utf8"));
+	for (const { location: workspace, manifest: packageJSON, root: packageRoot } of workspaces) {
 		const check = packageJSON.scripts?.["check:package"];
 
 		if (check === undefined) {

@@ -1,9 +1,10 @@
 import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readWorkspaceInventory } from "./workspaces.mjs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const rootPackage = await readJSON(path.join(root, "package.json"));
+const { workspaces } = await readWorkspaceInventory(root);
 const solutionPath = path.join(root, "tsconfig.build.json");
 const solution = await readJSON(solutionPath);
 const targets = new Set([path.join(root, "tsconfig.build.tsbuildinfo")]);
@@ -13,11 +14,8 @@ for (const reference of solution.references) {
 	await addProject(path.resolve(path.dirname(solutionPath), reference.path));
 }
 
-for (const workspace of rootPackage.workspaces) {
-	const workspaceRoot = path.join(root, workspace);
-	const packageJSON = await readJSON(path.join(workspaceRoot, "package.json"));
-
-	if (packageJSON.scripts?.["build:bundle"] !== undefined) {
+for (const { manifest, root: workspaceRoot } of workspaces) {
+	if (manifest.scripts?.["build:bundle"] !== undefined) {
 		addTarget(path.join(workspaceRoot, "dist"));
 		addTarget(path.join(workspaceRoot, "tsconfig.tsbuildinfo"));
 	}

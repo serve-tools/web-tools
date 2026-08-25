@@ -36,7 +36,7 @@ jobs:
       - if: matrix.node == 26
         run: npm run verify
       - if: matrix.node != 26
-        run: npm run verify:node
+        run: npm run build:typescript && npm run test:node
 
   bun-websocket:
     name: WebSocket adapter (Bun 1.3.14)

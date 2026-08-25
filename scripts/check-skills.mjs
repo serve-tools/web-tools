@@ -1,21 +1,19 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readWorkspaceInventory } from "./workspaces.mjs";
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const writeRecipes = process.argv.includes("--write-recipes");
-const rootPackage = await readJSON(path.join(root, "package.json"));
+const { publicWorkspaces, workspaces } = await readWorkspaceInventory(root);
 const errors = [];
 const names = new Set();
 const publicPackageNames = new Set();
 
-let publicPackages = 0;
 let metadataCharacters = 0;
 let publishedMetadataCharacters = 0;
 
-for (const workspace of rootPackage.workspaces) {
-	const packageRoot = path.join(root, workspace);
-	const packageJSON = await readJSON(path.join(packageRoot, "package.json"));
+for (const { location: workspace, manifest: packageJSON, root: packageRoot } of workspaces) {
 	const skillDirectories = await listDirectories(path.join(packageRoot, "skills"));
 
 	if (packageJSON.private) {
@@ -25,8 +23,6 @@ for (const workspace of rootPackage.workspaces) {
 
 		continue;
 	}
-
-	++publicPackages;
 
 	publicPackageNames.add(packageJSON.name);
 
@@ -78,10 +74,6 @@ if (maintainerSkill !== undefined) {
 
 await validateReleasePackages(publicPackageNames, errors);
 
-if (publicPackages !== 64) {
-	errors.push(`expected 64 public workspaces, found ${publicPackages}`);
-}
-
 if (publishedMetadataCharacters > 7_600) {
 	errors.push(
 		`Published Skill names and descriptions use ${publishedMetadataCharacters} characters; keep them at or below 7600`,
@@ -98,7 +90,7 @@ if (errors.length > 0) {
 	process.exitCode = 1;
 } else {
 	console.log(
-		`Validated ${publicPackages} package Skills and 1 repository Skill (${metadataCharacters} metadata characters).`,
+		`Validated ${publicWorkspaces.length} package Skills and 1 repository Skill (${metadataCharacters} metadata characters).`,
 	);
 }
 
@@ -340,10 +332,6 @@ async function listFiles(directory) {
 
 		throw error;
 	}
-}
-
-async function readJSON(file) {
-	return JSON.parse(await readFile(file, "utf8"));
 }
 
 function relative(file) {

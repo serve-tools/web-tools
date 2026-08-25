@@ -1,23 +1,16 @@
 import { execFileSync } from "node:child_process";
-import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readWorkspaceInventory } from "./workspaces.mjs";
 
 const require = createRequire(import.meta.url);
 
 export async function readPublishableWorkspaces(root) {
-	const rootManifest = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
-	const workspaces = [];
+	const { publicWorkspaces } = await readWorkspaceInventory(root);
 
-	for (const location of rootManifest.workspaces) {
-		const manifest = JSON.parse(await readFile(path.join(root, location, "package.json"), "utf8"));
-		if (!manifest.private) {
-			workspaces.push({ location, manifest });
-		}
-	}
-
-	return workspaces;
+	return publicWorkspaces.map(({ location, manifest }) => ({ location, manifest }));
 }
 
 async function readPackageVersions(packageName, registryURL) {
