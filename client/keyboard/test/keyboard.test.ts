@@ -46,8 +46,11 @@ describe(getKeyChord.name, (): void => {
 		expect(getKeyChord(createKeyboardEvent("1", 49))).toBe("1");
 		expect(getKeyChord(createKeyboardEvent("ArrowLeft"))).toBe("ArrowLeft");
 		expect(getKeyChord(createKeyboardEvent("F12"))).toBe("F12");
+		expect(getKeyChord(createKeyboardEvent("F24"))).toBe("F24");
+		expect(getKeyChord(createKeyboardEvent("AudioVolumeUp"))).toBe("AudioVolumeUp");
 		expect(getKeyChord(createKeyboardEvent("PageDown", 0, { [modKey]: true }))).toBe("Mod+PageDown");
 		expect(getKeyChord(createKeyboardEvent("é"))).toBe("é");
+		expect(getKeyChord(createKeyboardEvent("FutureKeyboardAction"))).toBe("FutureKeyboardAction");
 	});
 
 	test("returns an empty string for incomplete input", (): void => {

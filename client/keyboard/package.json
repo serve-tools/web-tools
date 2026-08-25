@@ -41,6 +41,7 @@
 		"build": "tsc --build tsconfig.json",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
+		"generate:keyboard-types": "node scripts/generate-keyboard-types.mjs",
 		"test": "npm run test:node && npm run test:browser",
 		"test:browser": "vitest run --config vitest.browser.config.ts",
 		"test:node": "vitest run --config vitest.config.ts",

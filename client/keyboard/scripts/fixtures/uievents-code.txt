@@ -1,0 +1,214 @@
+# Source: https://github.com/w3c/uievents-code/blob/b201684d1de0af90bc403814bbdee6aa96647130/index-source.txt
+# Revision: b201684d1de0af90bc403814bbdee6aa96647130
+# Snapshot: normalized normative table names and value rows; descriptions omitted.
+
+BEGIN_CODE_TABLE alphanumeric-writing-system
+CODE Backquote
+CODE Backslash
+CODE BracketLeft
+CODE BracketRight
+CODE Comma
+CODE Digit0
+CODE Digit1
+CODE Digit2
+CODE Digit3
+CODE Digit4
+CODE Digit5
+CODE Digit6
+CODE Digit7
+CODE Digit8
+CODE Digit9
+CODE Equal
+CODE IntlBackslash
+CODE IntlRo
+CODE IntlYen
+CODE KeyA
+CODE KeyB
+CODE KeyC
+CODE KeyD
+CODE KeyE
+CODE KeyF
+CODE KeyG
+CODE KeyH
+CODE KeyI
+CODE KeyJ
+CODE KeyK
+CODE KeyL
+CODE KeyM
+CODE KeyN
+CODE KeyO
+CODE KeyP
+CODE KeyQ
+CODE KeyR
+CODE KeyS
+CODE KeyT
+CODE KeyU
+CODE KeyV
+CODE KeyW
+CODE KeyX
+CODE KeyY
+CODE KeyZ
+CODE Minus
+CODE Period
+CODE Quote
+CODE Semicolon
+CODE Slash
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE alphanumeric-functional-1
+CODE AltLeft
+CODE AltRight
+CODE Backspace
+CODE CapsLock
+CODE ContextMenu
+CODE ControlLeft
+CODE ControlRight
+CODE Enter
+CODE MetaLeft
+CODE MetaRight
+CODE ShiftLeft
+CODE ShiftRight
+CODE Space
+CODE Tab
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE alphanumeric-functional-2
+CODE Convert
+CODE KanaMode
+CODE_OPT Lang1
+CODE_OPT Lang2
+CODE_OPT Lang3
+CODE_OPT Lang4
+CODE_OPT Lang5
+CODE NonConvert
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE controlpad
+CODE Delete
+CODE End
+CODE Help
+CODE Home
+CODE Insert
+CODE PageDown
+CODE PageUp
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE arrowpad
+CODE ArrowDown
+CODE ArrowLeft
+CODE ArrowRight
+CODE ArrowUp
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE numpad
+CODE NumLock
+CODE Numpad0
+CODE Numpad1
+CODE Numpad2
+CODE Numpad3
+CODE Numpad4
+CODE Numpad5
+CODE Numpad6
+CODE Numpad7
+CODE Numpad8
+CODE Numpad9
+CODE NumpadAdd
+CODE_OPT NumpadBackspace
+CODE_OPT NumpadClear
+CODE_OPT NumpadClearEntry
+CODE_OPT NumpadComma
+CODE NumpadDecimal
+CODE NumpadDivide
+CODE NumpadEnter
+CODE_OPT NumpadEqual
+CODE_OPT NumpadHash
+CODE_OPT NumpadMemoryAdd
+CODE_OPT NumpadMemoryClear
+CODE_OPT NumpadMemoryRecall
+CODE_OPT NumpadMemoryStore
+CODE_OPT NumpadMemorySubtract
+CODE NumpadMultiply
+CODE_OPT NumpadParenLeft
+CODE_OPT NumpadParenRight
+CODE_OPT NumpadStar
+CODE NumpadSubtract
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE function
+CODE Escape
+CODE F1
+CODE F2
+CODE F3
+CODE F4
+CODE F5
+CODE F6
+CODE F7
+CODE F8
+CODE F9
+CODE F10
+CODE F11
+CODE F12
+CODE_OPT Fn
+CODE_OPT FnLock
+CODE PrintScreen
+CODE ScrollLock
+CODE Pause
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE media
+CODE_OPT BrowserBack
+CODE_OPT BrowserFavorites
+CODE_OPT BrowserForward
+CODE_OPT BrowserHome
+CODE_OPT BrowserRefresh
+CODE_OPT BrowserSearch
+CODE_OPT BrowserStop
+CODE_OPT Eject
+CODE_OPT LaunchApp1
+CODE_OPT LaunchApp2
+CODE_OPT LaunchMail
+CODE_OPT MediaPlayPause
+CODE_OPT MediaSelect
+CODE_OPT MediaStop
+CODE_OPT MediaTrackNext
+CODE_OPT MediaTrackPrevious
+CODE_OPT Power
+CODE_OPT Sleep
+CODE_OPT AudioVolumeDown
+CODE_OPT AudioVolumeMute
+CODE_OPT AudioVolumeUp
+CODE_OPT WakeUp
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE legacy-modifier
+CODE_OPT Hyper
+CODE_OPT Super
+CODE_OPT Turbo
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE legacy-process
+CODE_OPT Abort
+CODE_OPT Resume
+CODE_OPT Suspend
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE legacy-editing
+CODE_OPT Again
+CODE_OPT Copy
+CODE_OPT Cut
+CODE_OPT Find
+CODE_OPT Open
+CODE_OPT Paste
+CODE_OPT Props
+CODE_OPT Select
+CODE_OPT Undo
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE international
+CODE_OPT Hiragana
+CODE_OPT Katakana
+END_CODE_TABLE
+
+BEGIN_CODE_TABLE special
+CODE Unidentified
+END_CODE_TABLE

@@ -1,3 +1,4 @@
+import type { KeyboardEventKey, KnownKeyboardEventKey } from "./keyboard-event-key.js";
 import { isApplePlatform, isWindowsPlatform } from "./platform.js";
 
 /** Represents the platform-specific modifier key: Command on Apple platforms, otherwise Control. */
@@ -123,13 +124,57 @@ const enum IgnorableKeyCode {
 
 // #region Types
 
-/** A platform-relative keyboard chord emitted with canonical modifier ordering by `getKeyChord()`. */
-export type KeyChord = `${KeyChordPrefix}${KeyChordShortcut}`;
+/** A standardized non-modifier key or package-normalized printable shortcut. */
+export type KnownKeyChordShortcut =
+	| Exclude<KnownKeyboardEventKey, KeyboardEventKey.Modifier | KeyboardEventKey.ModifierLegacy>
+	| KeyChordDigit
+	| KeyChordLetter
+	| "Comma"
+	| "Minus"
+	| "Period"
+	| "Plus"
+	| "Space";
 
 /** A browser-standard, international, or future non-modifier `KeyboardEvent.key` value. */
-export type KeyChordShortcut = string;
+export type KeyChordShortcut = KnownKeyChordShortcut | KeyboardEventKey.KeyString;
+
+/** A closed platform-relative keyboard chord with canonical modifier ordering and a known shortcut. */
+export type KnownKeyChord = `${KeyChordPrefix}${KnownKeyChordShortcut}`;
+
+/** A platform-relative chord with canonical known-key completions and support for arbitrary browser key strings. */
+export type KeyChord = KnownKeyChord | KeyboardEventKey.KeyString;
 
 type KeyChordPrefix = `${"Mod+" | ""}${"Aux+" | ""}${"Alt+" | ""}${"Shift+" | ""}`;
+
+type KeyChordDigit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+
+type KeyChordLetter =
+	| "A"
+	| "B"
+	| "C"
+	| "D"
+	| "E"
+	| "F"
+	| "G"
+	| "H"
+	| "I"
+	| "J"
+	| "K"
+	| "L"
+	| "M"
+	| "N"
+	| "O"
+	| "P"
+	| "Q"
+	| "R"
+	| "S"
+	| "T"
+	| "U"
+	| "V"
+	| "W"
+	| "X"
+	| "Y"
+	| "Z";
 
 type KeyModifierProperty = "ctrlKey" | "metaKey";
 

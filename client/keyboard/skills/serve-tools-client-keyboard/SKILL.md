@@ -1,6 +1,6 @@
 ---
 name: serve-tools-client-keyboard
-description: Use @serve-tools/client-keyboard for canonical keyboard chords, matching, labels, symbols, and ARIA shortcuts.
+description: Use @serve-tools/client-keyboard for typed keyboard events, canonical chords, matching, labels, symbols, and ARIA shortcuts.
 ---
 
 # Use @serve-tools/client-keyboard
@@ -11,5 +11,6 @@ Read only the references needed for the current task.
 ## Route by task
 
 - [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.
+- To choose physical-key, logical-key, strict-chord, or extensible-chord types, read [Keyboard event and chord types](references/keyboard-event-and-chord-types.md).
 - To normalize chords, read [Normalize chords](references/normalize-chords.md).
 - To present shortcuts, read [Present shortcuts](references/present-shortcuts.md).

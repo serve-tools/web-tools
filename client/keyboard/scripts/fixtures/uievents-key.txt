@@ -1,0 +1,376 @@
+# Source: https://github.com/w3c/uievents-key/blob/140cae88d6039b3fb1a51787978678115111c433/index-source.txt
+# Revision: 140cae88d6039b3fb1a51787978678115111c433
+# Snapshot: normalized normative table names and value rows; descriptions omitted.
+
+BEGIN_KEY_TABLE general
+KEY Unidentified
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE modifier
+KEY Alt
+KEY AltGraph
+KEY CapsLock
+KEY Control
+KEY_OPT Fn
+KEY_OPT FnLock
+KEY Meta
+KEY NumLock
+KEY ScrollLock
+KEY Shift
+KEY_OPT Symbol
+KEY_OPT SymbolLock
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE modifier-legacy
+KEY_OPT Hyper
+KEY_OPT Super
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE whitespace
+KEY Enter
+KEY Tab
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE navigation
+KEY ArrowDown
+KEY ArrowLeft
+KEY ArrowRight
+KEY ArrowUp
+KEY End
+KEY Home
+KEY PageDown
+KEY PageUp
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE editing
+KEY Backspace
+KEY_OPT Clear
+KEY_OPT Copy
+KEY_OPT CrSel
+KEY_OPT Cut
+KEY Delete
+KEY_OPT EraseEof
+KEY_OPT ExSel
+KEY Insert
+KEY_OPT Paste
+KEY_OPT Redo
+KEY_OPT Undo
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE ui
+KEY_OPT Accept
+KEY_OPT Again
+KEY_OPT Attn
+KEY_OPT Cancel
+KEY ContextMenu
+KEY Escape
+KEY_OPT Execute
+KEY_OPT Find
+KEY Help
+KEY Pause
+KEY_OPT Play
+KEY_OPT Props
+KEY_OPT Select
+KEY_OPT ZoomIn
+KEY_OPT ZoomOut
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE device
+KEY_OPT BrightnessDown
+KEY_OPT BrightnessUp
+KEY_OPT Eject
+KEY_OPT LogOff
+KEY_OPT Power
+KEY_OPT PowerOff
+KEY PrintScreen
+KEY_OPT Hibernate
+KEY_OPT Standby
+KEY_OPT WakeUp
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE composition
+KEY_OPT AllCandidates
+KEY_OPT Alphanumeric
+KEY_OPT CodeInput
+KEY_OPT Compose
+KEY_OPT Convert
+KEY_OPT Dead
+KEY_OPT FinalMode
+KEY_OPT GroupFirst
+KEY_OPT GroupLast
+KEY_OPT GroupNext
+KEY_OPT GroupPrevious
+KEY_OPT ModeChange
+KEY_OPT NextCandidate
+KEY_OPT NonConvert
+KEY_OPT PreviousCandidate
+KEY_OPT Process
+KEY_OPT SingleCandidate
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE ime-korean
+KEY_OPT HangulMode
+KEY_OPT HanjaMode
+KEY_OPT JunjaMode
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE ime-japanese
+KEY_OPT Eisu
+KEY_OPT Hankaku
+KEY_OPT Hiragana
+KEY_OPT HiraganaKatakana
+KEY_OPT KanaMode
+KEY_OPT KanjiMode
+KEY_OPT Katakana
+KEY_OPT Romaji
+KEY_OPT Zenkaku
+KEY_OPT ZenkakuHankaku
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE function
+KEY F1
+KEY F2
+KEY F3
+KEY F4
+KEY F5
+KEY F6
+KEY F7
+KEY F8
+KEY F9
+KEY F10
+KEY F11
+KEY F12
+KEY_OPT Soft1
+KEY_OPT Soft2
+KEY_OPT Soft3
+KEY_OPT Soft4
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE multimedia
+KEY_OPT ChannelDown
+KEY_OPT ChannelUp
+KEY_OPT Close
+KEY_OPT MailForward
+KEY_OPT MailReply
+KEY_OPT MailSend
+KEY_OPT MediaClose
+KEY_OPT MediaFastForward
+KEY_OPT MediaPause
+KEY_OPT MediaPlay
+KEY_OPT MediaPlayPause
+KEY_OPT MediaRecord
+KEY_OPT MediaRewind
+KEY_OPT MediaStop
+KEY_OPT MediaTrackNext
+KEY_OPT MediaTrackPrevious
+KEY_OPT New
+KEY_OPT Open
+KEY_OPT Print
+KEY_OPT Save
+KEY_OPT SpellCheck
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE multimedia-numpad
+KEY_OPT Key11
+KEY_OPT Key12
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE audio
+KEY_OPT AudioBalanceLeft
+KEY_OPT AudioBalanceRight
+KEY_OPT AudioBassBoostDown
+KEY_OPT AudioBassBoostToggle
+KEY_OPT AudioBassBoostUp
+KEY_OPT AudioFaderFront
+KEY_OPT AudioFaderRear
+KEY_OPT AudioSurroundModeNext
+KEY_OPT AudioTrebleDown
+KEY_OPT AudioTrebleUp
+KEY_OPT AudioVolumeDown
+KEY_OPT AudioVolumeUp
+KEY_OPT AudioVolumeMute
+KEY_OPT MicrophoneToggle
+KEY_OPT MicrophoneVolumeDown
+KEY_OPT MicrophoneVolumeUp
+KEY_OPT MicrophoneVolumeMute
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE speech
+KEY_OPT SpeechCorrectionList
+KEY_OPT SpeechInputToggle
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE apps
+KEY_OPT LaunchApplication1
+KEY_OPT LaunchApplication2
+KEY_OPT LaunchCalendar
+KEY_OPT LaunchContacts
+KEY_OPT LaunchMail
+KEY_OPT LaunchMediaPlayer
+KEY_OPT LaunchMusicPlayer
+KEY_OPT LaunchPhone
+KEY_OPT LaunchScreenSaver
+KEY_OPT LaunchSpreadsheet
+KEY_OPT LaunchWebBrowser
+KEY_OPT LaunchWebCam
+KEY_OPT LaunchWordProcessor
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE browser
+KEY_OPT BrowserBack
+KEY_OPT BrowserFavorites
+KEY_OPT BrowserForward
+KEY_OPT BrowserHome
+KEY_OPT BrowserRefresh
+KEY_OPT BrowserSearch
+KEY_OPT BrowserStop
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE mobile-phone
+KEY_OPT AppSwitch
+KEY_OPT Call
+KEY_OPT Camera
+KEY_OPT CameraFocus
+KEY_OPT EndCall
+KEY_OPT GoBack
+KEY_OPT GoHome
+KEY_OPT HeadsetHook
+KEY_OPT LastNumberRedial
+KEY_OPT Notification
+KEY_OPT MannerMode
+KEY_OPT VoiceDial
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE tv
+KEY_OPT TV
+KEY_OPT TV3DMode
+KEY_OPT TVAntennaCable
+KEY_OPT TVAudioDescription
+KEY_OPT TVAudioDescriptionMixDown
+KEY_OPT TVAudioDescriptionMixUp
+KEY_OPT TVContentsMenu
+KEY_OPT TVDataService
+KEY_OPT TVInput
+KEY_OPT TVInputComponent1
+KEY_OPT TVInputComponent2
+KEY_OPT TVInputComposite1
+KEY_OPT TVInputComposite2
+KEY_OPT TVInputHDMI1
+KEY_OPT TVInputHDMI2
+KEY_OPT TVInputHDMI3
+KEY_OPT TVInputHDMI4
+KEY_OPT TVInputVGA1
+KEY_OPT TVMediaContext
+KEY_OPT TVNetwork
+KEY_OPT TVNumberEntry
+KEY_OPT TVPower
+KEY_OPT TVRadioService
+KEY_OPT TVSatellite
+KEY_OPT TVSatelliteBS
+KEY_OPT TVSatelliteCS
+KEY_OPT TVSatelliteToggle
+KEY_OPT TVTerrestrialAnalog
+KEY_OPT TVTerrestrialDigital
+KEY_OPT TVTimer
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE media-controller
+KEY_OPT AVRInput
+KEY_OPT AVRPower
+KEY_OPT ColorF0Red
+KEY_OPT ColorF1Green
+KEY_OPT ColorF2Yellow
+KEY_OPT ColorF3Blue
+KEY_OPT ColorF4Grey
+KEY_OPT ColorF5Brown
+KEY_OPT ClosedCaptionToggle
+KEY_OPT Dimmer
+KEY_OPT DisplaySwap
+KEY_OPT DVR
+KEY_OPT Exit
+KEY_OPT FavoriteClear0
+KEY_OPT FavoriteClear1
+KEY_OPT FavoriteClear2
+KEY_OPT FavoriteClear3
+KEY_OPT FavoriteRecall0
+KEY_OPT FavoriteRecall1
+KEY_OPT FavoriteRecall2
+KEY_OPT FavoriteRecall3
+KEY_OPT FavoriteStore0
+KEY_OPT FavoriteStore1
+KEY_OPT FavoriteStore2
+KEY_OPT FavoriteStore3
+KEY_OPT Guide
+KEY_OPT GuideNextDay
+KEY_OPT GuidePreviousDay
+KEY_OPT Info
+KEY_OPT InstantReplay
+KEY_OPT Link
+KEY_OPT ListProgram
+KEY_OPT LiveContent
+KEY_OPT Lock
+KEY_OPT MediaApps
+KEY_OPT MediaAudioTrack
+KEY_OPT MediaLast
+KEY_OPT MediaSkipBackward
+KEY_OPT MediaSkipForward
+KEY_OPT MediaStepBackward
+KEY_OPT MediaStepForward
+KEY_OPT MediaTopMenu
+KEY_OPT NavigateIn
+KEY_OPT NavigateNext
+KEY_OPT NavigateOut
+KEY_OPT NavigatePrevious
+KEY_OPT NextFavoriteChannel
+KEY_OPT NextUserProfile
+KEY_OPT OnDemand
+KEY_OPT Pairing
+KEY_OPT PinPDown
+KEY_OPT PinPMove
+KEY_OPT PinPToggle
+KEY_OPT PinPUp
+KEY_OPT PlaySpeedDown
+KEY_OPT PlaySpeedReset
+KEY_OPT PlaySpeedUp
+KEY_OPT RandomToggle
+KEY_OPT RcLowBattery
+KEY_OPT RecordSpeedNext
+KEY_OPT RfBypass
+KEY_OPT ScanChannelsToggle
+KEY_OPT ScreenModeNext
+KEY_OPT Settings
+KEY_OPT SplitScreenToggle
+KEY_OPT STBInput
+KEY_OPT STBPower
+KEY_OPT Subtitle
+KEY_OPT Teletext
+KEY_OPT VideoModeNext
+KEY_OPT Wink
+KEY_OPT ZoomToggle
+END_KEY_TABLE
+
+BEGIN_KEY_TABLE media-controller-dup
+KEY_DUP_OPT AudioVolumeDown
+KEY_DUP_OPT AudioVolumeUp
+KEY_DUP_OPT AudioVolumeMute
+KEY_DUP_OPT BrowserBack
+KEY_DUP_OPT BrowserForward
+KEY_DUP_OPT ChannelDown
+KEY_DUP_OPT ChannelUp
+KEY_DUP ContextMenu
+KEY_DUP_OPT Eject
+KEY_DUP End
+KEY_DUP Enter
+KEY_DUP Home
+KEY_DUP_OPT MediaFastForward
+KEY_DUP_OPT MediaPlay
+KEY_DUP_OPT MediaPlayPause
+KEY_DUP_OPT MediaRecord
+KEY_DUP_OPT MediaRewind
+KEY_DUP_OPT MediaStop
+KEY_DUP_OPT MediaPause
+KEY_DUP_OPT MediaTrackNext
+KEY_DUP_OPT MediaTrackPrevious
+KEY_DUP_OPT Power
+KEY_DUP Unidentified
+END_KEY_TABLE
