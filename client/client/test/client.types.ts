@@ -20,6 +20,7 @@ import {
 	interaction,
 	keyboard,
 	messaging,
+	router,
 	sharedHttpStream,
 	sharedWebsocket,
 	sharedWebtransport,
@@ -44,6 +45,7 @@ import type * as keyboardModule from "../src/lib/keyboard.js";
 import * as messagingWindow from "../src/lib/messaging/scope/window.js";
 import * as messagingWorker from "../src/lib/messaging/scope/worker.js";
 import type * as messagingModule from "../src/lib/messaging.js";
+import type * as routerModule from "../src/lib/router.js";
 import * as sharedHTTPStreamWorker from "../src/lib/shared-http-stream/scope/shared-worker.js";
 import type * as sharedHttpStreamModule from "../src/lib/shared-http-stream.js";
 import * as sharedWebSocketWorker from "../src/lib/shared-websocket/scope/shared-worker.js";
@@ -188,6 +190,24 @@ const interactionNamespace: typeof interactionModule = interaction;
 const interactionShareNamespace: typeof interactionShareModule = interactionShare;
 const keyboardNamespace: typeof keyboardModule = keyboard;
 const messagingNamespace: typeof messagingModule = messaging;
+const routerNamespace: typeof routerModule = router;
+const routerHome = router.route("/");
+const routerProject = router.route("/projects/:projectId", {
+	params: { projectId: router.codec.integer() },
+});
+// @ts-expect-error The legacy pathname codec namespace is not exported.
+router.param;
+// @ts-expect-error The legacy query codec namespace is not exported.
+router.query;
+const publicRoutes = [routerHome] as const;
+const privateRoutes = [routerHome, routerProject] as const;
+declare const authenticated: boolean;
+const browserRouter = router.createRouter({
+	routes: authenticated ? privateRoutes : publicRoutes,
+});
+browserRouter.setRoutes(authenticated ? privateRoutes : publicRoutes);
+browserRouter.navigate(routerProject, { params: { projectId: 42 } });
+const routerProjectURL: string = routerProject.href({ params: { projectId: 42 } });
 const messagingWindowNamespace: typeof messagingWindowModule = messagingWindow;
 const messagingWorkerNamespace: typeof messagingWorkerModule = messagingWorker;
 const sharedDatabaseWorkerNamespace: typeof sharedDatabaseWorkerModule = sharedDatabaseWorker;
@@ -216,6 +236,9 @@ void [
 	interactionShareNamespace,
 	keyboardNamespace,
 	messagingNamespace,
+	routerNamespace,
+	browserRouter,
+	routerProjectURL,
 	messagingWindowNamespace,
 	messagingWorkerNamespace,
 	sharedDatabaseWorkerNamespace,

@@ -10,6 +10,7 @@ const projects = [
 	"client/interaction/vitest.browser.config.ts",
 	"client/keyboard/vitest.browser.config.ts",
 	"client/messaging/vitest.browser.config.ts",
+	"client/router/vitest.browser.config.ts",
 	"client/shared-db/vitest.browser.config.ts",
 	"client/shared-event-source/vitest.browser.config.ts",
 	"client/shared-http-stream/vitest.browser.config.ts",

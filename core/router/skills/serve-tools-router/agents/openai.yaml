@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Router"
+  short_description: "Declare typed universal routes"
+  default_prompt: "Use $serve-tools-router to declare and consume typed routes."

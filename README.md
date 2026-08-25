@@ -45,6 +45,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-keyboard`](./client/keyboard/) provides platform-aware keyboard chords, labels, symbols, and ARIA shortcuts.
 - [`@serve-tools/client-messaging`](./client/messaging/) provides requests and subscriptions across workers and message ports.
 - [`@serve-tools/client-realtime`](./client/realtime/) provides the sans-I/O operation core for custom client transports.
+- [`@serve-tools/client-router`](./client/router/) provides typed browser routing with native Navigation API lifecycles and automatic View Transitions.
 - [`@serve-tools/client-http-stream`](./client/http-stream/) provides typed binary HTTP requests and streaming subscriptions with author headers.
 - [`@serve-tools/client-shared-db`](./client/shared-db/) coordinates IndexedDB operations and change subscriptions through a SharedWorker.
 - [`@serve-tools/client-shared-event-source`](./client/shared-event-source/) coordinates typed JSON EventSource events through a SharedWorker.
@@ -56,6 +57,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client-webtransport`](./client/webtransport/) combines reliable typed operations with typed best-effort WebTransport datagrams.
 - [`@serve-tools/realtime-protocol`](./realtime/protocol/) provides the shared binary serializer, wire messages, guards, types, and reliable-stream framing.
 - [`@serve-tools/rolldown-decorators`](./rolldown/decorators/) transforms modern TC39 decorators in Rolldown and Vite builds.
+- [`@serve-tools/router`](./core/router/) provides runtime-neutral typed route declarations, URL matching, and reusable codecs for pathname and search values.
 - [`@serve-tools/server-event-source`](./server/event-source/) provides Fetch-compatible JSON Server-Sent Events.
 - [`@serve-tools/server-realtime`](./server/realtime/) provides the sans-I/O operation server for custom transport adapters.
 - [`@serve-tools/server-http-stream`](./server/http-stream/) provides typed WHATWG Fetch handlers for binary requests and streaming subscriptions.

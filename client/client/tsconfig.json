@@ -32,6 +32,9 @@
 			"path": "../messaging/tsconfig.json"
 		},
 		{
+			"path": "../router/tsconfig.json"
+		},
+		{
 			"path": "../shared-db/tsconfig.json"
 		},
 		{

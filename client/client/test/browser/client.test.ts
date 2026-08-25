@@ -10,7 +10,7 @@ import * as sharedDatabaseWorkerModule from "@serve-tools/client-shared-db/scope
 import * as sharedDatabaseWindowModule from "@serve-tools/client-shared-db/scope/window";
 import { expect, test } from "vitest";
 
-import { context, db, input, interaction, keyboard, messaging, storage } from "../../src/client.js";
+import { context, db, input, interaction, keyboard, messaging, router, storage } from "../../src/client.js";
 import * as contextModule from "../../src/lib/context.js";
 import * as sharedDatabaseWorker from "../../src/lib/db/scope/shared-worker.js";
 import * as sharedDatabaseWindow from "../../src/lib/db/scope/window.js";
@@ -27,6 +27,7 @@ import * as keyboardModule from "../../src/lib/keyboard.js";
 import * as messagingWindow from "../../src/lib/messaging/scope/window.js";
 import * as messagingWorker from "../../src/lib/messaging/scope/worker.js";
 import * as messagingModule from "../../src/lib/messaging.js";
+import * as routerModule from "../../src/lib/router.js";
 import * as storageModule from "../../src/lib/storage.js";
 
 test("exports each client dependency as a stable namespace", (): void => {
@@ -36,7 +37,20 @@ test("exports each client dependency as a stable namespace", (): void => {
 	expect(interaction).toBe(interactionModule);
 	expect(keyboard).toBe(keyboardModule);
 	expect(messaging).toBe(messagingModule);
+	expect(router).toBe(routerModule);
 	expect(storage).toBe(storageModule);
+});
+
+test("re-exports typed native routing through its owning namespace", (): void => {
+	const project = router.route("/projects/:projectId", {
+		params: { projectId: router.codec.integer() },
+	});
+
+	expect(project.href({ params: { projectId: 42 } })).toBe("/projects/42");
+	expect(router.codec).toBe(routerModule.codec);
+	expect(router.createRouter).toBe(routerModule.createRouter);
+	expect(router).not.toHaveProperty("param");
+	expect(router).not.toHaveProperty("query");
 });
 
 test("re-exports focused input and interaction capabilities", (): void => {

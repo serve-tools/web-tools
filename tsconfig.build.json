@@ -34,6 +34,9 @@
 			"path": "./client/realtime/tsconfig.json"
 		},
 		{
+			"path": "./client/router/tsconfig.json"
+		},
+		{
 			"path": "./client/shared-db/tsconfig.json"
 		},
 		{
@@ -104,6 +107,9 @@
 		},
 		{
 			"path": "./core/async-operation/tsconfig.json"
+		},
+		{
+			"path": "./core/router/tsconfig.json"
 		},
 		{
 			"path": "./lit/signals/tsconfig.json"

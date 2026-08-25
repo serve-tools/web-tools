@@ -1,5 +1,11 @@
 # Common combinations
 
+## Shared typed routes and browser navigation
+
+Use `@serve-tools/router` for route declarations shared between browser and server entrypoints.
+Use `@serve-tools/client-router` for native browser navigation, installed route arrays, rendering, and automatic View Transitions.
+The browser router re-exports the shared route helpers, so add `@serve-tools/router` as a direct dependency only when another application module imports the environment-neutral package directly.
+
 ## Typed realtime client and server
 
 Use `@serve-tools/client-websocket` for each browser-owned connection and `@serve-tools/server-websocket` for typed handlers and runtime integration when reactive subscription state is unnecessary.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Client Router"
+  short_description: "Build typed Navigation API routing"
+  default_prompt: "Use $serve-tools-client-router to implement typed browser routing with native navigation phases."

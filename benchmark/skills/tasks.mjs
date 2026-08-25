@@ -5,6 +5,11 @@ const selections = [
 		"@serve-tools/async-operation",
 	],
 	[
+		"typed-universal-routes",
+		"Declare runtime-neutral URL routes with reusable typed codecs for pathname and search values, reversible href construction, and matching shared by browser and server environments.",
+		"@serve-tools/router",
+	],
+	[
 		"context-provider-replay",
 		"Components outside Lit need typed DOM context providers and consumers. A consumer may connect before its provider, and it must receive late registrations and subsequent values.",
 		"@serve-tools/client-context",
@@ -38,6 +43,11 @@ const selections = [
 		"custom-realtime-client-core",
 		"Adapt a custom full-duplex transport to typed realtime requests and subscriptions without owning a WebSocket, WebTransport session, or HTTP stream exchange.",
 		"@serve-tools/client-realtime",
+	],
+	[
+		"native-browser-route-navigation",
+		"Own typed browser navigation through the native Navigation API with one replaceable route list, committed and finished phases, cancellation, and automatic View Transitions.",
+		"@serve-tools/client-router",
 	],
 	[
 		"event-source-client",
@@ -404,6 +414,22 @@ const compositionTasks = [
 ];
 
 const usageTasks = [
+	usage(
+		"typed-universal-route-declaration",
+		"Declare a reusable route with unified typed integer, enumerated, optional, and repeated codecs, then construct its typed URL without adding browser-specific navigation ownership.",
+		["@serve-tools/router"],
+		"core/router/test/router.recipes.ts",
+		["route(", "codec.integer()", "codec.enum(", ".optional()", ".many()", ".href("],
+		["core/router/skills/serve-tools-router/references/recipe-quick-start.md"],
+	),
+	usage(
+		"typed-native-browser-router",
+		"Create a typed native browser router, replace its installed route list, and navigate while preserving the platform's committed and finished navigation phases.",
+		["@serve-tools/client-router"],
+		"client/router/test/client-router.recipes.ts",
+		["createRouter(", "route(", ".start()", ".setRoutes(", ".navigate("],
+		["client/router/skills/serve-tools-client-router/references/recipe-quick-start.md"],
+	),
 	usage(
 		"async-operation-lifecycle",
 		"Create an owned asynchronous operation that emits connecting and ready events with backpressure, returns a terminal result, consumes the events in order, and disposes its producer lifetime.",

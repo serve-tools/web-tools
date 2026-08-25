@@ -31,6 +31,7 @@
 		"client/messaging",
 		"client/messaging/demo",
 		"client/realtime",
+		"client/router",
 		"client/shared-db",
 		"client/shared-db/demo",
 		"client/shared-event-source",
@@ -58,6 +59,7 @@
 		"client-signals/websocket",
 		"client-signals/webtransport",
 		"core/async-operation",
+		"core/router",
 		"lit/signals",
 		"lit/signals/demo",
 		"polyfills/arraybuffer-base64",
@@ -220,6 +222,11 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
+			"client/router": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"client/shared-db": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
@@ -339,6 +346,11 @@
 			"core/async-operation": {
 				"entry": [
 					"benchmark/*.benchmark.ts"
+				]
+			},
+			"core/router": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"lit/signals": {

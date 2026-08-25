@@ -34,6 +34,7 @@ npm install @serve-tools/client
 | `interaction`        | `@serve-tools/client/interaction`         | `@serve-tools/client-interaction`         |
 | `keyboard`           | `@serve-tools/client/keyboard`            | `@serve-tools/client-keyboard`            |
 | `messaging`          | `@serve-tools/client/messaging`           | `@serve-tools/client-messaging`           |
+| `router`             | `@serve-tools/client/router`              | `@serve-tools/client-router`              |
 | `sharedEventSource`  | `@serve-tools/client/shared-event-source` | `@serve-tools/client-shared-event-source` |
 | `sharedWebsocket`    | `@serve-tools/client/shared-websocket`    | `@serve-tools/client-shared-websocket`    |
 | `sharedHttpStream`   | `@serve-tools/client/shared-http-stream`  | `@serve-tools/client-shared-http-stream`  |
@@ -44,6 +45,9 @@ npm install @serve-tools/client
 
 The root entrypoint exports namespaces rather than flattening their members, so similarly named operations retain their owning capability.
 Use a focused subpath when only one capability is needed.
+
+`router` provides typed route declarations, native Navigation API commitment and completion, installed route arrays, and automatic View Transitions.
+Import the focused `@serve-tools/client/router` subpath when routing is the only required browser capability.
 
 `eventSource` provides typed JSON named events over the native EventSource API, including each event's `lastEventId`.
 Use `sharedEventSource` when one SharedWorker should own the physical EventSource and its native reconnection lifecycle for several pages.

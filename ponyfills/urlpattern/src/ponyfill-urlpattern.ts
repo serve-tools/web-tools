@@ -570,7 +570,12 @@ export class URLPattern {
 				const match = matches[component]!;
 
 				for (let index = 0; index < compiled[1].length; ++index) {
-					groups[compiled[1][index]!] = match[index + 1];
+					Object.defineProperty(groups, compiled[1][index]!, {
+						value: match[index + 1],
+						configurable: true,
+						enumerable: true,
+						writable: true,
+					});
 				}
 			}
 

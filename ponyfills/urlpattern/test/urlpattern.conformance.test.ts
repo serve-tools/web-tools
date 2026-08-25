@@ -121,6 +121,19 @@ describe("URLPattern web-standard conformance", () => {
 			expect(pattern.test("https://example.com/users/42/posts/first/extra")).toBe(false);
 		});
 
+		it("captures prototype-named groups as safe writable own properties", () => {
+			const groups = new URLPattern({ pathname: "/values/:__proto__" }).exec("https://example.com/values/path")!
+				.pathname.groups;
+
+			expect(Object.getPrototypeOf(groups)).toBe(Object.prototype);
+			expect(Object.getOwnPropertyDescriptor(groups, "__proto__")).toEqual({
+				value: "path",
+				configurable: true,
+				enumerable: true,
+				writable: true,
+			});
+		});
+
 		it("allows an optional named segment to be absent or present", () => {
 			const pattern = new URLPattern({ pathname: "/books/:id?" });
 

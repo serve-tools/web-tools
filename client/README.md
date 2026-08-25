@@ -15,6 +15,7 @@ Each immediate subdirectory is an independently versioned npm workspace.
 - [`@serve-tools/client-keyboard`](./keyboard/) provides platform-aware keyboard chords, labels, symbols, and ARIA shortcuts.
 - [`@serve-tools/client-messaging`](./messaging/) provides requests and subscriptions across workers and message ports.
 - [`@serve-tools/client-realtime`](./realtime/) provides a transport-neutral core for typed realtime requests and subscriptions.
+- [`@serve-tools/client-router`](./router/) provides typed browser routing with native Navigation API lifecycles and automatic View Transitions.
 - [`@serve-tools/client-shared-db`](./shared-db/) coordinates IndexedDB operations and change subscriptions through a SharedWorker.
 - [`@serve-tools/client-shared-event-source`](./shared-event-source/) shares one typed EventSource connection across browser contexts.
 - [`@serve-tools/client-shared-http-stream`](./shared-http-stream/) shares typed HTTP requests and streaming subscriptions through a SharedWorker.

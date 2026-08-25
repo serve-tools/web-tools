@@ -3,6 +3,7 @@
 Select the narrowest package that owns the required behavior.
 
 - Owned async events, terminal results, backpressure, and cancellation: `@serve-tools/async-operation`.
+- Runtime-neutral typed route declarations, matching, and URL construction: `@serve-tools/router`.
 - Namespace facade for several browser utilities: `@serve-tools/client`.
 - Namespace facade for several Signal-aware browser clients: `@serve-tools/client-signals`.
 - DOM context providers and consumers with late-registration replay: `@serve-tools/client-context`.
@@ -15,6 +16,7 @@ Select the narrowest package that owns the required behavior.
 - Keyboard chords, accessible labels, platform symbols, and ARIA shortcuts: `@serve-tools/client-keyboard`.
 - Typed worker or MessagePort requests and subscriptions: `@serve-tools/client-messaging`.
 - Sans-I/O custom realtime client operation adapter: `@serve-tools/client-realtime`.
+- Typed browser navigation, installed route arrays, and automatic View Transitions: `@serve-tools/client-router`.
 - SharedWorker-coordinated IndexedDB operations and change subscriptions: `@serve-tools/client-shared-db`.
 - SharedWorker-owned native EventSource and per-page event subscriptions: `@serve-tools/client-shared-event-source`.
 - SharedWorker-owned WebSocket with per-page logical clients: `@serve-tools/client-shared-websocket`.
@@ -72,6 +74,7 @@ Select `@serve-tools/signal` separately only when application code imports it di
 ## Selection rules
 
 - Choose `@serve-tools/async-operation` for runtime-neutral owned work; keep transport framing, reconciliation, persistence, and reactive state in their owning layers.
+- Choose `@serve-tools/router` for shared route declarations and `@serve-tools/client-router` when the browser owns navigation and rendering.
 - Choose a `client-*` package when imperative state or transport APIs are sufficient.
 - Pair a realtime client with its matching server only when the task explicitly implements both network sides; a client-only or server-only task needs only its owning package.
 - A custom server adapter uses only `@serve-tools/server-realtime`; never add `@serve-tools/client-realtime` unless the task also implements a client.

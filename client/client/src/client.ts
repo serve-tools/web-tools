@@ -22,6 +22,9 @@ export * as keyboard from "./lib/keyboard.js";
 /** Typed requests and subscriptions over browser message endpoints. */
 export * as messaging from "./lib/messaging.js";
 
+/** Typed native browser navigation, route ownership, and automatic View Transitions. */
+export * as router from "./lib/router.js";
+
 /** EventSource connections shared across browsing contexts through a SharedWorker. */
 export * as sharedEventSource from "./lib/shared-event-source.js";
 
