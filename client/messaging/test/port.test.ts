@@ -181,7 +181,7 @@ describe("requests", () => {
 
 		try {
 			if (navigator.locks) {
-				await vi.waitFor(() => expect(constructions).toBe(1));
+				await vi.waitFor(() => expect(constructions).toBe(2));
 			}
 
 			const baseline = constructions;
@@ -611,27 +611,248 @@ describe("liveness", () => {
 	const isLease = (lock: LockInfo | undefined): boolean => !!lock?.name?.startsWith(`${protocol}#`);
 	const hasWebLocks = typeof navigator.locks?.query === "function";
 
-	it("announces the queued lease before the first operation", async () => {
+	it("announces its lease only after acquisition without delaying operations", async () => {
 		const messages: unknown[][] = [];
+		const acquire = Promise.withResolvers<void>();
+		const lock = vi.fn((_name: string, _options: LockOptions, callback: () => Promise<void> | void) =>
+			acquire.promise.then(callback),
+		);
 
-		vi.stubGlobal("navigator", {
-			locks: { request: () => Promise.resolve() },
+		vi.stubGlobal("navigator", { locks: { request: lock } });
+
+		const client = connect<{ requests: { ping(): string } }>({
+			addEventListener: noop,
+			removeEventListener: noop,
+			postMessage: (message: unknown) => messages.push(message as unknown[]),
 		});
+		const request = client.request("ping");
+		void request.catch(noop);
 
 		try {
-			const client = connect<{ requests: { ping(): string } }>({
-				addEventListener: noop,
-				removeEventListener: noop,
-				postMessage: (message: unknown) => messages.push(message as unknown[]),
-			});
-			const request = client.request("ping");
+			expect(messages.map((message) => message[1])).toEqual(["hello", "request"]);
 
-			expect(messages.map((message) => message[1])).toEqual(["hello", "lease", "request"]);
+			acquire.resolve();
+			await acquire.promise;
+
+			expect(messages.map((message) => message[1])).toEqual(["hello", "request", "lease"]);
+			expect(messages[2]?.[2]).toBe(lock.mock.calls[0]?.[0]);
+
+			const released = vi.fn();
+			const held = lock.mock.results[0]!.value.then(released);
+			await Promise.resolve();
+			expect(released).not.toHaveBeenCalled();
 
 			client.close();
 
+			await held;
+			expect(released).toHaveBeenCalledOnce();
 			await expect(request).rejects.toMatchObject({ name: "ConnectionClosedError" });
 		} finally {
+			client.close();
+			acquire.resolve();
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it("sends hello before a synchronously acquired lease and holds it until closure", async () => {
+		const messages: unknown[][] = [];
+		const lock = vi.fn((_name: string, _options: LockOptions, callback: () => Promise<void> | void) =>
+			Promise.resolve(callback()),
+		);
+
+		vi.stubGlobal("navigator", { locks: { request: lock } });
+
+		const client = connect({
+			addEventListener: noop,
+			removeEventListener: noop,
+			postMessage: (message: unknown) => messages.push(message as unknown[]),
+		});
+
+		try {
+			expect(messages.map((message) => message[1])).toEqual(["hello", "lease"]);
+			expect(messages[1]?.[2]).toBe(lock.mock.calls[0]?.[0]);
+
+			const released = vi.fn();
+			const held = lock.mock.results[0]!.value.then(released);
+			await Promise.resolve();
+			expect(released).not.toHaveBeenCalled();
+
+			client.close();
+
+			await held;
+			expect(released).toHaveBeenCalledOnce();
+			expect(messages.map((message) => message[1])).toEqual(["hello", "lease", "close"]);
+		} finally {
+			client.close();
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it.each([false, true])("does not advertise a late lease after closure (failed hello: %s)", async (failedHello) => {
+		const messages: unknown[][] = [];
+		const acquire = Promise.withResolvers<void>();
+		const lock = vi.fn((_name: string, _options: LockOptions, callback: () => Promise<void> | void) =>
+			acquire.promise.then(callback),
+		);
+
+		vi.stubGlobal("navigator", { locks: { request: lock } });
+
+		const client = connect<{ requests: { ping(): void } }>({
+			addEventListener: noop,
+			removeEventListener: noop,
+			postMessage(message) {
+				const frame = message as unknown[];
+				messages.push(frame);
+				if (failedHello && frame[1] === "hello") {
+					throw new Error("Transport unavailable");
+				}
+			},
+		});
+
+		try {
+			if (!failedHello) {
+				client.close();
+			}
+
+			await expect(client.ready).rejects.toMatchObject({
+				name: failedHello ? "Error" : "ConnectionClosedError",
+				message: failedHello ? "Transport unavailable" : "The connection is closed",
+			});
+			await client.closed;
+			await expect(client.request("ping")).rejects.toMatchObject({ name: "ConnectionClosedError" });
+			expect(messages.some((message) => message[1] === "lease")).toBe(false);
+
+			acquire.resolve();
+			if (failedHello) {
+				expect(lock).not.toHaveBeenCalled();
+			} else {
+				await lock.mock.results[0]!.value;
+			}
+			expect(messages.some((message) => message[1] === "lease")).toBe(false);
+		} finally {
+			client.close();
+			acquire.resolve();
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it("ignores a stale welcome after closure before a late lease grant", async () => {
+		const messages: unknown[][] = [];
+		const acquire = Promise.withResolvers<void>();
+		const lock = vi.fn((_name: string, _options: LockOptions, callback: () => Promise<void> | void) =>
+			acquire.promise.then(callback),
+		);
+		let receive: (event: { data: unknown }) => void = noop;
+
+		vi.stubGlobal("navigator", { locks: { request: lock } });
+
+		const client = connect<{ requests: { ping(): void } }>({
+			addEventListener: (_type, listener) => {
+				receive = listener;
+			},
+			removeEventListener: noop,
+			postMessage: (message: unknown) => messages.push(message as unknown[]),
+		});
+
+		try {
+			client.close();
+			await client.closed;
+			receive({ data: [protocol, "welcome"] });
+
+			acquire.resolve();
+			await acquire.promise;
+			expect(messages.map((message) => message[1])).toEqual(["hello", "close"]);
+			await lock.mock.results[0]!.value;
+			await expect(client.request("ping")).rejects.toMatchObject({ name: "ConnectionClosedError" });
+		} finally {
+			client.close();
+			acquire.resolve();
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it("releases an acquired lock when announcing its lease fails", async () => {
+		const acquire = Promise.withResolvers<void>();
+		const lock = vi.fn((_name: string, _options: LockOptions, callback: () => Promise<void> | void) =>
+			acquire.promise.then(callback),
+		);
+		const announce = vi.fn();
+
+		vi.stubGlobal("navigator", { locks: { request: lock } });
+
+		const client = connect({
+			addEventListener: noop,
+			removeEventListener: noop,
+			postMessage(message) {
+				if ((message as unknown[])[1] === "lease") {
+					announce();
+					throw new Error("Transport unavailable");
+				}
+			},
+		});
+
+		try {
+			acquire.resolve();
+			await lock.mock.results[0]!.value;
+			expect(announce).toHaveBeenCalledOnce();
+		} finally {
+			client.close();
+			acquire.resolve();
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it("keeps messaging available without advertising a rejected lock request", async () => {
+		vi.stubGlobal("navigator", { locks: { request: () => Promise.reject(new Error("Locks unavailable")) } });
+		const { port1, port2 } = new MessageChannel();
+		const sent = vi.spyOn(port1, "postMessage");
+		const client = connect<{ requests: { ping(): string } }>(port1);
+		const server = serve<{ requests: { ping(): string } }>(port2, { requests: { ping: () => "pong" } });
+
+		try {
+			await client.ready;
+			expect(await client.request("ping")).toBe("pong");
+			expect(sent.mock.calls.some(([message]) => (message as unknown[])[1] === "lease")).toBe(false);
+		} finally {
+			client.close();
+			server.close();
+			port1.close();
+			port2.close();
+			sent.mockRestore();
+			vi.unstubAllGlobals();
+		}
+	});
+
+	it("does not initialize a lease or retain page listeners after a synchronous startup close", async () => {
+		const listeners = new Set<() => void>();
+		const lock = vi.fn(() => Promise.resolve());
+		const postMessage = vi.fn();
+		let receive: (event: { data: unknown }) => void = noop;
+
+		vi.stubGlobal("navigator", { locks: { request: lock } });
+		vi.stubGlobal("onpagehide", null);
+		vi.stubGlobal("addEventListener", (_type: string, listener: () => void) => listeners.add(listener));
+		vi.stubGlobal("removeEventListener", (_type: string, listener: () => void) => listeners.delete(listener));
+
+		let client: ReturnType<typeof connect> | undefined;
+
+		try {
+			client = connect({
+				addEventListener: (_type, listener) => {
+					receive = listener;
+				},
+				removeEventListener: noop,
+				postMessage,
+				start: () => receive({ data: [protocol, "close", { name: "Error", message: "Peer closed" }] }),
+			});
+
+			await expect(client.ready).rejects.toMatchObject({ message: "Peer closed" });
+			await client.closed;
+			expect(postMessage).not.toHaveBeenCalled();
+			expect(lock).not.toHaveBeenCalled();
+			expect(listeners.size).toBe(0);
+		} finally {
+			client?.close();
 			vi.unstubAllGlobals();
 		}
 	});
@@ -649,6 +870,55 @@ describe("liveness", () => {
 			}
 		} finally {
 			vi.unstubAllGlobals();
+		}
+	});
+
+	it.runIf(hasWebLocks)("cancels a pending native lease acquisition when the client closes", async () => {
+		const id = crypto.randomUUID();
+		const name = `${protocol}#${id}`;
+		const uuid = vi.spyOn(crypto, "randomUUID").mockReturnValue(id);
+		const request = vi.spyOn(navigator.locks, "request");
+		const acquired = Promise.withResolvers<void>();
+		const release = Promise.withResolvers<void>();
+		const blocker = navigator.locks.request(name, () => {
+			acquired.resolve();
+			return release.promise;
+		});
+
+		await acquired.promise;
+
+		const messages: unknown[][] = [];
+		const client = connect({
+			addEventListener: noop,
+			removeEventListener: noop,
+			postMessage: (message: unknown) => messages.push(message as unknown[]),
+		});
+
+		try {
+			await vi.waitFor(async () => {
+				const { pending } = await navigator.locks.query();
+				expect(pending?.some((lock) => lock.name === name)).toBe(true);
+			});
+
+			client.close();
+			await client.closed;
+
+			expect((request.mock.calls[1]![1] as LockOptions).signal?.aborted).toBe(true);
+			// Node may retain an aborted request in query() until the blocker releases; its promise still rejects now.
+			await expect(request.mock.results[1]!.value).rejects.toMatchObject({ name: "AbortError" });
+			const { held } = await navigator.locks.query();
+			expect(held?.some((lock) => lock.name === name)).toBe(true);
+			expect(messages.map((message) => message[1])).toEqual(["hello", "close"]);
+		} finally {
+			client.close();
+			uuid.mockRestore();
+			request.mockRestore();
+			release.resolve();
+			await blocker;
+			await vi.waitFor(async () => {
+				const { held, pending } = await navigator.locks.query();
+				expect([...(held ?? []), ...(pending ?? [])].some((lock) => lock.name === name)).toBe(false);
+			});
 		}
 	});
 

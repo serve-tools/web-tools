@@ -31,8 +31,8 @@ import type {
  * Connects a typed client to a worker or message port.
  *
  * The endpoint becomes protocol-owned until the client closes. Closing the client does not close or terminate the
- * underlying transport. When Web Locks are available, the client announces its lifetime through a held lock so the
- * serving peer can detect abrupt client loss, and window clients close automatically on `pagehide` to stay
+ * underlying transport. When Web Locks are available, the client announces its lifetime only after acquiring a lock so
+ * the serving peer can detect abrupt client loss, and window clients close automatically on `pagehide` to stay
  * back/forward-cache eligible.
  */
 export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoint: MessageEndpoint): Client<P> {
@@ -47,6 +47,10 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 	const pageEvents = "onpagehide" in globalThis ? globalThis : undefined;
 
 	const receive = ({ data }: MessageEventLike): void => {
+		if (state === ConnectionState.Closed) {
+			return;
+		}
+
 		if (!isWireMessage(data)) {
 			closeProtocol(protocolError());
 
@@ -218,38 +222,59 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 		finish(error, false);
 	};
 
-	endpoint.addEventListener("message", receive);
+	const acquireLease = (): void => {
+		const { locks } = navigator;
 
-	endpoint.start?.();
+		if (state === ConnectionState.Closed || !locks) {
+			return;
+		}
 
-	pageEvents?.addEventListener("pagehide", hidden);
-
-	void ready.promise.catch(noop);
-
-	try {
-		post(endpoint, [protocol, "hello"]);
-	} catch (error) {
-		finish(error, true);
-	}
-
-	const { locks } = navigator;
-
-	if (locks) {
 		const name = `${protocol}#${crypto.randomUUID()}`;
+		const controller = new AbortController();
 		const released = Promise.withResolvers<void>();
 
 		releaseLease = (): void => {
+			controller.abort();
 			released.resolve();
 		};
 
-		void locks.request(name, () => released.promise).catch(noop);
+		void locks
+			.request(name, { signal: controller.signal }, () => {
+				if (state === ConnectionState.Closed) {
+					return;
+				}
+
+				try {
+					post(endpoint, [protocol, "lease", name]);
+				} catch {
+					return;
+				}
+
+				return released.promise;
+			})
+			.catch(noop);
+	};
+
+	const initialize = (): void => {
+		if (state === ConnectionState.Closed) {
+			return;
+		}
 
 		try {
-			post(endpoint, [protocol, "lease", name]);
-		} catch {
-			releaseLease();
+			post(endpoint, [protocol, "hello"]);
+		} catch (error) {
+			finish(error, true);
 		}
-	}
+
+		acquireLease();
+	};
+
+	endpoint.addEventListener("message", receive);
+	pageEvents?.addEventListener("pagehide", hidden);
+	void ready.promise.catch(noop);
+
+	endpoint.start?.();
+	initialize();
 
 	return {
 		ready: ready.promise,

@@ -1,15 +1,11 @@
 /// <reference lib="webworker" />
 
-import type { ProtocolType } from "../../src/scope/worker.js";
+import type { Listener, ProtocolType } from "../../src/scope/worker.js";
 import { listen, transfer } from "../../src/scope/worker.js";
 
-let total = 0;
-let cancellationCount = 0;
-
-const subscribers = new Set<(value: number) => void>();
-
-const connections = listen<{
+type SharedCounterDefinition = {
 	requests: {
+		connectionCount(): number;
 		echo(value: string): string;
 		increment(amount: number): number;
 		subscriberCount(): number;
@@ -21,8 +17,16 @@ const connections = listen<{
 	subscriptions: {
 		totals(): number;
 	};
-}>({
+};
+
+let total = 0;
+let cancellationCount = 0;
+
+const subscribers = new Set<(value: number) => void>();
+
+const connections: Listener<SharedCounterDefinition> = listen<SharedCounterDefinition>({
 	requests: {
+		connectionCount: (): number => connections.length,
 		echo: async (value) => value,
 		increment: (amount) => {
 			total += amount;

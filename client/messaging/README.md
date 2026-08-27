@@ -180,20 +180,45 @@ A subscription reports its terminal failure through `onError`.
 ### Liveness detection
 
 A `MessagePort` cannot report an abruptly destroyed peer, such as a crashed or discarded tab holding a `SharedWorker` port.
-The library covers that gap automatically: each client holds a uniquely named Web Lock and announces it to the serving peer, and the browser releases the lock when the client's agent is destroyed for any reason.
+The library covers that gap automatically: each client acquires a uniquely named Web Lock and only then announces it to the serving peer, and the browser releases the lock when the client's agent is destroyed for any reason.
 The server watches the announced lock and finishes — aborting handlers and running subscription cleanups — when it is released.
-The lease requires no configuration; it is skipped only where Web Locks are unavailable, and closing the client releases it immediately.
+When Web Locks are available on both sides, peers must share the same [Web Locks storage bucket](https://www.w3.org/TR/web-locks/#lock-managers), normally same-origin windows and workers in the same storage partition.
+Cross-origin or separately partitioned transferred ports are not supported by this lease protocol.
+The handshake and operations do not wait for lease acquisition.
+Automatic abrupt-peer detection starts only after the lease has been announced.
+Closing the client cancels pending lease acquisition and releases a held lease; a grant observed after closure is not announced.
+Closure is final: late protocol events cannot reopen a closed client.
+The lease requires no configuration; where Web Locks are unavailable or acquisition fails, messaging continues without automatic abrupt-peer detection.
 
 ### Back/forward cache
 
 To keep pages eligible for the back/forward cache, a window client also closes itself automatically on `pagehide`, releasing its lease before the page is snapshotted.
 The lease never blocks caching on its own; note, however, that Chrome currently declines to cache any page connected to a `SharedWorker` (reported as `SharedWorkerWithNoActiveClient` in its bfcache diagnostics), which is a platform constraint independent of this library.
-A page restored from the cache must reconnect and re-subscribe, for example from a `pageshow` listener when `event.persisted` is `true`:
+A page restored from the cache must create a fresh worker connection and re-subscribe, for example from a `pageshow` listener when `event.persisted` is `true`.
+Do not call `connect()` again on the old port: its serving peer has already closed that protocol connection.
 
 ```ts
+import { SharedWorker } from "@serve-tools/client-messaging/scope/window";
+
+const openWorker = () =>
+	new SharedWorker<CounterProtocol>(new URL("./counter-worker.ts", import.meta.url), {
+		name: "counter",
+		type: "module",
+	});
+
+let worker = openWorker();
+let totals = worker.client.subscribe("totals", renderTotal);
+
+addEventListener("pagehide", () => {
+	totals.unsubscribe();
+	worker.client.close();
+	worker.port.close();
+});
+
 addEventListener("pageshow", (event) => {
 	if (event.persisted) {
-		client = connect<CounterProtocol>(worker.port);
+		worker = openWorker();
+		totals = worker.client.subscribe("totals", renderTotal);
 	}
 });
 ```
