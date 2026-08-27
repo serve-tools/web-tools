@@ -21,7 +21,10 @@ export interface MessageEndpoint {
 	/** Removes the protocol's message listener. */
 	removeEventListener(type: "message", listener: (event: MessageEventLike) => void): void;
 
-	/** Starts delivery for endpoints such as a `MessagePort`; called automatically when present. */
+	/**
+	 * Starts delivery for endpoints such as a `MessagePort`; called automatically when present.
+	 * If this throws, `connect()` and `serve()` clean up their protocol state and rethrow the original error.
+	 */
 	start?(): void;
 }
 

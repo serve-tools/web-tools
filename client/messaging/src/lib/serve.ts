@@ -301,7 +301,13 @@ export function serve<const P extends Protocol & ProtocolDefinition<P>>(
 	};
 
 	endpoint.addEventListener("message", receive);
-	endpoint.start?.();
+
+	try {
+		endpoint.start?.();
+	} catch (error) {
+		finish();
+		throw error;
+	}
 
 	return {
 		closed: closed.promise,

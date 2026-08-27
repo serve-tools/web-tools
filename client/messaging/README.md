@@ -177,6 +177,9 @@ A subscription reports its terminal failure through `onError`.
 `Client`, `Server`, and `Subscription` implement explicit resource management.
 `client.closed` and `server.closed` resolve after explicit local or remote closure.
 
+If an endpoint's optional `start()` throws, `connect()` and `serve()` remove their protocol listeners and rethrow the original error without closing the underlying transport.
+The server also aborts any operations accepted during startup, cancels its lease watch, and runs subscription cleanup even if the handler returns it after startup fails.
+
 ### Liveness detection
 
 A `MessagePort` cannot report an abruptly destroyed peer, such as a crashed or discarded tab holding a `SharedWorker` port.
