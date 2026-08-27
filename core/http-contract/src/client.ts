@@ -7,72 +7,47 @@ import type {
 	OperationAt,
 	OperationResponses,
 	PathsForMethod,
-	ResponseSchema,
+	ResponseMapAt,
+	ResponseMapStatuses,
 	RouteAt,
 	RoutePaths,
 	Schema,
 	SchemaInput,
 	SchemaOutput,
 } from "./http-contract.js";
-import { httpMethods, ProtocolError } from "./http-contract.js";
-import { assertJSONValue, isJSONMediaType } from "./lib/json.js";
+import type { ClientFetchOptions } from "./lib/client-runtime.js";
+import { fetchJSON, parseClientBaseURL } from "./lib/client-runtime.js";
+import { ProtocolError } from "./lib/error.js";
+import { httpMethods } from "./lib/types.js";
+
+export { ProtocolError } from "./lib/error.js";
 
 const CLIENT_BASE_URL = "https://http-contract.invalid/";
 const PARAMETER_SEGMENT_PATTERN = /^:([A-Za-z_$][\w$]*)$/;
 // biome-ignore lint/suspicious/noControlCharactersInRegex: Client route templates reject URL control characters.
 const INVALID_LITERAL_PATTERN = /[:%\\?#{()*\u0000-\u001f\u007f]/;
 
-declare const resultResponses: unique symbol;
+/** Native Fetch request metadata plus an optional typed framework extension. */
+export type ClientRequestInit<Extension extends object = object> = Omit<RequestInit, "body" | "method" | "mode"> &
+	Extension & {
+		readonly body?: never;
+		readonly method?: never;
+		readonly mode?: Exclude<RequestMode, "no-cors">;
+	};
 
 /** Options shared by every generated client request. */
-export interface ClientRequestOptions {
-	readonly credentials?: RequestCredentials;
-	readonly headers?: HeadersInit;
-	readonly signal?: AbortSignal;
+export interface ClientRequestOptions<InitExtension extends object = object> {
+	readonly init?: ClientRequestInit<InitExtension>;
 }
 
 /** Configuration for a schema-free native Fetch client. */
-export interface ClientOptions {
+export interface ClientOptions<InitExtension extends object = object> {
 	readonly baseURL?: string | URL;
-	readonly fetch?: typeof globalThis.fetch;
+	readonly fetch?: (
+		input: Parameters<typeof globalThis.fetch>[0],
+		init?: RequestInit & Partial<InitExtension>,
+	) => ReturnType<typeof globalThis.fetch>;
 }
-
-interface ResultAssociation<Responses> {
-	readonly [resultResponses]: (responses: Responses) => Responses;
-}
-
-/** An honest JSON, no-content, or unverified raw HTTP response. */
-export type HTTPResult<Responses extends object> = (
-	| {
-			readonly kind: "json";
-			readonly ok: true;
-			readonly status: number;
-			readonly data: unknown;
-			readonly response: Response;
-	  }
-	| {
-			readonly kind: "json";
-			readonly ok: false;
-			readonly status: number;
-			readonly error: unknown;
-			readonly response: Response;
-	  }
-	| {
-			readonly kind: "empty";
-			readonly ok: true;
-			readonly status: number;
-			readonly data: undefined;
-			readonly response: Response;
-	  }
-	| {
-			readonly kind: "raw";
-			readonly ok: boolean;
-			readonly status: number;
-			readonly response: Response;
-			readonly body?: string;
-	  }
-) &
-	ResultAssociation<Responses>;
 
 type ClientMethods<Definition extends API> = {
 	[Method in HTTPMethod]: PathsForMethod<Definition, Method> extends never ? never : Method;
@@ -81,7 +56,7 @@ type ClientMethods<Definition extends API> = {
 type NativeRouteOptions<Definition extends API, Path extends RoutePaths<Definition>> =
 	RouteAt<Definition, Path> extends {
 		readonly route: infer SelectedRoute extends AnyRoute;
-		readonly serialization: "native";
+		readonly serialization?: "native";
 	}
 		? RouteInput<SelectedRoute> & { readonly href?: never }
 		: never;
@@ -103,65 +78,77 @@ type RequestOptions<
 	Definition extends API,
 	Path extends RoutePaths<Definition>,
 	Selected extends Operation,
-> = ClientRequestOptions & RouteRequestOptions<Definition, Path> & BodyRequestOptions<Selected>;
+	InitExtension extends object,
+> = ClientRequestOptions<InitExtension> & RouteRequestOptions<Definition, Path> & BodyRequestOptions<Selected>;
 
 type RequestArguments<Options> = Record<never, never> extends Options ? [options?: Options] : [options: Options];
 
-type ClientResponseStatus<Responses> = keyof Responses & number;
-type ClientResponseAt<Responses, Status extends ClientResponseStatus<Responses>> = Responses[Status] & ResponseSchema;
-
-type CheckedHTTPResult<Responses extends object, Status extends ClientResponseStatus<Responses>> = (ClientResponseAt<
-	Responses,
-	Status
-> extends null
-	? {
-			readonly kind: "empty";
-			readonly ok: true;
-			readonly status: Status;
-			readonly data: undefined;
-			readonly response: Response;
-		}
-	: `${Status}` extends `2${string}`
+type HTTPResultAt<Responses extends object, Status extends ResponseMapStatuses<Responses>> =
+	ResponseMapAt<Responses, Status> extends null
 		? {
-				readonly kind: "json";
+				readonly body: undefined;
 				readonly ok: true;
 				readonly status: Status;
-				readonly data: SchemaOutput<Extract<ClientResponseAt<Responses, Status>, Schema>>;
 				readonly response: Response;
 			}
+		: `${Status}` extends `2${string}`
+			? {
+					readonly body: SchemaOutput<Extract<ResponseMapAt<Responses, Status>, Schema>>;
+					readonly ok: true;
+					readonly status: Status;
+					readonly response: Response;
+				}
+			: {
+					readonly body: SchemaOutput<Extract<ResponseMapAt<Responses, Status>, Schema>>;
+					readonly ok: false;
+					readonly status: Status;
+					readonly response: Response;
+				};
+
+type BroadHTTPResult =
+	| {
+			readonly body: unknown;
+			readonly ok: true;
+			readonly status: number;
+			readonly response: Response;
+	  }
+	| {
+			readonly body: unknown;
+			readonly ok: false;
+			readonly status: number;
+			readonly response: Response;
+	  };
+
+/** A contract-declared, status-discriminated native Fetch response. */
+export type HTTPResult<Responses extends object> =
+	number extends ResponseMapStatuses<Responses>
+		? BroadHTTPResult
 		: {
-				readonly kind: "json";
-				readonly ok: false;
-				readonly status: Status;
-				readonly error: SchemaOutput<Extract<ClientResponseAt<Responses, Status>, Schema>>;
-				readonly response: Response;
-			}) &
-	ResultAssociation<Responses>;
+				[Status in ResponseMapStatuses<Responses>]: HTTPResultAt<Responses, Status>;
+			}[ResponseMapStatuses<Responses>];
 
 /** A client whose methods, paths, route inputs, bodies, and declared status checks derive from one API type. */
-export type Client<Definition extends API> = {
+export type Client<Definition extends API, InitExtension extends object = object> = {
 	[Method in ClientMethods<Definition>]: <Path extends PathsForMethod<Definition, Method>>(
 		path: Path,
-		...args: RequestArguments<RequestOptions<Definition, Path, OperationAt<Definition, Method, Path>>>
+		...args: RequestArguments<
+			RequestOptions<Definition, Path, OperationAt<Definition, Method, Path>, InitExtension>
+		>
 	) => Promise<HTTPResult<OperationResponses<Definition, OperationAt<Definition, Method, Path>>>>;
 };
 
-interface RuntimeRequestOptions {
-	readonly body?: unknown;
-	readonly credentials?: RequestCredentials;
-	readonly headers?: HeadersInit;
+interface RuntimeRequestOptions extends ClientFetchOptions {
 	readonly href?: unknown;
 	readonly params?: unknown;
 	readonly search?: unknown;
-	readonly signal?: AbortSignal;
 }
 
 /** Creates a client whose application contract remains a fully erased type argument. */
-export function createClient<Definition extends API>({
+export function createClient<Definition extends API, InitExtension extends object = object>({
 	baseURL,
 	fetch: fetchImplementation = globalThis.fetch,
-}: ClientOptions = {}): Client<Definition> {
-	const base = baseURL === undefined ? undefined : parseBaseURL(baseURL);
+}: ClientOptions<InitExtension> = {}): Client<Definition, InitExtension> {
+	const base = baseURL === undefined ? undefined : parseClientBaseURL(baseURL);
 	const client: Partial<Record<HTTPMethod, unknown>> = {};
 
 	for (const method of httpMethods) {
@@ -171,90 +158,12 @@ export function createClient<Definition extends API>({
 				? serializeHref(method, path, options)
 				: serializeNative(method, path, options);
 			const url = resolveURL(method, path, href, base);
-			const headers = new Headers(options.headers);
 
-			headers.set("accept", "application/json");
-
-			let body: string | undefined;
-
-			if (Object.hasOwn(options, "body")) {
-				assertJSONValue(options.body, "the client request body");
-				headers.set("content-type", "application/json");
-				body = JSON.stringify(options.body);
-			}
-
-			const response = await fetchImplementation(url, {
-				method,
-				headers,
-				...(body === undefined ? {} : { body }),
-				...(options.credentials === undefined ? {} : { credentials: options.credentials }),
-				...(options.signal === undefined ? {} : { signal: options.signal }),
-			});
-
-			return (await readResponse(response)) as HTTPResult<object>;
+			return fetchJSON<InitExtension>(fetchImplementation, method, path, url, options);
 		};
 	}
 
-	return client as Client<Definition>;
-}
-
-/** Checks one operation-declared status before exposing the payload type trusted from its server validator. */
-export function isStatus<Responses extends object, const Status extends ClientResponseStatus<Responses>>(
-	result: HTTPResult<Responses>,
-	status: Status,
-): result is HTTPResult<Responses> & CheckedHTTPResult<Responses, Status> {
-	if (result.status !== status || result.kind === "raw") {
-		return false;
-	}
-
-	if (status === 204 || status === 205) {
-		return result.kind === "empty";
-	}
-
-	return result.kind === "json" && result.ok === (status >= 200 && status < 300);
-}
-
-async function readResponse(response: Response): Promise<HTTPResult<object>> {
-	const result = { ok: response.ok, status: response.status, response };
-
-	if (response.status === 204 || response.status === 205) {
-		return { ...result, kind: "empty", ok: true, data: undefined } as HTTPResult<object>;
-	}
-
-	if (!isJSONMediaType(response.headers.get("content-type"))) {
-		return { ...result, kind: "raw" } as HTTPResult<object>;
-	}
-
-	const body = await response.text();
-	let value: unknown;
-
-	try {
-		value = JSON.parse(body);
-	} catch {
-		return { ...result, kind: "raw", body } as HTTPResult<object>;
-	}
-
-	return (
-		response.ok
-			? { ...result, kind: "json", ok: true, data: value }
-			: { ...result, kind: "json", ok: false, error: value }
-	) as HTTPResult<object>;
-}
-
-function parseBaseURL(input: string | URL): URL {
-	let url: URL;
-
-	try {
-		url = new URL(input);
-	} catch {
-		throw new ProtocolError("Invalid client base URL");
-	}
-
-	if (url.protocol !== "http:" && url.protocol !== "https:") {
-		throw new ProtocolError("Invalid client base URL");
-	}
-
-	return url;
+	return client as Client<Definition, InitExtension>;
 }
 
 function resolveURL(method: HTTPMethod, path: string, href: string, base: URL | undefined): string {
@@ -361,8 +270,12 @@ function parseTemplate(
 		invalidRequest(method, String(path), "Invalid client route template");
 	}
 
-	const segments = path.split("/");
+	const segments = path === "/" ? [] : path.slice(1).split("/");
 	const parameterNames: string[] = [];
+
+	if (segments.some((segment) => segment === "" || segment === "." || segment === "..")) {
+		invalidRequest(method, path, "Invalid client route template");
+	}
 
 	for (const segment of segments) {
 		const match = PARAMETER_SEGMENT_PATTERN.exec(segment);
@@ -423,7 +336,7 @@ function inputRecord(
 
 function requestOptions(method: HTTPMethod, path: string, input: unknown): RuntimeRequestOptions {
 	const value = inputRecord(method, path, input);
-	const keys = ["body", "credentials", "headers", "href", "params", "search", "signal"];
+	const keys = ["body", "href", "init", "params", "search"];
 
 	if (Object.keys(value).some((key) => !keys.includes(key))) {
 		invalidRequest(method, path, "Invalid client request options");

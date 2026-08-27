@@ -4,8 +4,8 @@ import { expect, test } from "vitest";
 
 import { benchmark } from "../../../client/benchmark.js";
 import { createClient } from "../src/client.js";
-import { defineAPI } from "../src/http-contract.js";
-import type { AnyRouteEntry, API } from "../src/lib/types.js";
+import { defineAPI, ProtocolError } from "../src/http-contract.js";
+import type { APIDefinition, RouteDeclaration } from "../src/lib/types.js";
 import { toOpenAPI } from "../src/openapi.js";
 import { createHandler } from "../src/server.js";
 
@@ -27,32 +27,23 @@ const objectSchema = {
 	},
 } satisfies StandardSchemaV1 & StandardJSONSchemaV1;
 
-const createDefinition = (): API => {
-	const routes: Record<string, AnyRouteEntry> = {};
+const createDefinition = (): APIDefinition => {
+	const routes: Record<string, RouteDeclaration> = {};
 
 	for (let index = 0; index < 26; ++index) {
-		const resource = route(`/resources/${index}`);
-
-		routes[resource.path] = {
-			route: resource,
-			serialization: "native",
+		routes[`/resources/${index}`] = {
 			GET: { operationId: `resource${index}`, responses: { 200: objectSchema } },
 		};
 	}
 
-	const currentItem = route("/items/me");
 	const item = route("/items/:id", { params: { id: codec.integer() } });
 	const href = route("/href/:id", { params: { id: codec.integer() } });
-	const empty = route("/empty");
 
-	routes[currentItem.path] = {
-		route: currentItem,
-		serialization: "native",
+	routes["/items/me"] = {
 		GET: { operationId: "currentItem", responses: { 200: objectSchema } },
 	};
 	routes[item.path] = {
 		route: item,
-		serialization: "native",
 		GET: { operationId: "item", responses: { 200: objectSchema } },
 		POST: { operationId: "updateItem", body: objectSchema, responses: { 200: objectSchema } },
 	};
@@ -61,13 +52,11 @@ const createDefinition = (): API => {
 		serialization: "href",
 		GET: { operationId: "href", responses: { 200: objectSchema } },
 	};
-	routes[empty.path] = {
-		route: empty,
-		serialization: "native",
+	routes["/empty"] = {
 		DELETE: { operationId: "empty", responses: { 204: null } },
 	};
 
-	return { commonResponses: { 400: objectSchema }, routes };
+	return { routes };
 };
 
 const api = defineAPI(createDefinition());
@@ -89,10 +78,10 @@ handlers["DELETE /empty"] = () => ({ status: 204 });
 const createBenchmarkHandler = () => createHandler(api, { handlers } as never);
 
 const jsonFetch: typeof fetch = async () => Response.json({ ok: true });
-const rawFetch: typeof fetch = async () => new Response("upstream unavailable", { status: 502 });
+const nonJSONFetch: typeof fetch = async () => new Response("upstream unavailable", { status: 502 });
 
 interface RuntimeClient {
-	readonly GET: (path: string, input?: unknown) => Promise<{ readonly kind?: string; readonly status: number }>;
+	readonly GET: (path: string, input?: unknown) => Promise<{ readonly status: number }>;
 	readonly POST: (path: string, input?: unknown) => Promise<{ readonly status: number }>;
 	readonly DELETE: (path: string, input?: unknown) => Promise<{ readonly status: number }>;
 }
@@ -102,21 +91,21 @@ test("HTTP contract representative runtime workloads", async () => {
 		baseURL: "https://benchmark.invalid/",
 		fetch: jsonFetch,
 	}) as unknown as RuntimeClient;
-	const rawClient = createClient({
+	const protocolErrorClient = createClient({
 		baseURL: "https://benchmark.invalid/",
-		fetch: rawFetch,
+		fetch: nonJSONFetch,
 	}) as unknown as RuntimeClient;
 	const handler = createBenchmarkHandler();
 	const runtimeGET = nativeClient.GET;
 	const runtimePOST = nativeClient.POST;
 	const runtimeDELETE = nativeClient.DELETE;
-	const runtimeRawGET = rawClient.GET;
+	const runtimeProtocolErrorGET = protocolErrorClient.GET;
 
 	expect((await runtimeGET("/resources/0")).status).toBe(200);
 	expect((await runtimeGET("/items/:id", { params: { id: 42 } })).status).toBe(200);
 	expect((await runtimePOST("/items/:id", { params: { id: 42 }, body: { ok: true } })).status).toBe(200);
 	expect((await runtimeGET("/href/:id", { href: "/href/42" })).status).toBe(200);
-	expect(await runtimeRawGET("/resources/0")).toMatchObject({ kind: "raw", status: 502 });
+	await expect(runtimeProtocolErrorGET("/resources/0")).rejects.toBeInstanceOf(ProtocolError);
 	expect((await runtimeDELETE("/empty")).status).toBe(200);
 	expect((await handler(new Request("https://benchmark.invalid/resources/0"))).status).toBe(200);
 	expect((await handler(new Request("https://benchmark.invalid/resources/25"))).status).toBe(200);
@@ -188,9 +177,19 @@ test("HTTP contract representative runtime workloads", async () => {
 		{ ...measurement, iterations: 800 },
 	);
 	await benchmark(
-		"http-contract/client/raw-response",
+		"http-contract/client/protocol-error-response",
 		async () => {
-			await runtimeRawGET("/resources/0");
+			try {
+				await runtimeProtocolErrorGET("/resources/0");
+			} catch (error) {
+				if (error instanceof ProtocolError) {
+					return;
+				}
+
+				throw error;
+			}
+
+			throw new Error("The non-JSON response did not reject with ProtocolError");
 		},
 		{ ...measurement, iterations: 800 },
 	);

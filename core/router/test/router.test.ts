@@ -3,6 +3,100 @@ import { describe, expect, it } from "vitest";
 import { codec, route } from "../src/router.js";
 
 describe("route", () => {
+	it("exposes portable codec metadata through route options", () => {
+		const identifier = codec.integer();
+		const category = codec.enum("book", "film");
+		const custom = codec.schema({
+			parse: (value) => new Date(value),
+			format: (value) => value.toISOString(),
+		});
+		const catalog = route("/catalog/:id", {
+			params: { id: identifier },
+			search: {
+				category: category.default("book"),
+				tag: codec.string().many(),
+				filter: codec.string().many().optional(),
+				custom: custom.optional(),
+			},
+		});
+
+		expect(identifier.metadata).toEqual({
+			type: "integer",
+			required: true,
+			repeated: false,
+			native: true,
+		});
+		expect(category.metadata).toEqual({
+			type: "enum",
+			required: true,
+			repeated: false,
+			native: true,
+			values: ["book", "film"],
+		});
+		expect(catalog.options.search?.category.metadata).toEqual({
+			type: "enum",
+			required: false,
+			repeated: false,
+			native: true,
+			values: ["book", "film"],
+			defaultValue: "book",
+		});
+		expect(catalog.options.search?.tag.metadata).toEqual({
+			type: "string",
+			required: false,
+			repeated: true,
+			native: true,
+			defaultValue: [],
+		});
+		expect(catalog.options.search?.filter.metadata).toEqual({
+			type: "string",
+			required: false,
+			repeated: true,
+			native: true,
+		});
+		expect(custom.metadata).toEqual({
+			type: "custom",
+			required: true,
+			repeated: false,
+			native: false,
+		});
+		expect(catalog.options.search?.custom.metadata.native).toBe(false);
+		expect(catalog.options.params?.id.metadata).toBe(identifier.metadata);
+		expect(Object.isFrozen(category.metadata.values)).toBe(true);
+		expect(Object.isFrozen(catalog.options.search?.tag.metadata.defaultValue)).toBe(true);
+	});
+
+	it("snapshots and freezes route options without freezing caller-owned objects", async () => {
+		const originalLoad = () => "original";
+		const params = { id: codec.integer() };
+		const search = { q: codec.string().optional() };
+		const loading = { mode: "blocking" as const, load: originalLoad };
+		const options = { params, search, loading };
+		const item = route("/items/:id", options);
+
+		(params as Record<string, unknown>).id = codec.string();
+		(search as Record<string, unknown>).q = codec.integer().optional();
+		loading.mode = "deferred" as never;
+		loading.load = () => "mutated";
+		(options as Record<string, unknown>).params = {};
+
+		expect(item.options).not.toBe(options);
+		expect(item.options.params).not.toBe(params);
+		expect(item.options.search).not.toBe(search);
+		expect(item.options.loading).not.toBe(loading);
+		expect(Object.isFrozen(item.options)).toBe(true);
+		expect(Object.isFrozen(item.options.params)).toBe(true);
+		expect(Object.isFrozen(item.options.search)).toBe(true);
+		expect(Object.isFrozen(item.options.loading)).toBe(true);
+		expect(Object.isFrozen(options)).toBe(false);
+		expect(Object.isFrozen(params)).toBe(false);
+		expect(Object.isFrozen(search)).toBe(false);
+		expect(Object.isFrozen(loading)).toBe(false);
+		expect(item.href({ params: { id: 7 }, search: { q: "kept" } })).toBe("/items/7?q=kept");
+		expect(item.match("/items/7?q=kept")?.params).toEqual({ id: 7 });
+		expect(await item.options.loading?.load?.({} as never)).toBe("original");
+	});
+
 	it("builds and matches typed path and search values", () => {
 		const project = route("/projects/:id", {
 			params: { id: codec.integer() },
@@ -20,6 +114,7 @@ describe("route", () => {
 
 		const match = project.match("https://example.com/projects/42?q=road+map&tag=one&tag=two");
 		expect(match).toEqual({
+			path: project.path,
 			route: project,
 			url: new URL("https://example.com/projects/42?q=road+map&tag=one&tag=two"),
 			params: { id: 42 },
@@ -44,6 +139,59 @@ describe("route", () => {
 
 		expect(asset.href({ params: { id: "logo", format: "svg", variant: "dark" } })).toBe("/assets/logo.svg-dark");
 		expect(asset.match("/assets/logo.svg-dark")?.params).toEqual({ id: "logo", format: "svg", variant: "dark" });
+		expect(asset.href({ params: { id: ".", format: "svg", variant: "dark" } })).toBe("/assets/..svg-dark");
+	});
+
+	it("rejects ambiguous adjacent parameters and verifies formatted-wire round trips", async () => {
+		const nativeURLPattern = URLPattern;
+
+		Reflect.deleteProperty(globalThis, "URLPattern");
+		await import("@serve-tools/polyfill-urlpattern");
+		const ponyfillURLPattern = URLPattern;
+		globalThis.URLPattern = nativeURLPattern;
+
+		try {
+			for (const implementation of [nativeURLPattern, ponyfillURLPattern]) {
+				globalThis.URLPattern = implementation;
+
+				expect(() => route("/files/:a:b")).toThrow(TypeError);
+
+				const hidden = route("/files/.:key");
+				const hiddenHref = hidden.href({ params: { key: "x" } });
+				expect(hiddenHref).toBe("/files/.x");
+				expect(hidden.match(hiddenHref)?.params).toEqual({ key: "x" });
+
+				const asset = route("/assets/:id.:format-:variant");
+				const assetHref = asset.href({ params: { id: "logo", format: "svg", variant: "dark" } });
+				expect(asset.match(assetHref)?.params).toEqual({ id: "logo", format: "svg", variant: "dark" });
+
+				const normalized = route("/normalized/:value", {
+					params: {
+						value: codec.schema({
+							parse: (value: string) => value.toUpperCase(),
+							format: (value: string) => value,
+						}),
+					},
+				});
+				expect(normalized.href({ params: { value: "SAME" } })).toBe("/normalized/SAME");
+				expect(() => normalized.href({ params: { value: "changed" } })).toThrow(TypeError);
+
+				type Box = { value: string };
+				const boxed = route("/boxed/:value", {
+					params: {
+						value: codec.schema<Box>({
+							parse: (value) => ({ value: value.toLowerCase() }),
+							format: ({ value }) => value.toUpperCase(),
+						}),
+					},
+				});
+				const boxedHref = boxed.href({ params: { value: { value: "mixed" } } });
+				expect(boxedHref).toBe("/boxed/MIXED");
+				expect(boxed.match(boxedHref)?.params).toEqual({ value: { value: "mixed" } });
+			}
+		} finally {
+			globalThis.URLPattern = nativeURLPattern;
+		}
 	});
 
 	it("round trips encoded slashes and rejects malformed escapes", () => {
@@ -53,6 +201,20 @@ describe("route", () => {
 		expect(href).toBe("/files/folder%2Fname");
 		expect(file.match(href)?.params.key).toBe("folder/name");
 		expect(file.match("/files/%E0%A4%A")).toBeNull();
+	});
+
+	it("rejects pathname values that cannot round trip through URL parsing", () => {
+		const file = route("/files/:key");
+
+		for (const key of ["", ".", ".."]) {
+			expect(() => file.href({ params: { key } })).toThrow(TypeError);
+		}
+
+		expect(() => file.href({ params: { key: "\ud800" } })).toThrow(TypeError);
+		expect(() => route("/files/.:key").href({ params: { key: "." } })).toThrow(TypeError);
+		expect(() => route("/files/:key.").href({ params: { key: "." } })).toThrow(TypeError);
+		expect(() => route("/files/:a:b").href({ params: { a: ".", b: "." } })).toThrow(TypeError);
+		expect(route("/files/prefix-:key").href({ params: { key: "." } })).toBe("/files/prefix-.");
 	});
 
 	it("canonicalizes literal Unicode and spaces while preserving href-match round trips", () => {
@@ -177,6 +339,7 @@ describe("route", () => {
 		expect(() => route("/items/:é", {})).toThrow(TypeError);
 		expect(() => route("/items/%69d", {})).toThrow(TypeError);
 		expect(() => route("/items/:id/:id", {})).toThrow(TypeError);
+		expect(() => route("/items/:first:second", {})).toThrow(TypeError);
 
 		const item = route("/items/:id", {});
 		expect(() => item.href({ params: {} as { id: string } })).toThrow(TypeError);
@@ -306,5 +469,31 @@ describe("route", () => {
 				.many()
 				.default("invalid" as never),
 		).toThrow(TypeError);
+	});
+
+	it("snapshots custom defaults as wire values and reparses each omitted match", () => {
+		type Box = { value: string };
+		const schema = {
+			parse: (value: string): Box => ({ value }),
+			format: (value: Box) => value.value,
+		};
+		const original = { value: "snapshot" };
+		const defaulted = codec.schema(schema).default(original);
+		const listing = route("/listing", { search: { state: defaulted } });
+
+		original.value = "mutated";
+
+		const first = listing.match("/listing")!;
+		const second = listing.match("/listing")!;
+
+		expect(defaulted.metadata.defaultValue).toEqual({ value: "snapshot" });
+		expect(defaulted.metadata.defaultValue).not.toBe(original);
+		expect(first.search.state).toEqual({ value: "snapshot" });
+		expect(first.search.state).not.toBe(original);
+		expect(first.search.state).not.toBe(second.search.state);
+
+		first.search.state.value = "local";
+		expect(listing.match("/listing")?.search.state).toEqual({ value: "snapshot" });
+		expect(listing.match("/listing?state=explicit")?.search.state).toEqual({ value: "explicit" });
 	});
 });

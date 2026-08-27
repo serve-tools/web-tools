@@ -31,7 +31,7 @@ export function createRouter<const Routes extends readonly AnyRoute[]>(
 	type Value = Routes[number];
 
 	const { navigation, document } = globalThis;
-	const { routes, render } = options;
+	const { routes, render, shouldIntercept } = options;
 	const subscribers = new Set<(current: RouterCurrent<Value> | null) => void>();
 	const subscriptionCleanups = new Set<() => void>();
 
@@ -222,11 +222,26 @@ export function createRouter<const Routes extends readonly AnyRoute[]>(
 
 		const event = rawEvent as NavigateEvent;
 
-		if (!event.canIntercept || event.hashChange || event.downloadRequest !== null || event.formData !== null) {
+		if (
+			!event.canIntercept ||
+			event.navigationType === "reload" ||
+			event.hashChange ||
+			event.downloadRequest !== null ||
+			event.formData !== null
+		) {
 			return;
 		}
 
 		let matched = match(event.destination.url);
+
+		if (matched === null && unmatched.mode === "document") {
+			return;
+		}
+
+		if (shouldIntercept?.({ match: matched, event }) === false) {
+			return;
+		}
+
 		let redirectHref: string | undefined;
 
 		if (matched === null && unmatched.mode === "redirect") {
@@ -448,11 +463,20 @@ export type RouterUnmatched<Value extends AnyRoute> =
 	| RouterPreserveFallback
 	| RouterRedirectFallback<Value>;
 
+/** The original destination and native event considered for same-document navigation. */
+export interface RouterInterceptOptions<Value extends AnyRoute = AnyRoute> {
+	readonly match: RouteMatch<Value> | null;
+	readonly event: NavigateEvent;
+}
+
 /** Browser-router construction options. */
 export interface ClientRouterOptions<Routes extends readonly AnyRoute[]> {
 	readonly routes: Routes;
 	readonly unmatched?: NoInfer<RouterUnmatched<Routes[number]>>;
 	readonly render?: NoInfer<RouterRender<Routes[number]>>;
+
+	/** Synchronously returns false to leave a navigation to the browser or another router. */
+	readonly shouldIntercept?: NoInfer<(options: RouterInterceptOptions<Routes[number]>) => boolean>;
 }
 
 /** Options for replacing the installed routes. */

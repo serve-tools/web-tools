@@ -4,6 +4,7 @@
 - Import clipboard, eyedropper, file-picker, and sharing operations from their focused `@serve-tools/client/interaction/*` subpaths when only one interaction capability is needed.
 - Import the messaging window helpers from `@serve-tools/client/messaging/scope/window` and worker helpers from `@serve-tools/client/messaging/scope/worker`; both preserve the generic messaging types and their `connect` or `listen` namespace aliases.
 - Import native browser routing from `@serve-tools/client/router`; it has the same type and runtime identity as the aggregate `router` namespace.
+- Both router import shapes expose the same client-router 0.2 contract, including `match.path`, browser-owned reloads, and `shouldIntercept(...)`.
 - Import typed binary WebSocket clients from `@serve-tools/client/websocket`; it has the same type and runtime identity as the aggregate `websocket` namespace.
 - Import binary HTTP stream clients from `@serve-tools/client/http-stream` and reliable-plus-datagram WebTransport clients from `@serve-tools/client/webtransport`; each matches its aggregate namespace.
 - Import page clients for worker-owned HTTP and WebTransport sessions from `@serve-tools/client/shared-http-stream` and `@serve-tools/client/shared-webtransport`.

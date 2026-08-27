@@ -1,3 +1,4 @@
+import { gzipSync } from "node:zlib";
 import { rolldown } from "rolldown";
 import { describe, expect, it } from "vitest";
 
@@ -37,6 +38,8 @@ describe("router tree shaking", () => {
 	it("removes every codec factory from route-only consumers", async () => {
 		const generated = await bundleExport("route");
 
+		expect(Buffer.byteLength(generated)).toBeLessThanOrEqual(2_335);
+		expect(gzipSync(generated).byteLength).toBeLessThanOrEqual(1_175);
 		expect(generated).not.toContain("Number.isSafeInteger");
 		expect(generated).not.toContain("enum:");
 		expect(generated).not.toContain("optional:");
@@ -46,6 +49,8 @@ describe("router tree shaking", () => {
 	it("removes URL matching from codec-only consumers", async () => {
 		const generated = await bundleExport("codec");
 
+		expect(Buffer.byteLength(generated)).toBeLessThanOrEqual(1_220);
+		expect(gzipSync(generated).byteLength).toBeLessThanOrEqual(665);
 		expect(generated).not.toContain("URLPattern");
 		expect(generated).not.toContain("URLSearchParams");
 	});

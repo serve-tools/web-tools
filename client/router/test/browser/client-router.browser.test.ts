@@ -106,3 +106,36 @@ test.runIf("navigation" in window)("starts against the browser's real Navigation
 		router.stop();
 	}
 });
+
+test.runIf("navigation" in window).each(["reload", "scope-change"] as const)(
+	"preserves a real document load for %s",
+	async (kind) => {
+		const frame = document.createElement("iframe");
+		frame.src = new URL("./navigation.html", import.meta.url).href;
+		document.body.append(frame);
+
+		try {
+			await vi.waitFor(() => expect(frame.contentDocument?.body?.dataset.ready).toBe("true"));
+			const initial = frame.contentDocument;
+			const target = frame.contentWindow;
+			expect(target).not.toBeNull();
+
+			if (kind === "reload") {
+				target!.location.reload();
+			} else {
+				target!.location.href = `${frame.src}?document=true`;
+			}
+
+			await vi.waitFor(() => {
+				expect(frame.contentDocument).not.toBe(initial);
+				expect(frame.contentDocument?.body?.dataset.ready).toBe("true");
+			});
+			expect(frame.contentDocument?.body.dataset.renders).toBe("1");
+			if (kind === "scope-change") {
+				expect(target!.location.search).toBe("?document=true");
+			}
+		} finally {
+			frame.remove();
+		}
+	},
+);

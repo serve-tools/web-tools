@@ -1,4 +1,4 @@
-import { ProtocolError } from "../http-contract.js";
+import { ProtocolError } from "./error.js";
 
 const JSON_MEDIA_TYPE_PATTERN = /^application\/(?:json|[!#$%&'*+.^_`|~0-9a-z-]+\+json)$/i;
 

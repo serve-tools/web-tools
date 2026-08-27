@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/skills",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"description": "Package-selection guidance for the @serve-tools web platform utilities",
 	"keywords": [
 		"agent-skills",

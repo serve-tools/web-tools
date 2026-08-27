@@ -15,6 +15,7 @@ Read only the references needed for the current task.
 - To keep capability semantics intact, read [Keep capability semantics intact](references/keep-capability-semantics-intact.md).
 - To use scope-specific entrypoints directly, read [Use scope-specific entrypoints directly](references/use-scope-specific-entrypoints-directly.md).
 - Use `router` or the focused `@serve-tools/client/router` subpath for typed native browser navigation and automatic View Transitions.
+- In version 0.4, both router import shapes expose client-router 0.2: narrow matches by `match.path`, let reloads remain browser-owned, and use synchronous `shouldIntercept(...)` for application-scope changes that require a new document.
 - Use `eventSource` for typed JSON SSE events and `sharedEventSource` when one worker should own reconnection for several pages; preserve `lastEventId` in either form.
 - To share one WebSocket across windows, read [Share a WebSocket across windows](references/share-a-websocket-across-windows.md).
 - Use the matching shared HTTP stream or shared WebTransport focused subpath when those transports are worker-owned.

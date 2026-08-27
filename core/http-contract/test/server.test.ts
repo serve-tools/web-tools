@@ -2,9 +2,9 @@ import { codec, route } from "@serve-tools/router";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 import { describe, expect, it, vi } from "vitest";
 
-import { defineAPI, ProtocolError } from "../src/http-contract.js";
+import { adapterResponse, composeAPIs, defineAPI, ProtocolError } from "../src/http-contract.js";
 import { assertJSONValue, isJSONMediaType } from "../src/lib/json.js";
-import { createHandler, reject } from "../src/server.js";
+import { createHandler } from "../src/server.js";
 
 type ValidationResult<Output> = StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>;
 
@@ -112,6 +112,169 @@ describe("JSON wire helpers", () => {
 });
 
 describe("createHandler", () => {
+	it("keeps allowed methods and 405 schemas inside matching native pathname domains", async () => {
+		const integer = route("/items/:id", {
+			params: { id: codec.integer() },
+			search: { page: codec.integer().optional() },
+		});
+		const literal = route("/items/me");
+		const parameter405 = schema((value) =>
+			(value as { error?: unknown })?.error === "parameter_method"
+				? valid({ error: "parameter_method" })
+				: invalid(),
+		);
+		const literal405 = schema((value) =>
+			(value as { error?: unknown })?.error === "literal_method" ? valid({ error: "literal_method" }) : invalid(),
+		);
+		const api = defineAPI({
+			responses: { 400: defaultErrors[400] },
+			routes: {
+				[integer.path]: {
+					route: integer,
+					GET: { operationId: "integer", responses: { 200: unknownSchema, 405: parameter405 } },
+				},
+				[literal.path]: {
+					route: literal,
+					POST: {
+						operationId: "literal",
+						responses: {
+							200: unknownSchema,
+							405: adapterResponse(literal405, () => ({ error: "literal_method" })),
+						},
+					},
+				},
+			},
+		});
+		const handle = createHandler(api, {
+			handlers: {
+				"GET /items/:id": ({ params }) => ({ status: 200, body: params.id }),
+				"POST /items/me": () => ({ status: 200, body: "literal" }),
+			},
+		});
+		for (const method of ["GET", "PATCH"]) {
+			const response = await handle(new Request("https://api.test/items/me", { method }));
+			expect(response.status).toBe(405);
+			expect(response.headers.get("allow")).toBe("POST");
+			expect(await response.json()).toEqual({ error: "literal_method" });
+		}
+		expect(await (await handle(new Request("https://api.test/items/%34%32"))).json()).toBe(42);
+		for (const path of ["/items/invalid", "/items/42?page=invalid"]) {
+			expect((await handle(new Request(`https://api.test${path}`))).status).toBe(400);
+		}
+
+		const enumeration = route("/labels/:kind", { params: { kind: codec.enum("me") } });
+		const labelId = route("/labels/:id", { params: { id: codec.integer() } });
+		const labels = defineAPI({
+			responses: { 400: defaultErrors[400] },
+			routes: {
+				[enumeration.path]: {
+					route: enumeration,
+					GET: { operationId: "enum", responses: { 200: unknownSchema } },
+				},
+				[labelId.path]: { route: labelId, POST: { operationId: "labelId", responses: { 200: unknownSchema } } },
+			},
+		});
+		const labelHandler = createHandler(labels, {
+			handlers: {
+				"GET /labels/:kind": ({ params }) => ({ status: 200, body: params.kind }),
+				"POST /labels/:id": ({ params }) => ({ status: 200, body: params.id }),
+			},
+		});
+		expect(await (await labelHandler(new Request("https://api.test/labels/%6De"))).json()).toBe("me");
+		const unsupported = await labelHandler(new Request("https://api.test/labels/%6De", { method: "PATCH" }));
+		expect(unsupported.headers.get("allow")).toBe("GET");
+	});
+
+	it("preserves application headers on JSON, empty, and context responses", async () => {
+		const endpoint = route("/headers");
+		const api = defineAPI({
+			responses: { 401: unknownSchema },
+			routes: {
+				[endpoint.path]: {
+					route: endpoint,
+					GET: { operationId: "readHeaders", responses: { 200: unknownSchema } },
+					DELETE: { operationId: "deleteHeaders", responses: { 204: null } },
+					POST: { operationId: "resetHeaders", responses: { 205: null } },
+				},
+			},
+		});
+		const handle = createHandler(api, {
+			context: (input) => {
+				if (input.request.headers.has("x-denied")) {
+					return input.respond({
+						status: 401,
+						body: { error: "unauthorized" },
+						headers: { "WWW-Authenticate": "Bearer" },
+					});
+				}
+				if (input.method === "DELETE" && input.request.headers.has("x-cached")) {
+					return input.respond({ status: 204, headers: { "Cache-Control": "max-age=60" } });
+				}
+			},
+			handlers: {
+				"GET /headers": () => ({
+					status: 200,
+					body: { ok: true },
+					headers: [
+						["Cache-Control", "no-store"],
+						["Set-Cookie", "first=1"],
+						["Set-Cookie", "second=2"],
+					],
+				}),
+				"DELETE /headers": () => ({ status: 204, headers: { ETag: '"deleted"' } }),
+				"POST /headers": () => ({ status: 205, headers: { ETag: '"reset"' } }),
+			},
+		});
+		const response = await handle(new Request("https://api.test/headers"));
+		expect(response.headers.get("content-type")).toBe("application/json");
+		expect(response.headers.get("cache-control")).toBe("no-store");
+		expect(response.headers.getSetCookie()).toEqual(["first=1", "second=2"]);
+		expect(await response.json()).toEqual({ ok: true });
+		for (const method of ["DELETE", "POST"]) {
+			const empty = await handle(new Request("https://api.test/headers", { method }));
+			expect(empty.body).toBeNull();
+			expect(empty.headers.has("content-type")).toBe(false);
+			expect(empty.headers.has("etag")).toBe(true);
+		}
+		const denied = await handle(new Request("https://api.test/headers", { headers: { "x-denied": "yes" } }));
+		expect(denied.status).toBe(401);
+		expect(denied.headers.get("www-authenticate")).toBe("Bearer");
+		const cached = await handle(
+			new Request("https://api.test/headers", { method: "DELETE", headers: { "x-cached": "yes" } }),
+		);
+		expect(cached.body).toBeNull();
+		expect(cached.headers.get("cache-control")).toBe("max-age=60");
+	});
+
+	it("rejects invalid headers and attempts to override response framing", async () => {
+		const endpoint = route("/headers");
+		const api = defineAPI({
+			routes: {
+				[endpoint.path]: {
+					route: endpoint,
+					GET: { operationId: "headers", responses: { 200: unknownSchema, 204: null } },
+				},
+			},
+		});
+		for (const name of ["Content-Type", "Content-Length", "Content-Encoding", "Transfer-Encoding", "bad\nname"]) {
+			for (const empty of [false, true]) {
+				const handle = createHandler(api, {
+					handlers: {
+						"GET /headers": () =>
+							empty
+								? { status: 204, headers: { [name]: "invalid" } }
+								: { status: 200, body: null, headers: { [name]: "invalid" } },
+					},
+				});
+				await expect(handle(new Request("https://api.test/headers"))).rejects.toMatchObject({
+					name: "ProtocolError",
+					operationId: "headers",
+					status: empty ? 204 : 200,
+				});
+			}
+		}
+	});
+
 	it("dispatches static and parameterized routes with decoded router values", async () => {
 		const staticRoute = route("/items/me");
 		const itemRoute = route("/items/:id", {
@@ -123,7 +286,7 @@ describe("createHandler", () => {
 			},
 		});
 		const api = defineAPI({
-			commonResponses: defaultErrors,
+			responses: defaultErrors,
 			routes: {
 				[staticRoute.path]: {
 					route: staticRoute,
@@ -160,37 +323,32 @@ describe("createHandler", () => {
 		expect(getItem).toHaveBeenCalledOnce();
 	});
 
-	it("uses complete left-to-right specificity independent of registration order", async () => {
+	it("rejects crossing templates that could dispatch a typed call to another operation", () => {
 		const earlyLiteral = route("/a/x/:value");
 		const lateLiteral = route("/a/:id/b");
-		const api = defineAPI({
-			routes: {
-				[lateLiteral.path]: {
-					route: lateLiteral,
-					serialization: "native",
-					GET: { operationId: "lateLiteral", responses: { 200: unknownSchema } },
+		expect(() =>
+			defineAPI({
+				routes: {
+					[lateLiteral.path]: {
+						route: lateLiteral,
+						serialization: "native",
+						GET: { operationId: "lateLiteral", responses: { 200: unknownSchema } },
+					},
+					[earlyLiteral.path]: {
+						route: earlyLiteral,
+						serialization: "native",
+						GET: { operationId: "earlyLiteral", responses: { 200: unknownSchema } },
+					},
 				},
-				[earlyLiteral.path]: {
-					route: earlyLiteral,
-					serialization: "native",
-					GET: { operationId: "earlyLiteral", responses: { 200: unknownSchema } },
-				},
-			},
-		});
-		const handle = createHandler(api, {
-			handlers: {
-				"GET /a/:id/b": () => ({ status: 200, body: "late" }),
-				"GET /a/x/:value": () => ({ status: 200, body: "early" }),
-			},
-		});
-
-		expect(await (await handle(new Request("https://api.test/a/x/b"))).json()).toBe("early");
+			}),
+		).toThrowError(/Ambiguous HTTP route templates/);
 	});
 
-	it("preserves encoded literal matching while selecting literal routes over parameters", async () => {
+	it("preserves encoded literal matching beside disjoint native parameters", async () => {
 		const literal = route("/café/résumé");
-		const parameter = route("/café/:name");
+		const parameter = route("/café/:name", { params: { name: codec.enum("other") } });
 		const api = defineAPI({
+			responses: { 400: defaultErrors[400] },
 			routes: {
 				[parameter.path]: {
 					route: parameter,
@@ -218,34 +376,40 @@ describe("createHandler", () => {
 	it("rejects same-method overlapping templates with identical specificity", () => {
 		const first = route("/users/:id");
 		const second = route("/users/:name");
-		const api = defineAPI({
-			routes: {
-				[first.path]: {
-					route: first,
-					serialization: "native",
-					GET: { operationId: "first", responses: { 200: unknownSchema } },
-				},
-				[second.path]: {
-					route: second,
-					serialization: "native",
-					GET: { operationId: "second", responses: { 200: unknownSchema } },
-				},
-			},
-		});
 
-		expect(() =>
-			createHandler(api, {
-				handlers: {
-					"GET /users/:id": () => ({ status: 200, body: null }),
-					"GET /users/:name": () => ({ status: 200, body: null }),
+		expect(() => {
+			defineAPI({
+				routes: {
+					[first.path]: {
+						route: first,
+						serialization: "native",
+						GET: { operationId: "first", responses: { 200: unknownSchema } },
+					},
+					[second.path]: {
+						route: second,
+						serialization: "native",
+						GET: { operationId: "second", responses: { 200: unknownSchema } },
+					},
 				},
-			}),
-		).toThrowError(ProtocolError);
+			});
+		}).toThrowError(ProtocolError);
 	});
 
 	it("returns safe 404 and stable 405 responses without invoking application code", async () => {
 		const items = route("/items");
+		const missing = schema<{ code: "not_found" }, { error: "not_found" }>((value) =>
+			JSON.stringify(value) === '{"code":"not_found"}' ? valid({ error: "not_found" }) : invalid(),
+		);
+		const methodNotAllowed = schema<{ code: "method_not_allowed" }, { error: "method_not_allowed" }>((value) =>
+			JSON.stringify(value) === '{"code":"method_not_allowed"}'
+				? valid({ error: "method_not_allowed" })
+				: invalid(),
+		);
 		const api = defineAPI({
+			responses: {
+				404: adapterResponse(missing, () => ({ code: "not_found" })),
+				405: adapterResponse(methodNotAllowed, () => ({ code: "method_not_allowed" })),
+			},
 			routes: {
 				[items.path]: {
 					route: items,
@@ -262,24 +426,151 @@ describe("createHandler", () => {
 			context,
 			handlers: { "POST /items": post, "DELETE /items": remove },
 		});
+		const invalidAPI = defineAPI({
+			...api,
+			responses: {
+				404: adapterResponse(missing, () => ({ code: "wrong" }) as never),
+				405: adapterResponse(methodNotAllowed, () => ({ code: "wrong" }) as never),
+			},
+		});
+		const invalidHandle = createHandler(invalidAPI, {
+			handlers: { "POST /items": post, "DELETE /items": remove },
+		});
 
-		const missing = await handle(new Request("https://api.test/missing"));
+		const notFound = await handle(new Request("https://api.test/missing"));
 		const unsupported = await handle(new Request("https://api.test/items", { method: "PUT" }));
 
-		expect(missing.status).toBe(404);
-		expect(await missing.json()).toEqual({ error: "not_found" });
+		expect(notFound.status).toBe(404);
+		expect(await notFound.json()).toEqual({ error: "not_found" });
 		expect(unsupported.status).toBe(405);
 		expect(unsupported.headers.get("allow")).toBe("DELETE, POST");
 		expect(await unsupported.json()).toEqual({ error: "method_not_allowed" });
+		await expect(invalidHandle(new Request("https://api.test/missing"))).rejects.toMatchObject({
+			name: "ProtocolError",
+			method: "GET",
+			status: 404,
+		});
+		await expect(invalidHandle(new Request("https://api.test/items", { method: "PUT" }))).rejects.toMatchObject({
+			name: "ProtocolError",
+			method: "PUT",
+			status: 405,
+		});
 		expect(context).not.toHaveBeenCalled();
 		expect(post).not.toHaveBeenCalled();
 		expect(remove).not.toHaveBeenCalled();
+	});
+
+	it("uses matching composed-operation 405 schemas and rejects conflicts deterministically", async () => {
+		const parameter = route("/items/:id");
+		const literal = route("/items/me");
+		const shared = adapterResponse(
+			schema<{ code: "method_not_allowed" }, { error: "method_not_allowed" }>((value) =>
+				JSON.stringify(value) === '{"code":"method_not_allowed"}'
+					? valid({ error: "method_not_allowed" })
+					: invalid(),
+			),
+			() => ({ code: "method_not_allowed" }),
+		);
+		const conflicting = schema<{ code: "different" }>((value) =>
+			JSON.stringify(value) === '{"code":"different"}' ? valid({ code: "different" }) : invalid(),
+		);
+		const global = adapterResponse(
+			schema<{ code: "global" }, { error: "global" }>((value) =>
+				JSON.stringify(value) === '{"code":"global"}' ? valid({ error: "global" }) : invalid(),
+			),
+			() => ({ code: "global" }),
+		);
+		const first = defineAPI({
+			responses: { 400: defaultErrors[400], 405: shared },
+			routes: {
+				[parameter.path]: {
+					route: parameter,
+					serialization: "native",
+					GET: { operationId: "parameter", responses: { 200: unknownSchema } },
+				},
+			},
+		});
+		const second = (common405: typeof shared | typeof conflicting) =>
+			defineAPI({
+				responses: { 405: common405 },
+				routes: {
+					[literal.path]: {
+						route: literal,
+						serialization: "native",
+						POST: { operationId: "literal", responses: { 201: unknownSchema } },
+					},
+				},
+			});
+		const handlers = {
+			"GET /items/:id": () => ({ status: 200 as const, body: null }),
+			"POST /items/me": () => ({ status: 201 as const, body: null }),
+		};
+		const validHandle = createHandler(composeAPIs(first, second(shared)), {
+			handlers,
+		});
+		const conflictingHandle = createHandler(composeAPIs(first, second(conflicting)), {
+			handlers,
+		});
+		const globalHandle = createHandler(composeAPIs({ responses: { 405: global } }, first, second(conflicting)), {
+			handlers,
+		});
+
+		const response = await validHandle(new Request("https://api.test/items/me", { method: "PATCH" }));
+
+		expect(response.status).toBe(405);
+		expect(response.headers.get("allow")).toBe("GET, POST");
+		expect(await response.json()).toEqual({ error: "method_not_allowed" });
+		expect(
+			await (await globalHandle(new Request("https://api.test/items/me", { method: "PATCH" }))).json(),
+		).toEqual({
+			error: "global",
+		});
+		await expect(
+			conflictingHandle(new Request("https://api.test/items/me", { method: "PATCH" })),
+		).rejects.toMatchObject({
+			name: "ProtocolError",
+			method: "PATCH",
+			status: 405,
+		});
+	});
+
+	it("treats inherited API-level response statuses as undeclared", async () => {
+		const items = route("/items");
+		const validate = vi.fn((value: unknown) => valid(value));
+		const inherited = schema(validate);
+		const responses = Object.create({ 404: inherited }) as Record<number, typeof inherited>;
+		const api = defineAPI({
+			responses,
+			routes: {
+				[items.path]: {
+					route: items,
+					serialization: "native",
+					GET: { operationId: "get", responses: { 200: unknownSchema } },
+				},
+			},
+		});
+		const handle = createHandler(api, {
+			handlers: { "GET /items": () => ({ status: 404, body: { inherited: true } }) },
+		} as never);
+
+		await expect(handle(new Request("https://api.test/items"))).rejects.toMatchObject({
+			name: "ProtocolError",
+			method: "GET",
+			path: items.path,
+			status: 404,
+			operationId: "get",
+		});
+		const missing = await handle(new Request("https://api.test/missing"));
+
+		expect(await missing.json()).toEqual({ error: "not_found" });
+		expect(validate).not.toHaveBeenCalled();
 	});
 
 	it("combines allowed methods from every overlapping route in stable order", async () => {
 		const literal = route("/items/me");
 		const parameter = route("/items/:id");
 		const api = defineAPI({
+			responses: { 400: defaultErrors[400] },
 			routes: {
 				[parameter.path]: {
 					route: parameter,
@@ -311,7 +602,7 @@ describe("createHandler", () => {
 			search: { page: codec.integer() },
 		});
 		const api = defineAPI({
-			commonResponses: { 400: defaultErrors[400] },
+			responses: { 400: defaultErrors[400] },
 			routes: {
 				[item.path]: {
 					route: item,
@@ -349,7 +640,7 @@ describe("createHandler", () => {
 					: invalid(),
 		);
 		const api = defineAPI({
-			commonResponses: { 401: unauthorized },
+			responses: { ...defaultErrors, 401: unauthorized },
 			routes: {
 				[item.path]: {
 					route: item,
@@ -372,10 +663,12 @@ describe("createHandler", () => {
 		});
 		const handler = vi.fn(() => ({ status: 201 as const, body: null }));
 		const handle = createHandler(api, {
-			context: ({ params }) => {
+			context: ({ method, path, params, respond }) => {
+				expect(method).toBe("POST");
+				expect(path).toBe("/organizations/:organizationId/items");
 				expect(params.organizationId).toBe(42);
 
-				return reject(401, { error: "unauthorized" as const });
+				return respond({ status: 401, body: { error: "unauthorized" as const } });
 			},
 			handlers: { "POST /organizations/:organizationId/items": handler },
 		});
@@ -395,6 +688,71 @@ describe("createHandler", () => {
 		expect(handler).not.toHaveBeenCalled();
 	});
 
+	it("validates the same scoped rejection status through its selected component schema", async () => {
+		const firstRoute = route("/first");
+		const secondRoute = route("/second");
+		const firstUnavailable = schema<{ source: "first" }, { error: "first_unavailable" }>((value) =>
+			JSON.stringify(value) === '{"source":"first"}' ? valid({ error: "first_unavailable" }) : invalid(),
+		);
+		const secondUnavailable = schema<{ source: "second" }, { error: "second_unavailable" }>((value) =>
+			JSON.stringify(value) === '{"source":"second"}' ? valid({ error: "second_unavailable" }) : invalid(),
+		);
+		const firstAPI = defineAPI({
+			responses: { 503: firstUnavailable },
+			routes: {
+				[firstRoute.path]: {
+					route: firstRoute,
+					serialization: "native",
+					GET: { operationId: "first", responses: { 200: unknownSchema } },
+				},
+			},
+		});
+		const secondAPI = defineAPI({
+			responses: { 503: secondUnavailable },
+			routes: {
+				[secondRoute.path]: {
+					route: secondRoute,
+					serialization: "native",
+					GET: { operationId: "second", responses: { 200: unknownSchema } },
+				},
+			},
+		});
+		const api = composeAPIs(firstAPI, secondAPI);
+		const handlers = {
+			"GET /first": () => ({ status: 200 as const, body: null }),
+			"GET /second": () => ({ status: 200 as const, body: null }),
+		};
+		const handle = createHandler(api, {
+			context: (input) =>
+				input.path === firstRoute.path
+					? input.respond({ status: 503, body: { source: "first" } })
+					: input.respond({ status: 503, body: { source: "second" } }),
+			handlers,
+		});
+		const invalidHandle = createHandler(api, {
+			context: ({ respond }) =>
+				(respond as unknown as (result: { status: number; body: unknown }) => never)({
+					status: 503,
+					body: { source: "second" },
+				}),
+			handlers,
+		});
+
+		expect(await (await handle(new Request("https://api.test/first"))).json()).toEqual({
+			error: "first_unavailable",
+		});
+		expect(await (await handle(new Request("https://api.test/second"))).json()).toEqual({
+			error: "second_unavailable",
+		});
+		await expect(invalidHandle(new Request("https://api.test/first"))).rejects.toMatchObject({
+			name: "ProtocolError",
+			method: "GET",
+			path: "/first",
+			status: 503,
+			operationId: "first",
+		});
+	});
+
 	it("distinguishes unsupported media, malformed JSON, and transformed input", async () => {
 		const items = route("/items");
 		const transformed = schema<{ value: string }, { value: number }>(async (value) => {
@@ -405,7 +763,7 @@ describe("createHandler", () => {
 				: invalid();
 		});
 		const api = defineAPI({
-			commonResponses: { 400: defaultErrors[400], 415: defaultErrors[415] },
+			responses: defaultErrors,
 			routes: {
 				[items.path]: {
 					route: items,
@@ -445,7 +803,7 @@ describe("createHandler", () => {
 	it("enforces declared and streamed byte limits and cancels oversized streams", async () => {
 		const items = route("/items");
 		const api = defineAPI({
-			commonResponses: { 413: defaultErrors[413] },
+			responses: defaultErrors,
 			routes: {
 				[items.path]: {
 					route: items,
@@ -504,7 +862,7 @@ describe("createHandler", () => {
 			JSON.stringify(value) === '{"code":"bad_json"}' ? valid(value as { code: "bad_json" }) : invalid(),
 		);
 		const api = defineAPI({
-			commonResponses: { 400: customError },
+			responses: { ...defaultErrors, 400: adapterResponse(customError, () => ({ code: "bad_json" })) },
 			routes: {
 				[items.path]: {
 					route: items,
@@ -519,11 +877,16 @@ describe("createHandler", () => {
 			body: "{",
 		});
 		const validHandle = createHandler(api, {
-			errorBodies: { 400: () => ({ code: "bad_json" }) },
 			handlers: { "POST /items": () => ({ status: 201, body: null }) },
 		});
-		const invalidHandle = createHandler(api, {
-			errorBodies: { 400: () => ({ code: "wrong" }) },
+		const invalidAPI = defineAPI({
+			...api,
+			responses: {
+				...api.responses,
+				400: adapterResponse(customError, () => ({ code: "wrong" }) as never),
+			},
+		});
+		const invalidHandle = createHandler(invalidAPI, {
 			handlers: { "POST /items": () => ({ status: 201, body: null }) },
 		});
 
@@ -537,7 +900,42 @@ describe("createHandler", () => {
 		});
 	});
 
-	it("awaits response transforms, supports common outcomes, and emits true no-content responses", async () => {
+	it("materializes applicable adapter responses before serving requests", async () => {
+		const items = route("/items");
+		const api = defineAPI({
+			routes: {
+				[items.path]: {
+					route: items,
+					serialization: "native",
+					POST: { operationId: "create", body: unknownSchema, responses: { 201: unknownSchema } },
+				},
+			},
+		});
+		expect(Object.keys(api.routes[items.path].POST.responses)).toEqual(["201", "400", "413", "415"]);
+		const handle = createHandler(api, {
+			handlers: { "POST /items": () => ({ status: 201, body: null }) },
+		});
+		const response = await handle(new Request("https://api.test/items", { method: "POST", body: "null" }));
+		expect(response.status).toBe(415);
+		expect(await response.json()).toEqual({ error: "unsupported_media_type" });
+
+		for (const selected of [
+			route("/items/:id"),
+			route("/items", { search: { page: codec.integer().optional() } }),
+		]) {
+			const incomplete = defineAPI({
+				routes: {
+					[selected.path]: {
+						route: selected,
+						GET: { operationId: "read", responses: { 200: unknownSchema } },
+					},
+				},
+			});
+			expect(Object.keys(incomplete.routes[selected.path]!.GET.responses)).toEqual(["200", "400"]);
+		}
+	});
+
+	it("awaits response transforms, supports API-level outcomes, and emits true no-content responses", async () => {
 		const item = route("/items/:id", { params: { id: codec.integer() } });
 		const output = schema<{ id: number; private: string }, { id: string }>(async (value) => {
 			const record = value as { id?: unknown };
@@ -546,7 +944,7 @@ describe("createHandler", () => {
 		});
 		const missing = schema<{ error: "not_found" }>((value) => valid(value as { error: "not_found" }));
 		const api = defineAPI({
-			commonResponses: { 404: missing },
+			responses: { 400: defaultErrors[400], 404: missing },
 			routes: {
 				[item.path]: {
 					route: item,
@@ -637,6 +1035,7 @@ describe("createHandler", () => {
 			},
 		});
 		const validatorAPI = defineAPI({
+			responses: defaultErrors,
 			routes: {
 				[items.path]: {
 					route: items,
@@ -675,7 +1074,7 @@ describe("createHandler", () => {
 		).rejects.toBe(validatorError);
 	});
 
-	it("validates handler configuration without reading requests", () => {
+	it("validates handler configuration without reading requests", async () => {
 		const items = route("/items");
 		const api = defineAPI({
 			routes: {
@@ -698,6 +1097,11 @@ describe("createHandler", () => {
 
 		expect(() => createHandler(api, { handlers: {} as never })).toThrowError(ProtocolError);
 
-		expect(() => reject(99, null)).toThrowError(ProtocolError);
+		const invalidResponse = createHandler(api, {
+			context: ({ respond }) => (respond as unknown as (result: unknown) => never)({ status: 99, body: null }),
+			handlers: { "GET /items": () => ({ status: 200, body: null }) },
+		});
+
+		await expect(invalidResponse(new Request("https://api.test/items"))).rejects.toThrowError(ProtocolError);
 	});
 });

@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/router",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Declares unnamed strongly typed routes shared across runtimes",
 	"keywords": [
 		"routing",

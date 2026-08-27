@@ -1,6 +1,7 @@
 import type {
 	AnyRoute,
 	Codec,
+	CodecMetadata,
 	Route,
 	RouteData,
 	RouteInput,
@@ -62,6 +63,31 @@ const optionalSearch = route("/optional", {
 const anyRoute: AnyRoute = project;
 const scalarCodec: Codec<number> = id;
 const match: RouteMatch<typeof project> | null = project.match("/projects/1/readme?page=2");
+const metadata: CodecMetadata<number> = id.metadata;
+
+declare const selected: RouteMatch<typeof home | typeof project> | null;
+if (selected?.path === project.path) {
+	selected.params.id satisfies number;
+	selected.params.slug satisfies string;
+	selected.search.tab satisfies "overview" | "files";
+	selected.route satisfies typeof project;
+	// @ts-expect-error The selected pathname determines its numeric parameter codec.
+	selected.params.id satisfies string;
+}
+if (selected?.path === home.path) {
+	selected.route satisfies typeof home;
+	// @ts-expect-error The home route has no project parameter.
+	selected.params.id;
+}
+
+const numeric = route("/shared/:id", { params: { id: codec.integer() } });
+const textual = route("/shared/:id");
+declare const shared: RouteMatch<typeof numeric | typeof textual>;
+if (shared.path === numeric.path) {
+	shared.params.id satisfies number | string;
+	// @ts-expect-error A shared path cannot distinguish two different route codecs.
+	shared.params.id satisfies number;
+}
 
 project.href({ params: { id: 1, slug: "readme" }, search: { page: 2 } });
 project.href({
@@ -109,6 +135,10 @@ export type PublicInference = [
 	Expect<Equal<RouteInput<typeof project>["search"]["page"], number>>,
 	Expect<Equal<RouteInput<typeof project>["search"]["tab"], "overview" | "files" | undefined>>,
 	Expect<Equal<RouteInput<typeof project>["search"]["tag"], string[] | undefined>>,
+	Expect<Equal<typeof id.metadata.required, true>>,
+	Expect<Equal<typeof id.metadata.repeated, false>>,
+	Expect<Equal<NonNullable<typeof repeated.options.search>["tags"]["metadata"]["required"], false>>,
+	Expect<Equal<NonNullable<typeof repeated.options.search>["tags"]["metadata"]["repeated"], true>>,
 	Expect<Equal<NonNullable<RouteInput<typeof optionalSearch>["search"]>["page"], number | undefined>>,
 	Expect<
 		Equal<RouteParams<typeof project | typeof browse>, { id: number; slug: string } | { kind: "new" | "popular" }>
@@ -155,4 +185,5 @@ if (match !== null) {
 
 void anyRoute;
 void scalarCodec;
+void metadata;
 void match;

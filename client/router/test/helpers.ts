@@ -7,6 +7,7 @@ export interface FakeNavigateOptions {
 	readonly formData?: FormData | null;
 	readonly hasUAVisualTransition?: boolean;
 	readonly hashChange?: boolean;
+	readonly navigationType?: NavigationType;
 }
 
 export class FakeNavigateEvent extends Event {
@@ -16,7 +17,7 @@ export class FakeNavigateEvent extends Event {
 	readonly hasUAVisualTransition: boolean;
 	readonly hashChange: boolean;
 	readonly info = undefined;
-	readonly navigationType: NavigationType = "push";
+	readonly navigationType: NavigationType;
 	readonly signal: AbortSignal;
 	readonly sourceElement = null;
 	readonly userInitiated = false;
@@ -32,6 +33,7 @@ export class FakeNavigateEvent extends Event {
 		this.formData = options.formData ?? null;
 		this.hasUAVisualTransition = options.hasUAVisualTransition ?? false;
 		this.hashChange = options.hashChange ?? false;
+		this.navigationType = options.navigationType ?? "push";
 		this.signal = signal;
 		this.destination = {
 			id: "",

@@ -9,8 +9,10 @@ The browser router re-exports the shared route helpers, so add `@serve-tools/rou
 ## Typed JSON HTTP contracts and shared routes
 
 Use `@serve-tools/router` for schema-free pathname and search declarations shared between application entrypoints.
-Use `@serve-tools/http-contract` to bind those routes to explicit JSON operations and Standard Schema request/response validators.
-Import application contract values only into trusted handlers and optional OpenAPI generation; browser clients import application contracts only as types and use `@serve-tools/http-contract/client` for runtime calls.
+Use `@serve-tools/http-contract` to bind explicit JSON operations to Standard Schema request/response validators; omit a route value when string path parameters are sufficient, or provide a router route for typed codecs.
+Import application contract values only into trusted handlers and optional OpenAPI generation; browser clients import the exposed contract only as a type.
+Use `@serve-tools/http-contract/client/static` for fixed endpoints or `@serve-tools/http-contract/client` for pathname/search inputs and custom hrefs.
+Put native per-request Fetch metadata under `init`, narrow client results by `status` and `body`, and use server-context `respond({ status, body?, headers? })` for typed short circuits.
 Use existing binary HTTP-stream packages instead when requests require streaming subscriptions or non-JSON payloads.
 
 ## Typed realtime client and server

@@ -1,12 +1,28 @@
 import { codec, route } from "@serve-tools/router";
 import type { StandardJSONSchemaV1, StandardSchemaV1 } from "@standard-schema/spec";
 import { describe, expect, it, vi } from "vitest";
-import { createClient, isStatus } from "../src/client.js";
-import { defineAPI } from "../src/http-contract.js";
+import { createClient } from "../src/client.js";
+import { defineAPI, ProtocolError } from "../src/http-contract.js";
 import { toOpenAPI } from "../src/openapi.js";
-import { createHandler, reject } from "../src/server.js";
+import type { ContextInput } from "../src/server.js";
+import { createHandler } from "../src/server.js";
+import { handleNotes } from "./http-contract.recipes.js";
 
 type ConvertibleSchema<Input, Output = Input> = StandardSchemaV1<Input, Output> & StandardJSONSchemaV1<Input, Output>;
+
+it("runs the published quick-start recipe including malformed parameter handling", async () => {
+	const valid = await handleNotes(
+		new Request("https://api.test/notes/7", { headers: { authorization: "Bearer example" } }),
+	);
+	expect(await valid.json()).toEqual({ id: 7, title: "A public note" });
+	expect(valid.headers.get("cache-control")).toBe("no-store");
+	const denied = await handleNotes(new Request("https://api.test/notes/7"));
+	expect(denied.status).toBe(401);
+	expect(await denied.json()).toEqual({ error: "unauthorized" });
+	const invalid = await handleNotes(new Request("https://api.test/notes/not-an-integer"));
+	expect(invalid.status).toBe(400);
+	expect(await invalid.json()).toEqual({ error: "invalid_request" });
+});
 
 function schema<Input, Output = Input>(
 	validate: (value: unknown) => StandardSchemaV1.Result<Output> | Promise<StandardSchemaV1.Result<Output>>,
@@ -88,7 +104,7 @@ const noteRoute = route("/organizations/:organizationId/notes/:noteId", {
 });
 
 const notesAPI = defineAPI({
-	commonResponses: {
+	responses: {
 		400: errorSchema("invalid_request"),
 		401: errorSchema("unauthorized"),
 	},
@@ -97,7 +113,15 @@ const notesAPI = defineAPI({
 			route: notesRoute,
 			serialization: "native",
 			GET: { operationId: "listNotes", responses: { 200: noteList } },
-			POST: { operationId: "createNote", body: noteInput, responses: { 201: publicNote } },
+			POST: {
+				operationId: "createNote",
+				body: noteInput,
+				responses: {
+					201: publicNote,
+					413: errorSchema("request_too_large"),
+					415: errorSchema("unsupported_media_type"),
+				},
+			},
 		},
 		[noteRoute.path]: {
 			route: noteRoute,
@@ -109,9 +133,11 @@ const notesAPI = defineAPI({
 });
 
 function connectedAPI() {
-	const contexts = vi.fn(({ request, params }: { request: Request; params: { organizationId: number } }) => {
+	const contexts = vi.fn((input: ContextInput<typeof notesAPI>) => {
+		const { request, params } = input;
+
 		if (request.headers.has("x-denied")) {
-			return reject(401, { error: "unauthorized" });
+			return input.respond({ status: 401, body: { error: "unauthorized" } });
 		}
 
 		return { organizationId: params.organizationId };
@@ -156,9 +182,9 @@ describe("HTTP contract client/server conformance", () => {
 			search: { tag: ["release", "security"] },
 		});
 
-		expect(isStatus(listed, 200)).toBe(true);
-		if (isStatus(listed, 200)) {
-			expect(listed.data).toEqual([{ id: 42, title: "42:release,security" }]);
+		expect(listed.status).toBe(200);
+		if (listed.status === 200) {
+			expect(listed.body).toEqual([{ id: 42, title: "42:release,security" }]);
 		}
 
 		const created = await client.POST(notesRoute.path, {
@@ -166,9 +192,9 @@ describe("HTTP contract client/server conformance", () => {
 			body: { title: "  Ship the API  " },
 		});
 
-		expect(isStatus(created, 201)).toBe(true);
-		if (isStatus(created, 201)) {
-			expect(created.data).toEqual({ id: 42, title: "Ship the API" });
+		expect(created.status).toBe(201);
+		if (created.status === 201) {
+			expect(created.body).toEqual({ id: 42, title: "Ship the API" });
 		}
 
 		expect(contexts).toHaveBeenCalledTimes(2);
@@ -179,23 +205,23 @@ describe("HTTP contract client/server conformance", () => {
 
 		const denied = await client.GET(notesRoute.path, {
 			params: { organizationId: 42 },
-			headers: { "x-denied": "true" },
+			init: { headers: { "x-denied": "true" } },
 		});
 
-		expect(isStatus(denied, 401)).toBe(true);
-		if (isStatus(denied, 401)) {
-			expect(denied.error).toEqual({ error: "unauthorized" });
+		expect(denied.status).toBe(401);
+		if (denied.status === 401) {
+			expect(denied.body).toEqual({ error: "unauthorized" });
 		}
 
 		const missing = await client.GET(noteRoute.path, { params: { organizationId: 42, noteId: 404 } });
 
-		expect(isStatus(missing, 404)).toBe(true);
+		expect(missing.status).toBe(404);
 
 		const removed = await client.DELETE(noteRoute.path, { params: { organizationId: 42, noteId: 7 } });
 
-		expect(isStatus(removed, 204)).toBe(true);
-		if (isStatus(removed, 204)) {
-			expect(removed.data).toBeUndefined();
+		expect(removed.status).toBe(204);
+		if (removed.status === 204) {
+			expect(removed.body).toBeUndefined();
 		}
 
 		const unread = new Request("https://notes.example.test/organizations/42/notes", {
@@ -208,7 +234,7 @@ describe("HTTP contract client/server conformance", () => {
 		expect(unread.bodyUsed).toBe(false);
 	});
 
-	it("keeps middleware and gateway statuses honest without misclassifying raw payloads", async () => {
+	it("keeps JSON gateway statuses honest and rejects non-JSON protocol responses", async () => {
 		const gateway = createClient<typeof notesAPI>({
 			baseURL: "https://notes.example.test/",
 			fetch: async () => Response.json({ error: "rate_limited" }, { status: 429 }),
@@ -217,8 +243,6 @@ describe("HTTP contract client/server conformance", () => {
 		const limited = await gateway.GET(notesRoute.path, { params: { organizationId: 42 } });
 
 		expect(limited.status).toBe(429);
-		expect(isStatus(limited, 400)).toBe(false);
-		expect(isStatus(limited, 401)).toBe(false);
 
 		const html = createClient<typeof notesAPI>({
 			baseURL: "https://notes.example.test/",
@@ -229,11 +253,12 @@ describe("HTTP contract client/server conformance", () => {
 				}),
 		});
 
-		const failed = await html.GET(notesRoute.path, { params: { organizationId: 42 } });
-
-		expect(failed.kind).toBe("raw");
-		expect(failed.status).toBe(502);
-		expect(await failed.response.text()).toBe("<h1>Bad Gateway</h1>");
+		await expect(html.GET(notesRoute.path, { params: { organizationId: 42 } })).rejects.toMatchObject({
+			name: "ProtocolError",
+			method: "GET",
+			path: notesRoute.path,
+			status: 502,
+		});
 
 		const malformed = createClient<typeof notesAPI>({
 			baseURL: "https://notes.example.test/",
@@ -244,9 +269,9 @@ describe("HTTP contract client/server conformance", () => {
 				}),
 		});
 
-		const invalid = await malformed.GET(notesRoute.path, { params: { organizationId: 42 } });
-
-		expect(invalid).toMatchObject({ kind: "raw", status: 502, body: "not json" });
+		await expect(malformed.GET(notesRoute.path, { params: { organizationId: 42 } })).rejects.toBeInstanceOf(
+			ProtocolError,
+		);
 	});
 
 	it("projects only public response fields into OpenAPI", () => {

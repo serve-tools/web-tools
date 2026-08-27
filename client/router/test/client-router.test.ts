@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { RouterInterceptOptions } from "../src/client-router.js";
 import { codec, createRouter, route } from "../src/client-router.js";
 import { fakeNavigation } from "./helpers.js";
 
@@ -279,6 +280,152 @@ describe("browser router", () => {
 		const documentResult = navigation.navigate("/missing");
 		await documentResult.finished;
 		expect(navigation.events[1]?.interceptOptions).toBeUndefined();
+	});
+
+	it.each(["document", "preserve", "redirect"] as const)("leaves reloads to the browser in %s mode", async (mode) => {
+		const home = route("/");
+		const navigation = fakeNavigation("https://example.test/");
+		const render = vi.fn();
+		const router = createRouter({ routes: [home], render, unmatched: { mode, route: home } });
+		await router.start();
+		const current = router.current;
+
+		for (const path of ["/", "/missing"]) {
+			navigation.nextOptions = { navigationType: "reload" };
+			await navigation.navigate(path).finished;
+		}
+
+		expect(navigation.events).toHaveLength(2);
+		for (const event of navigation.events) {
+			expect(event.interceptOptions).toBeUndefined();
+			expect(event.defaultPrevented).toBe(false);
+		}
+		expect(router.current).toBe(current);
+		expect(render).toHaveBeenCalledOnce();
+		router.dispose();
+	});
+
+	it("uses current application scope to decide whether to intercept without gating startup", async () => {
+		let projectId = 1;
+		const home = route("/");
+		const project = route("/projects/:projectId", { params: { projectId: codec.integer() } });
+		const navigation = fakeNavigation("https://example.test/projects/1");
+		const shouldIntercept = vi.fn(({ match }: RouterInterceptOptions<typeof home | typeof project>) => {
+			if (match?.path !== project.path) {
+				return true;
+			}
+			return match.params.projectId === projectId;
+		});
+		const render = vi.fn();
+		const router = createRouter({ routes: [home, project], render, shouldIntercept });
+		await router.start();
+		const current = router.current;
+
+		expect(shouldIntercept).not.toHaveBeenCalled();
+		await router.navigate(project, { params: { projectId: 2 } }).finished;
+		expect(shouldIntercept).toHaveBeenCalledWith({
+			match: expect.objectContaining({ route: project, params: { projectId: 2 } }),
+			event: navigation.events[0],
+		});
+		expect(navigation.events[0]?.interceptOptions).toBeUndefined();
+		expect(navigation.events[0]?.defaultPrevented).toBe(false);
+		expect(router.current).toBe(current);
+		expect(render).toHaveBeenCalledOnce();
+
+		projectId = 2;
+		await router.navigate(project, { params: { projectId: 2 } }).finished;
+		expect(navigation.events[1]?.interceptOptions).toBeDefined();
+		expect(router.current?.match).toMatchObject({ path: project.path, params: { projectId: 2 } });
+		expect(render).toHaveBeenCalledTimes(2);
+
+		await router.navigate(home).finished;
+		expect(router.current?.match.path).toBe(home.path);
+		router.dispose();
+	});
+
+	it.each(["preserve", "redirect"] as const)(
+		"can decline an unmatched %s before applying its fallback",
+		async (mode) => {
+			const home = route("/");
+			const navigation = fakeNavigation("https://example.test/");
+			const shouldIntercept = vi.fn(() => false);
+			const router = createRouter({ routes: [home], shouldIntercept, unmatched: { mode, route: home } });
+			await router.start();
+
+			await navigation.navigate("/missing").finished;
+
+			expect(shouldIntercept).toHaveBeenCalledWith({ match: null, event: navigation.events[0] });
+			expect(navigation.events).toHaveLength(1);
+			expect(navigation.events[0]?.interceptOptions).toBeUndefined();
+			expect(navigation.events[0]?.defaultPrevented).toBe(false);
+			expect(router.current?.match.route).toBe(home);
+			router.dispose();
+		},
+	);
+
+	it("does not cancel initial loading when declining a navigation", async () => {
+		const prepared = Promise.withResolvers<string>();
+		let initialSignal: AbortSignal | undefined;
+		const page = route("/page", {
+			loading: {
+				mode: "blocking",
+				load: ({ signal }) => {
+					initialSignal = signal;
+					return prepared.promise;
+				},
+			},
+		});
+		const navigation = fakeNavigation("https://example.test/page");
+		const router = createRouter({ routes: [page], shouldIntercept: () => false });
+		const started = router.start();
+
+		await navigation.navigate("/page").finished;
+		expect(navigation.events[0]?.interceptOptions).toBeUndefined();
+		expect(initialSignal?.aborted).toBe(false);
+		prepared.resolve("ready");
+		await started;
+		expect(router.current?.data).toBe("ready");
+		router.dispose();
+	});
+
+	it("leaves a declined event available to another router", async () => {
+		const page = route("/page");
+		const navigation = fakeNavigation();
+		const declining = createRouter({ routes: [page], shouldIntercept: () => false });
+		const owning = createRouter({ routes: [page] });
+		await declining.start();
+		await owning.start();
+
+		await navigation.navigate("/page").finished;
+
+		expect(navigation.events[0]?.interceptOptions).toBeDefined();
+		expect(declining.current).toBeNull();
+		expect(owning.current?.match.route).toBe(page);
+		declining.dispose();
+		owning.dispose();
+	});
+
+	it("never calls the interception predicate for browser-owned navigation", async () => {
+		const home = route("/");
+		const navigation = fakeNavigation();
+		const shouldIntercept = vi.fn(() => true);
+		const router = createRouter({ routes: [home], shouldIntercept });
+		await router.start();
+
+		for (const options of [
+			{ navigationType: "reload" as const },
+			{ canIntercept: false },
+			{ hashChange: true },
+			{ downloadRequest: "file" },
+			{ formData: new FormData() },
+		]) {
+			navigation.nextOptions = options;
+			await navigation.navigate("/").finished;
+		}
+		await navigation.navigate("/missing").finished;
+
+		expect(shouldIntercept).not.toHaveBeenCalled();
+		router.dispose();
 	});
 
 	it("intercepts unmatched destinations only when preserve mode owns them", async () => {

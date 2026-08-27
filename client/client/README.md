@@ -49,6 +49,11 @@ Use a focused subpath when only one capability is needed.
 `router` provides typed route declarations, native Navigation API commitment and completion, installed route arrays, and automatic View Transitions.
 Import the focused `@serve-tools/client/router` subpath when routing is the only required browser capability.
 
+In version 0.4, both router import shapes re-export `@serve-tools/client-router` 0.2 and `@serve-tools/router` 0.2.
+Successful matches include the declared `path` discriminator, native reloads remain browser-owned, and `shouldIntercept(...)` can decline same-document interception for application-scope changes.
+Router 0.2's stricter route and `href()` validation, codec metadata, and frozen option snapshots apply through both import shapes.
+Update code that constructs match fixtures or mutates route options as described by the focused router package documentation.
+
 `eventSource` provides typed JSON named events over the native EventSource API, including each event's `lastEventId`.
 Use `sharedEventSource` when one SharedWorker should own the physical EventSource and its native reconnection lifecycle for several pages.
 

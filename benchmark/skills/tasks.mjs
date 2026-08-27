@@ -421,10 +421,18 @@ const compositionTasks = [
 const usageTasks = [
 	usage(
 		"typed-json-http-operation",
-		"Declare a typed JSON HTTP operation on a reusable route, validate request and response values, call it from a schema-free Fetch client, and narrow its declared status explicitly.",
+		"Declare a typed JSON HTTP operation on a reusable route, validate it in a trusted Fetch handler, authorize with a typed context response, call it from a schema-free client, and narrow its declared status and body.",
 		["@serve-tools/http-contract", "@serve-tools/router"],
 		"core/http-contract/test/http-contract.recipes.ts",
-		["defineAPI(", "route(", "createClient<", "isStatus("],
+		[
+			"defineAPI(",
+			"route(",
+			"createHandler(",
+			"respond({",
+			"createClient<",
+			"result.status === 200",
+			"result.body",
+		],
 		["core/http-contract/skills/serve-tools-http-contract/references/recipe-quick-start.md"],
 	),
 	usage(

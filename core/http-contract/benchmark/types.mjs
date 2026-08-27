@@ -29,6 +29,7 @@ const { counts: operations, editor } = parseBenchmarkOptions({
 
 const scenarios = [
 	"contract-declaration",
+	"composition",
 	"client-construction",
 	"client-use",
 	"selected-route",
@@ -71,13 +72,20 @@ async function createFixture(temporaryRoot, count, scenario) {
 	const source = path.join(temporaryRoot, `${stem}.ts`);
 	const configuration = path.join(temporaryRoot, `${stem}.json`);
 	const routes = createRoutes(count);
+	const contractImport = scenario === "composition" ? "composeAPIs, defineAPI" : "defineAPI";
+	const apiDeclaration =
+		scenario === "composition"
+			? createComposition(routes.contracts)
+			: [
+					`const api = defineAPI({ responses: { 400: invalidRequest, 404: missing }, routes: { ${routes.contracts.join(", ")} } });`,
+				];
 	const sections = [
 		`import type { StandardSchemaV1 } from "@standard-schema/spec";`,
-		`import { defineAPI } from ${JSON.stringify(contractSource)};`,
+		`import { ${contractImport} } from ${JSON.stringify(contractSource)};`,
 		`import { codec, route } from ${JSON.stringify(routerSource)};`,
-		standardSchemaFixture(),
+		standardSchemaFixture(scenario === "composition"),
 		...routes.declarations,
-		`const api = defineAPI({ commonResponses: { 400: invalidRequest, 404: missing }, routes: { ${routes.contracts.join(", ")} } });`,
+		...apiDeclaration,
 		...scenarioSections(scenario, routes.handlers),
 	];
 	const contents = `${sections.join("\n")}\n`;
@@ -114,7 +122,7 @@ async function createFixture(temporaryRoot, count, scenario) {
 	return { configuration, contents, source };
 }
 
-function standardSchemaFixture() {
+function standardSchemaFixture(includeUnavailable) {
 	return [
 		"const schema = <Input, Output = Input>(): StandardSchemaV1<Input, Output> => ({",
 		'\t"~standard": {',
@@ -131,8 +139,30 @@ function standardSchemaFixture() {
 		"const note = schema<NoteInput, Note>();",
 		'const invalidRequest = schema<{ readonly error: "invalid_request" }>();',
 		'const missing = schema<{ readonly error: "not_found" }>();',
+		...(includeUnavailable ? ['const unavailable = schema<{ readonly error: "unavailable" }>();'] : []),
 		"",
 	].join("\n");
+}
+
+function createComposition(contracts) {
+	const components = [];
+	const componentNames = [];
+
+	for (let index = 0; index < contracts.length; index += 10) {
+		const name = `component${index / 10}`;
+		const responses = index % 20 === 0 ? "responses: { 503: unavailable }, " : "";
+
+		components.push(
+			`const ${name} = defineAPI({ ${responses}routes: { ${contracts.slice(index, index + 10).join(", ")} } });`,
+		);
+		componentNames.push(name);
+	}
+
+	components.push(
+		`const api = composeAPIs({ responses: { 400: invalidRequest, 404: missing } }, ${componentNames.join(", ")});`,
+	);
+
+	return components;
 }
 
 function createRoutes(count) {
@@ -188,11 +218,14 @@ function createRoutes(count) {
 
 function scenarioSections(scenario, handlers) {
 	const client = [
-		`import { createClient, isStatus } from ${JSON.stringify(clientSource)};`,
+		`import { createClient } from ${JSON.stringify(clientSource)};`,
 		'const client = createClient<typeof api>({ baseURL: "https://api.example.test/" });',
 	];
 
 	if (scenario === "contract-declaration") {
+		return ["void api;"];
+	}
+	if (scenario === "composition") {
 		return ["void api;"];
 	}
 	if (scenario === "client-construction") {
@@ -224,10 +257,10 @@ function scenarioSections(scenario, handlers) {
 			...client,
 			"async function selectedStatus() {",
 			'\tconst result = await client.POST("/organizations/:organizationId/notes/2", { params: { organizationId: 2 }, body: { title: "Note", content: "Body" } });',
-			"\tif (isStatus(result, 201)) return result.data.id;",
-			"\tif (isStatus(result, 400)) return result.error.error;",
-			"\tif (isStatus(result, 404)) return result.error.error;",
-			"\treturn result.status;",
+			"\tif (result.status === 201) return result.body.id;",
+			"\tif (result.status === 400) return result.body.error;",
+			"\tif (result.status === 404) return result.body.error;",
+			'\tthrow new Error("Unexpected response status");',
 			"}",
 			"void selectedStatus;",
 		];

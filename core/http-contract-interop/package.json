@@ -1,0 +1,17 @@
+{
+	"name": "@serve-tools/http-contract-interop",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"test": "node --test test/interop.test.mjs",
+		"typecheck": "tsc --project tsconfig.json"
+	},
+	"devDependencies": {
+		"@serve-tools/http-contract": "file:../http-contract",
+		"@serve-tools/router": "file:../router",
+		"openapi-fetch": "0.17.0",
+		"openapi-typescript": "7.13.0",
+		"typescript": "5.9.3"
+	}
+}

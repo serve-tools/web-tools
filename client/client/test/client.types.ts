@@ -204,6 +204,16 @@ const privateRoutes = [routerHome, routerProject] as const;
 declare const authenticated: boolean;
 const browserRouter = router.createRouter({
 	routes: authenticated ? privateRoutes : publicRoutes,
+	shouldIntercept({ match, event }) {
+		event satisfies NavigateEvent;
+		if (match?.path !== routerProject.path) {
+			return true;
+		}
+		match.params.projectId satisfies number;
+		// @ts-expect-error The umbrella preserves the matched route's numeric codec.
+		match.params.projectId satisfies string;
+		return match.params.projectId === 42;
+	},
 });
 browserRouter.setRoutes(authenticated ? privateRoutes : publicRoutes);
 browserRouter.navigate(routerProject, { params: { projectId: 42 } });

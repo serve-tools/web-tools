@@ -47,6 +47,7 @@ test("re-exports typed native routing through its owning namespace", (): void =>
 	});
 
 	expect(project.href({ params: { projectId: 42 } })).toBe("/projects/42");
+	expect(project.match("/projects/42")).toMatchObject({ path: project.path, params: { projectId: 42 } });
 	expect(router.codec).toBe(routerModule.codec);
 	expect(router.createRouter).toBe(routerModule.createRouter);
 	expect(router).not.toHaveProperty("param");

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Browser navigation regression fixture</title>
+	</head>
+	<body>
+		<script type="module">
+		import { createRouter, route } from "../../src/client-router.ts";
+
+			const page = route(location.pathname);
+			const router = createRouter({
+				routes: [page],
+				shouldIntercept({ event }) {
+					return !new URL(event.destination.url).searchParams.has("document");
+				},
+				render() {
+					document.body.dataset.renders = String(Number(document.body.dataset.renders ?? 0) + 1);
+				},
+			});
+
+			await router.start();
+			document.body.dataset.ready = "true";
+		</script>
+	</body>
+</html>

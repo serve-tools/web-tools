@@ -1,4 +1,9 @@
-import type { RouterCurrent, RouterNavigationResult, RouterRenderOptions } from "../src/client-router.js";
+import type {
+	RouterCurrent,
+	RouterInterceptOptions,
+	RouterNavigationResult,
+	RouterRenderOptions,
+} from "../src/client-router.js";
 import { codec, createRouter, route } from "../src/client-router.js";
 
 const home = route("/");
@@ -82,5 +87,46 @@ const homeAndSettingsRender = (_options: RouterRenderOptions<typeof home | typeo
 const publicRouter = createRouter({ routes: publicRoutes, render: homeAndSettingsRender });
 // @ts-expect-error A render annotation cannot widen the inferred route-list union.
 publicRouter.navigate(settings);
+
+createRouter({
+	routes: [project],
+	shouldIntercept({ match, event }) {
+		const native: NavigateEvent = event;
+		const id: number | undefined = match?.params.projectId;
+		const tab: "overview" | "files" | undefined = match?.search.tab;
+		void native;
+		void tab;
+		// @ts-expect-error Interception receives decoded numeric pathname values.
+		const wrong: string | undefined = match?.params.projectId;
+		void wrong;
+		return id === 42;
+	},
+});
+createRouter({
+	routes: [home, project],
+	shouldIntercept({ match }) {
+		if (match?.path !== project.path) {
+			return true;
+		}
+		match.params.projectId satisfies number;
+		match.search.tab satisfies "overview" | "files";
+		// @ts-expect-error The matched project route retains its numeric parameter codec.
+		match.params.projectId satisfies string;
+		return match.params.projectId === 42;
+	},
+});
+const selectedMatch = router.match("/projects/42");
+if (selectedMatch?.path === project.path) {
+	selectedMatch.params.projectId satisfies number;
+}
+createRouter({
+	routes: [project],
+	// @ts-expect-error The browser requires an interception decision before the event returns.
+	shouldIntercept: async () => true,
+});
+const homeAndSettingsIntercept = (_options: RouterInterceptOptions<typeof home | typeof settings>): boolean => true;
+const scopedRouter = createRouter({ routes: publicRoutes, shouldIntercept: homeAndSettingsIntercept });
+// @ts-expect-error An interception annotation cannot widen the inferred route-list union.
+scopedRouter.navigate(settings);
 
 void result;

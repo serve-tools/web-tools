@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/http-contract",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Defines typed JSON HTTP contracts shared by native Fetch clients and validated handlers",
 	"keywords": [
 		"fetch",
@@ -27,6 +27,7 @@
 	"exports": {
 		".": "./dist/http-contract.js",
 		"./client": "./dist/client.js",
+		"./client/static": "./dist/static-client.js",
 		"./server": "./dist/server.js",
 		"./openapi": "./dist/openapi.js"
 	},
@@ -43,7 +44,7 @@
 		"typecheck": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/router": "^0.1.0",
+		"@serve-tools/router": "^0.2.0",
 		"@standard-schema/spec": "^1.1.0"
 	},
 	"devDependencies": {

@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client",
-	"version": "0.3.3",
+	"version": "0.4.0",
 	"description": "Namespaced access to Serve Tools client libraries",
 	"keywords": [
 		"browser",
@@ -85,7 +85,7 @@
 		"@serve-tools/client-interaction": "^0.1.2",
 		"@serve-tools/client-keyboard": "^0.1.2",
 		"@serve-tools/client-messaging": "^0.2.2",
-		"@serve-tools/client-router": "^0.1.0",
+		"@serve-tools/client-router": "^0.2.0",
 		"@serve-tools/client-shared-db": "^0.2.1",
 		"@serve-tools/client-shared-event-source": "^0.1.1",
 		"@serve-tools/client-shared-http-stream": "^0.1.1",

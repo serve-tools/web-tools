@@ -1,9 +1,10 @@
 import { codec, route } from "@serve-tools/router";
 import { describe, expect, it, vi } from "vitest";
 
-import { createClient, isStatus } from "../src/client.js";
+import type { HTTPResult } from "../src/client.js";
+import { createClient, ProtocolError } from "../src/client.js";
 import type { Schema } from "../src/http-contract.js";
-import { defineAPI, ProtocolError } from "../src/http-contract.js";
+import { defineAPI } from "../src/http-contract.js";
 
 function schema<Input, Output = Input>(): Schema<Input, Output> {
 	return {
@@ -43,11 +44,10 @@ const invalid = schema<{ error: "invalid_request" }>();
 const unauthorized = schema<{ error: "unauthorized" }>();
 
 const exampleAPI = defineAPI({
-	commonResponses: { 400: invalid, 401: unauthorized },
+	responses: { 400: invalid, 401: unauthorized },
 	routes: {
 		[collection.path]: {
 			route: collection,
-			serialization: "native",
 			GET: { operationId: "listItems", responses: { 200: itemList } },
 			POST: { operationId: "createItem", body: createItem, responses: { 201: publicItem } },
 		},
@@ -59,8 +59,7 @@ const exampleAPI = defineAPI({
 		},
 		[health.path]: {
 			route: health,
-			serialization: "native",
-			GET: { operationId: "health", responses: { 200: schema<unknown, { ready: boolean }>() } },
+			GET: { operationId: "health", responses: { 200: schema<unknown, { ready: boolean }>(), 205: null } },
 		},
 		[custom.path]: {
 			route: custom,
@@ -72,10 +71,31 @@ const exampleAPI = defineAPI({
 
 async function assertClientTypes(): Promise<void> {
 	const client = createClient<typeof exampleAPI>();
+	const frameworkClient = createClient<typeof exampleAPI, { readonly next?: { readonly tags: readonly string[] } }>();
+	const requiredFrameworkClient = createClient<typeof exampleAPI, { readonly trace: string }>({
+		fetch(input, init) {
+			input satisfies Parameters<typeof globalThis.fetch>[0];
+			init?.trace satisfies string | undefined;
+			init?.method satisfies string | undefined;
+			init?.body satisfies BodyInit | null | undefined;
+
+			if (init) {
+				// @ts-expect-error A request may omit init, so required extension metadata is not guaranteed here.
+				init.trace satisfies string;
+			}
+
+			return globalThis.fetch(input, init);
+		},
+	});
+	createClient<typeof exampleAPI>({ fetch: globalThis.fetch });
+	createClient<typeof exampleAPI, { readonly trace: string }>({ fetch: globalThis.fetch });
 
 	await client.GET(health.path);
 	await client.GET(health.path, undefined);
-	await client.GET(health.path, { headers: { "x-request-id": "optional" } });
+	await client.GET(health.path, { init: { headers: { "x-request-id": "optional" } } });
+	await frameworkClient.GET(health.path, { init: { cache: "no-store", next: { tags: ["health"] } } });
+	await requiredFrameworkClient.GET(health.path);
+	await requiredFrameworkClient.GET(health.path, { init: { trace: "health" } });
 	await client.GET(collection.path, {
 		params: { organizationId: 42 },
 		search: { page: 1, cursor: undefined, tag: ["one", "two"] },
@@ -86,18 +106,21 @@ async function assertClientTypes(): Promise<void> {
 		body: { label: "saved" },
 	});
 
-	created.status satisfies number;
-	if (isStatus(created, 201)) {
-		created.data.id satisfies number;
-		created.data.label satisfies string;
+	created.status satisfies 201 | 400 | 401 | 413 | 415;
+	if (created.status === 201) {
+		created.ok satisfies true;
+		created.body.id satisfies number;
+		created.body.label satisfies string;
 	}
-	if (isStatus(created, 401)) {
-		created.error.error satisfies "unauthorized";
+	if (created.status === 401) {
+		created.ok satisfies false;
+		created.body.error satisfies "unauthorized";
 	}
 
 	const removed = await client.DELETE(item.path, { params: { organizationId: 42, itemId: 7 } });
-	if (isStatus(removed, 204)) {
-		removed.data satisfies undefined;
+	if (removed.status === 204) {
+		removed.ok satisfies true;
+		removed.body satisfies undefined;
 	}
 
 	await client.GET(custom.path, { href: custom.href({ params: { code: "ABC" } }) });
@@ -128,41 +151,84 @@ async function assertClientTypes(): Promise<void> {
 	});
 	// @ts-expect-error bodyless operations reject a body
 	await client.GET(health.path, { body: {} });
+	// @ts-expect-error native Fetch metadata belongs inside init
+	await client.GET(health.path, { headers: {} });
+	// @ts-expect-error the adapter owns the HTTP method
+	await client.GET(health.path, { init: { method: "POST" } });
+	// @ts-expect-error the adapter owns request-body serialization
+	await client.GET(health.path, { init: { body: "hidden" } });
+	// @ts-expect-error opaque no-cors responses cannot satisfy a JSON HTTP contract
+	await client.GET(health.path, { init: { mode: "no-cors" } });
+	// @ts-expect-error undeclared framework extensions require an explicit client generic
+	await client.GET(health.path, { init: { next: { tags: ["health"] } } });
 	// @ts-expect-error href routes require their prebuilt URL
 	await client.GET(custom.path);
 	// @ts-expect-error href request options cannot be replaced with undefined
 	await client.GET(custom.path, undefined);
 	// @ts-expect-error href routes reject generic route serialization
 	await client.GET(custom.path, { params: { code: "ABC" } });
-	// @ts-expect-error status 204 is absent from createItem and its common responses
-	isStatus(created, 204);
-	// @ts-expect-error a delete result cannot use a status belonging only to createItem
-	isStatus(removed, 201);
+	// @ts-expect-error status 204 is absent from createItem and its API-level responses
+	created.status === 204;
+	// @ts-expect-error status 201 belongs only to createItem
+	removed.status === 201;
 }
 
 void assertClientTypes;
 
+function assertHTTPResultTypes(
+	quoted: HTTPResult<{ readonly "200": typeof publicItem; readonly "400": typeof invalid }>,
+	broad: HTTPResult<Readonly<Record<number, Schema>>>,
+): void {
+	quoted.status satisfies 200 | 400;
+
+	if (quoted.status === 200) {
+		quoted.body.label satisfies string;
+	} else {
+		quoted.body.error satisfies "invalid_request";
+	}
+
+	broad.status satisfies number;
+
+	if (broad.ok) {
+		broad.body satisfies unknown;
+	} else {
+		broad.body satisfies unknown;
+	}
+}
+
+void assertHTTPResultTypes;
+
 describe("createClient", () => {
 	it("serializes native route input and forwards native Fetch options", async () => {
 		let request: Request | undefined;
+		let requestInit: (RequestInit & { readonly next?: { readonly tags: readonly string[] } }) | undefined;
 		const controller = new AbortController();
 		const fetch = vi.fn(async (input: string | URL | Request, init?: RequestInit) => {
+			requestInit = init;
 			request = new Request(input, init);
 
 			return Response.json({ id: 7, label: "Saved" }, { status: 201 });
 		});
-		const client = createClient<typeof exampleAPI>({ baseURL: "https://api.example.test/root/", fetch });
+		const client = createClient<typeof exampleAPI, { readonly next?: { readonly tags: readonly string[] } }>({
+			baseURL: "https://api.example.test/root/",
+			fetch,
+		});
 		const result = await client.POST(collection.path, {
 			params: { organizationId: 42 },
 			search: { page: 2, tag: ["release notes", "folder/name"], cursor: undefined },
 			body: { label: "Saved" },
-			credentials: "include",
-			headers: { accept: "text/plain", "content-type": "text/plain", "x-request-id": "one" },
-			signal: controller.signal,
+			init: {
+				credentials: "include",
+				headers: { accept: "text/plain", "content-type": "text/plain", "x-request-id": "one" },
+				next: { tags: ["items"] },
+				signal: controller.signal,
+			},
 		});
 
-		expect(result).toMatchObject({ kind: "json", ok: true, status: 201, data: { id: 7, label: "Saved" } });
+		expect(result).toMatchObject({ ok: true, status: 201, body: { id: 7, label: "Saved" } });
+		expect(Object.keys(result).sort()).toEqual(["body", "ok", "response", "status"]);
 		expect(result.response).toBeInstanceOf(Response);
+		expect(requestInit?.next).toEqual({ tags: ["items"] });
 		expect(request?.url).toBe(
 			"https://api.example.test/organizations/42/items?page=2&tag=release+notes&tag=folder%2Fname",
 		);
@@ -200,41 +266,71 @@ describe("createClient", () => {
 		expect(urls).toEqual(["/values/caf%C3%A9%20menu/folder%2Fname/42/safe"]);
 	});
 
-	it("preserves JSON, no-content, non-JSON, malformed, and undeclared HTTP responses honestly", async () => {
+	it("returns JSON and no-content responses, then rejects invalid response representations", async () => {
+		const nonJSONResponse = new Response("<h1>Bad Gateway</h1>", {
+			status: 502,
+			headers: { "content-type": "text/html" },
+		});
+		const malformedResponse = new Response("{", {
+			status: 429,
+			headers: { "content-type": "application/json" },
+		});
 		const responses = [
 			new Response('{"error":"unauthorized"}', {
 				status: 401,
 				headers: { "content-type": "Application/Problem+JSON; charset=utf-8" },
 			}),
 			new Response(null, { status: 204, headers: { "content-type": "application/json" } }),
-			new Response("<h1>Bad Gateway</h1>", { status: 502, headers: { "content-type": "text/html" } }),
-			new Response("{", { status: 429, headers: { "content-type": "application/json" } }),
+			new Response(null, { status: 205 }),
+			Response.json({ error: "rate_limited" }, { status: 429 }),
+			nonJSONResponse,
+			malformedResponse,
 		];
 		const client = createClient<typeof exampleAPI>({ fetch: async () => responses.shift()! });
 
 		const denied = await client.GET(health.path);
-		expect(isStatus(denied, 401)).toBe(true);
-		if (isStatus(denied, 401)) {
-			expect(denied.error).toEqual({ error: "unauthorized" });
-		}
+		expect(denied).toMatchObject({ ok: false, status: 401, body: { error: "unauthorized" } });
 
 		const empty = await client.DELETE(item.path, { params: { organizationId: 1, itemId: 2 } });
-		expect(empty).toMatchObject({ kind: "empty", ok: true, status: 204, data: undefined });
-		expect(isStatus(empty, 204)).toBe(true);
+		expect(empty).toMatchObject({ ok: true, status: 204, body: undefined });
+		expect(Object.keys(empty).sort()).toEqual(["body", "ok", "response", "status"]);
 
-		const html = await client.GET(health.path);
-		expect(html).toMatchObject({ kind: "raw", ok: false, status: 502 });
-		expect(html.response.bodyUsed).toBe(false);
-		expect(isStatus(html, 200)).toBe(false);
-		expect(await html.response.text()).toBe("<h1>Bad Gateway</h1>");
+		const reset = await client.GET(health.path);
+		expect(reset).toMatchObject({ ok: true, status: 205, body: undefined });
 
-		const malformed = await client.GET(health.path);
-		expect(malformed).toMatchObject({ kind: "raw", ok: false, status: 429, body: "{" });
-		expect(malformed.response.bodyUsed).toBe(true);
-		expect(isStatus(malformed, 400)).toBe(false);
+		const unexpected = await client.GET(health.path);
+		expect(unexpected).toMatchObject({ ok: false, status: 429, body: { error: "rate_limited" } });
+		expect(unexpected.response.status).toBe(429);
+
+		await expect(client.GET(health.path)).rejects.toMatchObject({
+			name: "ProtocolError",
+			method: "GET",
+			path: health.path,
+			status: 502,
+			response: nonJSONResponse,
+		});
+		await expect(client.GET(health.path)).rejects.toMatchObject({
+			name: "ProtocolError",
+			method: "GET",
+			path: health.path,
+			status: 429,
+			response: malformedResponse,
+			cause: expect.any(SyntaxError),
+		});
 	});
 
-	it("preserves bodyless caller headers without transmitting a request body", async () => {
+	it("preserves native network failures", async () => {
+		const failure = new TypeError("offline");
+		const client = createClient<typeof exampleAPI>({
+			fetch: async () => {
+				throw failure;
+			},
+		});
+
+		await expect(client.GET(health.path)).rejects.toBe(failure);
+	});
+
+	it("preserves bodyless caller metadata without allowing reserved representation headers", async () => {
 		let request: Request | undefined;
 		const client = createClient<typeof exampleAPI>({
 			baseURL: "https://api.example.test/",
@@ -245,10 +341,12 @@ describe("createClient", () => {
 			},
 		});
 
-		await client.GET(health.path, { headers: { accept: "text/plain", "content-type": "text/plain" } });
+		await client.GET(health.path, {
+			init: { headers: { accept: "text/plain", "content-type": "text/plain" } },
+		});
 
 		expect(request?.headers.get("accept")).toBe("application/json");
-		expect(request?.headers.get("content-type")).toBe("text/plain");
+		expect(request?.headers.get("content-type")).toBeNull();
 		expect(request?.body).toBeNull();
 	});
 
@@ -296,6 +394,24 @@ describe("createClient", () => {
 		expect(fetch).not.toHaveBeenCalled();
 	});
 
+	it("rejects opaque mode and adapter-owned init fields before Fetch", async () => {
+		const fetch = vi.fn(async () => Response.json({ ready: true }));
+		const client = createClient<typeof exampleAPI>({ fetch });
+		const get = client.GET as unknown as (path: string, options?: unknown) => Promise<unknown>;
+
+		for (const init of [
+			{ mode: "no-cors" },
+			{ method: "POST" },
+			{ body: "hidden" },
+			Object.defineProperty({}, "headers", { enumerable: true, get: () => ({}) }),
+		]) {
+			await expect(get(health.path, { init })).rejects.toBeInstanceOf(ProtocolError);
+		}
+
+		await expect(get(health.path, { headers: {} })).rejects.toBeInstanceOf(ProtocolError);
+		expect(fetch).not.toHaveBeenCalled();
+	});
+
 	it("rejects unsafe native and prebuilt URLs before Fetch", async () => {
 		const fetch = vi.fn(async () => Response.json({ ready: true }));
 		const client = createClient<typeof exampleAPI>({ baseURL: "https://api.example.test/", fetch });
@@ -303,6 +419,9 @@ describe("createClient", () => {
 		const invalidRequests: readonly [string, unknown][] = [
 			["//attacker.example/value", undefined],
 			["https://attacker.example/value", undefined],
+			["/public/../admin", undefined],
+			["/items//value", undefined],
+			["/items/", undefined],
 			["/items/:id", undefined],
 			["/items/:id", { params: { id: Number.MAX_SAFE_INTEGER + 1 } }],
 			["/items/:id", { params: { id: "" } }],
@@ -336,6 +455,7 @@ describe("createClient", () => {
 		const result = await client.GET(custom.path, { href: custom.href({ params: { code: "ABC" } }) + "?view=full" });
 
 		expect(url).toBe("https://api.example.test/custom/ABC?view=full");
-		expect(isStatus(result, 200)).toBe(true);
+		expect(result.status).toBe(200);
+		expect(result.body).toEqual({ code: "ABC" });
 	});
 });

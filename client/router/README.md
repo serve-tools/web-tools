@@ -1,7 +1,7 @@
 # @serve-tools/client-router
 
 `@serve-tools/client-router` combines unnamed strongly typed route declarations with the browser Navigation API.
-It intercepts only destinations matched by the installed route array and preserves native `committed` and `finished` promises.
+By default, it intercepts destinations matched by the installed route array and preserves native `committed` and `finished` promises.
 The router uses its current browser realm's `navigation`, `document`, `URLPattern`, and `reportError` globals.
 Install any missing Navigation API or `URLPattern` polyfills globally before creating a router; compatibility fallbacks are never bundled.
 
@@ -76,7 +76,29 @@ await finished;
 `finished` includes route loading, rendering, scrolling, and any automatic same-document View Transition animation.
 Navigation to a route that is not installed throws synchronously.
 
-Hash-only, download, form-data, cross-origin, non-HTTP, and non-interceptable navigations retain browser handling.
+Reloads, hash-only, download, form-data, cross-origin, non-HTTP, and non-interceptable navigations retain browser handling.
+
+## Leave application-scope changes to the browser
+
+When switching a project or account must reboot document-owned stores, decline same-document interception:
+
+```ts
+const project = route("/projects/:projectId");
+const router = createRouter({
+	routes: [home, project],
+	shouldIntercept({ match }) {
+		if (match?.path !== project.path) return true;
+		return match.params.projectId === activeProjectId;
+	},
+});
+```
+
+`shouldIntercept({ match, event })` is synchronous and receives decoded route inputs plus the native `NavigateEvent`.
+In mixed route arrays, compare the declared `match.path` to narrow its parameters and search values; route-object equality alone is not a TypeScript discriminant.
+Returning `false` leaves the event untouched for normal document navigation or another router; it does not cancel navigation or authorize access.
+The callback runs before route loading and before any configured unmatched fallback, with `match: null` for an unmatched destination.
+It does not run during `start()`, for native-only navigations, or for unmatched destinations already using the `document` policy.
+Read current application scope from a closure; native reloads always bypass interception regardless of this callback or the unmatched policy.
 
 ## Loading phases
 
@@ -134,3 +156,14 @@ const router = createRouter({
 
 router.setRoutes(session.user ? privateRoutes : publicRoutes);
 ```
+
+## Migration to 0.2
+
+Version 0.2 re-exports `@serve-tools/router` 0.2.
+Successful matches now include the declared `path` discriminator, and router 0.2's stricter route construction, `href()` round-trip validation, codec metadata, and option snapshots apply here as well.
+
+Native reload events now always remain browser-owned.
+Remove application code that expected a reload to run a same-document loader or render cycle.
+
+Use the new synchronous `shouldIntercept({ match, event })` option when a matched or configured unmatched navigation must remain browser-owned, such as an application-scope change that requires a new document.
+It does not run for initial `start()` presentation, native-only events, or unmatched destinations already using the `document` policy, and it is not an authorization check.

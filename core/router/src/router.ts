@@ -95,12 +95,23 @@ export interface ValueSchema<Value> {
 	format(value: Value): string;
 }
 
+/** Portable facts about one codec for integrations that inspect route definitions. */
+export interface CodecMetadata<Value = unknown> {
+	readonly type: "string" | "integer" | "enum" | "custom";
+	readonly required: boolean;
+	readonly repeated: boolean;
+	readonly native: boolean;
+	readonly values?: readonly string[];
+	readonly defaultValue?: Value;
+}
+
 /** A typed URL component codec that can be shared by pathname and search parameters. */
 export interface Codec<Output, Input = Output, Required extends boolean = true, Multiple extends boolean = false> {
 	readonly value?: Output;
 	readonly input?: Input;
 	readonly required?: Required;
 	readonly multiple?: Multiple;
+	readonly metadata: CodecMetadata<Output> & { readonly required: Required; readonly repeated: Multiple };
 
 	/** Returns a codec whose key may be omitted and whose decoded value is then `undefined`. */
 	optional(): Codec<Output | undefined, Input | undefined, false, Multiple>;
@@ -186,15 +197,23 @@ export type RouteInput<Value extends AnyRoute> =
 export type RouteData<Value extends AnyRoute> =
 	Value extends Route<any, any, any, any, infer Data, any> ? Awaited<Data> : never;
 
-/** A URL matched and decoded by one route declaration. */
-export interface RouteMatch<Value extends AnyRoute = AnyRoute> {
-	readonly route: Value;
-	readonly url: URL;
-	readonly params: RouteParams<Value>;
-	readonly search: RouteSearch<Value>;
-}
+/** A URL matched and decoded by one route declaration, discriminated by its declared path. */
+export type RouteMatch<Value extends AnyRoute = AnyRoute> = Value extends AnyRoute
+	? {
+			readonly path: Value["path"];
+			readonly route: Value;
+			readonly url: URL;
+			readonly params: RouteParams<Value>;
+			readonly search: RouteSearch<Value>;
+		}
+	: never;
 
-type RuntimeCodec = readonly [ValueSchema<unknown>, multiple: boolean, missing: unknown, brand: Invalid];
+type RuntimeCodec = readonly [
+	ValueSchema<unknown>,
+	multiple: boolean,
+	missing: Invalid | undefined | string | readonly string[],
+	brand: Invalid,
+];
 
 const integerSchema: ValueSchema<number> = {
 	parse(value) {
@@ -228,8 +247,8 @@ const stringSchema: ValueSchema<string> = {
 
 /** Built-in scalar codecs shared by pathname and search parameters. */
 export const codec = {
-	string: (): Codec<string> => createCodec(stringSchema),
-	integer: (): Codec<number> => createCodec(integerSchema),
+	string: (): Codec<string> => createCodec(stringSchema, "string"),
+	integer: (): Codec<number> => createCodec(integerSchema, "integer"),
 	enum: <const Values extends readonly [string, ...string[]]>(...values: Values): Codec<Values[number]> => {
 		const allowed = new Set<string>(values);
 
@@ -237,18 +256,22 @@ export const codec = {
 			invalid();
 		}
 
-		return createCodec({
-			parse: (value) => (allowed.has(value) ? (value as Values[number]) : (INVALID as never)),
-			format: (value) => {
-				if (!allowed.has(value)) {
-					invalid();
-				}
+		return createCodec(
+			{
+				parse: (value) => (allowed.has(value) ? (value as Values[number]) : (INVALID as never)),
+				format: (value) => {
+					if (!allowed.has(value)) {
+						invalid();
+					}
 
-				return value;
+					return value;
+				},
 			},
-		});
+			"enum",
+			Object.freeze(values),
+		);
 	},
-	schema: <Value>(schema: ValueSchema<Value>): Codec<Value> => createCodec(schema),
+	schema: <Value>(schema: ValueSchema<Value>): Codec<Value> => createCodec(schema, "custom"),
 };
 
 /** Declares one unnamed, typed route shared by browser and server integrations. */
@@ -272,43 +295,84 @@ export function route<
 > {
 	const parameterNames = [...path.matchAll(PATH_PARAMETER_PATTERN)].map((match) => match[1]!);
 
-	if (!VALID_PATH_PATTERN.test(path) || new Set(parameterNames).size !== parameterNames.length) {
+	if (
+		!VALID_PATH_PATTERN.test(path) ||
+		/:[$\w]+:/.test(path) ||
+		new Set(parameterNames).size !== parameterNames.length
+	) {
 		invalid();
 	}
 
-	const patternInput: URLPatternInit = { pathname: path };
-	const pattern = new URLPattern(patternInput);
-	const staticPathname = parameterNames.length === 0 && pattern.pathname;
-	const parameterCodecs = codecMap(options.params, parameterNames);
-	const queryCodecs = codecMap(options.search);
+	const routeOptions = snapshotOptions(options) as RouteDefinition<Path, Parameters, Search, Data>;
+	const pattern = new URLPattern({ pathname: path.replace(/\/\.(:[$\w]+)/g, "/{.$1}") });
+	const staticPathname = !parameterNames.length && pattern.pathname;
+	const parameterCodecs = codecMap(routeOptions.params, parameterNames);
+	const queryCodecs = codecMap(routeOptions.search);
+	const matchPathname = (pathname: string, wires?: string[]): [string, unknown][] | undefined => {
+		const groups = staticPathname ? pathname === staticPathname && {} : pattern.exec({ pathname })?.pathname.groups;
+
+		if (!groups) {
+			return;
+		}
+
+		const params: [string, unknown][] = [];
+
+		for (const name of parameterNames) {
+			const value = groups[name]!;
+			const schema = parameterCodecs.get(name)?.[0];
+			const parameter = parse(schema, value, value.includes("%"));
+
+			if (
+				parameter === INVALID ||
+				(wires && (schema ? schema.format(parameter) : parameter) !== wires[params.length])
+			) {
+				return;
+			}
+
+			params.push([name, parameter]);
+		}
+
+		return params;
+	};
 
 	const concrete = {
 		path,
-		options,
+		options: routeOptions,
 		href(input?: RouteInputValue<Path, Parameters, Search>) {
 			const value = inputObject(input, ["params", "search"]);
 			const params = inputObject(value.params, parameterNames);
-			const pathname =
-				staticPathname ||
-				new URL(
-					path.replace(PATH_PARAMETER_PATTERN, (_token, name: string) => {
-						if (!Object.hasOwn(params, name)) {
-							invalid();
-						}
+			const wires: string[] = [];
+			let pathname: string;
 
-						const codec = parameterCodecs.get(name);
-						const parameter = params[name];
+			try {
+				pathname =
+					staticPathname ||
+					new URL(
+						path.replace(PATH_PARAMETER_PATTERN, (_token, name: string) => {
+							if (!Object.hasOwn(params, name)) {
+								invalid();
+							}
 
-						if (codec === undefined && typeof parameter !== "string") {
-							invalid();
-						}
+							const codec = parameterCodecs.get(name);
+							const parameter = codec ? codec[0].format(params[name]) : params[name];
 
-						return encodeURIComponent(
-							codec === undefined ? (parameter as string) : codec[0].format(parameter),
-						);
-					}),
-					ROUTE_BASE_URL,
-				).pathname;
+							if (typeof parameter !== "string") {
+								invalid();
+							}
+
+							wires.push(parameter);
+
+							return encodeURIComponent(parameter);
+						}),
+						ROUTE_BASE_URL,
+					).pathname;
+
+				if (!matchPathname(pathname, wires)) {
+					invalid();
+				}
+			} catch {
+				invalid();
+			}
 
 			const search = inputObject(value.search, [...queryCodecs.keys()]);
 			const searchParams = new URLSearchParams();
@@ -339,7 +403,7 @@ export function route<
 				}
 			}
 
-			return searchParams.size === 0 ? pathname : `${pathname}?${searchParams}`;
+			return !searchParams.size ? pathname : `${pathname}?${searchParams}`;
 		},
 		match(input: string | URL) {
 			let url: URL;
@@ -354,91 +418,109 @@ export function route<
 				return null;
 			}
 
-			patternInput.pathname = url.pathname;
+			const params = matchPathname(url.pathname);
 
-			const groups = staticPathname
-				? patternInput.pathname === staticPathname && {}
-				: pattern.exec(patternInput)?.pathname.groups;
-
-			if (!groups) {
+			if (!params) {
 				return null;
 			}
 
-			const params = [];
-
-			for (const name of parameterNames) {
-				const value = groups[name]!;
-				const parameter = parse(parameterCodecs.get(name)?.[0], value, value.includes("%"));
-
-				if (parameter === INVALID) {
-					return null;
-				}
-
-				params.push([name, parameter]);
-			}
-
 			const search = [];
-			const hasSearch = url.search !== "";
-
 			for (const [name, codec] of queryCodecs) {
-				const values = hasSearch ? url.searchParams.getAll(name) : undefined;
+				const values = url.searchParams.getAll(name);
+				const input = values.length ? values : codec[2];
 
-				let value = Array.isArray(codec[2]) ? [...codec[2]] : codec[2];
-
-				if (values?.length) {
-					if (!codec[1] && values.length !== 1) {
-						return null;
-					}
-
-					const decoded = values.map((value) => parse(codec[0], value));
-
-					if (decoded.includes(INVALID)) {
-						return null;
-					}
-
-					value = codec[1] ? decoded : decoded[0];
-				}
-
-				if (value === INVALID) {
+				if (input === INVALID || (Array.isArray(input) && !codec[1] && input.length !== 1)) {
 					return null;
 				}
+
+				const decoded =
+					input === undefined
+						? undefined
+						: (Array.isArray(input) ? input : [input]).map((value) => parse(codec[0], value));
+
+				if (decoded?.includes(INVALID)) {
+					return null;
+				}
+
+				const value = codec[1] ? decoded : decoded?.[0];
 
 				search.push([name, value]);
 			}
 
-			return { route: concrete, url, params: Object.fromEntries(params), search: Object.fromEntries(search) };
+			return {
+				path,
+				route: concrete,
+				url,
+				params: Object.fromEntries(params),
+				search: Object.fromEntries(search),
+			};
 		},
 	};
 
 	return concrete as never;
 }
 
-function createCodec<Value>(schema: ValueSchema<Value>, multiple = false, ...missing: [] | [unknown]): Codec<Value> {
-	return Object.assign([schema, multiple, missing.length ? missing[0] : INVALID, INVALID] as const, {
-		optional: () => createCodec(schema, multiple, undefined),
-		default: (value: Value) => {
-			const values = multiple ? value : [value];
+function createCodec<Value>(
+	schema: ValueSchema<Value>,
+	type: CodecMetadata["type"],
+	values?: readonly string[],
+	multiple = false,
+	...missing: [] | [undefined | string | readonly string[]]
+): Codec<Value> {
+	const missingValue = missing.length ? missing[0] : INVALID;
+	const defaultValue = Array.isArray(missingValue)
+		? Object.freeze(missingValue.map((value) => parse(schema, value)))
+		: typeof missingValue === "string"
+			? parse(schema, missingValue)
+			: undefined;
 
-			if (!Array.isArray(values)) {
+	if (defaultValue === INVALID || (Array.isArray(defaultValue) && defaultValue.includes(INVALID))) {
+		invalid();
+	}
+
+	const metadata = Object.freeze({
+		type,
+		required: missing.length === 0,
+		repeated: multiple,
+		native: type !== "custom",
+		...(values === undefined ? {} : { values }),
+		...(defaultValue === undefined ? {} : { defaultValue }),
+	});
+
+	return Object.assign([schema, multiple, missingValue, INVALID] as const, {
+		metadata,
+		optional: () => createCodec(schema, type, values, multiple, undefined),
+		default: (value: Value) => {
+			const candidates = multiple ? value : [value];
+
+			if (!Array.isArray(candidates)) {
 				invalid();
 			}
 
-			for (const item of values) {
-				if (parse(schema, schema.format(item)) === INVALID) {
-					invalid();
-				}
-			}
+			const formatted = candidates.map((item) => schema.format(item));
 
-			return createCodec(schema, multiple, Array.isArray(value) ? Object.freeze([...value]) : value);
+			return createCodec(schema, type, values, multiple, multiple ? Object.freeze(formatted) : formatted[0]);
 		},
 		many: () => {
 			if (multiple || missing.length) {
 				invalid();
 			}
 
-			return createCodec(schema, true, []);
+			return createCodec(schema, type, values, true, []);
 		},
 	}) as never;
+}
+
+function snapshotOptions(options: object): object {
+	const snapshot = { ...options } as Record<string, unknown>;
+
+	for (const name of ["params", "search", "loading"]) {
+		if (snapshot[name]) {
+			snapshot[name] = Object.freeze({ ...(snapshot[name] as object) });
+		}
+	}
+
+	return Object.freeze(snapshot);
 }
 
 function parse(schema: ValueSchema<unknown> | undefined, value: string, encoded = false): unknown | Invalid {

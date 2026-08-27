@@ -29,7 +29,7 @@ await withTemporaryRoot("router", async (temporaryRoot) => {
 	for (const routeCount of routes) {
 		const results = new Map();
 
-		for (const scenario of ["declarations", "installed", "navigation"]) {
+		for (const scenario of ["declarations", "installed", "navigation", "interception"]) {
 			const fixture = await createFixture(temporaryRoot, routeCount, scenario);
 			const metrics = compileTypeScript({
 				compiler: typescript.compiler,
@@ -56,8 +56,8 @@ await withTemporaryRoot("router", async (temporaryRoot) => {
 			results.set(scenario, record);
 			console.log(`[benchmark:types] ${JSON.stringify(record)}`);
 
-			if (editor && scenario === "navigation") {
-				await benchmarkEditor(temporaryRoot, fixture, routeCount);
+			if (editor && (scenario === "navigation" || scenario === "interception")) {
+				await benchmarkEditor(temporaryRoot, fixture, routeCount, scenario);
 			}
 		}
 	}
@@ -106,7 +106,18 @@ async function createFixture(temporaryRoot, count, scenario) {
 		...(scenario === "declarations" ? [] : [`import { createRouter } from ${JSON.stringify(clientSource)};`]),
 		...declarations,
 		`const routes = [${Array.from({ length: count }, (_, index) => `route${index}`).join(", ")}] as const;`,
-		...(scenario === "declarations" ? ["void routes;"] : ["const router = createRouter({ routes });"]),
+		...(scenario === "declarations"
+			? ["void routes;"]
+			: scenario === "interception"
+				? [
+						"const router = createRouter({ routes, shouldIntercept({ match }) {",
+						"  if (match?.path !== route0.path) return true;",
+						"  const teamId: number = match.params./* editor-completion */teamId;",
+						"  const page: number = match.search.page;",
+						"  return teamId > 0 && page > 0;",
+						"} });",
+					]
+				: ["const router = createRouter({ routes });"]),
 		...(scenario === "navigation" ? navigations : []),
 		...(scenario === "navigation" ? ["router./* editor-completion */navigate;"] : []),
 		...(scenario === "installed" ? ["void router;"] : []),
@@ -137,7 +148,7 @@ async function createFixture(temporaryRoot, count, scenario) {
 	return { configuration, contents, source };
 }
 
-async function benchmarkEditor(temporaryRoot, fixture, routes) {
+async function benchmarkEditor(temporaryRoot, fixture, routes, scenario) {
 	const record = await withNativeEditor({
 		editor: typescript.editor,
 		fixture,
@@ -155,7 +166,8 @@ async function benchmarkEditor(temporaryRoot, fixture, routes) {
 			const { result: completions, timing: completionTiming } = timeEditorRequest(api, () =>
 				project.checker.getCompletionsAtPosition(fixture.source, position),
 			);
-			if (!completions?.entries.some((entry) => entry.name === "navigate")) {
+			const expectedCompletion = scenario === "interception" ? "teamId" : "navigate";
+			if (!completions?.entries.some((entry) => entry.name === expectedCompletion)) {
 				throw new Error("The TypeScript editor did not provide the expected router completion");
 			}
 
@@ -164,6 +176,7 @@ async function benchmarkEditor(temporaryRoot, fixture, routes) {
 			const nativeAllocatedBytes = readNativeHeap({ profile, root, sample: "alloc_space" });
 			return {
 				name: "client-router/types/editor",
+				scenario,
 				routes,
 				typescript: typescriptVersion,
 				diagnosticServerMilliseconds: diagnosticTiming.totals.serverTimeMs,

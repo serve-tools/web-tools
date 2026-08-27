@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/client-router",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "Typed browser routing built directly on the Navigation API",
 	"keywords": [
 		"browser",
@@ -45,6 +45,6 @@
 		"typecheck": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/router": "^0.1.0"
+		"@serve-tools/router": "^0.2.0"
 	}
 }

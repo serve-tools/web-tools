@@ -1,13 +1,31 @@
 # Preserve HTTP contract boundaries
 
 - Keep one executable application contract in a trusted server module, and import it from browser code only with `import type`.
-- Treat `@serve-tools/router` as the owner of route syntax, typed params/search, URL creation, and trusted route matching.
-- Use `serialization: "native"` only for router’s built-in string, safe-integer, and identity enum wire forms.
-- For a custom router codec, declare `serialization: "href"` and supply a URL from an explicitly browser-safe route module’s `href()` method.
+- Omit `route` to infer a string-parameter route from the path key; use router-owned typed params/search, URL creation, and matching when explicit codecs are needed.
+- Omitted serialization defaults to `"native"`; native mode requires every codec's wire form to be native.
+- For a custom router codec, metadata is non-native, so declare `serialization: "href"` and supply a URL from an explicitly browser-safe route module’s `href()` method.
 - Declare public request and response schemas explicitly; never expose database tables, ORM schemas, migrations, internal timestamps, secrets, or authorization state by implication.
 - Give every operation a successful 2xx response and only use `null` for a bodyless 204 or 205 response.
-- Keep shared `commonResponses` limited to declared 4xx/5xx public envelopes, and do not replace an operation-specific status with a merely similar validator.
-- Authorize in application context before reading a request body; route parameters and TypeScript types are never proof of access.
-- Treat `isStatus()` as status-and-response-kind narrowing, not browser-side payload validation; preserve unexpected HTTP responses as their actual numeric status and native `Response`.
-- Generate OpenAPI only as an explicit application-owned projection, and require Standard JSON Schema conversion only at that boundary.
+- Keep API-level `responses` limited to declared 4xx/5xx public envelopes; operation `responses` remains operation-specific, and an overlapping status must reuse the identical schema object rather than a merely similar validator.
+- Let `defineAPI()` materialize applicable adapter responses: `400` for URL decoding or JSON bodies and `413`/`415` for JSON bodies. An operation or API-level response at the same status overrides the default schema.
+- Use `adapterResponse(schema, ({ request, status }) => body)` when an adapter-created `400`, `404`, `405`, `413`, or `415` response needs a custom body; its output still passes response validation.
+- Treat `operationId` as optional documentation metadata, not runtime identity; omitted IDs are never synthesized.
+- Avoid same-method route shadows that could deliver another operation's response to a typed client; only native integer/enum exclusions can prove an otherwise overlapping literal path disjoint.
+- Compose independently owned API components with `composeAPIs(componentA, componentB)` so each component's API-level responses materialize only into its own operations.
+- Use `composeAPIs({ responses }, componentA, componentB)` only for envelopes intentionally shared by every final operation, including public adapter `404` and `405` responses; a same-status final global schema overrides the component schema.
+- Scope middleware outcomes through nested composition and import the exposed contract type in browser code; an overriding schema must accept every producer of that status.
+- Authorize in application context before reading a request body; narrow on literal `method` and `path`, then return `respond({ status, body?, headers? })` for only the matched operation's response pairs. Route parameters and TypeScript types are never proof of access.
+- Narrow schema-derived browser results with direct status checks; every branch exposes only `status`, literal `ok`, typed `body`, and native `response`, with `body: undefined` for 204/205.
+- Browser clients import the executable contract only as a type and do no schema validation; malformed JSON and non-JSON responses reject with `ProtocolError`, retaining the source response at `error.response`.
+- When handling `ProtocolError.response`, rethrow response-less errors so native network and abort failures and local request-contract failures remain distinct.
+- The generic client can still receive valid JSON or bodyless 204/205 with an undeclared status from an upstream proxy because it does not ship contract status metadata.
+- Put credentials, headers, signals, caching, and other native per-request Fetch metadata inside `init`; only an explicit second client generic may add typed framework keys, and injected `fetch` callbacks see those keys as optional alongside native `RequestInit` fields.
+- Reject method/body overrides and `mode: "no-cors"`; let the client own JSON `Accept`, `Content-Type`, and serialization.
+- Handler results and context response objects accept native response headers without bypassing schema validation; media type, content encoding, content length, and transfer encoding remain adapter-owned.
+- Reuse typed component handler maps with object spread; the composed handler still requires every operation.
+- Use `/client/static` only for fixed literal native paths without route input; use `/client` for params, search, or prebuilt href requests.
+- Generated 404 and 405 responses are adapter-owned and bypass application code; expose or customize them through final-API `responses` `adapterResponse(...)` entries.
+- Generate OpenAPI only as an explicit application-owned projection, using closed metadata options and router codec metadata for path/query schemas while rejecting colliding templated paths; require Standard JSON Schema conversion only at that boundary.
+- Add operation summaries, descriptions, tags, deprecation, or security only when intentionally documented; declare every referenced security scheme in projection options.
+- Custom codecs project as strings without decoded defaults; OpenAPI's templated-path constraints may reject a method-disjoint API that can otherwise be served.
 - Do not infer authentication schemes, permissions, storage metadata, or a public documentation endpoint from an HTTP contract.
