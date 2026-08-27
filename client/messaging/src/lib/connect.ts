@@ -273,8 +273,13 @@ export function connect<const P extends Protocol & ProtocolDefinition<P>>(endpoi
 	pageEvents?.addEventListener("pagehide", hidden);
 	void ready.promise.catch(noop);
 
-	endpoint.start?.();
-	initialize();
+	try {
+		endpoint.start?.();
+		initialize();
+	} catch (error) {
+		finish(error, true);
+		throw error;
+	}
 
 	return {
 		ready: ready.promise,

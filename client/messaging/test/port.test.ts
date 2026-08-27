@@ -857,6 +857,38 @@ describe("liveness", () => {
 		}
 	});
 
+	it("removes registered listeners when endpoint startup throws", () => {
+		const messages = new Set<(event: { data: unknown }) => void>();
+		const pages = new Set<() => void>();
+		const error = new Error("Endpoint startup failed");
+		const lock = vi.fn();
+		const postMessage = vi.fn();
+
+		vi.stubGlobal("navigator", { locks: { request: lock } });
+		vi.stubGlobal("onpagehide", null);
+		vi.stubGlobal("addEventListener", (_type: string, listener: () => void) => pages.add(listener));
+		vi.stubGlobal("removeEventListener", (_type: string, listener: () => void) => pages.delete(listener));
+
+		try {
+			expect(() =>
+				connect({
+					addEventListener: (_type, listener) => messages.add(listener),
+					removeEventListener: (_type, listener) => messages.delete(listener),
+					postMessage,
+					start() {
+						throw error;
+					},
+				}),
+			).toThrow(error);
+			expect(messages.size).toBe(0);
+			expect(pages.size).toBe(0);
+			expect(lock).not.toHaveBeenCalled();
+			expect(postMessage).not.toHaveBeenCalled();
+		} finally {
+			vi.unstubAllGlobals();
+		}
+	});
+
 	it("works without Web Locks", async () => {
 		vi.stubGlobal("navigator", {});
 
