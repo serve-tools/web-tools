@@ -77,6 +77,9 @@ Measure native-event-to-visible-update behavior separately from JavaScript-only 
 
 ## Retention and ownership
 
+The [retention evidence](retention.md) records completed base-lifecycle and Checkbox experiments, including positive controls, retained-heap snapshots, and an initial Checkbox sensitivity failure followed by a separately predeclared larger workload.
+Those results do not replace the matched Base UI latency and bundle comparisons required above.
+
 First prove deterministic cleanup through exact counters for external signal subscriptions, global listeners, observers, timers, and active overlays.
 Keep the external store alive during retirement tests.
 Verify queued updates do not execute after suspension and that repeated reconnects do not accumulate registrations.

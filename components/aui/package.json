@@ -25,8 +25,11 @@
 	"exports": {
 		".": "./dist/aui.js",
 		"./base": "./dist/aui-element.js",
+		"./checkbox": "./dist/checkbox-element.js",
 		"./dialog": "./dist/dialog-element.js",
-		"./tabs": "./dist/tabs-element.js"
+		"./tabs": "./dist/tabs-element.js",
+		"./toggle": "./dist/toggle-element.js",
+		"./toggle-group": "./dist/toggle-group-element.js"
 	},
 	"files": [
 		"dist",

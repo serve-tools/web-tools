@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { userEvent } from "vitest/browser";
+import type { CheckboxChangeDetail } from "../../src/checkbox-element.js";
 import { CheckboxElement } from "../../src/checkbox-element.js";
 
 const fixtures: Node[] = [];
+const microtask = () => new Promise<void>(queueMicrotask);
 
 afterEach(() => {
 	for (const fixture of fixtures.splice(0).reverse()) {
@@ -27,6 +29,7 @@ describe("CheckboxElement", () => {
 	test("uses the host as the only focus, label, and form-control owner", async () => {
 		const { element } = defineCheckbox();
 		element.id = crypto.randomUUID();
+		element.textContent = "Control";
 		const label = document.createElement("label");
 		label.htmlFor = element.id;
 		label.textContent = "Receive updates";
@@ -86,45 +89,269 @@ describe("CheckboxElement", () => {
 		expect(element.checked).toBe(false);
 	});
 
-	test("submits one native-shaped value only while checked", () => {
+	test("submits checked and optional unchecked values without duplicates", () => {
 		const { element } = defineCheckbox();
 		const form = append(document.createElement("form"));
 		element.name = "terms";
 		form.append(element);
 
 		expect([...new FormData(form)]).toEqual([]);
+		element.uncheckedValue = "no";
+		expect([...new FormData(form)]).toEqual([["terms", "no"]]);
+		element.uncheckedValue = "";
+		expect([...new FormData(form)]).toEqual([["terms", ""]]);
 		element.checked = true;
 		expect([...new FormData(form)]).toEqual([["terms", "on"]]);
 		element.value = "yes";
 		expect([...new FormData(form)]).toEqual([["terms", "yes"]]);
 		element.name = "";
 		expect([...new FormData(form)]).toEqual([]);
+		element.uncheckedValue = undefined;
+		expect(element.hasAttribute("unchecked-value")).toBe(false);
 	});
 
-	test("matches programmatic click, Space, and Enter activation essentials", async () => {
+	test("uses the same transaction ordering for programmatic, synthetic, pointer, label, and Space activation", async () => {
 		const { element } = defineCheckbox();
-		append(element);
+		element.id = crypto.randomUUID();
+		element.textContent = "Control";
+		const label = document.createElement("label");
+		label.htmlFor = element.id;
+		label.textContent = "Toggle";
+		const fixture = append(document.createElement("div"));
+		fixture.append(label, element);
 		const events: string[] = [];
-		for (const type of ["click", "input", "change"]) {
+		let sourceEvent: MouseEvent | undefined;
+		element.addEventListener("beforechange", (event) => {
+			events.push("beforechange");
+			sourceEvent = event.detail.sourceEvent;
+		});
+		for (const type of ["click", "input", "change"] as const) {
 			element.addEventListener(type, () => events.push(type));
 		}
+		const expected = ["beforechange", "input", "change", "click"];
+		const reset = () => {
+			element.checked = false;
+			events.length = 0;
+		};
 
 		element.indeterminate = true;
 		element.click();
 		expect(element.checked).toBe(true);
-		expect(element.indeterminate).toBe(false);
-		expect(events).toEqual(["click", "input", "change"]);
+		expect(element.indeterminate).toBe(true);
+		expect(events).toEqual(expected);
 
-		events.length = 0;
+		reset();
+		element.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+		expect(element.checked).toBe(true);
+		expect(events).toEqual(expected);
+
+		reset();
+		await userEvent.click(element);
+		expect(element.checked).toBe(true);
+		expect(events).toEqual(expected);
+
+		reset();
+		await userEvent.click(label);
+		expect(element.checked).toBe(true);
+		expect(events).toEqual(expected);
+
+		reset();
 		element.focus();
-		await userEvent.keyboard(" ");
-		expect(element.checked).toBe(false);
-		expect(events).toEqual(["click", "input", "change"]);
+		await userEvent.keyboard("{Shift>} {/Shift}");
+		expect(element.checked).toBe(true);
+		expect(events).toEqual(expected);
+		expect(sourceEvent?.shiftKey).toBe(true);
 
 		events.length = 0;
 		await userEvent.keyboard("{Enter}");
-		expect(element.checked).toBe(false);
+		await microtask();
+		expect(element.checked).toBe(true);
 		expect(events).toEqual([]);
+	});
+
+	test("copies every keyboard modifier to the single Space click and honors capture vetoes", () => {
+		const accepted = defineCheckbox().element;
+		const vetoed = defineCheckbox().element;
+		const acceptedParent = append(document.createElement("div"));
+		const vetoedParent = append(document.createElement("div"));
+		acceptedParent.append(accepted);
+		vetoedParent.append(vetoed);
+		let sourceEvent: MouseEvent | undefined;
+		const acceptedClicks = vi.fn();
+		accepted.addEventListener("beforechange", (event) => (sourceEvent = event.detail.sourceEvent));
+		accepted.addEventListener("click", acceptedClicks);
+		vetoedParent.addEventListener("keydown", (event) => event.preventDefault(), { capture: true });
+		vetoedParent.addEventListener("keyup", (event) => event.preventDefault(), { capture: true });
+		const keyboardInit = {
+			altKey: true,
+			bubbles: true,
+			cancelable: true,
+			ctrlKey: true,
+			key: " ",
+			metaKey: true,
+			shiftKey: true,
+		};
+
+		accepted.dispatchEvent(new KeyboardEvent("keydown", keyboardInit));
+		accepted.dispatchEvent(new KeyboardEvent("keyup", keyboardInit));
+		vetoed.dispatchEvent(new KeyboardEvent("keydown", keyboardInit));
+		vetoed.dispatchEvent(new KeyboardEvent("keyup", keyboardInit));
+		expect(acceptedClicks).toHaveBeenCalledOnce();
+		expect(sourceEvent).toMatchObject({ altKey: true, ctrlKey: true, metaKey: true, shiftKey: true });
+		expect(accepted.checked).toBe(true);
+		expect(vetoed.checked).toBe(false);
+	});
+
+	test("proposes immutable state and guards real pointer activation through all transaction events", async () => {
+		const { element } = defineCheckbox();
+		element.textContent = "Control";
+		append(element);
+		const events: string[] = [];
+		const clicks = vi.fn();
+		let detail: CheckboxChangeDetail | undefined;
+		element.addEventListener("click", clicks);
+		element.addEventListener("beforechange", (event) => {
+			events.push("beforechange");
+			detail = event.detail;
+			element.click();
+		});
+		element.addEventListener("input", () => {
+			events.push("input");
+			element.click();
+		});
+		element.addEventListener("change", () => {
+			events.push("change");
+			element.click();
+		});
+
+		await userEvent.click(element);
+		expect(detail?.checked).toBe(true);
+		expect(detail?.sourceEvent).toBeInstanceOf(MouseEvent);
+		expect(Object.isFrozen(detail)).toBe(true);
+		expect(element.checked).toBe(true);
+		expect(events).toEqual(["beforechange", "input", "change"]);
+		expect(clicks).toHaveBeenCalledOnce();
+	});
+
+	test("cancels beforechange across shadow boundaries and preserves input/change composition", () => {
+		const { element } = defineCheckbox();
+		const fixture = append(document.createElement("div"));
+		const shadow = fixture.attachShadow({ mode: "open" });
+		shadow.append(element);
+		let cancel = true;
+		const outsideBeforeChange = vi.fn((event: Event) => {
+			if (cancel) {
+				event.preventDefault();
+			}
+		});
+		const outsideInput = vi.fn();
+		const outsideChange = vi.fn();
+		const localInput = vi.fn((event: Event) => ({ bubbles: event.bubbles, composed: event.composed }));
+		const localChange = vi.fn((event: Event) => ({ bubbles: event.bubbles, composed: event.composed }));
+		fixture.addEventListener("beforechange", outsideBeforeChange);
+		fixture.addEventListener("input", outsideInput);
+		fixture.addEventListener("change", outsideChange);
+		element.addEventListener("input", localInput);
+		element.addEventListener("change", localChange);
+
+		element.click();
+		expect(element.checked).toBe(false);
+		expect(outsideBeforeChange).toHaveBeenCalledOnce();
+		expect(localInput).not.toHaveBeenCalled();
+		expect(localChange).not.toHaveBeenCalled();
+
+		cancel = false;
+		element.click();
+		expect(element.checked).toBe(true);
+		expect(outsideBeforeChange).toHaveBeenCalledTimes(2);
+		expect(localInput).toHaveReturnedWith({ bubbles: true, composed: true });
+		expect(localChange).toHaveReturnedWith({ bubbles: true, composed: false });
+		expect(outsideInput).toHaveBeenCalledOnce();
+		expect(outsideChange).not.toHaveBeenCalled();
+	});
+
+	test("allows explicit reentrant click dispatch to bubble without starting another transaction", () => {
+		const { element } = defineCheckbox();
+		append(element);
+		const clicks = vi.fn();
+		const proposals = vi.fn();
+		const changes = vi.fn();
+		element.addEventListener("click", clicks);
+		element.addEventListener("beforechange", proposals);
+		element.addEventListener("change", changes);
+		element.addEventListener("input", () => {
+			element.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+		});
+
+		element.click();
+		expect(element.checked).toBe(true);
+		expect(proposals).toHaveBeenCalledOnce();
+		expect(changes).toHaveBeenCalledOnce();
+		expect(clicks).toHaveBeenCalledTimes(2);
+	});
+
+	test("does not activate from nested interactive content or cancel its click", () => {
+		const { element } = defineCheckbox();
+		const fixture = append(document.createElement("div"));
+		const button = document.createElement("button");
+		const link = document.createElement("a");
+		button.type = "button";
+		link.href = "#nested-checkbox-link";
+		link.textContent = "Link";
+		element.append(button, link);
+		fixture.append(element);
+		const proposals = vi.fn();
+		const defaultPreventedAtHost: boolean[] = [];
+		element.addEventListener("beforechange", proposals);
+		element.addEventListener("click", (event) => defaultPreventedAtHost.push(event.defaultPrevented));
+		fixture.addEventListener("click", (event) => event.preventDefault());
+
+		button.click();
+		link.click();
+		expect(element.checked).toBe(false);
+		expect(proposals).not.toHaveBeenCalled();
+		expect(defaultPreventedAtHost).toEqual([false, false]);
+	});
+
+	test("cancellation preserves listener-authored state and accepted proposals recheck interaction state", () => {
+		const canceled = defineCheckbox().element;
+		const stopped = defineCheckbox().element;
+		append(document.createElement("div")).append(canceled, stopped);
+		const canceledInput = vi.fn();
+		canceled.addEventListener("input", canceledInput);
+		canceled.addEventListener("beforechange", (event) => {
+			canceled.checked = true;
+			event.preventDefault();
+		});
+		canceled.click();
+		expect(canceled.checked).toBe(true);
+		expect(canceledInput).not.toHaveBeenCalled();
+
+		const stoppedInput = vi.fn();
+		stopped.addEventListener("input", stoppedInput);
+		stopped.addEventListener("beforechange", () => (stopped.readOnly = true));
+		stopped.click();
+		expect(stopped.checked).toBe(false);
+		expect(stoppedInput).not.toHaveBeenCalled();
+	});
+
+	test("honors click cancellation only when it precedes the internal transaction", () => {
+		const early = defineCheckbox().element;
+		const late = defineCheckbox().element;
+		const earlyParent = append(document.createElement("div"));
+		const lateParent = append(document.createElement("div"));
+		earlyParent.append(early);
+		lateParent.append(late);
+		const earlyProposal = vi.fn();
+		early.addEventListener("beforechange", earlyProposal);
+		earlyParent.addEventListener("click", (event) => event.preventDefault(), { capture: true });
+		lateParent.addEventListener("click", (event) => event.preventDefault());
+
+		early.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+		late.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+		expect(early.checked).toBe(false);
+		expect(earlyProposal).not.toHaveBeenCalled();
+		expect(late.checked).toBe(true);
 	});
 
 	test("suppresses click activation while directly or fieldset disabled", () => {
@@ -160,6 +387,46 @@ describe("CheckboxElement", () => {
 		element.click();
 		expect(element.checked).toBe(true);
 		expect(clicks).toHaveBeenCalledOnce();
+	});
+
+	test("honors the first legend exception for inherited fieldset disabling", () => {
+		const legendCheckbox = defineCheckbox().element;
+		const disabledCheckbox = defineCheckbox().element;
+		const fieldset = append(document.createElement("fieldset"));
+		const legend = document.createElement("legend");
+		legend.append(legendCheckbox);
+		fieldset.append(legend, disabledCheckbox);
+		fieldset.disabled = true;
+
+		legendCheckbox.click();
+		disabledCheckbox.click();
+		expect(legendCheckbox.checked).toBe(true);
+		expect(legendCheckbox.tabIndex).toBe(0);
+		expect(disabledCheckbox.checked).toBe(false);
+		expect(disabledCheckbox.tabIndex).toBe(-1);
+	});
+
+	test("reflects readOnly, retains indeterminate state, and records FACE validation behavior", () => {
+		const { element } = defineCheckbox();
+		append(element);
+		element.required = true;
+		element.readOnly = true;
+		element.indeterminate = true;
+		const native = document.createElement("input");
+		native.type = "checkbox";
+		native.required = true;
+		native.readOnly = true;
+		const proposal = vi.fn();
+		element.addEventListener("beforechange", proposal);
+
+		expect(element.getAttribute("readonly")).toBe("");
+		expect(element.willValidate).toBe(false);
+		expect(native.willValidate).toBe(false);
+		element.click();
+		expect(element.checked).toBe(false);
+		expect(element.indeterminate).toBe(true);
+		expect(proposal).not.toHaveBeenCalled();
+		expect(element.tabIndex).toBe(0);
 	});
 
 	test("provides native constraint-validation methods and invalid events", () => {
@@ -215,6 +482,8 @@ describe("CheckboxElement", () => {
 		element.value = "before";
 		element.name = "choice";
 		element.required = true;
+		element.readOnly = true;
+		element.uncheckedValue = "no";
 		element.checked = true;
 		element.indeterminate = true;
 		append(element);
@@ -226,48 +495,142 @@ describe("CheckboxElement", () => {
 		expect(element.value).toBe("before");
 		expect(element.name).toBe("choice");
 		expect(element.required).toBe(true);
+		expect(element.readOnly).toBe(true);
+		expect(element.uncheckedValue).toBe("no");
 	});
 
-	test("rolls back canceled .click() like native input", () => {
+	test("submits the first associated submitter on Enter after uncanceled propagation", async () => {
 		const { element } = defineCheckbox();
-		const input = document.createElement("input");
-		input.type = "checkbox";
 		const fixture = append(document.createElement("div"));
-		fixture.append(element, input);
-		fixture.addEventListener("click", (event) => event.preventDefault());
+		const external = document.createElement("button");
+		const form = document.createElement("form");
+		const later = document.createElement("button");
+		form.id = crypto.randomUUID();
+		external.type = "submit";
+		external.setAttribute("form", form.id);
+		later.type = "submit";
+		element.setAttribute("form", form.id);
+		form.append(later);
+		fixture.append(external, form, element);
+		form.addEventListener("submit", (event) => event.preventDefault());
+		const externalClick = vi.fn();
+		const laterClick = vi.fn();
+		external.addEventListener("click", externalClick);
+		later.addEventListener("click", laterClick);
 
-		const customInput = vi.fn();
-		const nativeInput = vi.fn();
-		element.addEventListener("input", customInput);
-		input.addEventListener("input", nativeInput);
-		element.click();
-		input.click();
-		expect(element.checked).toBe(input.checked);
+		element.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }));
+		await microtask();
+		expect(externalClick).toHaveBeenCalledOnce();
+		expect(laterClick).not.toHaveBeenCalled();
 		expect(element.checked).toBe(false);
-		expect(customInput).not.toHaveBeenCalled();
-		expect(nativeInput).not.toHaveBeenCalled();
 	});
 
-	test("documents the unavailable native default-action hook for later click cancellation", () => {
-		const { element } = defineCheckbox();
-		const input = document.createElement("input");
-		input.type = "checkbox";
-		const customParent = append(document.createElement("div"));
-		const nativeParent = append(document.createElement("div"));
-		customParent.append(element);
-		nativeParent.append(input);
-		customParent.addEventListener("click", (event) => event.preventDefault());
-		nativeParent.addEventListener("click", (event) => event.preventDefault());
-		const customInput = vi.fn();
-		const nativeInput = vi.fn();
-		element.addEventListener("input", customInput);
-		input.addEventListener("input", nativeInput);
+	test("does not fall through a disabled default submitter or submit without one", async () => {
+		const disabledFirst = defineCheckbox().element;
+		const noSubmitter = defineCheckbox().element;
+		const fixture = append(document.createElement("div"));
+		const firstForm = document.createElement("form");
+		const secondForm = document.createElement("form");
+		const disabled = document.createElement("button");
+		const enabled = document.createElement("button");
+		disabled.type = "submit";
+		disabled.disabled = true;
+		enabled.type = "submit";
+		firstForm.append(disabledFirst, disabled, enabled);
+		secondForm.append(noSubmitter);
+		fixture.append(firstForm, secondForm);
+		const enabledClick = vi.fn();
+		enabled.addEventListener("click", enabledClick);
 
-		element.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
-		input.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
-		expect(element.checked).toBe(true);
-		expect(input.checked).toBe(false);
-		expect(customInput).toHaveBeenCalledOnce();
-		expect(nativeInput).not.toHaveBeenCalled();
+		disabledFirst.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }));
+		noSubmitter.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }));
+		await microtask();
+		expect(enabledClick).not.toHaveBeenCalled();
+	});
+
+	test("excludes image inputs when choosing the default Enter submitter", async () => {
+		const { element } = defineCheckbox();
+		const form = append(document.createElement("form"));
+		const image = document.createElement("input");
+		const submit = document.createElement("button");
+		image.type = "image";
+		submit.type = "submit";
+		form.append(element, image, submit);
+		form.addEventListener("submit", (event) => event.preventDefault());
+		const imageClick = vi.fn();
+		const submitClick = vi.fn();
+		image.addEventListener("click", imageClick);
+		submit.addEventListener("click", submitClick);
+
+		element.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }));
+		await microtask();
+		expect(imageClick).not.toHaveBeenCalled();
+		expect(submitClick).toHaveBeenCalledOnce();
+	});
+
+	test("cancels deferred Enter submission after ancestor prevention, reassociation, or adoption", async () => {
+		const prevented = defineCheckbox().element;
+		const initiallyDisabled = defineCheckbox().element;
+		const reassociated = defineCheckbox().element;
+		const reassociatedRoundTrip = defineCheckbox().element;
+		const disabledRoundTrip = defineCheckbox().element;
+		const reconnected = defineCheckbox().element;
+		const adopted = defineCheckbox().element;
+		const fixture = append(document.createElement("div"));
+		const form = document.createElement("form");
+		const otherForm = document.createElement("form");
+		const submit = document.createElement("button");
+		const frame = append(document.createElement("iframe"));
+		form.id = crypto.randomUUID();
+		otherForm.id = crypto.randomUUID();
+		submit.type = "submit";
+		initiallyDisabled.disabled = true;
+		form.append(
+			prevented,
+			initiallyDisabled,
+			reassociated,
+			reassociatedRoundTrip,
+			disabledRoundTrip,
+			reconnected,
+			adopted,
+			submit,
+		);
+		fixture.append(form, otherForm);
+		form.addEventListener("submit", (event) => event.preventDefault());
+		const submitClick = vi.fn();
+		submit.addEventListener("click", submitClick);
+		form.addEventListener("keydown", (event) => {
+			if (event.target === prevented) {
+				event.preventDefault();
+			} else if (event.target === initiallyDisabled) {
+				initiallyDisabled.disabled = false;
+			}
+		});
+
+		prevented.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }));
+		initiallyDisabled.dispatchEvent(
+			new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }),
+		);
+		reassociated.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }));
+		reassociatedRoundTrip.dispatchEvent(
+			new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }),
+		);
+		disabledRoundTrip.dispatchEvent(
+			new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }),
+		);
+		reconnected.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }));
+		adopted.dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, key: "Enter" }));
+		otherForm.append(reassociated);
+		reassociatedRoundTrip.setAttribute("form", otherForm.id);
+		reassociatedRoundTrip.setAttribute("form", form.id);
+		disabledRoundTrip.disabled = true;
+		disabledRoundTrip.disabled = false;
+		reconnected.remove();
+		form.prepend(reconnected);
+		const target = frame.contentDocument!;
+		target.body.append(target.adoptNode(adopted));
+		fixtures.push(adopted);
+		await microtask();
+		expect(submitClick).not.toHaveBeenCalled();
 	});
 });

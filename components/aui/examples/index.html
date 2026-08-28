@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>AUI — native controls</title>
+		<style>
+		:root {
+			color: #17231f;
+			background: #f4f6f2;
+			font: 16px/1.55 system-ui, sans-serif;
+			accent-color: #276851;
+		}
+		body { max-width: 48rem; margin: 3rem auto; padding: 0 1.5rem; }
+		h1 { font-size: 2.4rem; line-height: 1.15; letter-spacing: -0.04em; }
+		h2 { margin-top: 0; font-size: 1.2rem; }
+		.card { background: white; padding: 1.5rem; border: 1px solid #d5ded5; border-radius: 1rem; margin: 1.25rem 0; }
+		.row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin: 1rem 0; }
+		label { display: inline-flex; align-items: center; gap: 0.6rem; }
+		button { font: inherit; padding: 0.4rem 0.8rem; border: 1px solid #a6b9ad; border-radius: 0.4rem; background: #f6f9f6; color: inherit; cursor: pointer; }
+		:focus-visible { outline: 3px solid #326eac; outline-offset: 3px; }
+		input:not([type="checkbox"]) { font: inherit; padding: 0.4rem; }
+		output { display: block; min-height: 1.6rem; color: #3c5b4d; }
+		app-checkbox { display: inline-flex; border-radius: 0.2rem; cursor: pointer; }
+		app-checkbox::part(control) { display: grid; place-items: center; width: 1.2rem; height: 1.2rem; border: 2px solid #517260; border-radius: 0.2rem; }
+		app-checkbox [slot="indicator"] { visibility: hidden; line-height: 1; }
+		app-checkbox:state(checked) [slot="indicator"] { visibility: visible; }
+		app-checkbox:state(checked)::part(control) { color: white; background: #276851; }
+		app-checkbox:state(readonly) { opacity: 0.65; cursor: default; }
+		app-tabs [role="tablist"] { display: flex; gap: 0.5rem; border-bottom: 1px solid #d5ded5; padding-bottom: 0.75rem; }
+		app-tabs [aria-selected="true"] { background: #276851; border-color: #276851; color: white; }
+		app-tabs [slot="panel"] { padding-top: 1rem; }
+		app-toggle:state(pressed) > button { background: #276851; border-color: #276851; color: white; }
+		dialog { max-width: 28rem; border: 1px solid #a6b9ad; border-radius: 1rem; padding: 1.5rem; }
+		dialog::backdrop { background: rgb(15 32 24 / 45%); }
+		</style>
+		<script type="module" src="./main.ts"></script>
+	</head>
+	<body>
+		<p>Serve Tools / AUI</p>
+		<h1>Native controls. Explicit state.</h1>
+		<p>
+			A working example of the current components, with native forms, retained layouts, and no automatic tag
+			registration.
+		</p>
+		<section class="card" aria-labelledby="preferences-title">
+			<h2 id="preferences-title">Preferences</h2>
+			<form id="preferences">
+				<div class="row">
+					<label>
+						<app-checkbox name="updates" value="yes" unchecked-value="no">
+							<span slot="indicator">✓</span>
+						</app-checkbox>
+						Receive product updates
+					</label>
+				</div>
+				<div class="row">
+					<button type="submit">Save preferences</button>
+					<button type="reset">Reset</button>
+				</div>
+				<output id="submission" aria-live="polite">No preferences submitted.</output>
+			</form>
+			<div class="row"><label><input id="lock" type="checkbox" /> Cancel proposed changes</label></div>
+			<output id="interaction" aria-live="polite">The checkbox is unchecked.</output>
+		</section>
+		<section class="card" aria-labelledby="workspace-title">
+			<h2 id="workspace-title">Retained workspace</h2>
+			<app-tabs>
+				<div slot="tablist" aria-label="Workspace">
+					<button type="button" value="notes">Notes</button>
+					<button type="button" value="counter">Counter</button>
+				</div>
+				<section slot="panel"><label>Draft <input value="This draft stays here." /></label></section>
+				<section slot="panel"><app-counter></app-counter></section>
+			</app-tabs>
+		</section>
+		<section class="card" aria-labelledby="formatting-title">
+			<h2 id="formatting-title">Native toggle buttons</h2>
+			<app-toggle-group multiple class="row" aria-label="Text formatting">
+				<app-toggle value="bold"><button>Bold</button></app-toggle>
+				<app-toggle value="italic"><button>Italic</button></app-toggle>
+				<app-toggle value="underline"><button>Underline</button></app-toggle>
+			</app-toggle-group>
+			<output id="formatting-result" aria-live="polite">Selected formatting: none</output>
+		</section>
+		<section class="card" aria-labelledby="dialog-section-title">
+			<h2 id="dialog-section-title">Native dialog</h2>
+			<button id="open-dialog" type="button">Review changes</button>
+			<app-dialog>
+				<dialog aria-labelledby="dialog-title">
+					<h2 id="dialog-title">Ready to save?</h2>
+					<p>The browser owns modal focus and the form's closing action.</p>
+					<form method="dialog" class="row">
+						<button value="cancel">Cancel</button>
+						<button value="save">Save</button>
+					</form>
+				</dialog>
+			</app-dialog>
+			<output id="dialog-result" aria-live="polite"></output>
+		</section>
+	</body>
+</html>

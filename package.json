@@ -355,6 +355,7 @@
 			},
 			"components/aui": {
 				"entry": [
+					"examples/main.ts",
 					"test/*.{recipes,types}.ts"
 				]
 			},

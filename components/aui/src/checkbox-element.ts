@@ -1,5 +1,19 @@
 import { AUIElement } from "./aui-element.js";
 
+/** Immutable state proposed by a checkbox's `beforechange` event. */
+export interface CheckboxChangeDetail {
+	/** The checked state that will be committed unless the event is canceled. */
+	readonly checked: boolean;
+
+	/** The click shared by pointer, label, keyboard, and programmatic activation. */
+	readonly sourceEvent: MouseEvent;
+}
+
+/** Events emitted by a checkbox element. */
+export interface CheckboxEventMap extends HTMLElementEventMap {
+	beforechange: CustomEvent<CheckboxChangeDetail>;
+}
+
 const restoredStates = new Map<string, readonly [checked: boolean, indeterminate: boolean]>([
 	["checked", [true, false]],
 	["unchecked", [false, false]],
@@ -7,12 +21,26 @@ const restoredStates = new Map<string, readonly [checked: boolean, indeterminate
 	["unchecked/indeterminate", [false, true]],
 ]);
 
+const interactiveContentSelector =
+	'a[href], audio[controls], button, details, embed, iframe, input, label, select, summary, textarea, video[controls], [contenteditable]:not([contenteditable="false"]), [tabindex]';
+
 /** A form-associated checkbox whose host owns its interaction and accessible semantics. */
 export class CheckboxElement extends AUIElement {
 	static readonly formAssociated = true;
-	static readonly observedAttributes = ["checked", "disabled", "name", "required", "tabindex", "value"];
+	static readonly observedAttributes = [
+		"checked",
+		"disabled",
+		"name",
+		"readonly",
+		"required",
+		"tabindex",
+		"unchecked-value",
+		"value",
+	];
 
+	#changing = false;
 	#checked = this.hasAttribute("checked");
+	#connectionSignal: AbortSignal | undefined;
 	#customValidity = "";
 	#dirtyCheckedness = false;
 	#effectiveDisabled = this.hasAttribute("disabled");
@@ -20,11 +48,36 @@ export class CheckboxElement extends AUIElement {
 	#focusInitialized = false;
 	#indeterminate = false;
 	#internals = this.attachInternals();
+	#interactionEpoch = 0;
 	#platformDisabled = false;
-	#programmaticClickEvent: MouseEvent | undefined;
-	#programmaticClickInProgress = false;
 	#settingTabIndex = false;
 	#spacePressed = false;
+
+	declare addEventListener: {
+		<Type extends keyof CheckboxEventMap>(
+			type: Type,
+			listener: (this: CheckboxElement, event: CheckboxEventMap[Type]) => unknown,
+			options?: boolean | AddEventListenerOptions,
+		): void;
+		(
+			type: string,
+			listener: EventListenerOrEventListenerObject | null,
+			options?: boolean | AddEventListenerOptions,
+		): void;
+	};
+
+	declare removeEventListener: {
+		<Type extends keyof CheckboxEventMap>(
+			type: Type,
+			listener: (this: CheckboxElement, event: CheckboxEventMap[Type]) => unknown,
+			options?: boolean | EventListenerOptions,
+		): void;
+		(
+			type: string,
+			listener: EventListenerOrEventListenerObject | null,
+			options?: boolean | EventListenerOptions,
+		): void;
+	};
 
 	constructor() {
 		super();
@@ -35,7 +88,15 @@ export class CheckboxElement extends AUIElement {
 		this.addEventListener("keydown", this.#handleKeyDown);
 		this.addEventListener("keyup", this.#handleKeyUp);
 
-		for (const property of ["defaultChecked", "value", "name", "disabled", "required"] as const) {
+		for (const property of [
+			"defaultChecked",
+			"value",
+			"uncheckedValue",
+			"name",
+			"disabled",
+			"readOnly",
+			"required",
+		] as const) {
 			this.#upgradeProperty(property);
 		}
 		for (const property of ["checked", "indeterminate"] as const) {
@@ -82,6 +143,19 @@ export class CheckboxElement extends AUIElement {
 		this.setAttribute("value", String(value));
 	}
 
+	/** The submitted value while unchecked, or `undefined` to omit the checkbox from submission. */
+	get uncheckedValue(): string | undefined {
+		return this.getAttribute("unchecked-value") ?? undefined;
+	}
+
+	set uncheckedValue(value: string | undefined) {
+		if (value === undefined) {
+			this.removeAttribute("unchecked-value");
+		} else {
+			this.setAttribute("unchecked-value", String(value));
+		}
+	}
+
 	/** The form-entry name. */
 	get name(): string {
 		return this.getAttribute("name") ?? "";
@@ -98,6 +172,15 @@ export class CheckboxElement extends AUIElement {
 
 	set disabled(value: boolean) {
 		this.toggleAttribute("disabled", Boolean(value));
+	}
+
+	/** Whether user interaction may propose a checked-state change. */
+	get readOnly(): boolean {
+		return this.hasAttribute("readonly");
+	}
+
+	set readOnly(value: boolean) {
+		this.toggleAttribute("readonly", Boolean(value));
 	}
 
 	/** Whether checkedness is required for constraint validation. */
@@ -150,32 +233,12 @@ export class CheckboxElement extends AUIElement {
 		this.#synchronizeValidity();
 	}
 
-	/** Performs script activation unless the checkbox is effectively disabled. */
+	/** Dispatches the same click activation used by pointer, label, and keyboard interaction. */
 	override click(): void {
-		if (this.#effectiveDisabled || this.#programmaticClickInProgress) {
+		if (this.#changing || this.#effectiveDisabled) {
 			return;
 		}
-
-		const previousChecked = this.#checked;
-		const previousIndeterminate = this.#indeterminate;
-		this.#preactivate();
-		this.#programmaticClickEvent = undefined;
-		this.#programmaticClickInProgress = true;
-
-		try {
-			super.click();
-		} finally {
-			this.#programmaticClickInProgress = false;
-		}
-
-		const clickEvent = this.#programmaticClickEvent as MouseEvent | undefined;
-		if (clickEvent?.defaultPrevented) {
-			this.#checked = previousChecked;
-			this.#indeterminate = previousIndeterminate;
-			this.#synchronize();
-		} else {
-			this.#dispatchChangeEvents();
-		}
+		super.click();
 	}
 
 	attributeChangedCallback(name: string, _previous: string | null, value: string | null): void {
@@ -198,6 +261,10 @@ export class CheckboxElement extends AUIElement {
 	formDisabledCallback(disabled: boolean): void {
 		this.#platformDisabled = disabled;
 		this.#setEffectiveDisabled(disabled || this.disabled);
+	}
+
+	formAssociatedCallback(_form: HTMLFormElement | null): void {
+		++this.#interactionEpoch;
 	}
 
 	formResetCallback(): void {
@@ -237,6 +304,8 @@ export class CheckboxElement extends AUIElement {
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {
+		this.#connectionSignal = connection.signal;
+
 		if (!this.#focusInitialized) {
 			this.#focusInitialized = true;
 
@@ -248,7 +317,12 @@ export class CheckboxElement extends AUIElement {
 			}
 		}
 
-		connection.addCleanup(() => (this.#spacePressed = false));
+		connection.addCleanup(() => {
+			if (this.#connectionSignal === connection.signal) {
+				this.#connectionSignal = undefined;
+			}
+			this.#spacePressed = false;
+		});
 	}
 
 	#dispatchChangeEvents(): void {
@@ -257,42 +331,116 @@ export class CheckboxElement extends AUIElement {
 	}
 
 	#handleClick = (event: MouseEvent): void => {
-		if (this.#programmaticClickInProgress) {
-			this.#programmaticClickEvent = event;
+		if (
+			event.defaultPrevented ||
+			this.#effectiveDisabled ||
+			this.readOnly ||
+			hasInteractiveTargetBeforeHost(event, this)
+		) {
 			return;
 		}
-		if (event.defaultPrevented || this.#effectiveDisabled) {
-			return;
-		}
-
-		this.#preactivate();
-		this.#dispatchChangeEvents();
+		this.#proposeChange(event);
 	};
 
-	#handleKeyDown = (event: KeyboardEvent): void => {
-		if (event.target !== this || event.key !== " " || this.#effectiveDisabled) {
+	#proposeChange(sourceEvent: MouseEvent): void {
+		if (this.#changing || this.#effectiveDisabled || this.readOnly) {
 			return;
 		}
-		event.preventDefault();
-		if (!event.repeat) {
-			this.#spacePressed = true;
+
+		this.#changing = true;
+		try {
+			const checked = !this.#checked;
+			const detail = Object.freeze({ checked, sourceEvent }) satisfies CheckboxChangeDetail;
+			const proposal = new CustomEvent<CheckboxChangeDetail>("beforechange", {
+				bubbles: true,
+				cancelable: true,
+				composed: true,
+				detail,
+			});
+
+			if (!this.dispatchEvent(proposal) || this.#effectiveDisabled || this.readOnly) {
+				return;
+			}
+
+			this.#dirtyCheckedness = true;
+			this.#checked = checked;
+			this.#synchronize();
+			this.#dispatchChangeEvents();
+		} finally {
+			this.#changing = false;
+		}
+	}
+
+	#handleKeyDown = (event: KeyboardEvent): void => {
+		if (event.target !== this || event.defaultPrevented) {
+			return;
+		}
+
+		if (event.key === " ") {
+			if (this.#effectiveDisabled || this.readOnly) {
+				return;
+			}
+			event.preventDefault();
+			if (!event.repeat) {
+				this.#spacePressed = true;
+			}
+		} else if (event.key === "Enter") {
+			if (this.#effectiveDisabled) {
+				return;
+			}
+			this.#scheduleEnterSubmission(event);
 		}
 	};
 
 	#handleKeyUp = (event: KeyboardEvent): void => {
-		if (event.target !== this || event.key !== " " || !this.#spacePressed) {
+		if (event.target !== this || event.key !== " ") {
+			return;
+		}
+		const spacePressed = this.#spacePressed;
+		this.#spacePressed = false;
+		if (event.defaultPrevented || !spacePressed || this.#effectiveDisabled || this.readOnly) {
 			return;
 		}
 		event.preventDefault();
-		this.#spacePressed = false;
-		this.click();
+
+		const MouseEventConstructor = this.ownerDocument.defaultView?.MouseEvent ?? MouseEvent;
+		this.dispatchEvent(
+			new MouseEventConstructor("click", {
+				altKey: event.altKey,
+				bubbles: true,
+				cancelable: true,
+				composed: true,
+				ctrlKey: event.ctrlKey,
+				metaKey: event.metaKey,
+				shiftKey: event.shiftKey,
+			}),
+		);
 	};
 
-	#preactivate(): void {
-		this.#dirtyCheckedness = true;
-		this.#checked = !this.#checked;
-		this.#indeterminate = false;
-		this.#synchronize();
+	#scheduleEnterSubmission(event: KeyboardEvent): void {
+		const connectionSignal = this.#connectionSignal;
+		const document = this.ownerDocument;
+		const form = this.form;
+		const interactionEpoch = this.#interactionEpoch;
+		if (!connectionSignal || !form) {
+			return;
+		}
+
+		queueMicrotask(() => {
+			if (
+				event.defaultPrevented ||
+				connectionSignal.aborted ||
+				!this.isConnected ||
+				this.#effectiveDisabled ||
+				this.#interactionEpoch !== interactionEpoch ||
+				this.ownerDocument !== document ||
+				this.form !== form
+			) {
+				return;
+			}
+
+			getDefaultFormSubmitter(form)?.click();
+		});
 	}
 
 	#setChecked(value: boolean): void {
@@ -307,6 +455,7 @@ export class CheckboxElement extends AUIElement {
 		if (this.#effectiveDisabled === value) {
 			return;
 		}
+		++this.#interactionEpoch;
 		this.#effectiveDisabled = value;
 
 		if (!this.#focusInitialized) {
@@ -346,11 +495,13 @@ export class CheckboxElement extends AUIElement {
 	#synchronize(): void {
 		this.#internals.ariaChecked = this.#indeterminate ? "mixed" : String(this.#checked);
 		this.#internals.ariaDisabled = String(this.#effectiveDisabled);
+		this.#internals.ariaReadOnly = String(this.readOnly);
 		this.#internals.ariaRequired = String(this.required);
 
 		this.#setState("checked", this.#checked);
 		this.#setState("indeterminate", this.#indeterminate);
 		this.#setState("disabled", this.#effectiveDisabled);
+		this.#setState("readonly", this.readOnly);
 
 		const state = this.#checked
 			? this.#indeterminate
@@ -359,7 +510,7 @@ export class CheckboxElement extends AUIElement {
 			: this.#indeterminate
 				? "unchecked/indeterminate"
 				: "unchecked";
-		this.#internals.setFormValue(this.#checked ? this.value : null, state);
+		this.#internals.setFormValue(this.#checked ? this.value : (this.uncheckedValue ?? null), state);
 		this.#synchronizeValidity();
 	}
 
@@ -382,7 +533,16 @@ export class CheckboxElement extends AUIElement {
 	}
 
 	#upgradeProperty(
-		property: "checked" | "defaultChecked" | "disabled" | "indeterminate" | "name" | "required" | "value",
+		property:
+			| "checked"
+			| "defaultChecked"
+			| "disabled"
+			| "indeterminate"
+			| "name"
+			| "readOnly"
+			| "required"
+			| "uncheckedValue"
+			| "value",
 	): void {
 		if (!Object.hasOwn(this, property)) {
 			return;
@@ -392,3 +552,37 @@ export class CheckboxElement extends AUIElement {
 		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }
+
+const getDefaultFormSubmitter = (form: HTMLFormElement): HTMLButtonElement | HTMLInputElement | undefined => {
+	for (const element of form.elements) {
+		if (element.localName === "button") {
+			const button = element as HTMLButtonElement;
+			if (button.form === form && button.type === "submit") {
+				return button;
+			}
+		} else if (element.localName === "input") {
+			const input = element as HTMLInputElement;
+			if (input.form === form && input.type === "submit") {
+				return input;
+			}
+		}
+	}
+
+	return undefined;
+};
+
+const hasInteractiveTargetBeforeHost = (event: MouseEvent, host: CheckboxElement): boolean => {
+	for (const target of event.composedPath()) {
+		if (target === host) {
+			return false;
+		}
+		if (
+			typeof (target as Element).matches === "function" &&
+			(target as Element).matches(interactiveContentSelector)
+		) {
+			return true;
+		}
+	}
+
+	return false;
+};

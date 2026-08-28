@@ -3,8 +3,7 @@
 AUI provides composable web components and a small base element for layouts backed by Signal DOM.
 This workspace is under development; [the implementation plan](design/plan.md) and [behavior matrix](design/coverage.md) distinguish planned coverage from verified functionality.
 No release has been authorized.
-The base, Tabs, and Dialog are initial proofs, not a claim of complete Base UI coverage.
-Checkbox remains an unexported experiment while its activation and form-control contract is being decided.
+The base, Checkbox, Tabs, Dialog, Toggle, and Toggle Group are initial components, not a claim of complete Base UI coverage.
 
 ```ts
 import { AUIElement } from "@serve-tools/aui/base";
@@ -31,6 +30,95 @@ document.body.append(document.createElement("app-counter"));
 ```
 
 ## Native composition
+
+Checkbox is a labelable, form-associated control without an authored input:
+
+```ts
+import { CheckboxElement } from "@serve-tools/aui/checkbox";
+
+customElements.define("app-checkbox", CheckboxElement);
+```
+
+```html
+<form>
+	<label>
+		<app-checkbox name="updates" value="yes" unchecked-value="no"></app-checkbox>
+		Receive updates
+	</label>
+	<button type="submit">Save preferences</button>
+</form>
+```
+
+The host owns focus, labels, accessible state, validation, and the form value through `ElementInternals`.
+It contributes its `value` when checked, or `uncheckedValue` when unchecked and that optional value is defined.
+Without those attributes, the checked value is `"on"` and an unchecked control contributes nothing.
+An empty unchecked value is different from an omitted one.
+External `form` IDs, native form reset, disabled fieldsets, `required`, and constraint-validation methods are supported.
+
+`checked` is the current boolean state; `defaultChecked` and the `checked` attribute specify default state for initialization and form reset.
+Like Base UI, `indeterminate` is independent presentation state and is not cleared by activation.
+`readOnly` blocks interaction while retaining focusability and form participation.
+As with a native checkbox carrying `readonly`, the browser excludes it from constraint validation while read-only.
+Space toggles; Enter leaves checkedness alone and activates the associated form's first submit button after keydown propagation, unless prevented.
+A disabled first submit button blocks that submission; the control does not look for a later enabled button.
+Like Base UI 1.7.0, this Enter behavior considers submit buttons and submit inputs, not image inputs.
+
+Every activation proposes its next state through a typed, bubbling, composed, cancelable `beforechange` event.
+Its immutable `detail` contains `checked` and `sourceEvent`.
+Call `event.preventDefault()` there to veto the change, including from an ancestor.
+An accepted proposal updates state and form value synchronously, then emits `input` (bubbling and composed) and `change` (bubbling).
+These events occur during the host's click handling; preventing a later ancestor click does not undo the change.
+Property assignments and form reset are silent.
+The [Checkbox contract](design/checkbox.md) records the Base UI reference and event-ordering boundary.
+
+Style the host with `:state(checked)`, `:state(indeterminate)`, `:state(disabled)`, and `:state(readonly)`.
+Use `::part(control)` for its presentational control region and `slot="indicator"` for an optional decorative indicator.
+Keep the accessible label on the host or a native associated label; the indicator is hidden from accessibility semantics.
+Checkbox content must be text or decorative content, not nested buttons, links, or other interactive controls.
+
+Toggle adds pressed state to an authored native button; Toggle Group coordinates direct Toggle children:
+
+```ts
+import { ToggleElement } from "@serve-tools/aui/toggle";
+import { ToggleGroupElement } from "@serve-tools/aui/toggle-group";
+
+customElements.define("app-toggle", ToggleElement);
+customElements.define("app-toggle-group", ToggleGroupElement);
+```
+
+```html
+<app-toggle-group multiple aria-label="Text formatting">
+	<app-toggle value="bold"><button>Bold</button></app-toggle>
+	<app-toggle value="italic"><button>Italic</button></app-toggle>
+</app-toggle-group>
+```
+
+Each toggle's first direct native button owns its focus and activation.
+The toggle supplies `type="button"`, button semantics, `aria-pressed`, and effective disabledness, preserving the author's original attributes when that button leaves the control.
+Connected structural changes reconcile through the component's observer; after detached structural edits, reading `button` or reconnecting reconciles the target and releases the old one.
+Use `pressed`, `disabled`, and `value` properties or attributes; property assignments are silent.
+Style `:state(pressed)` on the host and native button states on the button.
+Toggle is not a form control and does not submit a value.
+
+Group `values` is a readonly array snapshot in DOM order, including when only one value is selected.
+Assign an array to change selection silently.
+Single selection is the default and may be empty; `multiple` permits several pressed members.
+Every selectable member needs an explicit, unique `value` attribute; an explicitly empty value is valid.
+Duplicate or missing member values cannot participate in selection.
+Assignments reject duplicate, unknown, or ambiguous values, and single selection rejects arrays containing more than one value.
+Values assigned before any children are available are retained until matching children upgrade or arrive.
+
+Arrow keys move focus without changing selection; orientation and inherited RTL determine direction.
+Home and End move to the boundaries; `loopFocus` defaults to true and `loop-focus="false"` disables wrapping.
+Group `disabled` adds an interaction restriction without overwriting each toggle's own disabled property.
+Detached groups retain selection and disabled coordination while connection observers and document listeners stop.
+
+Toggle's cancelable `beforechange` carries proposed `pressed` and `sourceEvent`.
+After that event finishes, a group proposes its complete `values` through a separate cancelable `beforechange`, also identifying `sourceToggle`.
+Both proposals bubble and are composed; filter with `"values" in event.detail` when listening on a group because child proposals also bubble through it.
+Every veto runs before group selection changes, and a listener that changes membership or selection invalidates the pending group transaction.
+An accepted action commits the complete group selection before the source toggle emits one `input`/`change` pair.
+Those events bubble normally, so a group listener can read `group.values` without receiving a duplicate pair from the group itself.
 
 Tabs coordinate an authored tablist and panels without replacing their nodes:
 
@@ -170,6 +258,14 @@ npm run test:browser --workspace @serve-tools/aui
 
 Browser tests run in Chromium, Firefox, and WebKit.
 The [performance contract](design/performance.md) defines the comparisons required before any claim of an advantage over Base UI.
+
+To run the [interactive example](examples/index.html) from the repository root:
+
+```shell
+npm run build:dependencies --workspace @serve-tools/aui
+npm run build --workspace @serve-tools/aui
+npx vite components/aui/examples --host 127.0.0.1
+```
 
 ## Agent Skill
 

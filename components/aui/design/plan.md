@@ -1,6 +1,6 @@
 # AUI implementation plan
 
-Status: approved direction; lifecycle foundation verified; representative component proofs are in progress and the Checkbox API decision is pending.
+Status: approved direction; lifecycle foundation, standalone Checkbox, Toggle, and Toggle Group verified; remaining component families are pending.
 
 ## Outcome and boundaries
 
@@ -111,14 +111,15 @@ Stop before any push or release.
 
 ## Progress
 
-| Deliverable                                      | Status                                                                            |
-| ------------------------------------------------ | --------------------------------------------------------------------------------- |
-| Donor inventory and API recommendations          | Inventoried; migration pending                                                    |
-| Pinned Base UI behavior matrix                   | Inventoried against 1.7.0                                                         |
-| Lifecycle decision and adversarial test contract | Implemented; 51 base browser checks pass                                          |
-| AUI workspace and base element                   | Implemented; full repository verification passes                                  |
-| Checkbox, Tabs, Dialog                           | 147 combined proof checks pass; [Checkbox API decision](checkbox.md) pending      |
-| Remaining Base UI families and AUI extras        | Pending                                                                           |
-| Matched performance and retention evidence       | Existing DOM regression budget met; Base UI comparison and heap retention pending |
-| Complete validation and local commit             | Verified foundation checkpoint; full component set pending                        |
-| Push or release                                  | Held by user                                                                      |
+| Deliverable                                      | Status                                                                                         |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| Donor inventory and API recommendations          | Inventoried; migration pending                                                                 |
+| Pinned Base UI behavior matrix                   | Inventoried against 1.7.0                                                                      |
+| Lifecycle decision and adversarial test contract | Implemented; 51 base browser checks pass                                                       |
+| AUI workspace and base element                   | Implemented; full repository verification passes                                               |
+| Checkbox, Tabs, Dialog                           | Standalone Checkbox verified in 63 browser cases; Tabs and native Dialog proofs pass           |
+| Toggle and Toggle Group                          | Implemented; 96 browser cases pass, including ownership and failed-upgrade isolation           |
+| Remaining Base UI families and AUI extras        | Pending                                                                                        |
+| Matched performance and retention evidence       | DOM regression budget and bounded base/Checkbox retention verified; Base UI comparison pending |
+| Complete validation and local commit             | Checkbox/toggle checkpoint passes full repository verification; full component set pending     |
+| Push or release                                  | Held by user                                                                                   |
