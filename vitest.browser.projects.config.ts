@@ -23,6 +23,7 @@ const projects = [
 	"client-signals/messaging/vitest.browser.config.ts",
 	"client-signals/storage/vitest.browser.config.ts",
 	"client-signals/websocket/vitest.browser.config.ts",
+	"components/aui/vitest.browser.config.ts",
 	"core/async-operation/vitest.browser.config.ts",
 	"lit/signals/vitest.browser.config.ts",
 	"ponyfills/prioritized-task-scheduling/vitest.browser.config.ts",

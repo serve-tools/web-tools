@@ -1,12 +1,13 @@
 import { Signal } from "@serve-tools/signal";
 import type { Watchable } from "./.internals.js";
-import { handler, isSignal } from "./.internals.js";
+import { getCurrentDocument, handler, isSignal } from "./.internals.js";
 import { dispose, own } from "./dispose.js";
 import type { DOM } from "./types.js";
 
 /** Creates a constructed stylesheet from a static or signal-derived CSS template. */
 export const css = (strings: TemplateStringsArray, ...values: Array<Watchable<CSSValue>>): CSSStyleSheet => {
-	const sheet = new CSSStyleSheet();
+	const StyleSheet = getCurrentDocument()?.defaultView?.CSSStyleSheet ?? CSSStyleSheet;
+	const sheet = new StyleSheet();
 
 	const serializeTemplate = () => {
 		let cssText = strings.raw[0];

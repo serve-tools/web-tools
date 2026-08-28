@@ -1,5 +1,15 @@
 import { expect, test } from "vitest";
 import * as clientSignals from "../src/client-signals.js";
+import { createBindingScope } from "../src/lib/dom.js";
+
+test("exposes binding scopes through the DOM namespace and focused entry", () => {
+	expect(clientSignals.dom.createBindingScope).toBe(createBindingScope);
+	const scope = createBindingScope();
+	expect(scope.resume()).toBe(true);
+	scope.suspend();
+	scope.dispose();
+	expect(scope.resume()).toBe(false);
+});
 
 test("exposes each signal-aware client namespace", () => {
 	expect(Object.keys(clientSignals).sort()).toEqual([

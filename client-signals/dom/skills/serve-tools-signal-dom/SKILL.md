@@ -1,6 +1,6 @@
 ---
 name: serve-tools-signal-dom
-description: Use @serve-tools/signal-dom for functional DOM templates with fine-grained Signal bindings and disposal.
+description: Use @serve-tools/signal-dom for reactive DOM templates.
 ---
 
 # Use @serve-tools/signal-dom

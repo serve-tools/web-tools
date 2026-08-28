@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools AUI"
+  short_description: "Build components with owned signal lifecycles"
+  default_prompt: "Use $serve-tools-aui to build a web component with a reactive layout and safe connection resources."

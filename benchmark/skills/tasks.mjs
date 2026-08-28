@@ -1,5 +1,10 @@
 const selections = [
 	[
+		"owned-custom-element-layout",
+		"Build a custom element with a Signal DOM layout that keeps node identity across reconnection and releases active bindings and connection resources on removal without an application destructor.",
+		"@serve-tools/aui",
+	],
+	[
 		"owned-async-operation",
 		"Represent one runtime-neutral asynchronous lifetime with ordered typed intermediate events, a terminal result, cancellation, stream backpressure, and asynchronous disposal.",
 		"@serve-tools/async-operation",
@@ -419,6 +424,15 @@ const compositionTasks = [
 ];
 
 const usageTasks = [
+	usage(
+		"aui-owned-counter-layout",
+		"Create and register a counter custom element with a Signal DOM layout. Remove and reconnect the same instance without rebuilding its nodes or leaving active signal subscriptions while detached.",
+		["@serve-tools/aui"],
+		"components/aui/test/aui.recipes.ts",
+		["extends AUIElement", "layout(content", "new Signal.State", "customElements.define", "counter.remove()"],
+		["components/aui/skills/serve-tools-aui/references/recipe-quick-start.md"],
+		["@serve-tools/signal", "@serve-tools/signal-dom"],
+	),
 	usage(
 		"typed-json-http-operation",
 		"Declare a typed JSON HTTP operation on a reusable route, validate it in a trusted Fetch handler, authorize with a typed context response, call it from a schema-free client, and narrow its declared status and body.",

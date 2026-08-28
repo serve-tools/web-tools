@@ -1,6 +1,6 @@
 ---
 name: serve-tools-skills
-description: Use @serve-tools/skills to choose focused Serve Tools packages.
+description: Use @serve-tools/skills to choose packages.
 ---
 
 # Serve Tools package guide

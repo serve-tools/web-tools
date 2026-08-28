@@ -3,6 +3,7 @@ import type { DOM } from "@serve-tools/signal-dom";
 import {
 	adoptedCSS,
 	attrs,
+	createBindingScope,
 	css,
 	dispose,
 	elementInternals,
@@ -44,14 +45,25 @@ const htmlTemplate: typeof html = html;
 const htmlNode: DOM.HTML.Element = element();
 const shadowWithText = shadowRoot({ mode: "open" }, text("content"));
 const disposeResult: ReturnType<() => void> = dispose(document.createTextNode("content"));
+const bindingScope = createBindingScope();
+const captureResult: HTMLDivElement = bindingScope.capture(() => html("div")());
+const resumed: boolean = bindingScope.resume();
+
+// @ts-expect-error binding capture must finish synchronously
+bindingScope.capture(async () => html("div")());
+
+bindingScope.suspend();
+bindingScope.dispose();
 
 void [
 	CustomElement,
 	control,
+	captureResult,
 	disposeResult,
 	htmlNode,
 	htmlTemplate,
 	mathml,
+	resumed,
 	dispose(sheet),
 	svg,
 	shadowWithText,

@@ -36,6 +36,12 @@ Use `@serve-tools/signal-db` for reactive queries local to one typed connection,
 
 Use `@serve-tools/client-messaging` for request and subscription transport without reactive state, or the capability-complete `@serve-tools/signal-messaging` package when subscriptions must be consumed as Signal state.
 
+## Signal-aware web components
+
+Use `@serve-tools/aui` when the element should own a persistent layout and automatically suspend its signal bindings while disconnected.
+Import `@serve-tools/signal-dom` for functional layout helpers and `@serve-tools/signal` when application code creates state directly.
+Use Signal DOM alone when the application already owns its component lifecycle or only needs standalone DOM construction.
+
 ## Signal-aware Lit components
 
 Use `@serve-tools/lit-signals` for Lit lifecycle integration.

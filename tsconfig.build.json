@@ -106,6 +106,9 @@
 			"path": "./client-signals/webtransport/tsconfig.json"
 		},
 		{
+			"path": "./components/aui/tsconfig.json"
+		},
+		{
 			"path": "./core/async-operation/tsconfig.json"
 		},
 		{

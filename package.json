@@ -58,6 +58,7 @@
 		"client-signals/storage",
 		"client-signals/websocket",
 		"client-signals/webtransport",
+		"components/aui",
 		"core/async-operation",
 		"core/http-contract",
 		"core/http-contract-interop",
@@ -348,6 +349,11 @@
 				]
 			},
 			"client-signals/webtransport": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"components/aui": {
 				"entry": [
 					"test/*.{recipes,types}.ts"
 				]

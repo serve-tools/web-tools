@@ -6,6 +6,7 @@ This repository hosts web platform tooling under the `@serve-tools` npm scope:
 
 - `client/` for browser databases, storage, messaging, and other client runtime libraries.
 - `client-signals/` for signal-aware browser databases, storage, and DOM libraries.
+- `components/` for composable web-component libraries.
 - `lit/` for Lit integrations.
 - `polyfills/` for implementations that modify the global environment.
 - `ponyfills/` for implementations imported without global modification.

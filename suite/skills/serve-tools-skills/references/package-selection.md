@@ -3,6 +3,7 @@
 Select the narrowest package that owns the required behavior.
 
 - Owned async events, terminal results, backpressure, and cancellation: `@serve-tools/async-operation`.
+- Web components and a base element with automatically suspended signal bindings: `@serve-tools/aui`.
 - Typed JSON HTTP contracts, schema-free Fetch clients, validated handlers, and optional OpenAPI: `@serve-tools/http-contract`.
 - Runtime-neutral typed route declarations, matching, and URL construction: `@serve-tools/router`.
 - Namespace facade for several browser utilities: `@serve-tools/client`.

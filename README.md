@@ -6,6 +6,7 @@ Core, client and server libraries, realtime protocols, Lit integrations, polyfil
 
 - [`client/`](./client/) contains libraries for browser databases, storage, messaging, and other client runtime capabilities.
 - [`client-signals/`](./client-signals/) contains signal-aware browser database, storage, and DOM libraries.
+- [`components/`](./components/) contains composable web-component libraries.
 - [`core/`](./core/) contains general runtime-neutral APIs.
 - [`lit/`](./lit/) contains Lit integrations.
 - [`polyfills/`](./polyfills/) contains polyfills that modify the global environment.
@@ -36,6 +37,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 ## Packages
 
 - [`@serve-tools/async-operation`](./core/async-operation/) provides owned asynchronous work with typed events, terminal results, cancellation, backpressure, and disposal.
+- [`@serve-tools/aui`](./components/aui/) is the developing web-component library with owned signal lifecycles.
 - [`@serve-tools/client`](./client/client/) provides namespace-oriented access to the client libraries and focused capability subpaths.
 - [`@serve-tools/client-context`](./client/context/) provides interoperable context events, lifecycle-owned providers and consumers, and indexed late-registration replay.
 - [`@serve-tools/client-db`](./client/db/) provides promise-based IndexedDB operations, transactions, and scans.

@@ -1,5 +1,113 @@
 import { expect, test } from "@playwright/test";
 
+test("binding scopes preserve cross-realm nodes and reach hidden and closed-root bindings", async ({ page }) => {
+	await page.goto("/__test__");
+
+	const result = await page.evaluate(async () => {
+		const [{ attrs, createBindingScope, group, html, shadowRoot, svg, text }, { Signal }] = await Promise.all([
+			import("/dom/signal-dom.js"),
+			import("@serve-tools/signal"),
+		]);
+		const frame = document.createElement("iframe");
+
+		document.body.append(frame);
+
+		const ownerDocument = frame.contentDocument;
+		const content = ownerDocument.createDocumentFragment();
+		const title = new Signal.State("initial");
+		const visible = new Signal.State(false);
+		const hiddenText = new Signal.State("hidden-initial");
+		const scope = createBindingScope();
+		let closedRoot;
+		let hiddenNode;
+
+		const host = scope.capture(() =>
+			html(
+				"article",
+				attrs({ title }),
+				shadowRoot({ mode: "closed" }, (root) => {
+					closedRoot = root;
+					text(title)(root);
+					group(visible, () => (hiddenNode = html("span", text(hiddenText))()))(root);
+					svg("svg", svg("circle"))(root);
+				}),
+			)(content),
+		);
+		const initial = {
+			hiddenOwner: hiddenNode.ownerDocument === ownerDocument,
+			hostOwner: host.ownerDocument === ownerDocument,
+			sinks: [title, visible, hiddenText].map((signal) => Signal.subtle.hasSinks(signal)),
+			svgOwner: closedRoot.querySelector("svg").ownerDocument === ownerDocument,
+			text: closedRoot.firstChild.data,
+			title: host.title,
+		};
+
+		ownerDocument.body.append(content);
+		const resumed = scope.resume();
+
+		title.set("connected");
+		visible.set(true);
+		hiddenText.set("hidden-connected");
+
+		await new Promise(queueMicrotask);
+
+		const connected = {
+			hiddenConnected: hiddenNode.isConnected,
+			hiddenText: hiddenNode.textContent,
+			resumed,
+			sinks: [title, visible, hiddenText].map((signal) => Signal.subtle.hasSinks(signal)),
+			text: closedRoot.firstChild.data,
+			title: host.title,
+		};
+
+		visible.set(false);
+
+		await new Promise(queueMicrotask);
+
+		scope.suspend();
+		title.set("disconnected");
+		hiddenText.set("hidden-disconnected");
+
+		await new Promise(queueMicrotask);
+
+		const suspended = {
+			hiddenConnected: hiddenNode.isConnected,
+			hiddenText: hiddenNode.textContent,
+			sinks: [title, visible, hiddenText].map((signal) => Signal.subtle.hasSinks(signal)),
+			text: closedRoot.firstChild.data,
+			title: host.title,
+		};
+
+		return { connected, initial, suspended };
+	});
+
+	expect(result).toEqual({
+		connected: {
+			hiddenConnected: true,
+			hiddenText: "hidden-connected",
+			resumed: true,
+			sinks: [true, true, true],
+			text: "connected",
+			title: "connected",
+		},
+		initial: {
+			hiddenOwner: true,
+			hostOwner: true,
+			sinks: [false, false, false],
+			svgOwner: true,
+			text: "initial",
+			title: "initial",
+		},
+		suspended: {
+			hiddenConnected: false,
+			hiddenText: "hidden-connected",
+			sinks: [false, false, false],
+			text: "connected",
+			title: "connected",
+		},
+	});
+});
+
 test("group independently preserves and toggles multiple-node regions", async ({ page }) => {
 	await page.goto("/__test__");
 

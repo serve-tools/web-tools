@@ -1,5 +1,5 @@
 import type { Watchable } from "./.internals.js";
-import { handler } from "./.internals.js";
+import { getDocument, handler, withDocument } from "./.internals.js";
 import type { Disposer } from "./dispose.js";
 import { disown, dispose, own } from "./dispose.js";
 
@@ -7,8 +7,11 @@ import { disown, dispose, own } from "./dispose.js";
 export const group =
 	(condition: Watchable<boolean>, ...templates: group.Item[]): group.Template =>
 	(parent) => {
-		const placeholder = new Text("");
-		const nodes = templates.flatMap((template) => template(placeholder.parentNode as never));
+		const ownerDocument = getDocument(parent);
+		const placeholder = ownerDocument.createTextNode("");
+		const nodes = withDocument(ownerDocument, () =>
+			templates.flatMap((template) => template(placeholder.parentNode as never)),
+		);
 
 		if (!nodes.length) {
 			nodes.push(placeholder);
@@ -16,6 +19,7 @@ export const group =
 
 		let disposed = false;
 		let hasRendered = false;
+		let rendered: boolean | undefined;
 		let conditionCleanup: Disposer | undefined;
 		let range: Range | undefined;
 
@@ -48,7 +52,7 @@ export const group =
 		}
 
 		conditionCleanup = handler(condition, (shouldRender) => {
-			if (disposed) {
+			if (disposed || rendered === shouldRender) {
 				return;
 			}
 
@@ -62,7 +66,7 @@ export const group =
 				}
 			} else {
 				if (hasRendered) {
-					range ??= new Range();
+					range ??= ownerDocument.createRange();
 
 					range.setStartBefore(nodes[0]);
 					range.setEndAfter(nodes[nodes.length - 1]);
@@ -75,6 +79,8 @@ export const group =
 					hasRendered = true;
 				}
 			}
+
+			rendered = shouldRender;
 		});
 
 		if (disposed) {
