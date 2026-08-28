@@ -137,7 +137,10 @@ export class ToggleElement extends AUIElement {
 	}
 
 	attributeChangedCallback(name: string): void {
-		if (name === "pressed" && !this.#settingPressedAttribute) {
+		if (name === "pressed") {
+			if (this.#settingPressedAttribute) {
+				return;
+			}
 			const pressed = this.hasAttribute("pressed");
 			const group = this.#reconcileGroup();
 
@@ -174,7 +177,9 @@ export class ToggleElement extends AUIElement {
 		});
 		connection.addCleanup(() => {
 			observer.disconnect();
-			this.#reconcileGroup();
+			if (getDirectToggleGroup(this.#handle) !== this.#group) {
+				this.#reconcileGroup();
+			}
 		});
 	}
 
@@ -192,14 +197,19 @@ export class ToggleElement extends AUIElement {
 		}
 
 		const initialGroup = this.#reconcileGroup();
-		if (initialGroup?.changing || this.#getEffectiveDisabled()) {
+		if (this.#getEffectiveDisabled()) {
+			return;
+		}
+
+		const previousPressed = this.#pressed;
+		const pressed = !previousPressed;
+		const lease = initialGroup?.begin(this.#handle, pressed);
+		if (initialGroup && !lease) {
 			return;
 		}
 
 		this.#changing = true;
 		try {
-			const previousPressed = this.#pressed;
-			const pressed = !previousPressed;
 			const detail = Object.freeze({ pressed, sourceEvent }) satisfies ToggleChangeDetail;
 			const EventConstructor = this.ownerDocument.defaultView?.CustomEvent ?? CustomEvent;
 			const proposal = new EventConstructor<ToggleChangeDetail>("beforechange", {
@@ -220,14 +230,15 @@ export class ToggleElement extends AUIElement {
 			if (group !== initialGroup) {
 				return;
 			}
-			if (group) {
-				group.activate(this.#handle, pressed, sourceEvent, () => this.#dispatchChangeEvents());
+			if (lease) {
+				lease.complete(sourceEvent, () => this.#dispatchChangeEvents());
 				return;
 			}
 
 			this.#setPressed(pressed);
 			this.#dispatchChangeEvents();
 		} finally {
+			lease?.release();
 			this.#changing = false;
 		}
 	};
@@ -352,7 +363,7 @@ export class ToggleElement extends AUIElement {
 		if (!button) {
 			this.#effectiveDisabled = controlledDisabled;
 			this.#setState("pressed", this.#pressed);
-			this.#setState("disabled", this.#effectiveDisabled);
+			this.#setState("disabled", controlledDisabled);
 			return;
 		}
 
@@ -369,7 +380,7 @@ export class ToggleElement extends AUIElement {
 
 		this.#effectiveDisabled = button.matches(":disabled");
 		this.#setState("pressed", this.#pressed);
-		this.#setState("disabled", this.#effectiveDisabled);
+		this.#setState("disabled", controlledDisabled);
 	}
 
 	#setState(state: string, present: boolean): void {

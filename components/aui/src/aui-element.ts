@@ -19,6 +19,7 @@ export class AUIElement extends HTMLElement {
 	protected layout(_content: DocumentFragment): void {}
 
 	/** Acquires resources for one connected interval; register cleanup as each resource is acquired. */
+	// biome-ignore lint/suspicious/noConfusingVoidType: Overrides may return void or a cleanup callback.
 	protected connect(_connection: AUIElement.Connection): void | (() => void) {}
 
 	/** Refreshes relationships that depend on the element's ancestors after a connected move. */

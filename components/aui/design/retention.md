@@ -1,10 +1,55 @@
 # AUI retained-heap evidence
 
-Status: the measured AUIElement, Signal DOM, and Checkbox workloads returned to their post-warmup DOM, listener, signal, and connection-resource baselines after forced collection.
-Positive leaking controls retained the expected component graphs.
-This evidence is bounded to the exact production bundles, Chromium version, and workloads below and is not proof that every component graph is leak-free.
+Status: the final complete-component experiment passes its deterministic cleanup, positive-control sensitivity, and post-GC criteria independently.
+Historical foundation and Checkbox captures remain below with their original source and sensitivity limits.
+This evidence applies to the exact production bundles, Chromium version, and exercised fixture paths; it is not proof that every component graph is leak-free.
 
-## Base lifecycle soak
+## Final complete-component experiment, August 28, 2026
+
+Five independent fresh-Chromium pairs alternated normal and intentionally leaking conditions.
+Each condition used two warmup batches of four fixtures and eight measured batches of eight fixtures.
+Each fixture exercised all 36 public constructors and the ten required activation paths, including active overlay, delay, repeat, menu, and pointer-session teardown paths.
+Every normal host tree was deliberately reconnected three times while an external Signal remained alive.
+Constructors were registered once outside fixture closures so the custom-element registry could not retain individual fixtures through the harness.
+
+All 20 predeclared checks passed without a threshold change.
+Every synchronous removal check returned active external listeners, observers, timeouts, intervals, animation frames, and Signal sinks exactly to the browser baseline.
+There were no detached Signal writes or remaining open dialogs/popovers, and each normal run balanced 256 probe connection starts with 256 stops.
+The 40 recorded normal batch checkpoints preserve those counters and the bounded authored-node counts.
+Thirteen baseline window listeners and one document observer were identified by creation stack as Playwright InjectedScript resources, not AUI resources.
+
+The independent post-GC check passed in all five normal runs:
+
+| Metric                         | Final normal result |    Predeclared limit |
+| ------------------------------ | ------------------: | -------------------: |
+| Added DOM nodes                |      0 in every run |          At most 200 |
+| Added CDP event listeners      |      0 in every run |            At most 5 |
+| Added documents                |      0 in every run |            At most 1 |
+| Median absolute DOM-node slope |         0 per batch | At most 10 per batch |
+| Median JavaScript-heap growth  |       354,772 bytes |        At most 2 MiB |
+
+The normal JavaScript-heap range was 354,768–354,772 bytes, with 24,592 added embedder-heap bytes in every run.
+These nonzero heap deltas do not justify a zero-allocation or zero-retained-byte claim.
+
+Every intentionally leaking run retained 64 additional document-root listeners, 64 external Signal sinks, 26,240 added DOM nodes, and 1,920 added CDP listeners.
+Its median JavaScript-heap growth was 6,401,912 bytes, above the unchanged 1 MiB sensitivity minimum.
+The predeclared positive-to-normal DOM comparison also passed its 10:1 minimum, using the one-node denominator floor when the normal median is zero.
+The normal run-one heap snapshot contained four detached infrastructure nodes and no named AUI fixture native elements; the positive snapshot contained 11,835 detached nodes including the expected fixture graph.
+
+The durable artifact is `/Users/jonathan/Documents/Codex/outputs/aui-retention-2026-08-28`, including `PROTOCOL.md`, `plan.json`, source and bundle snapshots, rerun scripts, heap snapshots, and `results/STATUS.md`.
+The final source SHA-256 is `c6cc4a9333d05e53ab1d45b7fe2d3068f8c99cc1bb6f4cccc75da18730a6053d` across its 75 runtime/package inputs.
+The production fixture bundle SHA-256 is `2dc2b278c4d59d58dc9575a669ae04eab7126b31d4808d8ca9fdc9c388288dc7`.
+The formal raw and analysis SHA-256 values are `85b0cdb8943e8d5900d5b9ffa3932f6952ab3ed30e717defec0192ff0e6ad5c0` and `3cd2d268c98b4f18dd25887474ffcdd3b9b047df1da9d1a084a3e347e6d5ca40`.
+
+The exact counters establish synchronous cleanup for the exercised paths; forced collection only checks whether the browser's retained graph agrees with those counters.
+Drawer and Scroll Area use an explicit fixture-local pointer-capture shim to exercise active-session teardown because synthetic PointerEvents cannot establish native capture.
+Native pointer-capture integration, other compositions, cross-browser collection behavior, and universal leak freedom remain outside this result.
+The earlier bounded smoke is preserved separately and does not contribute formal replications or substitute for sensitivity checks.
+
+## Historical base lifecycle soak
+
+The August 27 captures below measured checkpoint `0457b0f` before the Checkbox label-activation correction and subsequent component families.
+They are historical evidence for those exact sources, not measurements of the final package.
 
 Five fresh counterbalanced Chromium pairs exercised closed shadow roots, hidden groups, nested independently owned AUI elements, external long-lived signals, and repeated reconnection of the same hosts.
 Each normal run completed eight measured batches and 2,560 connection intervals after two warmup batches.
@@ -16,7 +61,7 @@ The intentionally leaking control ended at 4,960 added DOM nodes, 1,040 added li
 The normal heap snapshot had three detached browser-infrastructure nodes, while the leaking snapshot had 4,003 detached nodes in the expected fixture graph.
 Every predeclared normal and positive-control criterion passed.
 
-## Checkbox lifecycle soak
+## Historical Checkbox lifecycle soak
 
 The Checkbox extension used the production Checkbox inside native labels with checked, indeterminate, disabled, and read-only state variants.
 Each host had one connection-scoped document listener and cleanup counter.
@@ -36,7 +81,7 @@ The first Checkbox run overlapped a separate Vite-triggered in-app-browser reloa
 The exact lifecycle, DOM, and listener counts remain direct observations, while ambient load makes the heap readings supporting evidence rather than an absolute-memory-performance claim.
 Neither experiment measures latency or compares AUI with Base UI.
 
-## Chromium accessibility-tree check
+## Historical Chromium accessibility-tree check
 
 A separate production Checkbox fixture was inspected through Chromium 151 `Accessibility.getFullAXTree`.
 The control was exposed as a non-ignored `checkbox` named from its enclosing native label, with false, true, mixed, and disabled states represented in the corresponding cases.
@@ -44,9 +89,9 @@ Chromium did not serialize a read-only property for the AUI Checkbox, a native c
 The omission is therefore not isolated to ElementInternals by this evidence and does not justify adding duplicate ARIA attributes.
 This is one Chromium accessibility-tree capture, not a claim about every browser, platform accessibility API, screen reader, or assistive technology.
 
-## Evidence and limits
+## Historical evidence and shared limits
 
-The durable artifact is `/Users/jonathan/Documents/Codex/outputs/aui-retention-2026-08-27`.
+The historical artifact is `/Users/jonathan/Documents/Codex/outputs/aui-retention-2026-08-27`.
 Its `base/` and `checkbox/` directories contain the predeclared plans, machine-readable samples, analyses, heap snapshots, exact source snapshots, captured production bundles, byte-identical rebuilt bundles, executable rerun harnesses, and detailed limitations.
 The base raw result SHA-256 is `7f3f92d3be94505a5b299d5a60ed7444680fa5850dfafc8ad923e5f1f81e8800`.
 The initial and follow-up Checkbox raw result SHA-256 values are `c0a435293d8bce5ed8005fbbe0beaa5c41a9c7357cc86bbebfe3bfe070c488fb` and `e818075d36ba13e98f9d49af7890f7a2e9c4192e5edaedfe82c263d20c70e650`.

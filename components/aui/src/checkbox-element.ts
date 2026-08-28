@@ -1,3 +1,5 @@
+import type { CheckboxGroupController, CheckboxHandle } from "./.checkbox-group.js";
+import { getCheckboxGroup, getDirectCheckboxGroup, registerCheckbox } from "./.checkbox-group.js";
 import { AUIElement } from "./aui-element.js";
 
 /** Immutable state proposed by a checkbox's `beforechange` event. */
@@ -31,6 +33,7 @@ export class CheckboxElement extends AUIElement {
 		"checked",
 		"disabled",
 		"name",
+		"parent",
 		"readonly",
 		"required",
 		"tabindex",
@@ -46,6 +49,9 @@ export class CheckboxElement extends AUIElement {
 	#effectiveDisabled = this.hasAttribute("disabled");
 	#enabledTabIndex: string | undefined;
 	#focusInitialized = false;
+	readonly #handle: CheckboxHandle;
+	#group: CheckboxGroupController | undefined;
+	#groupDisabled = false;
 	#indeterminate = false;
 	#internals = this.attachInternals();
 	#interactionEpoch = 0;
@@ -82,6 +88,40 @@ export class CheckboxElement extends AUIElement {
 	constructor() {
 		super();
 
+		const element = this;
+		this.#handle = {
+			element: this,
+			get checked() {
+				return element.#checked;
+			},
+			get disabled() {
+				return element.#effectiveDisabled;
+			},
+			get hasValue() {
+				return element.hasAttribute("value");
+			},
+			get parent() {
+				return element.parent;
+			},
+			get value() {
+				return element.value;
+			},
+			releaseGroup(group) {
+				element.#releaseGroup(group);
+			},
+			setChecked(checked, dirty = true) {
+				if (dirty && element.#checked !== checked) {
+					element.#dirtyCheckedness = true;
+				}
+				element.#setChecked(checked);
+			},
+			setGroupDisabled(group, disabled) {
+				element.#setGroupDisabled(group, disabled);
+			},
+			setIndeterminate(indeterminate) {
+				element.#setIndeterminate(indeterminate);
+			},
+		};
 		this.#internals.role = "checkbox";
 		this.addEventListener("click", this.#handleClick);
 		this.addEventListener("blur", () => (this.#spacePressed = false));
@@ -102,18 +142,29 @@ export class CheckboxElement extends AUIElement {
 		for (const property of ["checked", "indeterminate"] as const) {
 			this.#upgradeProperty(property);
 		}
+		this.#upgradeProperty("parent");
 
 		this.#synchronize();
+		registerCheckbox(this, this.#handle);
+		this.#reconcileGroup()?.memberChanged(this.#handle);
 	}
 
 	/** Whether the checkbox is currently checked. */
 	get checked(): boolean {
+		this.#reconcileGroup();
 		return this.#checked;
 	}
 
 	set checked(value: boolean) {
-		this.#dirtyCheckedness = true;
-		this.#setChecked(Boolean(value));
+		const checked = Boolean(value);
+		const group = this.#reconcileGroup();
+		if (group) {
+			group.setChecked(this.#handle, checked);
+			this.#dirtyCheckedness = true;
+		} else {
+			this.#dirtyCheckedness = true;
+			this.#setChecked(checked);
+		}
 	}
 
 	/** Whether checkedness defaults to true when the form is reset. */
@@ -192,6 +243,15 @@ export class CheckboxElement extends AUIElement {
 		this.toggleAttribute("required", Boolean(value));
 	}
 
+	/** Whether this checkbox is a non-submitting parent control for its direct checkbox group. */
+	get parent(): boolean {
+		return this.hasAttribute("parent");
+	}
+
+	set parent(value: boolean) {
+		this.toggleAttribute("parent", Boolean(value));
+	}
+
 	/** The associated form, if any. */
 	get form(): HTMLFormElement | null {
 		return this.#internals.form;
@@ -214,7 +274,7 @@ export class CheckboxElement extends AUIElement {
 
 	/** Whether this checkbox participates in constraint validation. */
 	get willValidate(): boolean {
-		return this.#internals.willValidate;
+		return !this.#effectiveDisabled && !this.parent && this.#internals.willValidate;
 	}
 
 	/** Runs constraint validation and dispatches `invalid` when invalid. */
@@ -242,25 +302,36 @@ export class CheckboxElement extends AUIElement {
 	}
 
 	attributeChangedCallback(name: string, _previous: string | null, value: string | null): void {
+		if (name === "name") {
+			return;
+		}
+		if (name === "tabindex") {
+			if (!this.#settingTabIndex) {
+				if (this.#effectiveDisabled) {
+					this.#enabledTabIndex = value ?? "0";
+					this.#setTabIndex("-1");
+				} else if (value === null) {
+					this.#setTabIndex("0");
+				}
+			}
+			return;
+		}
+
 		if (name === "checked" && !this.#dirtyCheckedness) {
 			this.#checked = value !== null;
 		} else if (name === "disabled") {
-			this.#setEffectiveDisabled(value !== null || this.#platformDisabled);
-		} else if (name === "tabindex" && !this.#settingTabIndex) {
-			if (this.#effectiveDisabled) {
-				this.#enabledTabIndex = value ?? "0";
-				this.#setTabIndex("-1");
-			} else if (value === null) {
-				this.#setTabIndex("0");
-			}
+			this.#setEffectiveDisabled(value !== null || this.#platformDisabled || this.#groupDisabled);
 		}
 
 		this.#synchronize();
+		if (name === "checked" || name === "disabled" || name === "parent" || name === "value") {
+			this.#reconcileGroup()?.memberChanged(this.#handle);
+		}
 	}
 
 	formDisabledCallback(disabled: boolean): void {
 		this.#platformDisabled = disabled;
-		this.#setEffectiveDisabled(disabled || this.disabled);
+		this.#setEffectiveDisabled(disabled || this.disabled || this.#groupDisabled);
 	}
 
 	formAssociatedCallback(_form: HTMLFormElement | null): void {
@@ -270,6 +341,7 @@ export class CheckboxElement extends AUIElement {
 	formResetCallback(): void {
 		this.#dirtyCheckedness = false;
 		this.#setChecked(this.defaultChecked);
+		this.#reconcileGroup()?.memberChanged(this.#handle);
 	}
 
 	formStateRestoreCallback(state: File | FormData | string | null, _mode: "autocomplete" | "restore"): void {
@@ -285,6 +357,7 @@ export class CheckboxElement extends AUIElement {
 		this.#checked = restored[0];
 		this.#indeterminate = restored[1];
 		this.#synchronize();
+		this.#reconcileGroup()?.memberChanged(this.#handle);
 	}
 
 	protected override createLayoutRoot(): ShadowRoot {
@@ -310,7 +383,7 @@ export class CheckboxElement extends AUIElement {
 			this.#focusInitialized = true;
 
 			if (this.#effectiveDisabled) {
-				this.#enabledTabIndex = this.getAttribute("tabindex") ?? "0";
+				this.#enabledTabIndex ??= this.getAttribute("tabindex") ?? "0";
 				this.#setTabIndex("-1");
 			} else if (!this.hasAttribute("tabindex")) {
 				this.#setTabIndex("0");
@@ -323,11 +396,18 @@ export class CheckboxElement extends AUIElement {
 			}
 			this.#spacePressed = false;
 		});
+
+		this.#reconcileGroup()?.memberChanged(this.#handle);
+	}
+
+	protected override moved(): void {
+		this.#reconcileGroup()?.memberChanged(this.#handle);
 	}
 
 	#dispatchChangeEvents(): void {
-		this.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-		this.dispatchEvent(new Event("change", { bubbles: true }));
+		const EventConstructor = this.ownerDocument.defaultView?.Event ?? Event;
+		this.dispatchEvent(new EventConstructor("input", { bubbles: true, composed: true }));
+		this.dispatchEvent(new EventConstructor("change", { bubbles: true }));
 	}
 
 	#handleClick = (event: MouseEvent): void => {
@@ -339,6 +419,8 @@ export class CheckboxElement extends AUIElement {
 		) {
 			return;
 		}
+		// The host owns activation; do not also forward a decorative-child click through a wrapping native label.
+		event.preventDefault();
 		this.#proposeChange(event);
 	};
 
@@ -347,26 +429,44 @@ export class CheckboxElement extends AUIElement {
 			return;
 		}
 
+		const initialGroup = this.#reconcileGroup();
+		const checked = !this.#checked;
+		const lease = initialGroup?.begin(this.#handle, checked);
+		if (initialGroup && !lease) {
+			return;
+		}
+
 		this.#changing = true;
 		try {
-			const checked = !this.#checked;
 			const detail = Object.freeze({ checked, sourceEvent }) satisfies CheckboxChangeDetail;
-			const proposal = new CustomEvent<CheckboxChangeDetail>("beforechange", {
+			const EventConstructor = this.ownerDocument.defaultView?.CustomEvent ?? CustomEvent;
+			const proposal = new EventConstructor<CheckboxChangeDetail>("beforechange", {
 				bubbles: true,
 				cancelable: true,
 				composed: true,
 				detail,
 			});
 
-			if (!this.dispatchEvent(proposal) || this.#effectiveDisabled || this.readOnly) {
+			if (
+				!this.dispatchEvent(proposal) ||
+				this.#effectiveDisabled ||
+				this.readOnly ||
+				this.#checked === checked ||
+				this.#reconcileGroup() !== initialGroup
+			) {
 				return;
 			}
 
+			if (lease) {
+				lease.complete(sourceEvent, () => this.#dispatchChangeEvents());
+				return;
+			}
 			this.#dirtyCheckedness = true;
 			this.#checked = checked;
 			this.#synchronize();
 			this.#dispatchChangeEvents();
 		} finally {
+			lease?.release();
 			this.#changing = false;
 		}
 	}
@@ -475,6 +575,42 @@ export class CheckboxElement extends AUIElement {
 		this.#synchronize();
 	}
 
+	#setGroupDisabled(group: CheckboxGroupController, disabled: boolean): void {
+		if (this.#group !== undefined && this.#group !== group) {
+			if (getDirectCheckboxGroup(this.#handle) !== group) {
+				return;
+			}
+			this.#releaseGroup(this.#group);
+		}
+		this.#group = group;
+		this.#groupDisabled = disabled;
+		this.#setEffectiveDisabled(this.#platformDisabled || this.disabled || disabled);
+	}
+
+	#releaseGroup(group: CheckboxGroupController): void {
+		if (this.#group !== group) {
+			return;
+		}
+		this.#group = undefined;
+		this.#groupDisabled = false;
+		this.#setEffectiveDisabled(this.#platformDisabled || this.disabled);
+	}
+
+	#reconcileGroup(): CheckboxGroupController | undefined {
+		const group = getDirectCheckboxGroup(this.#handle);
+		if (group === this.#group && (!group || getCheckboxGroup(this.#handle) === group)) {
+			return group;
+		}
+		if (this.#group) {
+			this.#releaseGroup(this.#group);
+		}
+		if (group?.has(this.#handle)) {
+			this.#group = group;
+			return group;
+		}
+		return undefined;
+	}
+
 	#setIndeterminate(value: boolean): void {
 		if (this.#indeterminate === value) {
 			return;
@@ -510,12 +646,17 @@ export class CheckboxElement extends AUIElement {
 			: this.#indeterminate
 				? "unchecked/indeterminate"
 				: "unchecked";
-		this.#internals.setFormValue(this.#checked ? this.value : (this.uncheckedValue ?? null), state);
+		this.#internals.setFormValue(
+			this.#effectiveDisabled || this.parent ? null : this.#checked ? this.value : (this.uncheckedValue ?? null),
+			state,
+		);
 		this.#synchronizeValidity();
 	}
 
 	#synchronizeValidity(): void {
-		if (this.#customValidity) {
+		if (this.#groupDisabled || this.parent) {
+			this.#internals.setValidity({});
+		} else if (this.#customValidity) {
 			this.#internals.setValidity({ customError: true }, this.#customValidity);
 		} else if (this.required && !this.#checked) {
 			this.#internals.setValidity({ valueMissing: true }, "Please check this box.");
@@ -539,6 +680,7 @@ export class CheckboxElement extends AUIElement {
 			| "disabled"
 			| "indeterminate"
 			| "name"
+			| "parent"
 			| "readOnly"
 			| "required"
 			| "uncheckedValue"

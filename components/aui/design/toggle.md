@@ -45,6 +45,7 @@ A value assigned before any child has upgraded is retained as pending upgrade st
 It commits silently after every requested value identifies exactly one upgraded direct child.
 This supports either custom-element definition order, including detached upgrade.
 If single mode is enabled while a multiple pending selection exists, the first requested value is retained.
+Construction gates every child-coordination path until all recovered properties validate, so a failed group upgrade does not normalize or disable already-upgraded children.
 
 ## Native button ownership
 
@@ -60,18 +61,20 @@ The toggle owns the native `disabled` attribute only for its own `disabled` stat
 It checks `button.matches(":disabled")` at interaction and navigation boundaries so disabled fieldset ancestry is honored without copying inherited disabledness into the button attribute.
 The group never changes a member's own `disabled` property.
 
-The toggle exposes `:state(pressed)` and effective `:state(disabled)` custom states.
+The toggle exposes `:state(pressed)` and `:state(disabled)` for its direct, group, and authored-button disabled sources.
+Inherited fieldset disabledness remains available through the native button's `:disabled` selector and is checked for every interaction without being copied into a potentially stale host custom state.
 The group exposes `:state(disabled)`, `:state(multiple)`, `:state(horizontal)`, and `:state(vertical)`.
 
 ## Transactions and events
 
 A native click proposes `!pressed` in this order:
 
-1. The source toggle dispatches cancelable, bubbling, composed `beforechange` with frozen detail `{ pressed, sourceEvent }`.
-2. A current direct group computes the complete proposed value set and dispatches its own cancelable, bubbling, composed `beforechange` with frozen detail `{ values, sourceToggle, sourceEvent }`.
-3. After all listeners finish, the group revalidates exact direct membership, order, buttons, disabledness, values, pressed state, and mode.
-4. An accepted transaction commits every affected toggle synchronously.
-5. The source toggle dispatches bubbling, composed `input`, then bubbling `change`.
+1. A current direct group acquires a synchronous lease and captures its revision and full member snapshot.
+2. The source toggle dispatches cancelable, bubbling, composed `beforechange` with frozen detail `{ pressed, sourceEvent }`.
+3. The group rejects the stale interaction if child listeners changed group state or membership; otherwise it computes the complete proposed value set and dispatches its own cancelable, bubbling, composed `beforechange` with frozen detail `{ values, sourceToggle, sourceEvent }`.
+4. After all listeners finish, the group revalidates exact direct membership, order, buttons, disabledness, values, pressed state, mode, and revision.
+5. An accepted transaction commits every affected toggle synchronously.
+6. The source toggle dispatches bubbling, composed `input`, then bubbling `change` before releasing the lease.
 
 Child `beforechange`, `input`, and `change` events naturally bubble through a group.
 The group does not emit a second `input` or `change` pair.
@@ -91,9 +94,12 @@ Keyboard events from nested groups or embedded controls are ignored.
 
 Mutation observers, document focus listeners, and keyboard listeners belong to one connection interval and are cleaned up on disconnect.
 Disconnect releases group-owned `tabindex` values back to their latest authored values.
+If one member restoration throws, the group clears its connection cache, attempts every remaining restoration, and reports the collected failure afterward.
 The private group coordinator is registered for the element's lifetime in a `WeakMap`, so existing direct members still preserve disabled and single-selection invariants while the whole group is detached; it owns no external listener or observer.
 Each toggle records the current coordinator as an ownership token, so cleanup from an old group cannot release or overwrite state already claimed by a new direct parent.
 Detached membership edits reconcile on the next group or member operation or on reconnect.
+Because disconnect clears active membership and stops observation, a membership snapshot rebuilt by a detached operation may retain those member handles until another operation or reconnect replaces the snapshot.
+This proof does not claim immediate collection of detached members after otherwise unobserved structural edits.
 
 Button and member checks use namespace, local name, and private handles rather than current-realm constructors.
 Observers and event constructors come from the current `ownerDocument`, allowing adopted elements to reconnect in another document without rebuilding authored DOM.

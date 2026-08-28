@@ -232,7 +232,7 @@ describe("ToggleElement", () => {
 		click();
 		expect(element.pressed).toBe(false);
 		expect(button.hasAttribute("disabled")).toBe(false);
-		expect(element.matches(":state(disabled)")).toBe(true);
+		expect(element.matches(":state(disabled)")).toBe(false);
 		fieldset.disabled = false;
 		click();
 		expect(element.pressed).toBe(true);

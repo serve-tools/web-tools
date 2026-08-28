@@ -199,6 +199,59 @@ describe("ToggleGroupElement", () => {
 		expect(toggles.map((toggle) => toggle.pressed)).toEqual([false, false, true]);
 	});
 
+	test("preserves a programmatic selection committed by the child proposal", () => {
+		const { buttons, group, toggles } = create();
+		group.values = ["bold"];
+		const groupProposal = vi.fn();
+		const input = vi.fn();
+		const change = vi.fn();
+		group.addEventListener("beforechange", (event) => {
+			if (event.target === group) {
+				groupProposal();
+			}
+		});
+		group.addEventListener("input", input);
+		group.addEventListener("change", change);
+		toggles[1].addEventListener(
+			"beforechange",
+			() => {
+				group.values = ["underline"];
+			},
+			{ once: true },
+		);
+
+		buttons[1].click();
+		expect(group.values).toEqual(["underline"]);
+		expect(toggles.map((toggle) => toggle.pressed)).toEqual([false, false, true]);
+		expect(groupProposal).not.toHaveBeenCalled();
+		expect(input).not.toHaveBeenCalled();
+		expect(change).not.toHaveBeenCalled();
+	});
+
+	test("blocks sibling user activation throughout the child proposal lease", () => {
+		const { buttons, group, toggles } = create();
+		group.values = ["bold"];
+		const proposals = vi.fn();
+		const input = vi.fn();
+		const change = vi.fn();
+		group.addEventListener("beforechange", proposals);
+		group.addEventListener("input", input);
+		group.addEventListener("change", change);
+		toggles[1].addEventListener(
+			"beforechange",
+			() => {
+				buttons[2].click();
+			},
+			{ once: true },
+		);
+
+		buttons[1].click();
+		expect(group.values).toEqual(["italic"]);
+		expect(proposals).toHaveBeenCalledTimes(2);
+		expect(input).toHaveBeenCalledOnce();
+		expect(change).toHaveBeenCalledOnce();
+	});
+
 	test("guards the group transaction through the source toggle's input and change events", () => {
 		const { buttons, group } = create();
 		const beforechange = vi.fn();
@@ -416,6 +469,58 @@ describe("ToggleGroupElement", () => {
 		observer.disconnect();
 	});
 
+	test("finishes member cleanup and clears cached state when one restoration throws", () => {
+		const definitions = names();
+		customElements.define(definitions.toggleName, class extends ToggleElement {});
+		class CleanupGroup extends ToggleGroupElement {
+			startTestConnection(): () => void {
+				const controller = new AbortController();
+				let cleanup = () => {};
+				super.connect({
+					addCleanup(value) {
+						cleanup = value;
+					},
+					signal: controller.signal,
+				});
+				return () => {
+					controller.abort();
+					cleanup();
+				};
+			}
+		}
+		customElements.define(definitions.groupName, CleanupGroup);
+		const group = document.createElement(definitions.groupName) as CleanupGroup;
+		const toggles = ["a", "b", "c"].map((value) => {
+			const toggle = document.createElement(definitions.toggleName) as ToggleElement;
+			toggle.value = value;
+			const button = document.createElement("button");
+			toggle.append(button);
+			group.append(toggle);
+			return toggle;
+		});
+		const buttons = toggles.map((toggle) => toggle.button as HTMLButtonElement);
+		const cleanup = group.startTestConnection();
+		expect(buttons.map((button) => button.tabIndex)).toEqual([0, -1, -1]);
+		const expectedMessage = "Expected tabindex restoration failure";
+		const removeAttribute = buttons[0].removeAttribute;
+		buttons[0].removeAttribute = function (name: string) {
+			if (name === "tabindex") {
+				throw new Error(expectedMessage);
+			}
+			removeAttribute.call(this, name);
+		};
+		try {
+			expect(cleanup).toThrowError(expectedMessage);
+		} finally {
+			buttons[0].removeAttribute = removeAttribute;
+		}
+
+		expect(buttons[1].hasAttribute("tabindex")).toBe(false);
+		const reconnectCleanup = group.startTestConnection();
+		expect(buttons.map((button) => button.tabIndex)).toEqual([0, -1, -1]);
+		reconnectCleanup();
+	});
+
 	test("recovers pre-upgrade values and pressed properties in either definition order", () => {
 		for (const order of ["group-first", "toggle-first"] as const) {
 			const definitions = names();
@@ -464,10 +569,13 @@ describe("ToggleGroupElement", () => {
 		const definitions = names();
 		customElements.define(definitions.toggleName, class extends ToggleElement {});
 		const fixture = append(document.createElement("div"));
-		fixture.innerHTML = `<${definitions.groupName}><${definitions.toggleName} value="a"><button>A</button></${definitions.toggleName}><${definitions.toggleName} value="b"><button>B</button></${definitions.toggleName}></${definitions.groupName}>`;
-		const group = fixture.firstElementChild as HTMLElement & { values: readonly string[] };
+		fixture.innerHTML = `<${definitions.groupName}><${definitions.toggleName} value="a" pressed><button>A</button></${definitions.toggleName}><${definitions.toggleName} value="b" pressed><button>B</button></${definitions.toggleName}></${definitions.groupName}>`;
+		const group = fixture.firstElementChild as HTMLElement & { disabled: boolean; values: readonly string[] };
 		const toggles = [...group.children] as ToggleElement[];
 		const buttons = toggles.map((toggle) => toggle.button as HTMLButtonElement);
+		const beforePressed = toggles.map((toggle) => toggle.getAttribute("pressed"));
+		const beforeAria = buttons.map((button) => button.getAttribute("aria-pressed"));
+		group.disabled = true;
 		group.values = ["a", "a"];
 		const expectedMessage = "A single toggle group accepts at most one value";
 		let upgradeError: unknown;
@@ -495,9 +603,13 @@ describe("ToggleGroupElement", () => {
 
 		expect(upgradeError).toBeInstanceOf(RangeError);
 		expect((upgradeError as RangeError).message).toBe(expectedMessage);
+		expect(toggles.map((toggle) => toggle.getAttribute("pressed"))).toEqual(beforePressed);
+		expect(buttons.map((button) => button.getAttribute("aria-pressed"))).toEqual(beforeAria);
+		expect(toggles.map((toggle) => toggle.pressed)).toEqual([true, true]);
+		expect(buttons.map((button) => button.disabled)).toEqual([false, false]);
 		buttons[0].click();
 		buttons[1].click();
-		expect(toggles.map((toggle) => toggle.pressed)).toEqual([true, true]);
+		expect(toggles.map((toggle) => toggle.pressed)).toEqual([false, false]);
 	});
 
 	test("uses native fieldset eligibility and survives document adoption and reconnect", async () => {

@@ -1,4 +1,4 @@
-import type { ToggleGroupController, ToggleHandle } from "./.toggle-group.js";
+import type { ToggleGroupController, ToggleGroupLease, ToggleHandle } from "./.toggle-group.js";
 import { getToggle, registerToggleGroup } from "./.toggle-group.js";
 import { AUIElement } from "./aui-element.js";
 import type { ToggleChangeDetail, ToggleElement } from "./toggle-element.js";
@@ -51,10 +51,12 @@ export class ToggleGroupElement extends AUIElement {
 	#connected = false;
 	readonly #controller: ToggleGroupController;
 	#focused: ToggleHandle | undefined;
+	#initializing = true;
 	#internals = this.attachInternals();
 	#members: ToggleHandle[] = [];
 	#pendingValues: readonly string[] | undefined;
 	#refreshing = false;
+	#revision = 0;
 
 	constructor() {
 		super();
@@ -65,8 +67,8 @@ export class ToggleGroupElement extends AUIElement {
 			get changing() {
 				return element.#changing;
 			},
-			activate(toggle, pressed, sourceEvent, notify) {
-				return element.#activate(toggle, pressed, sourceEvent, notify);
+			begin(toggle, pressed) {
+				return element.#begin(toggle, pressed);
 			},
 			has(toggle) {
 				if (toggle.element.parentElement !== element || getToggle(toggle.element) !== toggle) {
@@ -77,10 +79,12 @@ export class ToggleGroupElement extends AUIElement {
 			},
 			memberChanged(toggle) {
 				if (toggle.element.parentElement === element) {
+					++element.#revision;
 					element.#refresh();
 				}
 			},
 			setPressed(toggle, pressed) {
+				++element.#revision;
 				element.#setMemberPressed(toggle, pressed);
 			},
 		};
@@ -89,6 +93,7 @@ export class ToggleGroupElement extends AUIElement {
 		}
 
 		this.#synchronizeStates();
+		this.#initializing = false;
 		registerToggleGroup(this, this.#controller);
 		this.#refresh();
 	}
@@ -144,6 +149,10 @@ export class ToggleGroupElement extends AUIElement {
 
 	attributeChangedCallback(): void {
 		this.#synchronizeStates();
+		if (this.#initializing) {
+			return;
+		}
+		++this.#revision;
 		this.#refresh();
 	}
 
@@ -157,7 +166,10 @@ export class ToggleGroupElement extends AUIElement {
 		});
 
 		const Observer = this.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
-		const observer = new Observer(() => this.#refresh());
+		const observer = new Observer(() => {
+			++this.#revision;
+			this.#refresh();
+		});
 		observer.observe(this, {
 			attributeFilter: ["aria-pressed", "disabled", "pressed", "tabindex", "value"],
 			attributes: true,
@@ -168,17 +180,29 @@ export class ToggleGroupElement extends AUIElement {
 		connection.addCleanup(() => {
 			observer.disconnect();
 			this.#connected = false;
-			for (const member of this.#members) {
-				if (member.element.parentElement === this && getToggle(member.element) === member) {
-					member.setGroupDisabled(this.#controller, this.disabled);
-					member.setGroupTabIndex(this.#controller, undefined);
-				} else {
-					member.releaseGroup(this.#controller);
-				}
-			}
+			const members = this.#members;
 			this.#active = undefined;
 			this.#focused = undefined;
 			this.#members = [];
+			const errors: unknown[] = [];
+			for (const member of members) {
+				try {
+					if (member.element.parentElement === this && getToggle(member.element) === member) {
+						member.setGroupDisabled(this.#controller, this.disabled);
+						member.setGroupTabIndex(this.#controller, undefined);
+					} else {
+						member.releaseGroup(this.#controller);
+					}
+				} catch (error) {
+					errors.push(error);
+				}
+			}
+			if (errors.length === 1) {
+				throw errors[0];
+			}
+			if (errors.length > 1) {
+				throw new AggregateError(errors, "Toggle group member cleanup failed");
+			}
 		});
 
 		this.#refresh();
@@ -256,9 +280,9 @@ export class ToggleGroupElement extends AUIElement {
 		button.focus();
 	};
 
-	#activate(toggle: ToggleHandle, pressed: boolean, sourceEvent: MouseEvent, notify: () => void): boolean {
+	#begin(toggle: ToggleHandle, pressed: boolean): ToggleGroupLease | undefined {
 		if (this.#changing) {
-			return false;
+			return;
 		}
 
 		this.#refresh();
@@ -270,6 +294,44 @@ export class ToggleGroupElement extends AUIElement {
 			source.pressed === pressed ||
 			!this.#isUniqueValue(source.value, before.members, source.hasValue)
 		) {
+			return;
+		}
+		const revision = this.#revision;
+		const element = this;
+		let active = true;
+		this.#changing = true;
+
+		return {
+			complete(sourceEvent, notify) {
+				if (!active) {
+					return false;
+				}
+				active = false;
+				try {
+					return element.#complete(toggle, pressed, sourceEvent, notify, before, revision);
+				} finally {
+					element.#changing = false;
+				}
+			},
+			release() {
+				if (!active) {
+					return;
+				}
+				active = false;
+				element.#changing = false;
+			},
+		};
+	}
+
+	#complete(
+		toggle: ToggleHandle,
+		pressed: boolean,
+		sourceEvent: MouseEvent,
+		notify: () => void,
+		before: GroupSnapshot,
+		revision: number,
+	): boolean {
+		if (revision !== this.#revision || !this.#snapshotEquals(before, this.#snapshot())) {
 			return false;
 		}
 
@@ -303,18 +365,19 @@ export class ToggleGroupElement extends AUIElement {
 			detail,
 		});
 
-		this.#changing = true;
-		try {
-			if (!this.dispatchEvent(proposal) || !this.#snapshotEquals(before, this.#snapshot())) {
-				return false;
-			}
-
-			this.#commit(selected);
-			notify();
-			return true;
-		} finally {
-			this.#changing = false;
+		if (
+			!this.dispatchEvent(proposal) ||
+			revision !== this.#revision ||
+			!this.#snapshotEquals(before, this.#snapshot()) ||
+			!this.#commitInteraction(selected, before, revision)
+		) {
+			return false;
 		}
+
+		++this.#revision;
+		this.#synchronizeRovingFocus();
+		notify();
+		return true;
 	}
 
 	#setMemberPressed(toggle: ToggleHandle, pressed: boolean): void {
@@ -349,7 +412,6 @@ export class ToggleGroupElement extends AUIElement {
 	}
 
 	#setValues(values: readonly string[]): void {
-		this.#refresh();
 		if (!this.multiple && values.length > 1) {
 			throw new RangeError("A single toggle group accepts at most one value");
 		}
@@ -361,14 +423,17 @@ export class ToggleGroupElement extends AUIElement {
 			}
 			requested.add(value);
 		}
-		if (this.#members.length === 0 && requested.size > 0) {
+
+		const members = this.#readMembers();
+		if (members.length === 0 && requested.size > 0) {
+			++this.#revision;
 			this.#pendingValues = Object.freeze([...requested]);
 			return;
 		}
 
 		const selected = new Set<ToggleHandle>();
 		for (const value of requested) {
-			const matches = this.#members.filter((member) => member.hasValue && member.value === value);
+			const matches = members.filter((member) => member.hasValue && member.value === value);
 			if (matches.length !== 1) {
 				throw new TypeError(
 					`Toggle group value ${JSON.stringify(value)} does not identify exactly one direct toggle`,
@@ -377,6 +442,8 @@ export class ToggleGroupElement extends AUIElement {
 			selected.add(matches[0]);
 		}
 
+		++this.#revision;
+		this.#refresh();
 		this.#commit(selected);
 	}
 
@@ -386,6 +453,20 @@ export class ToggleGroupElement extends AUIElement {
 			member.setPressed(selected.has(member));
 		}
 		this.#synchronizeRovingFocus();
+	}
+
+	#commitInteraction(selected: ReadonlySet<ToggleHandle>, before: GroupSnapshot, revision: number): boolean {
+		for (const member of before.members) {
+			if (revision !== this.#revision || !this.#commitContextEquals(before)) {
+				return false;
+			}
+			member.handle.setPressed(selected.has(member.handle));
+			if (revision !== this.#revision || !this.#commitContextEquals(before)) {
+				return false;
+			}
+		}
+		this.#pendingValues = undefined;
+		return true;
 	}
 
 	#applyPendingValues(): void {
@@ -421,7 +502,13 @@ export class ToggleGroupElement extends AUIElement {
 			const previousMembers = this.#members;
 			const previousActive = this.#active;
 			const previousActiveButton = previousActive?.button;
-			const members = [...this.children].map(getToggle).filter((member) => member !== undefined);
+			const members = this.#readMembers();
+			if (
+				members.length !== previousMembers.length ||
+				members.some((member, index) => member !== previousMembers[index])
+			) {
+				++this.#revision;
+			}
 			this.#members = members;
 
 			const counts = new Map<string, number>();
@@ -503,7 +590,7 @@ export class ToggleGroupElement extends AUIElement {
 	}
 
 	#snapshot(): GroupSnapshot {
-		const members = [...this.children].map(getToggle).filter((member) => member !== undefined);
+		const members = this.#readMembers();
 		return {
 			disabled: this.disabled,
 			members: members.map((handle) => ({
@@ -516,6 +603,30 @@ export class ToggleGroupElement extends AUIElement {
 			})),
 			multiple: this.multiple,
 		};
+	}
+
+	#readMembers(): ToggleHandle[] {
+		return [...this.children].map(getToggle).filter((member) => member !== undefined);
+	}
+
+	#commitContextEquals(before: GroupSnapshot): boolean {
+		if (before.disabled !== this.disabled || before.multiple !== this.multiple) {
+			return false;
+		}
+		const members = this.#readMembers();
+		if (members.length !== before.members.length) {
+			return false;
+		}
+		return before.members.every((member, index) => {
+			const handle = members[index];
+			return (
+				handle === member.handle &&
+				handle.button === member.button &&
+				handle.disabled === member.disabled &&
+				handle.hasValue === member.hasValue &&
+				handle.value === member.value
+			);
+		});
 	}
 
 	#snapshotEquals(left: GroupSnapshot, right: GroupSnapshot): boolean {

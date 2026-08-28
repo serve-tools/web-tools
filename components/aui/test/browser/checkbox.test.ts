@@ -2,6 +2,7 @@ import { afterEach, describe, expect, test, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import type { CheckboxChangeDetail } from "../../src/checkbox-element.js";
 import { CheckboxElement } from "../../src/checkbox-element.js";
+import { CheckboxGroupElement } from "../../src/checkbox-group-element.js";
 
 const fixtures: Node[] = [];
 const microtask = () => new Promise<void>(queueMicrotask);
@@ -89,6 +90,37 @@ describe("CheckboxElement", () => {
 		expect(element.checked).toBe(false);
 	});
 
+	test.each(["indicator", ""])("activates once through a wrapping label and decorative slot %s", async (slot) => {
+		const { element } = defineCheckbox();
+		const label = append(document.createElement("label"));
+		const decoration = document.createElement("span");
+		decoration.slot = slot;
+		decoration.textContent = "Activate";
+		element.append(decoration);
+		label.append(element, " Associated label");
+		const proposals = vi.fn();
+		const input = vi.fn();
+		const change = vi.fn();
+		element.addEventListener("beforechange", proposals);
+		element.addEventListener("input", input);
+		element.addEventListener("change", change);
+		const sourceClicks: MouseEvent[] = [];
+		element.addEventListener("beforechange", (event) => sourceClicks.push(event.detail.sourceEvent));
+
+		await userEvent.click(decoration);
+		expect(element.checked).toBe(true);
+		expect(proposals).toHaveBeenCalledOnce();
+		expect(input).toHaveBeenCalledOnce();
+		expect(change).toHaveBeenCalledOnce();
+		element.addEventListener("beforechange", (event) => event.preventDefault());
+		await userEvent.click(decoration);
+		expect(element.checked).toBe(true);
+		expect(proposals).toHaveBeenCalledTimes(2);
+		expect(input).toHaveBeenCalledOnce();
+		expect(change).toHaveBeenCalledOnce();
+		expect(sourceClicks.every((event) => event.defaultPrevented)).toBe(true);
+	});
+
 	test("submits checked and optional unchecked values without duplicates", () => {
 		const { element } = defineCheckbox();
 		const form = append(document.createElement("form"));
@@ -108,6 +140,76 @@ describe("CheckboxElement", () => {
 		expect([...new FormData(form)]).toEqual([]);
 		element.uncheckedValue = undefined;
 		expect(element.hasAttribute("unchecked-value")).toBe(false);
+	});
+
+	test("uses the current name without disturbing checked state, validation, or custom states", () => {
+		const { element } = defineCheckbox();
+		const form = append(document.createElement("form"));
+		element.name = "before";
+		element.value = "yes";
+		element.checked = true;
+		element.indeterminate = true;
+		element.required = true;
+		form.append(element);
+
+		element.name = "after";
+		expect([...new FormData(form)]).toEqual([["after", "yes"]]);
+		expect(form.elements.namedItem("before")).toBeNull();
+		expect(form.elements.namedItem("after")).toBe(element);
+		expect(element.checked).toBe(true);
+		expect(element.indeterminate).toBe(true);
+		expect(element.validity.valid).toBe(true);
+		expect(element.matches(":state(checked)")).toBe(true);
+		expect(element.matches(":state(indeterminate)")).toBe(true);
+
+		element.name = "";
+		expect([...new FormData(form)]).toEqual([]);
+		expect(element.checked).toBe(true);
+		expect(element.validity.valid).toBe(true);
+
+		element.checked = false;
+		element.uncheckedValue = "no";
+		element.name = "final";
+		expect([...new FormData(form)]).toEqual([["final", "no"]]);
+		expect(element.validity.valueMissing).toBe(true);
+		expect(element.matches(":state(checked)")).toBe(false);
+		expect(element.matches(":state(indeterminate)")).toBe(true);
+	});
+
+	test("accepts name and tabindex edits inside canceled and committed proposals", () => {
+		const { element } = defineCheckbox();
+		const form = append(document.createElement("form"));
+		element.name = "before";
+		element.value = "yes";
+		element.uncheckedValue = "no";
+		form.append(element);
+		let cancel = true;
+		const input = vi.fn();
+		const change = vi.fn();
+		element.addEventListener("input", input);
+		element.addEventListener("change", change);
+		element.addEventListener("beforechange", (event) => {
+			element.name = cancel ? "canceled" : "accepted";
+			element.tabIndex = cancel ? 4 : 6;
+			if (cancel) {
+				event.preventDefault();
+			}
+		});
+
+		element.click();
+		expect(element.checked).toBe(false);
+		expect(element.tabIndex).toBe(4);
+		expect([...new FormData(form)]).toEqual([["canceled", "no"]]);
+		expect(input).not.toHaveBeenCalled();
+		expect(change).not.toHaveBeenCalled();
+
+		cancel = false;
+		element.click();
+		expect(element.checked).toBe(true);
+		expect(element.tabIndex).toBe(6);
+		expect([...new FormData(form)]).toEqual([["accepted", "yes"]]);
+		expect(input).toHaveBeenCalledOnce();
+		expect(change).toHaveBeenCalledOnce();
 	});
 
 	test("uses the same transaction ordering for programmatic, synthetic, pointer, label, and Space activation", async () => {
@@ -389,6 +491,57 @@ describe("CheckboxElement", () => {
 		expect(clicks).toHaveBeenCalledOnce();
 	});
 
+	test("preserves authored tabindex edits across direct disabled transitions", () => {
+		const { element } = defineCheckbox();
+		append(element);
+		element.tabIndex = 4;
+
+		element.disabled = true;
+		expect(element.tabIndex).toBe(-1);
+		element.tabIndex = 7;
+		expect(element.tabIndex).toBe(-1);
+		element.disabled = false;
+		expect(element.tabIndex).toBe(7);
+
+		element.disabled = true;
+		element.removeAttribute("tabindex");
+		expect(element.tabIndex).toBe(-1);
+		element.disabled = false;
+		expect(element.tabIndex).toBe(0);
+	});
+
+	test("preserves authored tabindex through fieldset and group disabling", () => {
+		const fieldsetCheckbox = defineCheckbox().element;
+		const groupDefinitions = {
+			checkbox: `aui-checkbox-${crypto.randomUUID()}`,
+			group: `aui-checkbox-group-${crypto.randomUUID()}`,
+		};
+		customElements.define(groupDefinitions.checkbox, class extends CheckboxElement {});
+		customElements.define(groupDefinitions.group, class extends CheckboxGroupElement {});
+		const groupedCheckbox = document.createElement(groupDefinitions.checkbox) as CheckboxElement;
+		const group = document.createElement(groupDefinitions.group) as CheckboxGroupElement;
+		const fieldset = append(document.createElement("fieldset"));
+		fieldset.append(fieldsetCheckbox);
+		group.append(groupedCheckbox);
+		append(group);
+		fieldsetCheckbox.tabIndex = 4;
+		groupedCheckbox.tabIndex = 5;
+
+		fieldset.disabled = true;
+		group.disabled = true;
+		expect(fieldsetCheckbox.tabIndex).toBe(-1);
+		expect(groupedCheckbox.tabIndex).toBe(-1);
+		fieldsetCheckbox.tabIndex = 7;
+		groupedCheckbox.tabIndex = 8;
+		expect(fieldsetCheckbox.tabIndex).toBe(-1);
+		expect(groupedCheckbox.tabIndex).toBe(-1);
+
+		fieldset.disabled = false;
+		group.disabled = false;
+		expect(fieldsetCheckbox.tabIndex).toBe(7);
+		expect(groupedCheckbox.tabIndex).toBe(8);
+	});
+
 	test("honors the first legend exception for inherited fieldset disabling", () => {
 		const legendCheckbox = defineCheckbox().element;
 		const disabledCheckbox = defineCheckbox().element;
@@ -497,6 +650,26 @@ describe("CheckboxElement", () => {
 		expect(element.required).toBe(true);
 		expect(element.readOnly).toBe(true);
 		expect(element.uncheckedValue).toBe("no");
+	});
+
+	test("preserves authored tabindex while disabled before connection and late upgrade", () => {
+		const defined = defineCheckbox().element;
+		defined.disabled = true;
+		defined.tabIndex = 4;
+		append(defined);
+		expect(defined.tabIndex).toBe(-1);
+		defined.disabled = false;
+		expect(defined.tabIndex).toBe(4);
+
+		const name = `aui-checkbox-${crypto.randomUUID()}`;
+		const late = document.createElement(name) as CheckboxElement;
+		late.setAttribute("disabled", "");
+		late.setAttribute("tabindex", "5");
+		append(late);
+		customElements.define(name, class extends CheckboxElement {});
+		expect(late.tabIndex).toBe(-1);
+		late.disabled = false;
+		expect(late.tabIndex).toBe(5);
 	});
 
 	test("submits the first associated submitter on Enter after uncanceled propagation", async () => {

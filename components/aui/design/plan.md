@@ -1,6 +1,7 @@
 # AUI implementation plan
 
-Status: approved direction; lifecycle foundation, standalone Checkbox, Toggle, and Toggle Group verified; remaining component families are pending.
+Status: all component-family source is frozen and independently reviewed; final browser, automated accessibility, retention, and repository checks pass within their stated scopes.
+The measured mount-performance gate is not satisfied, manual assistive-technology evaluation remains open, and pushing or releasing remains held by the user.
 
 ## Outcome and boundaries
 
@@ -8,8 +9,10 @@ Build `@serve-tools/aui` in `components/aui` as an accessible, composable web-co
 Preserve useful AUI capabilities and prefer its natural element, property, method, and event vocabulary over names inherited from React composition.
 Use Base UI 1.7.0 as a pinned behavioral reference, not as a required JavaScript API or internal architecture.
 Account for the complete donor inventory in [migration.md](migration.md) and the upstream component and behavior inventory in [coverage.md](coverage.md).
+Treat complete family coverage as an inventory result, not a statement of full Base UI parity.
 
 Assume native dialog and popover support, ElementInternals, custom CSS states, CSS positioning, and form association.
+Tooltip additionally uses native `CloseWatcher`, verified in all three current test engines, to preserve platform close-request grouping without a JavaScript overlay stack.
 Do not ship fallback implementations for those capabilities.
 Do not infer support for unrelated features, such as state-preserving moves or scoped custom-element registries, from this baseline.
 
@@ -23,6 +26,8 @@ Keep one independently versioned AUI workspace with focused component and base-e
 Keep imports free of automatic global registration; registration is an explicit application operation.
 Keep React adapters out of the core import graph.
 Preserve upstream notices if source or tests are adapted.
+Maintain the file-level [provenance ledger](provenance.md); every current runtime family has an independence attestation, while the historical foundation has a bounded corpus comparison with its limits stated explicitly.
+If future work copies or substantially adapts Base UI material, add its MIT notice and an exact source-to-destination map before release.
 
 Separate three responsibilities:
 
@@ -75,6 +80,7 @@ Pin the donor revision and upstream release.
 Account for every existing source capability, export, dependency, and adapter.
 Record intentional API changes and any capability that remains deferred; a donor file's existence is not evidence of a correct component.
 Establish the workspace, build, type checks, explicit exports, package checks, documentation, and consumer Skill without publishing.
+Confirm the licensing path for every copied or substantially adapted source or test file; design citations alone are not a replacement for a required license notice.
 
 ### Gate 2: lifecycle and three representative components
 
@@ -96,9 +102,13 @@ Implement families in the dependency order recorded in the coverage matrix.
 Each completed family needs runtime implementation, public types, browser tests, documented styling/composition, a working example, and parity evidence.
 Keep AUI's extra calendar, time, and file capabilities visible in the inventory even though they are outside the Base UI roster.
 
+Button, Input, Fieldset, Form, Radio, and Radio Group deliberately remain authored native HTML compositions.
+Their working gallery examples and documented contracts satisfy the AUI product decision without adding empty custom-element wrappers.
+
 A matching component name is insufficient for parity.
 Check keyboard behavior, focus, forms, nested interaction, RTL, touch, accessibility relationships, and state/transition semantics for each relevant part.
 Document intentional platform-native API differences instead of adding React compatibility machinery.
+Do not describe full family coverage as full behavior, accessibility, React API, or visual parity.
 
 ### Gate 4: evidence and local handoff
 
@@ -106,20 +116,42 @@ Follow [performance.md](performance.md) for matched production comparisons and a
 Run focused tests, package builds, declaration and tarball checks, Skill checks, and the repository's full `npm run verify` gate.
 Inspect the demo in a real browser and perform accessibility checks; automated tests do not substitute for a documented screen-reader evaluation.
 Report environment failures, unverified assistive-technology combinations, behavior gaps, and inconclusive performance results explicitly.
+Reconcile `package.json`, `src/aui.ts`, declarations, browser export tests, gallery sections, README examples, and the consumer Skill against the same final public family set.
 Commit only scoped, verified work and preserve unrelated user changes.
 Stop before any push or release.
 
 ## Progress
 
-| Deliverable                                      | Status                                                                                         |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| Donor inventory and API recommendations          | Inventoried; migration pending                                                                 |
-| Pinned Base UI behavior matrix                   | Inventoried against 1.7.0                                                                      |
-| Lifecycle decision and adversarial test contract | Implemented; 51 base browser checks pass                                                       |
-| AUI workspace and base element                   | Implemented; full repository verification passes                                               |
-| Checkbox, Tabs, Dialog                           | Standalone Checkbox verified in 63 browser cases; Tabs and native Dialog proofs pass           |
-| Toggle and Toggle Group                          | Implemented; 96 browser cases pass, including ownership and failed-upgrade isolation           |
-| Remaining Base UI families and AUI extras        | Pending                                                                                        |
-| Matched performance and retention evidence       | DOM regression budget and bounded base/Checkbox retention verified; Base UI comparison pending |
-| Complete validation and local commit             | Checkbox/toggle checkpoint passes full repository verification; full component set pending     |
-| Push or release                                  | Held by user                                                                                   |
+| Deliverable                               | Status                                                                                                                                                                                                                                                                                                                                                             |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Donor inventory and API decisions         | Donor commit `080ad617486945851d0775278d1c8d215bdf75f7` is inventoried in `migration.md`; accepted AUI contracts replace rather than promise compatibility with its mixin and React entrypoints.                                                                                                                                                                   |
+| Pinned Base UI behavior matrix            | All 38 Base UI 1.7.0 component-family entrypoints and documented utilities have an exported proof, deliberate native composition, intentional utility difference, or explicit gap in `coverage.md`. This is full inventory coverage, not full parity.                                                                                                              |
+| Lifecycle foundation                      | Implemented; 51 focused checks passed across Chromium, Firefox, and WebKit.                                                                                                                                                                                                                                                                                        |
+| Binary controls                           | Checkbox passed 84 standalone checks. Checkbox Group, Switch, Toggle, and Toggle Group have focused three-engine and independent-review evidence recorded in `coverage.md`.                                                                                                                                                                                        |
+| Disclosure and display                    | Accordion and Collapsible passed 96 focused three-engine checks. Avatar, Meter, Progress, and Separator passed 78. Documented transition and accessibility gaps remain.                                                                                                                                                                                            |
+| Native overlays                           | Popover, Tooltip, Preview Card, and Alert Dialog passed 120 focused three-engine checks and independent review. Dialog remains the native modal foundation.                                                                                                                                                                                                        |
+| Field                                     | The final focused `field.test.ts` run passed 54 checks across the three engines, including the bounded input-adapter and connection-epoch regressions.                                                                                                                                                                                                             |
+| Selection                                 | Autocomplete, Combobox, and Select passed 183 focused selection and adversarial checks across the three engines; independent review found no remaining defect.                                                                                                                                                                                                     |
+| Numeric and code entry                    | Number Field, OTP Field, and Slider completed adversarial review. The final disjoint Number Field and Slider reruns passed 69 and 51 checks respectively across the three engines; `coverage.md` records the preceding combined checkpoint and non-additive count boundary.                                                                                        |
+| Native HTML families                      | Button, Input, Fieldset, Form, Radio, and Radio Group are deliberate, documented, working compositions rather than empty wrappers or public classes.                                                                                                                                                                                                               |
+| Gallery and package-adjacent integrations | The gallery has 44 working sections: all 38 Base UI families plus Base, Calendar, File, Time, Context, and Drag/Drop. The authoritative isolated root run passed all 81 gallery checks and all 3 export checks across the three engines.                                                                                                                           |
+| Menus and Toolbar                         | The author and independent reviewer each passed the exact five-family suite at 213 checks across the three engines, including the repaired trusted long-page click case. Static review is clear and source is frozen.                                                                                                                                              |
+| Drawer, Toast Region, Scroll Area         | Source is frozen and independent review is clear. The final scoped suite passed 75 checks across the three engines: Drawer 21, Toast Region 30, and Scroll Area 24.                                                                                                                                                                                                |
+| Calendar and File extras                  | Public source, design, tests, and gallery examples exist outside the Base UI roster. The final owned suite passed 57 checks, the independent adversarial suite passed 84, and the spoofed-Blob brand suite passed 3 across the three engines; review is clear.                                                                                                     |
+| Accessibility evidence                    | The final gallery passed 80 checks across 15 Chromium accessibility-tree snapshots with zero page or console errors; a separate earlier eight-family fixture passed 31 checks. Manual screen-reader work and cross-browser accessibility-tree equivalence remain open.                                                                                             |
+| Matched performance and retention         | The final five-pair retention experiment passes all 20 predeclared checks across 36 public constructors. The ten-pair Checkbox comparison meets its completed-update targets but does not establish the fixed regression bound for either mount workload. All failed and inconclusive earlier experiments remain preserved in `performance.md` and `retention.md`. |
+| Provenance                                | Reconciled in `provenance.md`. Authors attested independent implementation/tests for every current family. The unattested historical foundation has a bounded whole-corpus similarity audit, explicitly not proof of all possible copying. No upstream adaptation was found.                                                                                       |
+| Complete validation                       | The final isolated AUI run passed 1,518 of 1,518 browser tests in 114 files across Chromium, Firefox, and WebKit, including all 81 gallery and 3 export checks. The complete repository verification gate, typechecks, publint, ESM package analysis, Skill checks, and three mobile-width checks pass.                                                            |
+| Push or release                           | Held by user.                                                                                                                                                                                                                                                                                                                                                      |
+
+## Release holds
+
+The selected automated evidence is complete, but completion of an experiment is not the same as satisfying its acceptance gate.
+
+1. Resolve the mount-performance gate with a separately predeclared comparison; preserve the current failed and inconclusive results.
+2. Complete the manual accessibility checks required by the accepted component contracts and identify untested assistive-technology combinations.
+3. Decide which documented behavior gaps and unmeasured workloads are acceptable for the intended release, without calling this full Base UI parity.
+4. Obtain the user's authorization before any push or release.
+
+Any further runtime change requires corresponding correctness, ownership, and performance revalidation before relying on these final-source captures.
+The local gallery and package inventory are ready for review; the package is not declared release-ready.

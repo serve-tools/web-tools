@@ -1,7 +1,7 @@
 # Checkbox activation decision
 
 Status: approved; follow Base UI's interaction pattern with native custom-element form association.
-The public implementation passes 63 browser cases across Chromium, Firefox, and WebKit.
+The public implementation passes 84 browser cases across Chromium, Firefox, and WebKit.
 
 ## Reference and decision
 
@@ -29,6 +29,8 @@ Pointer, label, Space, synthetic click, and `click()` activation use the same sy
 The proposal sees the old checked state.
 Input and change listeners see committed state.
 All three events occur within the component's click handling; an ancestor click listener runs afterward during bubbling.
+The component prevents the handled click's default action so a wrapping native label cannot forward a second activation after a decorative child was clicked.
+This does not stop click propagation, and it does not cancel the separately proposed state change.
 Use `beforechange.preventDefault()` to veto a transition, including from an ancestor or outside a shadow root.
 Preventing a later click listener does not roll back a committed change.
 Cancellation never rolls back changes an application listener makes itself.
@@ -48,6 +50,9 @@ Disabled controls submit neither value; read-only controls retain focusability a
 All three tested browser engines exclude both a read-only native checkbox and a `readonly` form-associated custom element from constraint validation; AUI preserves this platform behavior.
 Native `form` association supports an external form ID, and required validation still depends on checkedness.
 State restoration retains both checked and indeterminate state.
+Changing `name` immediately renames the existing form entry without changing checkedness, validation, ARIA, or CSS states.
+The host defaults to `tabindex="0"` and preserves an authored tab index across direct, fieldset, and group disabling.
+While effectively disabled, the visible tab index remains `-1`; authored changes during that interval become the value restored when the control is enabled.
 
 Space activates once on key release.
 Enter does not toggle.
@@ -64,6 +69,11 @@ An interaction generation also cancels pending Enter work when association or di
 The shadow layout provides a presentational `control` part and `indicator` slot; the host retains the sole control identity.
 Authored checkbox content must be text or decorative content; nested interactive controls are not a supported composition.
 The component does not create duplicate hidden inputs or intercept native form serialization with document listeners.
-Checkbox Group and parent/select-all behavior are separate family work and are not implied by this standalone control.
+Use `checkbox.click()` or dispatch synthetic clicks on the host.
+Manually dispatched clicks on decorative descendants must be cancelable; a noncancelable descendant event cannot portably suppress the wrapping label's native forwarding action.
+`parent` marks a non-submitting select-all checkbox when the checkbox is a direct child of `CheckboxGroupElement`.
+The group owns that checkbox's checked and indeterminate presentation, while ordinary grouped checkboxes remain the only form-value owners.
+Outside a group, a parent checkbox still contributes no form value because the marker describes a presentation control rather than a data field.
+The [Checkbox Group contract](checkbox-group.md) defines membership, disabled-option cycling, cancellation, and detached reconciliation.
 The remaining accessibility gate includes manual assistive-technology evaluation; passing browser assertions is not a substitute.
 No source or tests were copied from Base UI to implement this contract.

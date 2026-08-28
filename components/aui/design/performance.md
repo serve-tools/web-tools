@@ -1,7 +1,78 @@
 # AUI performance and retention contract
 
-Status: the measured existing-DOM regression check meets its latency budget; AUI versus Base UI comparisons and heap-retention experiments remain pending.
-No AUI performance advantage has been demonstrated.
+Status: the existing-DOM regression check meets its latency budget, and the complete-component retention experiment passes its bounded criteria.
+The final Checkbox comparison does not meet the complete performance acceptance gate because both mount workloads fail to establish the required regression bound.
+Completed-update workloads show a measured advantage within the scope below; no overall AUI advantage over Base UI is established.
+
+## Final Checkbox comparison, August 28, 2026
+
+Ten independent counterbalanced pairs compared the final public AUI Checkbox with Base UI 1.7.0 and production React/React DOM 19.2.8 in fresh Chromium 151 processes.
+Both fixtures used the same enabled binary state, direct native labels, name/value vectors, styles, and exact FormData checks.
+Every mount created a new populated form under a persistent root container.
+Both update clocks included the public operation and its completion microtask; React used normal scheduling through the final expected layout-effect commit, without `flushSync`.
+Fixture validation and symmetric watchdogs remained outside the clocks.
+
+The table reports the median of ten condition-run medians, with Base UI/AUI paired geometric ratios and two-sided Student-t 95% intervals over the paired log ratios.
+The no-material-regression requirement is an entire ratio interval above `1 / 1.05`, approximately 0.95238.
+The isolated-update target requires the entire interval to reach 1.25, corresponding to at least a 20% cost reduction.
+
+| Workload                              |   AUI ms | Base UI ms | Base UI/AUI | Paired 95% interval | Result                           |
+| ------------------------------------- | -------: | ---------: | ----------: | ------------------: | -------------------------------- |
+| Mount 100                             |   9.2013 |     8.4288 |       0.966 |         0.801–1.165 | Regression bound not established |
+| Mount 1,000                           | 222.1288 |   128.6788 |       0.655 |         0.450–0.954 | Regression bound not established |
+| Isolated update, exact-100 block mean |  0.00125 |   0.086625 |      78.354 |       66.111–92.865 | Mean-cost target met             |
+| Batch 100 among 1,000                 |   0.1100 |     3.1400 |      32.907 |       24.681–43.876 | No material regression resolved  |
+| Batch 1,000 among 1,000               |   0.6675 |    23.0475 |      39.142 |       31.784–48.203 | No material regression resolved  |
+
+The Mount 1,000 interval ends at approximately 0.9541, narrowly crossing the fixed 0.95238 boundary.
+That is inconclusive at the 5% acceptance threshold, not evidence that mounting is equally fast.
+Both observed mount medians are slower for AUI, so mounting remains optimization work before an overall performance claim or release readiness.
+
+Each isolated observation covers exactly 100 sequential completed updates, with one operation completed before the next begins, divided by 100.
+These are mean completed-update costs within blocks, not individual interaction latencies or interaction p95 values.
+Every block remained nonzero and at least 20 observed clock quanta; the fresh-page quantum was approximately 0.005 ms.
+All ten pairs passed the declared form, accessibility-tree, identity, precision, source-integrity, isolation, and error checks.
+The measurements cover JavaScript completion in this fixture, not native input latency, layout, paint, manual assistive technology, or other components.
+
+### Prior results and the optimization boundary
+
+The original ten-pair experiment recorded a material Mount 1,000 regression: AUI 205.9500 ms, Base UI 136.1750 ms, ratio 0.743 with a 0.615–0.899 interval.
+Its isolated update reached the original timer floor and was inconclusive.
+The original AUI fixture reused its connected form while React created a new form subtree; the later experiment matched that ownership and attachment boundary.
+
+A separate instrumented diagnostic identified 2,000 redundant full state synchronizations among 1,000 Checkbox constructions and connections, triggered by `name` and `tabindex` writes.
+The final implementation skips those synchronizations while preserving focus ownership, live form naming, and authored tab order across disabling and late upgrade.
+Instrumented platform-call counts are diagnostic evidence, not a latency improvement measurement.
+The final mount result does not establish that this patch resolves the performance problem.
+
+An individual-timing follow-up then passed its precision preflight but stopped during its first formal AUI condition: eight of 50 durations were zero, exceeding the fixed 5% limit.
+It contains no complete pair and supports no comparative result.
+The separate aggregate experiment used the exact-100 block size specified before that failure, preserved both earlier artifacts, and changed neither effect thresholds nor the fixed ten-pair count.
+These experiments are not contemporaneous candidate-versus-original pairs; their absolute times must not be used to claim a patch speedup.
+
+### Executable weight
+
+These are functional one-control application bundles from public entrypoints, measured independently of timing.
+
+| Application                   | Raw minified bytes | gzip bytes | Brotli bytes |
+| ----------------------------- | -----------------: | ---------: | -----------: |
+| AUI standalone                |             17,031 |      5,700 |        5,152 |
+| Base UI plus React standalone |            205,516 |     64,822 |       55,912 |
+| Native React baseline         |            191,039 |     59,255 |       51,160 |
+
+Base UI's raw increment over the native React baseline is 14,477 bytes.
+The compressed differences, 5,567 gzip and 4,752 Brotli bytes, are descriptive because compression is not additive.
+The standalone AUI application is smaller, but its 17,031 bytes do not establish an incremental advantage when React is already present.
+These values do not measure the whole library, a three-component consumer, or a representative multi-component application.
+DOM counts distinguish light DOM from shadow elements and roots; a light-DOM-only count must not be presented as total DOM cost.
+
+### Evidence
+
+The final report, frozen protocol, source closure, bundles, preflight, raw samples, and analysis are in `/Users/jonathan/Documents/Codex/outputs/aui-comparison-aggregate-2026-08-28`.
+The formal raw SHA-256 is `74df3bf356cd787bdeffaf6e71974409efd0b8ea786b004a14e927a12647a381`.
+The build metadata SHA-256 is `1e237a9df15ce8d5933001392dfaa159dbbc2efc6e860d2591483d5377b34637` and closes over 95 runtime and bundle inputs.
+The earlier primary, diagnostic, and individual-precision artifacts remain at `aui-comparison-2026-08-28`, `aui-checkbox-mount-diagnostic-2026-08-28`, and `aui-comparison-followup-2026-08-28` under the same outputs directory.
+All measurements used an Apple M5 Max, macOS release 25.6.0, Node 24.16.0, Rolldown 1.2.6, and Playwright 1.62.1 without concurrent builds or automated browser work.
 
 ## Existing DOM result, August 27, 2026
 
@@ -77,8 +148,10 @@ Measure native-event-to-visible-update behavior separately from JavaScript-only 
 
 ## Retention and ownership
 
-The [retention evidence](retention.md) records completed base-lifecycle and Checkbox experiments, including positive controls, retained-heap snapshots, and an initial Checkbox sensitivity failure followed by a separately predeclared larger workload.
-Those results do not replace the matched Base UI latency and bundle comparisons required above.
+The [retention evidence](retention.md) records the final five-pair experiment across all 36 public constructors, plus historical base-lifecycle and Checkbox experiments.
+Exact cleanup, positive-control sensitivity, and post-GC criteria passed for the final fixture.
+The historical Checkbox sensitivity failure and its separately predeclared larger follow-up remain documented.
+Retention results do not replace the latency and bundle comparisons above or resolve the remaining mount-performance gate.
 
 First prove deterministic cleanup through exact counters for external signal subscriptions, global listeners, observers, timers, and active overlays.
 Keep the external store alive during retirement tests.

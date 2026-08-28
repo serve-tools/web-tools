@@ -15,10 +15,16 @@ export interface ToggleHandle {
 /** Private synchronous transaction boundary exposed by a connected toggle group. */
 export interface ToggleGroupController {
 	readonly changing: boolean;
-	activate(toggle: ToggleHandle, pressed: boolean, sourceEvent: MouseEvent, notify: () => void): boolean;
+	begin(toggle: ToggleHandle, pressed: boolean): ToggleGroupLease | undefined;
 	has(toggle: ToggleHandle): boolean;
 	memberChanged(toggle: ToggleHandle): void;
 	setPressed(toggle: ToggleHandle, pressed: boolean): void;
+}
+
+/** Private lease spanning one toggle's child proposal, group proposal, commit, and post-events. */
+export interface ToggleGroupLease {
+	complete(sourceEvent: MouseEvent, notify: () => void): boolean;
+	release(): void;
 }
 
 const handles = new WeakMap<HTMLElement, ToggleHandle>();
