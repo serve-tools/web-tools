@@ -146,7 +146,7 @@
 		"knip": "6.32.2",
 		"playwright": "1.62.1",
 		"publint": "0.3.24",
-		"rolldown": "1.2.5",
+		"rolldown": "1.2.6",
 		"typescript": "7.0.2",
 		"vite": "8.2.2",
 		"vitest": "4.1.11",
