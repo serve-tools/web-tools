@@ -1,7 +1,7 @@
 import type { DirectiveResult } from "lit/directive.js";
 import { directive } from "lit/directive.js";
-import type { ReactiveSource } from "./.internals.js";
-import { ReactiveDirective, readSource } from "./.internals.js";
+import type { ReactiveSource } from "./_internals.js";
+import { ReactiveDirective, readSource } from "./_internals.js";
 
 class ChooseDirective<Selected = unknown, Value = unknown, DefaultValue = undefined> extends ReactiveDirective<
 	Value | DefaultValue | undefined

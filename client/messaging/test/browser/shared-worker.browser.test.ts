@@ -2,7 +2,7 @@
 
 import { expect, test, vi } from "vitest";
 
-import { protocol } from "../../src/lib/.internals.js";
+import { protocol } from "../../src/lib/_internals.js";
 import { connect, SharedWorker } from "../../src/scope/window.js";
 import type { SharedCounterProtocol } from "./shared-worker.js";
 

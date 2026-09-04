@@ -4,7 +4,7 @@ import {
 	disposeResourcesAsync,
 	getDisposeMethod,
 	StackState,
-} from "./.internals.js";
+} from "./_internals.js";
 import type { AsyncDisposable } from "./AsyncDisposable.js";
 import type { Disposable } from "./Disposable.js";
 import { asyncDispose } from "./Symbol/asyncDispose.js";

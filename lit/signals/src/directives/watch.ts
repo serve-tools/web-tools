@@ -2,8 +2,8 @@ import { Signal } from "@serve-tools/signal";
 import { nothing } from "lit";
 import type { DirectiveResult } from "lit/directive.js";
 import { directive } from "lit/directive.js";
-import type { ReactiveSource } from "./.internals.js";
-import { ReactiveDirective } from "./.internals.js";
+import type { ReactiveSource } from "./_internals.js";
+import { ReactiveDirective } from "./_internals.js";
 
 /** A callback whose signal reads determine when its Lit part updates. */
 export type WatchCallback<Value> = () => Value;

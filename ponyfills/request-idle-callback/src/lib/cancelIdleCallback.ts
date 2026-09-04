@@ -1,4 +1,4 @@
-import { callbacks, resetScheduleIfEmpty } from "./.internals.js";
+import { callbacks, resetScheduleIfEmpty } from "./_internals.js";
 
 /** Cancels a callback previously scheduled by this module. */
 export function cancelIdleCallback(handle: number): void {

@@ -1,5 +1,5 @@
-import type { Watchable } from "./.internals.js";
-import { assign } from "./.internals.js";
+import type { Watchable } from "./_internals.js";
+import { assign } from "./_internals.js";
 import type { DOM } from "./types.js";
 
 /** Attaches element internals and reactively assigns writable properties. */

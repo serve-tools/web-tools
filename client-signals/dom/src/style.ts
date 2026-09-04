@@ -1,6 +1,6 @@
 import { Signal } from "@serve-tools/signal";
-import type { Watchable } from "./.internals.js";
-import { getCurrentDocument, handler, isSignal } from "./.internals.js";
+import type { Watchable } from "./_internals.js";
+import { getCurrentDocument, handler, isSignal } from "./_internals.js";
 import { dispose, own } from "./dispose.js";
 import type { DOM } from "./types.js";
 

@@ -1,6 +1,5 @@
 import type { DB, DBCountOptions, DBGetAllOptions, DBWriteOptions, StoreKey, StoreValue } from "@serve-tools/client-db";
 import { connect as connectPort } from "@serve-tools/client-messaging";
-import { encodeQuery, mutationOptions, queryOptions, requestOptions, writeOptions } from "./.internals.js";
 import type {
 	SchemaDefinition,
 	SharedDBClient,
@@ -9,6 +8,7 @@ import type {
 	SharedDBSubscription,
 	StoreDefinition,
 } from "./.types.js";
+import { encodeQuery, mutationOptions, queryOptions, requestOptions, writeOptions } from "./_internals.js";
 
 /** Connects a typed database client to a port owned by a `SharedWorker`. */
 export const connect = <Schema extends SchemaDefinition<Schema> = DB.Schema>(

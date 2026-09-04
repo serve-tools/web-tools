@@ -1,5 +1,5 @@
-import type { ReactiveElement } from "./.internals.js";
-import { signalAccessor } from "./.internals.js";
+import type { ReactiveElement } from "./_internals.js";
+import { signalAccessor } from "./_internals.js";
 
 /** Creates a signal-backed, non-attribute collection property. */
 export const collection =

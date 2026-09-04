@@ -1,5 +1,5 @@
-import type { Watchable } from "./.internals.js";
-import { getDocument, handler, withDocument } from "./.internals.js";
+import type { Watchable } from "./_internals.js";
+import { getDocument, handler, withDocument } from "./_internals.js";
 import type { Disposer } from "./dispose.js";
 import { disown, dispose, own } from "./dispose.js";
 

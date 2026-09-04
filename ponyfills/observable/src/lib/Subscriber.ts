@@ -1,4 +1,4 @@
-import { defineStringTag, throwError } from "./.internals.js";
+import { defineStringTag, throwError } from "./_internals.js";
 import { notify, onAbort, report, requireCallback } from "./lifecycle.js";
 
 export let __createSubscriber: <T>(observer: SubscriptionObserver<T>, signal?: AbortSignal) => Subscriber<T>;

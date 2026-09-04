@@ -1,6 +1,6 @@
 /// <reference lib="esnext.disposable" preserve="true" />
 
-import { createDisposableStack } from "../.internals.js";
+import { createDisposableStack } from "../_internals.js";
 import { SuppressedError } from "./SuppressedError.js";
 import { dispose } from "./Symbol/dispose.js";
 

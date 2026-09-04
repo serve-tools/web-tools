@@ -1,5 +1,5 @@
 export { refreshContexts } from "./decorators/.context.js";
-export type { PropertyDeclaration } from "./decorators/.internals.js";
+export type { PropertyDeclaration } from "./decorators/_internals.js";
 export * from "./decorators/collection.js";
 export * from "./decorators/computed.js";
 export * from "./decorators/consume.js";

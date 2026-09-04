@@ -499,7 +499,7 @@
 					"test/*.recipes.ts"
 				],
 				"ignoreIssues": {
-					"src/lib/.internals.ts": [
+					"src/lib/_internals.ts": [
 						"exports"
 					]
 				}

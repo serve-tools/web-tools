@@ -11,6 +11,6 @@ void (0 as unknown as DisposableStack);
 void (0 as unknown as SuppressedError);
 
 // @ts-expect-error Internal modules are deliberately not package entrypoints.
-type InternalModule = typeof import("@serve-tools/ponyfill-resource-management/lib/.internals");
+type InternalModule = typeof import("@serve-tools/ponyfill-resource-management/lib/_internals");
 
 void (0 as unknown as InternalModule);

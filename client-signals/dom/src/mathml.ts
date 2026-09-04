@@ -1,4 +1,4 @@
-import { render } from "./.internals.js";
+import { render } from "./_internals.js";
 import type { html } from "./html.js";
 import type { DOM } from "./types.js";
 

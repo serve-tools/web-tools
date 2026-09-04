@@ -1,17 +1,3 @@
-import {
-	ConnectionState,
-	callSafely,
-	connectionClosedError,
-	errorRecord,
-	inactiveSubscription,
-	isWireMessage,
-	MessagePart,
-	noop,
-	post,
-	protocol,
-	protocolError,
-	remoteError,
-} from "./.internals.js";
 import type * as T from "./.types.js";
 import type {
 	Client,
@@ -26,6 +12,20 @@ import type {
 	SubscribeOptions,
 	Subscription,
 } from "./.types.js";
+import {
+	ConnectionState,
+	callSafely,
+	connectionClosedError,
+	errorRecord,
+	inactiveSubscription,
+	isWireMessage,
+	MessagePart,
+	noop,
+	post,
+	protocol,
+	protocolError,
+	remoteError,
+} from "./_internals.js";
 
 /**
  * Connects a typed client to a worker or message port.

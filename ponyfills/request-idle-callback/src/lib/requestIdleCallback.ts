@@ -1,5 +1,5 @@
-import type { ScheduledCallback } from "./.internals.js";
-import { callbacks, getChannel, getNextHandle, resetScheduleIfEmpty, schedule } from "./.internals.js";
+import type { ScheduledCallback } from "./_internals.js";
+import { callbacks, getChannel, getNextHandle, resetScheduleIfEmpty, schedule } from "./_internals.js";
 import type { IdleRequestCallback, IdleRequestOptions } from "./types.js";
 
 /** Schedules work for an idle period and returns its cancellation handle. */

@@ -1,4 +1,4 @@
-import { assertFunction, assertObject, defineStringTag, throwEmpty, throwError, toCount } from "./.internals.js";
+import { assertFunction, assertObject, defineStringTag, throwEmpty, throwError, toCount } from "./_internals.js";
 import { onAbort, report } from "./lifecycle.js";
 import type { Subscriber, SubscriptionObserver } from "./Subscriber.js";
 import { __createSubscriber } from "./Subscriber.js";

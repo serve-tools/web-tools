@@ -1,4 +1,4 @@
-import { defineStringTag } from "./.internals.js";
+import { defineStringTag } from "./_internals.js";
 
 export class DisposableElement extends HTMLElement {
 	static readonly disposables: readonly DisposableElement.DisposableInitiator[] = [];

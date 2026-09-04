@@ -1,4 +1,3 @@
-import { requested } from "./.internals.js";
 import type {
 	DBIndex,
 	DBObjectStore as DBObjectStoreInterface,
@@ -8,6 +7,7 @@ import type {
 	StoreKey,
 	StoreValue,
 } from "./.types.js";
+import { requested } from "./_internals.js";
 import { DBQuery } from "./DBQuery.js";
 
 /** Promise-based mutation and query operations for one transaction-scoped object store. */

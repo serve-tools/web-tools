@@ -1,4 +1,4 @@
-import { getContextConsumer, getContextProvider, isInvalidContext } from "./.internals.js";
+import { getContextConsumer, getContextProvider, isInvalidContext } from "./_internals.js";
 import type { Context, ContextCallback, ContextType } from "./context.js";
 import { ContextProviderEvent, ContextRequestEvent } from "./context.js";
 

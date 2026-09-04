@@ -1,4 +1,4 @@
-import { render } from "./.internals.js";
+import { render } from "./_internals.js";
 import type { svg } from "./svg.js";
 import type { DOM } from "./types.js";
 

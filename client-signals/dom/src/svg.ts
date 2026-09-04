@@ -1,4 +1,4 @@
-import { render } from "./.internals.js";
+import { render } from "./_internals.js";
 import type { html } from "./html.js";
 
 /** Creates an SVG element with the specified tag name and applies the given items to it. */

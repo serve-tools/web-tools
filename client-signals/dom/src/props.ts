@@ -1,5 +1,5 @@
-import type { Watchable } from "./.internals.js";
-import { assign } from "./.internals.js";
+import type { Watchable } from "./_internals.js";
+import { assign } from "./_internals.js";
 
 /** Assigns properties to an element. */
 export const props =

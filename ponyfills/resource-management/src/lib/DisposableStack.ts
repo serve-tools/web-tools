@@ -1,4 +1,4 @@
-import { assertPending, assertPendingCallback, disposeResources, getDisposeMethod, StackState } from "./.internals.js";
+import { assertPending, assertPendingCallback, disposeResources, getDisposeMethod, StackState } from "./_internals.js";
 import type { Disposable } from "./Disposable.js";
 import { dispose } from "./Symbol/dispose.js";
 

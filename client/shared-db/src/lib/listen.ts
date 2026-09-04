@@ -1,8 +1,8 @@
 import type { DBOpenOptions } from "@serve-tools/client-db";
 import { DB } from "@serve-tools/client-db";
 import { listen as listenForMessages } from "@serve-tools/client-messaging/scope/worker";
-import { decodeQuery, isEncodedKeyRange } from "./.internals.js";
 import type { SchemaDefinition, SharedDBChange, SharedDBEvent, SharedDBProtocol, SharedDBServer } from "./.types.js";
+import { decodeQuery, isEncodedKeyRange } from "./_internals.js";
 
 interface ChangeTarget<Schema extends SchemaDefinition<Schema>> {
 	readonly emit: (change: SharedDBEvent<Schema>) => void;

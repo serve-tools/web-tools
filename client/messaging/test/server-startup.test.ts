@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { MessageEndpoint, RequestContext } from "../src/client-messaging.js";
 import { serve } from "../src/client-messaging.js";
-import { protocol } from "../src/lib/.internals.js";
+import { protocol } from "../src/lib/_internals.js";
 
 const startupEndpoint = (start: (dispatch: (data: unknown) => void) => void) => {
 	type MessageListener = Parameters<MessageEndpoint["addEventListener"]>[1];

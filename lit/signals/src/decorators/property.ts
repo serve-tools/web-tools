@@ -1,5 +1,5 @@
-import type { PropertyDeclaration, ReactiveElement } from "./.internals.js";
-import { signalAccessor } from "./.internals.js";
+import type { PropertyDeclaration, ReactiveElement } from "./_internals.js";
+import { signalAccessor } from "./_internals.js";
 
 /** Creates a signal-backed Lit reactive property. */
 export const property =

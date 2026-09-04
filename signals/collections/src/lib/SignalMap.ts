@@ -1,6 +1,6 @@
 import { Signal } from "@serve-tools/signal";
-import type { VersionSignal } from "./.internals.js";
-import { consumeKey, dirty, dirtyAll, versionSignal } from "./.internals.js";
+import type { VersionSignal } from "./_internals.js";
+import { consumeKey, dirty, dirtyAll, versionSignal } from "./_internals.js";
 
 /** A Map with signal-backed key and iteration reads. */
 export class SignalMap<Key = unknown, Value = unknown> extends Map<Key, Value> {
