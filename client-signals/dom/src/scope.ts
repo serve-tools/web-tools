@@ -165,6 +165,7 @@ class BindingScopeController implements BindingScope {
 		}
 
 		++this.#generation;
+
 		this.#shouldRun = false;
 		this.#active = false;
 
@@ -177,7 +178,9 @@ class BindingScopeController implements BindingScope {
 		}
 
 		this.#disposed = true;
+
 		++this.#generation;
+
 		this.#shouldRun = false;
 		this.#active = false;
 
@@ -192,6 +195,7 @@ class BindingScopeController implements BindingScope {
 		const record = new BindingRecord(this, owner, run);
 
 		this.#records.add(record);
+
 		frame.records.push(record);
 
 		return { dispose: record.retire, run: record.run };
@@ -205,6 +209,7 @@ class BindingScopeController implements BindingScope {
 		const record = new BindingRecord(this, undefined, undefined, dispose);
 
 		this.#records.add(record);
+
 		frame.records.push(record);
 
 		return { dispose: record.retire };
@@ -256,6 +261,7 @@ class BindingRecord {
 		}
 
 		this.#retired = true;
+
 		this.scope.delete(this);
 
 		if (this.owner) {
@@ -302,6 +308,7 @@ class BindingRecord {
 		}
 
 		this.#current = undefined;
+
 		effect.dispose();
 	}
 }
