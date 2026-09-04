@@ -1,4 +1,5 @@
-import { isDirectInput, isFormElement, OwnedAttributes } from "./.numeric.js";
+import { isDirectInput, isFormElement } from "./.numeric.js";
+import { AttributeOwner } from "./.ownership.js";
 import { AUIElement } from "./aui-element.js";
 
 export type SliderOrientation = "horizontal" | "vertical";
@@ -9,7 +10,7 @@ export class SliderElement extends AUIElement {
 
 	#inputs: HTMLInputElement[] = [];
 	#internals = this.attachInternals();
-	#owned = new OwnedAttributes();
+	#owned = new AttributeOwner();
 	#pendingFirstValue: number | undefined;
 	#pendingValues: readonly number[] | undefined;
 	#recovering = true;
@@ -343,8 +344,8 @@ export class SliderElement extends AUIElement {
 
 	#outerBounds(): { maximum: number; minimum: number } {
 		const first = this.#inputs[0];
-		const minimumAttribute = this.getAttribute("min") ?? (first ? this.#owned.author(first, "min") : null);
-		const maximumAttribute = this.getAttribute("max") ?? (first ? this.#owned.author(first, "max") : null);
+		const minimumAttribute = this.getAttribute("min") ?? (first ? this.#owned.authorValue(first, "min") : null);
+		const maximumAttribute = this.getAttribute("max") ?? (first ? this.#owned.authorValue(first, "max") : null);
 		const oracle = this.ownerDocument.createElement("input");
 		oracle.type = "range";
 		oracle.step = "any";

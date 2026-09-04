@@ -1,5 +1,6 @@
 import type { CheckboxGroupController, CheckboxGroupLease, CheckboxHandle } from "./.checkbox-group.js";
 import { getCheckbox, registerCheckboxGroup } from "./.checkbox-group.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 import type { CheckboxChangeDetail } from "./checkbox-element.js";
 import { CheckboxElement } from "./checkbox-element.js";
@@ -81,7 +82,7 @@ export class CheckboxGroupElement extends AUIElement {
 		};
 
 		for (const property of ["disabled", "values"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 		this.#recoveringProperties = false;
 
@@ -568,15 +569,6 @@ export class CheckboxGroupElement extends AUIElement {
 		} else {
 			this.#internals.states.delete("disabled");
 		}
-	}
-
-	#upgradeProperty(property: "disabled" | "values"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }
 

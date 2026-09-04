@@ -79,6 +79,14 @@ test("corpus covers every runtime package and every evaluation kind", async () =
 	);
 
 	assert.ok(tasks.some((task) => task.source === "reve-core-inspired"));
+
+	const packageNames = new Set(catalog.packages.map((packageEntry) => packageEntry.name));
+	for (const task of tasks) {
+		assert.ok(
+			task.expected.packages.every((name) => packageNames.has(name)),
+			`${task.id} must only select public catalog packages`,
+		);
+	}
 });
 
 test("every runtime package has one exact public usage recipe and Skill reference", async () => {

@@ -1,4 +1,5 @@
-import { isDirectButton, isDirectInput, isFormElement, OwnedAttributes } from "./.numeric.js";
+import { isDirectButton, isDirectInput, isFormElement } from "./.numeric.js";
+import { AttributeOwner } from "./.ownership.js";
 import { AUIElement } from "./aui-element.js";
 
 /** Immutable state proposed before an AUI number-field step action. */
@@ -38,7 +39,7 @@ export class NumberFieldElement extends AUIElement {
 	#incrementButton: HTMLButtonElement | undefined;
 	#input: HTMLInputElement | undefined;
 	#internals = this.attachInternals();
-	#owned = new OwnedAttributes();
+	#owned = new AttributeOwner();
 	#pendingValue: string | undefined;
 	#repeatCleanup: (() => void) | undefined;
 	#recovering = true;
@@ -633,7 +634,7 @@ export class NumberFieldElement extends AUIElement {
 				continue;
 			}
 			this.#owned.own(button, "type", "button");
-			const authorDisabled = this.#owned.author(button, "disabled") !== null;
+			const authorDisabled = this.#owned.authorValue(button, "disabled") !== null;
 			this.#owned.own(button, "disabled", disabled || authorDisabled ? "" : null);
 		}
 		this.#setState("disabled", input.disabled);

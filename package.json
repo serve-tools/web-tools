@@ -384,7 +384,7 @@
 			},
 			"components/aui": {
 				"entry": [
-					"benchmark/*.{js,mjs}",
+					"benchmark/**/*.{js,mjs}",
 					"examples/main.ts",
 					"examples/template.ts",
 					"test/*.{recipes,types}.ts"
@@ -409,6 +409,7 @@
 			},
 			"lit/signals": {
 				"entry": [
+					"benchmark/**/*.{js,mjs}",
 					"src/{decorators,lit-signals}.ts",
 					"test/*.{recipes,types}.ts"
 				]

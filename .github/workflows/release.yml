@@ -10,7 +10,6 @@ on:
         options:
           - "all"
           - "@serve-tools/async-operation"
-          - "@serve-tools/aui"
           - "@serve-tools/client-context"
           - "@serve-tools/client-db"
           - "@serve-tools/client-dom-fragment"

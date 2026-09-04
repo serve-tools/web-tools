@@ -1,5 +1,6 @@
 import type { ToggleGroupController, ToggleHandle } from "./.toggle-group.js";
 import { getDirectToggleGroup, getToggleGroup, registerToggle } from "./.toggle-group.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** Immutable state proposed by a toggle's `beforechange` event. */
@@ -86,7 +87,7 @@ export class ToggleElement extends AUIElement {
 		this.addEventListener("click", this.#onClick);
 
 		for (const property of ["value", "disabled", "pressed"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 
 		this.#refresh();
@@ -447,15 +448,6 @@ export class ToggleElement extends AUIElement {
 		for (const name of names) {
 			this.#releaseAttribute(element, name);
 		}
-	}
-
-	#upgradeProperty(property: "disabled" | "pressed" | "value"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }
 

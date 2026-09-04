@@ -1,5 +1,6 @@
 import type { AccordionActivation, AccordionController, DisclosureHandle } from "./.disclosure.js";
 import { getDisclosure, registerAccordion } from "./.disclosure.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 import type { CollapsibleChangeDetail, CollapsibleElement } from "./collapsible-element.js";
 
@@ -94,7 +95,7 @@ export class AccordionElement extends AUIElement {
 		};
 
 		for (const property of ["disabled", "loopFocus", "multiple", "orientation", "values"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 		this.#recoveringProperties = false;
 
@@ -553,15 +554,6 @@ export class AccordionElement extends AUIElement {
 		} else {
 			this.#internals.states.delete(state);
 		}
-	}
-
-	#upgradeProperty(property: "disabled" | "loopFocus" | "multiple" | "orientation" | "values"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }
 

@@ -59,6 +59,7 @@
 		"skills"
 	],
 	"scripts": {
+		"benchmark": "node --experimental-strip-types benchmark/run.mjs",
 		"build": "tsc --build tsconfig.build.json && npm run build:assets",
 		"build:assets": "mkdir -p dist/types && cp -R src/types/. dist/types/",
 		"check:package": "publint && attw --pack . --profile esm-only",

@@ -1,5 +1,6 @@
 import type { PointerEndState, PointerState } from "@serve-tools/client-input";
 import { observePointer } from "@serve-tools/client-input";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 export type DrawerSide = "bottom" | "left" | "right" | "top";
@@ -87,7 +88,7 @@ export class DrawerElement extends AUIElement {
 	constructor() {
 		super();
 		for (const property of ["side", "snapPoints", "snapPoint"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 		this.#ready = true;
 	}
@@ -499,14 +500,4 @@ export class DrawerElement extends AUIElement {
 			);
 		}
 	};
-
-	#upgradeProperty(property: "side" | "snapPoint" | "snapPoints"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const record = this as unknown as Record<string, unknown>;
-		const value = record[property];
-		delete record[property];
-		record[property] = value;
-	}
 }

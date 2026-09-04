@@ -17,6 +17,9 @@
 	"references": [
 		{
 			"path": "../../polyfills/urlpattern/tsconfig.json"
+		},
+		{
+			"path": "../../ponyfills/urlpattern/tsconfig.json"
 		}
 	]
 }

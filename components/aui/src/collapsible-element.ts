@@ -1,5 +1,6 @@
 import type { AccordionActivation, AccordionController, DisclosureHandle } from "./.disclosure.js";
 import { getAccordion, getDirectAccordion, registerDisclosure } from "./.disclosure.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** Immutable state proposed by a collapsible's `beforechange` event. */
@@ -107,7 +108,7 @@ export class CollapsibleElement extends AUIElement {
 		this.addEventListener("click", this.#onClick);
 
 		for (const property of ["value", "disabled", "open"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 
 		this.#refresh();
@@ -541,15 +542,6 @@ export class CollapsibleElement extends AUIElement {
 		}
 
 		this.#ownedAttributes.delete(element);
-	}
-
-	#upgradeProperty(property: "disabled" | "open" | "value"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }
 

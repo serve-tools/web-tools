@@ -137,12 +137,9 @@ const applyDecorators = (Class, ...entries) => {
 	const metadata = create(Class[metadataSymbol] ?? null);
 	let Replacement = Class;
 
-	entries = entries.map((entry, index) => [entry, index]);
-	entries.sort(
-		([left, leftIndex], [right, rightIndex]) => bucketOf(left) - bucketOf(right) || leftIndex - rightIndex,
-	);
+	entries.sort((left, right) => bucketOf(left) - bucketOf(right));
 
-	for (const [[decorators, kind, name, isStatic, isPrivate, controller]] of entries) {
+	for (const [decorators, kind, name, isStatic, isPrivate, controller] of entries) {
 		if (kind === 0) {
 			Replacement = decorate(
 				decorators,

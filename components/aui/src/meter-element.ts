@@ -1,3 +1,4 @@
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** A passive meter whose host owns accessibility and whose native meter owns numeric parsing. */
@@ -15,7 +16,7 @@ export class MeterElement extends AUIElement {
 		this.#meter.setAttribute("part", "meter");
 
 		for (const property of ["high", "low", "max", "min", "optimum", "value"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 		for (const attribute of MeterElement.observedAttributes) {
 			this.#copyAttribute(attribute);
@@ -133,14 +134,5 @@ export class MeterElement extends AUIElement {
 			return value >= high ? "optimum" : value >= low ? "suboptimal" : "even-less-good";
 		}
 		return value >= low && value <= high ? "optimum" : "suboptimal";
-	}
-
-	#upgradeProperty(property: "high" | "low" | "max" | "min" | "optimum" | "value"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }

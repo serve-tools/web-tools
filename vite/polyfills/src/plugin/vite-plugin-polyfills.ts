@@ -1,6 +1,7 @@
 import { rolldownTransform } from "@jsxtools/rolldown-transform";
 import type { Plugin } from "vite";
 import { Visitor } from "vite";
+import { builtinPolyfills } from "../polyfills/builtin-polyfills.js";
 import type { Polyfill } from "./define-polyfill.js";
 
 const PLUGIN_NAME = "vite-plugin-polyfills";
@@ -17,26 +18,7 @@ const BUILTIN_RUNTIME_PACKAGES = [
 const isBuiltinRuntimeSpecifier = (id: string): boolean =>
 	BUILTIN_RUNTIME_PACKAGES.some((packageName) => id === packageName || id.startsWith(packageName + "/"));
 
-/** Ordered built-in polyfill definitions enabled when no explicit list is provided. */
-export const builtinPolyfills: readonly Polyfill[] = await Promise.all([
-	import("../polyfills/async-disposable-stack-polyfill.js"),
-	import("../polyfills/cancel-idle-callback-polyfill.js"),
-	import("../polyfills/composite-polyfill.js"),
-	import("../polyfills/disposable-stack-polyfill.js"),
-	import("../polyfills/event-target-when-polyfill.js"),
-	import("../polyfills/map-upsert-polyfill.js"),
-	import("../polyfills/observable-polyfill.js"),
-	import("../polyfills/request-idle-callback-polyfill.js"),
-	import("../polyfills/scheduler-polyfill.js"),
-	import("../polyfills/subscriber-polyfill.js"),
-	import("../polyfills/suppressed-error-polyfill.js"),
-	import("../polyfills/symbol-async-dispose-polyfill.js"),
-	import("../polyfills/symbol-dispose-polyfill.js"),
-	import("../polyfills/symbol-metadata-polyfill.js"),
-	import("../polyfills/task-controller-polyfill.js"),
-	import("../polyfills/task-signal-polyfill.js"),
-	import("../polyfills/url-pattern-polyfill.js"),
-]).then((modules) => modules.map((module) => module.default));
+export { builtinPolyfills };
 
 /** Options for configuring {@link vitePolyfills}. */
 export interface VitePolyfillsOptions {

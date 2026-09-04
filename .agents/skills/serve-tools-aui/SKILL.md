@@ -1,11 +1,12 @@
 ---
 name: serve-tools-aui
-description: Use @serve-tools/aui for native web components.
+description: Use the private @serve-tools/aui workspace for native web components in this repository.
 ---
 
 # Use @serve-tools/aui
 
-Treat the installed README and public declarations as the source of truth.
+AUI is private and is not ready for release; use it only from this workspace.
+Treat the [workspace README](../../../components/aui/README.md) and public declarations as the source of truth.
 The design inventory is a roadmap, not evidence that a component is implemented.
 Automated component tests are not screen-reader certification; validate the application's labels, focus, keyboard flows, announcements, and styling in its target browser and assistive-technology combinations.
 

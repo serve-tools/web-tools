@@ -1,5 +1,5 @@
 import { nextEnabledOption, setListboxState } from "./.listbox.js";
-import { AttributeOwner } from "./.popover.js";
+import { AttributeOwner } from "./.ownership.js";
 import type { SelectionOwner } from "./.selection.js";
 import { invalidateSelectionId, ownSelectionId, ownsOption, registerSelectionOwner } from "./.selection.js";
 import { AUIElement } from "./aui-element.js";

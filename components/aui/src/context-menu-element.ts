@@ -1,6 +1,6 @@
 import type { RealmTimeout } from "./.composite.js";
 import { clearRealmTimeout, isHTMLElement, setRealmTimeout } from "./.composite.js";
-import { AttributeOwner } from "./.popover.js";
+import { AttributeOwner } from "./.ownership.js";
 import type { AUIElement } from "./aui-element.js";
 import { MenuElement } from "./menu-element.js";
 

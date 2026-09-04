@@ -21,6 +21,24 @@ describe("rolldownDecorators", () => {
 		expect(await plugin.transform.handler.call({}, "@media {}", "example.css")).toBeNull();
 	});
 
+	it("keeps generated public and private bindings clear of source names", async () => {
+		const { code } = await transformSource(`
+			const __decorators_apply = 1;
+			const __decorators_expression = 2;
+			const __decorators_Example = 3;
+			function decorate(value) { return value; }
+			class Example {
+				#__decorators_init;
+				@decorate method() {}
+			}
+		`);
+
+		expect(code).toContain("_apply_decorators as __decorators_apply_");
+		expect(code).toContain("const __decorators_expression_=");
+		expect(code).toContain("let __decorators_Example_;");
+		expect(code).toContain("#__decorators_init_=");
+	});
+
 	it("transforms every public decorator kind with modern context and initializer semantics", async () => {
 		const { code } = await bundleSource(`
 			const contexts = [];

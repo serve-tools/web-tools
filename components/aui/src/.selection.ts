@@ -1,4 +1,4 @@
-import type { AttributeOwner } from "./.popover.js";
+import type { AttributeOwner } from "./.ownership.js";
 import type { OptionElement } from "./option-element.js";
 
 /** Private callbacks published by one selection owner. */

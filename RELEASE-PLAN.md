@@ -98,5 +98,6 @@ The existing native-feature skip and unused lint-suppression warning are not rel
 5. Verify published versions, tags, tarballs, provenance, and consumer installation; resume only unpublished versions after any partial failure.
 
 **Do not use the workflow's `all` selector for this batch.**
-It selects every unpublished prepared version, including the held AUI package.
-No Git or registry mutations were made while preparing this plan.
+It selects unpublished versions from public workspaces; private AUI is excluded.
+Use explicit reviewed package/version pairs so unrelated public workspaces are not released accidentally.
+This plan does not authorize package publication.

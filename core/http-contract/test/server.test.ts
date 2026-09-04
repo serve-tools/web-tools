@@ -118,6 +118,8 @@ describe("createHandler", () => {
 			search: { page: codec.integer().optional() },
 		});
 		const literal = route("/items/me");
+		const hrefInteger = route("/href-items/:id", { params: { id: codec.integer() } });
+		const hrefLiteral = route("/href-items/me");
 		const parameter405 = schema((value) =>
 			(value as { error?: unknown })?.error === "parameter_method"
 				? valid({ error: "parameter_method" })
@@ -143,12 +145,23 @@ describe("createHandler", () => {
 						},
 					},
 				},
+				[hrefInteger.path]: {
+					route: hrefInteger,
+					serialization: "href",
+					GET: { operationId: "hrefInteger", responses: { 200: unknownSchema } },
+				},
+				[hrefLiteral.path]: {
+					route: hrefLiteral,
+					POST: { operationId: "hrefLiteral", responses: { 200: unknownSchema } },
+				},
 			},
 		});
 		const handle = createHandler(api, {
 			handlers: {
 				"GET /items/:id": ({ params }) => ({ status: 200, body: params.id }),
 				"POST /items/me": () => ({ status: 200, body: "literal" }),
+				"GET /href-items/:id": ({ params }) => ({ status: 200, body: params.id }),
+				"POST /href-items/me": () => ({ status: 200, body: "literal" }),
 			},
 		});
 		for (const method of ["GET", "PATCH"]) {
@@ -157,6 +170,7 @@ describe("createHandler", () => {
 			expect(response.headers.get("allow")).toBe("POST");
 			expect(await response.json()).toEqual({ error: "literal_method" });
 		}
+		expect((await handle(new Request("https://api.test/href-items/me"))).status).toBe(400);
 		expect(await (await handle(new Request("https://api.test/items/%34%32"))).json()).toBe(42);
 		for (const path of ["/items/invalid", "/items/42?page=invalid"]) {
 			expect((await handle(new Request(`https://api.test${path}`))).status).toBe(400);
@@ -439,12 +453,42 @@ describe("createHandler", () => {
 
 		const notFound = await handle(new Request("https://api.test/missing"));
 		const unsupported = await handle(new Request("https://api.test/items", { method: "PUT" }));
+		const propertyNamedMethods = await Promise.all(
+			["route", "serialization", "constructor", "__proto__", "toString"].map((method) =>
+				handle(new Request("https://api.test/items", { method })),
+			),
+		);
 
 		expect(notFound.status).toBe(404);
 		expect(await notFound.json()).toEqual({ error: "not_found" });
 		expect(unsupported.status).toBe(405);
 		expect(unsupported.headers.get("allow")).toBe("DELETE, POST");
 		expect(await unsupported.json()).toEqual({ error: "method_not_allowed" });
+		for (const response of propertyNamedMethods) {
+			expect(response.status).toBe(405);
+			expect(response.headers.get("allow")).toBe("DELETE, POST");
+			expect(await response.json()).toEqual({ error: "method_not_allowed" });
+		}
+		const inheritedGET = Object.getOwnPropertyDescriptor(Object.prototype, "GET");
+
+		try {
+			Object.defineProperty(Object.prototype, "GET", {
+				configurable: true,
+				value: { operationId: "inherited", responses: { 200: unknownSchema } },
+			});
+
+			const inherited = await handle(new Request("https://api.test/items"));
+
+			expect(inherited.status).toBe(405);
+			expect(inherited.headers.get("allow")).toBe("DELETE, POST");
+			expect(await inherited.json()).toEqual({ error: "method_not_allowed" });
+		} finally {
+			if (inheritedGET) {
+				Object.defineProperty(Object.prototype, "GET", inheritedGET);
+			} else {
+				Reflect.deleteProperty(Object.prototype, "GET");
+			}
+		}
 		await expect(invalidHandle(new Request("https://api.test/missing"))).rejects.toMatchObject({
 			name: "ProtocolError",
 			method: "GET",

@@ -73,7 +73,7 @@ Templates use the owner's document when available, or `html(owner, ownerDocument
 Unlike `scopedHtml` bindings, standalone `html` bindings remain active when detached or hidden, including when constructed inside `AUIElement.layout()`.
 Use connection-owned resources separately, and retain a deterministic disposal policy for permanently retired templates.
 Weak scheduling is not a guarantee that external signals cannot retain a view.
-See [Own a persistent template](skills/serve-tools-aui/references/own-a-persistent-template.md) for cleanup, parser, and movement boundaries.
+See [Own a persistent template](../../.agents/skills/serve-tools-aui/references/own-a-persistent-template.md) for cleanup, parser, and movement boundaries.
 
 ## Native composition
 
@@ -526,7 +526,7 @@ Disabling the Toolbar prevents activation and supplies current disabled semantic
 Any popovers used by these families keep native opening cancellation, noncancelable closing, toggle coalescing, Escape, and light dismissal authoritative.
 Menu and Context Menu imperative opening, closing, and toggling methods throw `InvalidStateError` when their required popup is absent, while matching user-event paths do nothing.
 They do not create portals, hidden form controls, synthetic focus nodes, collision engines, focus traps, or transition-completion events.
-The [menu composition reference](skills/serve-tools-aui/references/compose-menus.md) covers nested menus, hover timing, state transactions, and the deliberate boundaries in more detail.
+The [menu composition reference](../../.agents/skills/serve-tools-aui/references/compose-menus.md) covers nested menus, hover timing, state transactions, and the deliberate boundaries in more detail.
 
 ## Field labels and validation state
 
@@ -1032,8 +1032,8 @@ Restart the command after editing package source so the examples use the rebuilt
 
 ## Agent Skill
 
-The package includes consumer guidance under `skills/serve-tools-aui`.
-Installing it does not automatically activate or trust the Skill.
+Repository-only consumer guidance lives in [the AUI Skill](../../.agents/skills/serve-tools-aui/SKILL.md).
+It is not packaged or included in the public Skill catalog while AUI is private.
 
 ## License
 

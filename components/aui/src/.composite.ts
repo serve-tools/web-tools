@@ -1,4 +1,4 @@
-import { AttributeOwner } from "./.popover.js";
+import { AttributeOwner } from "./.ownership.js";
 
 /** An axis used by a scoped composite collection. */
 export type CompositeOrientation = "horizontal" | "vertical";

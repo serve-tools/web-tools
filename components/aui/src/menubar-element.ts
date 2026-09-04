@@ -2,7 +2,8 @@ import type { CompositeEntry } from "./.composite.js";
 import { CompositeCollection, isHTMLElement, isNativelyDisabled, pathElement } from "./.composite.js";
 import type { MenuHandle } from "./.menu.js";
 import { directMenuChildren } from "./.menu.js";
-import { AttributeOwner } from "./.popover.js";
+import { AttributeOwner } from "./.ownership.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** A menubar target addressed by DOM order, ID, or focus element. */
@@ -21,7 +22,7 @@ export class MenubarElement extends AUIElement {
 		super();
 		this.#internals.role = "menubar";
 		for (const property of ["loopFocus", "orientation"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 		this.#synchronizeRole();
 	}
@@ -279,14 +280,5 @@ export class MenubarElement extends AUIElement {
 
 	#synchronizeRole(): void {
 		this.#internals.ariaOrientation = this.orientation;
-	}
-
-	#upgradeProperty(name: string): void {
-		if (!Object.hasOwn(this, name)) {
-			return;
-		}
-		const value = (this as unknown as Record<string, unknown>)[name];
-		delete (this as unknown as Record<string, unknown>)[name];
-		(this as unknown as Record<string, unknown>)[name] = value;
 	}
 }

@@ -1,6 +1,6 @@
 ---
 name: maintain-serve-tools
-description: Maintain packages in the serve-tools/web-tools repository. Use when changing, reviewing, testing, documenting, or packaging any @serve-tools workspace here, especially when public behavior, declarations, exports, Agent Skills, or package tarballs change. Do not use merely to consume an installed @serve-tools package in another repository.
+description: Maintain @serve-tools packages in serve-tools/web-tools, including code, tests, types, exports, docs, consumer Skills, and packaging. Not for consuming installed packages in another repository.
 ---
 
 # Maintain serve-tools/web-tools

@@ -1,3 +1,4 @@
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** A committed calendar date and the user event that proposed it. */
@@ -76,7 +77,7 @@ export class CalendarElement extends AUIElement {
 			"weekStartsOn",
 			"focusDate",
 		] as const) {
-			this.#upgrade(property);
+			upgradeProperty(this, property);
 		}
 		this.#grid.part.add("grid");
 		this.#grid.setAttribute("role", "grid");
@@ -463,14 +464,6 @@ export class CalendarElement extends AUIElement {
 		}
 		this.#changing = false;
 		this.#readAttributes();
-	}
-	#upgrade(property: "value" | "month" | "min" | "max" | "locale" | "disabled" | "weekStartsOn" | "focusDate"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }
 

@@ -1,3 +1,4 @@
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** Immutable state proposed by a switch's `beforechange` event. */
@@ -95,7 +96,7 @@ export class SwitchElement extends AUIElement {
 			"required",
 			"checked",
 		] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 
 		this.#synchronize();
@@ -506,25 +507,6 @@ export class SwitchElement extends AUIElement {
 		} else {
 			this.#internals.states.delete(state);
 		}
-	}
-
-	#upgradeProperty(
-		property:
-			| "checked"
-			| "defaultChecked"
-			| "disabled"
-			| "name"
-			| "readOnly"
-			| "required"
-			| "uncheckedValue"
-			| "value",
-	): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }
 

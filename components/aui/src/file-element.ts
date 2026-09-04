@@ -1,4 +1,5 @@
 import { observeDropTarget } from "@serve-tools/client-input";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** A proposed dropped file batch. */
@@ -61,7 +62,7 @@ export class FileElement extends AUIElement {
 		super();
 		try {
 			for (const property of ["maxSize", "files"] as const) {
-				this.#upgrade(property);
+				upgradeProperty(this, property);
 			}
 		} finally {
 			this.#constructing = false;
@@ -349,15 +350,6 @@ export class FileElement extends AUIElement {
 			throw new Error("File requires exactly one direct authored input[type=file]");
 		}
 		return this.#input;
-	}
-
-	#upgrade(property: "files" | "maxSize"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 
 	#observeResetRoot(connection: AUIElement.Connection): void {

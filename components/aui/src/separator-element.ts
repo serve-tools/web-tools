@@ -1,3 +1,4 @@
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** The separator's visual and semantic axis. */
@@ -16,7 +17,7 @@ export class SeparatorElement extends AUIElement {
 		this.#separator.setAttribute("aria-hidden", "true");
 		this.#separator.setAttribute("part", "separator");
 		for (const property of ["decorative", "orientation"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 		this.#synchronize();
 	}
@@ -72,14 +73,5 @@ export class SeparatorElement extends AUIElement {
 		} else {
 			this.#internals.states.delete(state);
 		}
-	}
-
-	#upgradeProperty(property: "decorative" | "orientation"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }

@@ -9,7 +9,9 @@ import {
 } from "./.composite.js";
 import type { MenuHandle } from "./.menu.js";
 import { getContainingMenu, getMenuByTrigger, notifyMenuChange, registerMenu, updateMenuTrigger } from "./.menu.js";
-import { AttributeOwner, NativePopoverElement } from "./.popover.js";
+import { AttributeOwner } from "./.ownership.js";
+import { NativePopoverElement } from "./.popover.js";
+import { upgradeProperty } from "./.upgrade.js";
 import type { AUIElement } from "./aui-element.js";
 
 /** A menu item addressed by DOM order, ID, or native element identity. */
@@ -114,7 +116,7 @@ export class MenuElement extends NativePopoverElement {
 		};
 		registerMenu(this, this.#menuHandle);
 		for (const property of ["closeDelay", "delay", "loopFocus", "openOnHover", "orientation"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 	}
 
@@ -975,14 +977,5 @@ export class MenuElement extends NativePopoverElement {
 		} else {
 			this.#internals.states.delete(state);
 		}
-	}
-
-	#upgradeProperty(name: string): void {
-		if (!Object.hasOwn(this, name)) {
-			return;
-		}
-		const value = (this as unknown as Record<string, unknown>)[name];
-		delete (this as unknown as Record<string, unknown>)[name];
-		(this as unknown as Record<string, unknown>)[name] = value;
 	}
 }

@@ -38,7 +38,10 @@
 		"skills"
 	],
 	"scripts": {
-		"build": "tsc --build tsconfig.build.json && node -e \"require('node:fs').copyFileSync('src/decorators.js', 'dist/decorators.js')\"",
+		"benchmark": "node --experimental-strip-types benchmark/decorators.benchmark.mjs",
+		"benchmark:transform": "node --experimental-strip-types benchmark/transform.benchmark.mjs",
+		"build": "tsc --build tsconfig.build.json && npm run build:assets",
+		"build:assets": "node -e \"require('node:fs').copyFileSync('src/decorators.js', 'dist/decorators.js')\"",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
 		"test": "npm run build --workspace @serve-tools/polyfill-decorator-metadata && vitest run",

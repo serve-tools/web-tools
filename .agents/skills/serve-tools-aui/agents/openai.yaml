@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools AUI (workspace)"
+  short_description: "Build workspace-only AUI components"
+  default_prompt: "Use $serve-tools-aui to build a workspace-only AUI component with a reactive layout and safe connection resources."

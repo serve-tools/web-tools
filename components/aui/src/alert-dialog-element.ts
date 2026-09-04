@@ -1,4 +1,4 @@
-import { AttributeOwner } from "./.popover.js";
+import { AttributeOwner } from "./.ownership.js";
 import { AUIElement } from "./aui-element.js";
 
 const htmlNamespace = "http://www.w3.org/1999/xhtml";

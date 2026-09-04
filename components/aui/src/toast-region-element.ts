@@ -1,3 +1,4 @@
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 export type ToastPriority = "assertive" | "polite";
@@ -79,7 +80,7 @@ export class ToastRegionElement extends AUIElement {
 	constructor() {
 		super();
 		for (const property of ["duration", "f6"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 	}
 
@@ -608,16 +609,6 @@ export class ToastRegionElement extends AUIElement {
 			}
 		}
 		return false;
-	}
-
-	#upgradeProperty(property: "duration" | "f6"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const record = this as unknown as Record<string, unknown>;
-		const value = record[property];
-		delete record[property];
-		record[property] = value;
 	}
 }
 

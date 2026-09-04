@@ -1,5 +1,6 @@
 import type { ToggleGroupController, ToggleGroupLease, ToggleHandle } from "./.toggle-group.js";
 import { getToggle, registerToggleGroup } from "./.toggle-group.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 import type { ToggleChangeDetail, ToggleElement } from "./toggle-element.js";
 
@@ -89,7 +90,7 @@ export class ToggleGroupElement extends AUIElement {
 			},
 		};
 		for (const property of ["disabled", "loopFocus", "multiple", "orientation", "values"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 
 		this.#synchronizeStates();
@@ -672,15 +673,6 @@ export class ToggleGroupElement extends AUIElement {
 		} else {
 			this.#internals.states.delete(state);
 		}
-	}
-
-	#upgradeProperty(property: "disabled" | "loopFocus" | "multiple" | "orientation" | "values"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }
 

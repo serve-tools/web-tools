@@ -7,8 +7,9 @@ import {
 	textEditorConsumesArrow,
 } from "./.composite.js";
 import { directMenuChildren } from "./.menu.js";
-import { AttributeOwner } from "./.popover.js";
+import { AttributeOwner } from "./.ownership.js";
 import { getToggle } from "./.toggle-group.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** A toolbar item addressed by DOM order, ID, or native focus element. */
@@ -35,7 +36,7 @@ export class ToolbarElement extends AUIElement {
 		super();
 		this.#internals.role = "toolbar";
 		for (const property of ["disabled", "loopFocus", "orientation"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 		this.#synchronizeState();
 	}
@@ -241,14 +242,5 @@ export class ToolbarElement extends AUIElement {
 		} else {
 			this.#internals.states.delete("disabled");
 		}
-	}
-
-	#upgradeProperty(name: string): void {
-		if (!Object.hasOwn(this, name)) {
-			return;
-		}
-		const value = (this as unknown as Record<string, unknown>)[name];
-		delete (this as unknown as Record<string, unknown>)[name];
-		(this as unknown as Record<string, unknown>)[name] = value;
 	}
 }

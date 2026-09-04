@@ -1,5 +1,6 @@
-import { AttributeOwner } from "./.popover.js";
+import { AttributeOwner } from "./.ownership.js";
 import { notifySelectionOwner, ownSelectionId, setOwnedOptionSelected } from "./.selection.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** A string-identified authored option in an AUI selection collection. */
@@ -15,7 +16,7 @@ export class OptionElement extends AUIElement {
 		super();
 
 		for (const property of ["value", "label", "disabled", "defaultSelected", "selected"] as const) {
-			this.#upgrade(property);
+			upgradeProperty(this, property);
 		}
 	}
 
@@ -107,14 +108,5 @@ export class OptionElement extends AUIElement {
 		this.toggleAttribute("data-active", this.#active);
 		this.toggleAttribute("data-selected", this.#selected);
 		this.toggleAttribute("data-disabled", this.disabled || this.#invalid);
-	}
-
-	#upgrade(property: "defaultSelected" | "disabled" | "label" | "selected" | "value"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }

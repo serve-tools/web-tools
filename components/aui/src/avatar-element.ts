@@ -1,3 +1,4 @@
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** The current outcome of an avatar image request. */
@@ -27,7 +28,7 @@ export class AvatarElement extends AUIElement {
 		this.#fallback.append(this.ownerDocument.createElement("slot"));
 
 		for (const property of ["alt", "delay", "src"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 
 		this.#synchronizeAlt();
@@ -260,14 +261,5 @@ export class AvatarElement extends AUIElement {
 		} else {
 			this.#internals.states.add("fallback");
 		}
-	}
-
-	#upgradeProperty(property: "alt" | "delay" | "src"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }

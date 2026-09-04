@@ -1,5 +1,6 @@
 import { HoverPopoverElement } from "./.hover-popover.js";
-import { AttributeOwner } from "./.popover.js";
+import { AttributeOwner } from "./.ownership.js";
+import { upgradeProperty } from "./.upgrade.js";
 import type { AUIElement } from "./aui-element.js";
 
 const defaultDelay = 600;
@@ -64,7 +65,7 @@ export class TooltipElement extends HoverPopoverElement {
 		super();
 
 		for (const property of ["closeDelay", "delay"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 	}
 
@@ -367,14 +368,5 @@ export class TooltipElement extends HoverPopoverElement {
 			trigger.setAttribute("aria-describedby", ownership.authorTokens.join(" "));
 		}
 		this.#description = undefined;
-	}
-
-	#upgradeProperty(property: "closeDelay" | "delay"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }

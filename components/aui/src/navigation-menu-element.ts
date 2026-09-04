@@ -1,6 +1,7 @@
 import type { RealmTimeout } from "./.composite.js";
 import { clearRealmTimeout, isCompositeUnavailable, isHTMLElement, setRealmTimeout } from "./.composite.js";
-import { AttributeOwner } from "./.popover.js";
+import { AttributeOwner } from "./.ownership.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** A navigation item addressed by DOM order, ID, or element identity. */
@@ -46,7 +47,7 @@ export class NavigationMenuElement extends AUIElement {
 		navigationMenus.add(this);
 		this.#internals.role = "navigation";
 		for (const property of ["closeDelay", "delay", "orientation"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 		this.#synchronizeState();
 	}
@@ -462,14 +463,5 @@ export class NavigationMenuElement extends AUIElement {
 			throw new TypeError(`${name} must be a finite nonnegative number`);
 		}
 		this.setAttribute(name, String(number));
-	}
-
-	#upgradeProperty(name: string): void {
-		if (!Object.hasOwn(this, name)) {
-			return;
-		}
-		const value = (this as unknown as Record<string, unknown>)[name];
-		delete (this as unknown as Record<string, unknown>)[name];
-		(this as unknown as Record<string, unknown>)[name] = value;
 	}
 }

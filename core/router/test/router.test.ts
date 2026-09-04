@@ -1,3 +1,4 @@
+import { URLPattern as ponyfillURLPattern } from "@serve-tools/ponyfill-urlpattern";
 import { describe, expect, it } from "vitest";
 
 import { codec, route } from "../src/router.js";
@@ -142,17 +143,12 @@ describe("route", () => {
 		expect(asset.href({ params: { id: ".", format: "svg", variant: "dark" } })).toBe("/assets/..svg-dark");
 	});
 
-	it("rejects ambiguous adjacent parameters and verifies formatted-wire round trips", async () => {
-		const nativeURLPattern = URLPattern;
-
-		Reflect.deleteProperty(globalThis, "URLPattern");
-		await import("@serve-tools/polyfill-urlpattern");
-		const ponyfillURLPattern = URLPattern;
-		globalThis.URLPattern = nativeURLPattern;
+	it("rejects ambiguous adjacent parameters and verifies formatted-wire round trips", () => {
+		const initialURLPattern = URLPattern;
 
 		try {
-			for (const implementation of [nativeURLPattern, ponyfillURLPattern]) {
-				globalThis.URLPattern = implementation;
+			for (const implementation of [initialURLPattern, ponyfillURLPattern]) {
+				Object.defineProperty(globalThis, "URLPattern", { value: implementation });
 
 				expect(() => route("/files/:a:b")).toThrow(TypeError);
 
@@ -190,7 +186,7 @@ describe("route", () => {
 				expect(boxed.match(boxedHref)?.params).toEqual({ value: { value: "mixed" } });
 			}
 		} finally {
-			globalThis.URLPattern = nativeURLPattern;
+			globalThis.URLPattern = initialURLPattern;
 		}
 	});
 

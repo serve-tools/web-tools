@@ -55,21 +55,30 @@ for (const { location: workspace, manifest: packageJSON, root: packageRoot } of 
 	}
 }
 
-const maintainerSkill = await validateSkill(
-	path.join(root, ".agents", "skills", "maintain-serve-tools"),
-	"maintain-serve-tools",
-	undefined,
-	errors,
-);
+const repositorySkills = [
+	["maintain-serve-tools"],
+	["serve-tools-aui", "@serve-tools/aui", path.join(root, "components", "aui")],
+];
 
-if (maintainerSkill !== undefined) {
-	metadataCharacters += maintainerSkill.name.length + maintainerSkill.description.length;
-
-	if (names.has(maintainerSkill.name)) {
-		errors.push(`duplicate Skill name ${maintainerSkill.name}`);
+for (const [name, packageName, packageRoot] of repositorySkills) {
+	const skill = await validateSkill(
+		path.join(root, ".agents", "skills", name),
+		name,
+		packageName,
+		errors,
+		packageRoot,
+	);
+	if (skill === undefined) {
+		continue;
 	}
 
-	names.add(maintainerSkill.name);
+	metadataCharacters += skill.name.length + skill.description.length;
+
+	if (names.has(skill.name)) {
+		errors.push(`duplicate Skill name ${skill.name}`);
+	}
+
+	names.add(skill.name);
 }
 
 await validateReleasePackages(publicPackageNames, errors);
@@ -90,11 +99,17 @@ if (errors.length > 0) {
 	process.exitCode = 1;
 } else {
 	console.log(
-		`Validated ${publicWorkspaces.length} package Skills and 1 repository Skill (${metadataCharacters} metadata characters).`,
+		`Validated ${publicWorkspaces.length} package Skills and ${repositorySkills.length} repository Skills (${metadataCharacters} metadata characters).`,
 	);
 }
 
-async function validateSkill(skillRoot, expectedName, packageName, validationErrors) {
+async function validateSkill(
+	skillRoot,
+	expectedName,
+	packageName,
+	validationErrors,
+	packageRoot = path.dirname(path.dirname(skillRoot)),
+) {
 	let source;
 
 	try {
@@ -161,7 +176,7 @@ async function validateSkill(skillRoot, expectedName, packageName, validationErr
 		await validateReferences(skillRoot, source, validationErrors);
 
 		if (packageName !== "@serve-tools/skills") {
-			await validateRecipe(path.dirname(path.dirname(skillRoot)), skillRoot, packageName, validationErrors);
+			await validateRecipe(packageRoot, skillRoot, packageName, validationErrors);
 		}
 
 		if (source.includes("Validate changes")) {

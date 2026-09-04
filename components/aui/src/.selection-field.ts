@@ -1,5 +1,5 @@
 import { nextEnabledOption, setListboxState } from "./.listbox.js";
-import { AttributeOwner } from "./.popover.js";
+import { AttributeOwner } from "./.ownership.js";
 import type { SelectionOwner } from "./.selection.js";
 import {
 	invalidateSelectionId,
@@ -10,6 +10,7 @@ import {
 	uniqueValues,
 	unregisterSelectionOwner,
 } from "./.selection.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 import { OptionElement } from "./option-element.js";
 
@@ -131,7 +132,7 @@ export abstract class SelectionFieldElement extends AUIElement {
 			},
 		};
 		for (const property of ["name", "multiple", "disabled", "readOnly", "required", "value", "values"] as const) {
-			this.#upgrade(property);
+			upgradeProperty(this, property);
 		}
 		this.#recovering = false;
 		registerSelectionOwner(this.#owner);
@@ -892,14 +893,5 @@ export abstract class SelectionFieldElement extends AUIElement {
 
 	#eligible(record: OptionRecord): boolean {
 		return !record.invalid && !record.disabled && !record.hidden;
-	}
-
-	#upgrade(property: "disabled" | "multiple" | "name" | "readOnly" | "required" | "value" | "values"): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }

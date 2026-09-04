@@ -1,5 +1,6 @@
 import type { CheckboxGroupController, CheckboxHandle } from "./.checkbox-group.js";
 import { getCheckboxGroup, getDirectCheckboxGroup, registerCheckbox } from "./.checkbox-group.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** Immutable state proposed by a checkbox's `beforechange` event. */
@@ -137,12 +138,12 @@ export class CheckboxElement extends AUIElement {
 			"readOnly",
 			"required",
 		] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
 		for (const property of ["checked", "indeterminate"] as const) {
-			this.#upgradeProperty(property);
+			upgradeProperty(this, property);
 		}
-		this.#upgradeProperty("parent");
+		upgradeProperty(this, "parent");
 
 		this.#synchronize();
 		registerCheckbox(this, this.#handle);
@@ -671,27 +672,6 @@ export class CheckboxElement extends AUIElement {
 		} else {
 			this.#internals.states.delete(state);
 		}
-	}
-
-	#upgradeProperty(
-		property:
-			| "checked"
-			| "defaultChecked"
-			| "disabled"
-			| "indeterminate"
-			| "name"
-			| "parent"
-			| "readOnly"
-			| "required"
-			| "uncheckedValue"
-			| "value",
-	): void {
-		if (!Object.hasOwn(this, property)) {
-			return;
-		}
-		const value = this[property];
-		delete (this as Partial<Record<typeof property, unknown>>)[property];
-		(this as Record<typeof property, unknown>)[property] = value;
 	}
 }
 

@@ -1,97 +1,91 @@
-const { Composite, isComposite } = {
-	Composite<const T extends object>(source: T, options: CompositeOptions | undefined = undefined) {
-		assert("requires an object", source === object(source));
+const Composite = (<const T extends object>(source: T, options: CompositeOptions | undefined = undefined) => {
+	assert("requires an object", source === object(source));
 
-		if (weakSetHas.call(composites, source)) {
-			return source;
+	if (weakSetHas.call(composites, source)) {
+		return source;
+	}
+
+	assert("options must be an object", options !== null);
+
+	const preserveNegativeZero = options?.preserveNegativeZero;
+	const keys: string[] = [];
+	const values = objectCreate(null);
+	const sourceKeys = reflectOwnKeys(source);
+
+	for (let index = 0; index < sourceKeys.length; ++index) {
+		const key = sourceKeys[index]!;
+
+		if (!getOwnPropertyDescriptor(source, key)?.enumerable) {
+			continue;
 		}
 
-		assert("options must be an object", options !== null);
+		assert("enumerable key must be a string", typeof key === "string");
 
-		const preserveNegativeZero = options?.preserveNegativeZero;
-		const keys: string[] = [];
-		const values = objectCreate(null);
-		const sourceKeys = reflectOwnKeys(source);
+		keys[keys.length] = key;
 
-		for (let index = 0; index < sourceKeys.length; ++index) {
-			const key = sourceKeys[index]!;
+		const value = (source as Record<string, unknown>)[key];
 
-			if (!getOwnPropertyDescriptor(source, key)?.enumerable) {
-				continue;
-			}
+		values[key] =
+			// biome-ignore lint/suspicious/noSelfCompare: NaN is the only JavaScript value not equal to itself.
+			typeof value === "number" && value !== value
+				? canonicalNaN
+				: preserveNegativeZero || value !== 0
+					? value
+					: 0;
+	}
 
-			assert("enumerable key must be a string", typeof key === "string");
+	arraySort.call(keys);
 
-			keys[keys.length] = key;
+	const live: WeakRef<object>[] = [];
 
-			const value = (source as Record<string, unknown>)[key];
+	candidate: for (let index = 0; index < interned.length; ++index) {
+		const ref = interned[index]!;
+		const composite = weakRefDeref.call(ref);
 
-			values[key] =
-				// biome-ignore lint/suspicious/noSelfCompare: NaN is the only JavaScript value not equal to itself.
-				typeof value === "number" && value !== value
-					? canonicalNaN
-					: preserveNegativeZero || value !== 0
-						? value
-						: 0;
+		if (!composite) {
+			continue;
 		}
 
-		arraySort.call(keys);
+		live[live.length] = ref;
 
-		const live: WeakRef<object>[] = [];
+		const other = weakMapGet.call(compositeData, composite)!;
 
-		candidate: for (let index = 0; index < interned.length; ++index) {
-			const ref = interned[index]!;
-			const composite = weakRefDeref.call(ref);
-
-			if (!composite) {
-				continue;
-			}
-
-			live[live.length] = ref;
-
-			const other = weakMapGet.call(compositeData, composite)!;
-
-			if (other.keys.length !== keys.length) {
-				continue;
-			}
-
-			for (let keyIndex = 0; keyIndex < keys.length; ++keyIndex) {
-				const key = keys[keyIndex]!;
-
-				if (key !== other.keys[keyIndex] || !objectIs(values[key], other.values[key])) {
-					continue candidate;
-				}
-			}
-
-			return composite;
+		if (other.keys.length !== keys.length) {
+			continue;
 		}
 
-		const composite = objectCreate(null);
+		for (let keyIndex = 0; keyIndex < keys.length; ++keyIndex) {
+			const key = keys[keyIndex]!;
 
-		for (let index = 0; index < keys.length; ++index) {
-			const key = keys[index]!;
-
-			composite[key] = values[key];
+			if (key !== other.keys[keyIndex] || !objectIs(values[key], other.values[key])) {
+				continue candidate;
+			}
 		}
-
-		objectFreeze(composite);
-
-		weakSetAdd.call(composites, composite);
-		weakMapSet.call(compositeData, composite, { keys, values });
-
-		live[live.length] = new WeakReference(composite);
-
-		interned = live;
 
 		return composite;
-	},
-	isComposite(value: unknown): value is Composite {
-		return weakSetHas.call(composites, value as object);
-	},
-} as {
-	Composite: CompositeConstructor;
-	isComposite: CompositeConstructor["isComposite"];
-};
+	}
+
+	const composite = objectCreate(null);
+
+	for (let index = 0; index < keys.length; ++index) {
+		const key = keys[index]!;
+
+		composite[key] = values[key];
+	}
+
+	objectFreeze(composite);
+
+	weakSetAdd.call(composites, composite);
+	weakMapSet.call(compositeData, composite, { keys, values });
+
+	live[live.length] = new WeakReference(composite);
+
+	interned = live;
+
+	return composite;
+}) as CompositeConstructor;
+
+const isComposite = (value: unknown): value is Composite => weakSetHas.call(composites, value as object);
 
 export { Composite };
 

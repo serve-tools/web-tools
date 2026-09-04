@@ -1,4 +1,6 @@
-import { isDirectInput, isFormElement, OwnedAttributes, upgradeProperty } from "./.numeric.js";
+import { isDirectInput, isFormElement } from "./.numeric.js";
+import { AttributeOwner } from "./.ownership.js";
+import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
 
 /** Coordinates one native one-time-code input with optional inert visual segments. */
@@ -7,7 +9,7 @@ export class OTPFieldElement extends AUIElement {
 
 	#input: HTMLInputElement | undefined;
 	#internals = this.attachInternals();
-	#owned = new OwnedAttributes();
+	#owned = new AttributeOwner();
 	#pendingValue: string | undefined;
 	#segments: Element[] = [];
 
@@ -255,7 +257,7 @@ export class OTPFieldElement extends AUIElement {
 			["autocomplete", "one-time-code"],
 			["inputmode", "numeric"],
 		] as const) {
-			if (this.#owned.author(input, name) === null) {
+			if (this.#owned.authorValue(input, name) === null) {
 				this.#owned.own(input, name, value);
 			} else {
 				this.#owned.releaseAttribute(input, name);
