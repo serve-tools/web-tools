@@ -1,40 +1,39 @@
-# Release preparation — September 3, 2026
+# Release plan — September 4, 2026
 
-This is a local release recommendation, not authorization to commit, push, publish, or change npm tags.
-The nine prepared versions were checked directly against npm on September 3, 2026 and remain unpublished; recheck immediately before any release.
+The user authorized publication after all work is committed, pushed, and CI passes.
+AUI remains private and is not part of this release.
+The September 4 registry and shipped-file audit found the twelve prepared versions below unpublished and identified one required patch for Rolldown Decorators.
 
-## Prepared release batch
+## Approved release batch
 
-The requested batch includes these nine packages, including Observable, Composites, and the Skill selector under their current names and documented contracts.
-This is preparation only: do not publish, push, or dispatch the release workflow without separate authorization.
-When authorized, use the existing provenance-enabled release workflow, selecting each package explicitly.
-The order below is compatible with their dependency graph; DOM Fragment must be available before Signal DOM, and Signal DOM before the Client Signals umbrella.
+Publish these thirteen versions with the `latest` tag through the existing provenance-enabled release workflow.
+The table follows the release planner's dependency order.
 
-| Package                            | Prepared version | Change                                                                                                            |
-| ---------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `@serve-tools/client-dom-fragment` | `0.1.0`          | First release of reusable DOM regions, including hidden-region ancestry and exact region lookup.                  |
-| `@serve-tools/signal-dom`          | `0.2.0`          | Reconnectable binding scopes and the opt-in `/template` renderer with persistent `html` and managed `scopedHtml`. |
-| `@serve-tools/signal-db`           | `0.2.2`          | Patch releasing the retained-query/editor-draft consumer guidance and recipe.                                     |
-| `@serve-tools/signal-shared-db`    | `0.3.2`          | Matching retained-query/editor-draft guidance for shared-worker updates.                                          |
-| `@serve-tools/client-signals`      | `0.3.0`          | Already prepared, unpublished umbrella release selecting Signal DOM `^0.2.0`.                                     |
-| `@serve-tools/client-webtransport` | `0.1.3`          | Legacy shared-datagram writable compatibility while preserving independent-queue capability checks.               |
-| `@serve-tools/ponyfill-observable` | `0.0.1`          | First release with independent cold executions, explicit imports, and documented proposal differences.            |
-| `@serve-tools/ponyfill-composites` | `0.0.1`          | First release with documented module-local structural identity and native-proposal limitations.                   |
-| `@serve-tools/skills`              | `0.0.6`          | Updated package selection and availability guidance, including the new packages.                                  |
+| Package                            | Version | Change                                                                                                            |
+| ---------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| `@serve-tools/client-dom-fragment` | `0.1.0` | First release of reusable DOM regions, including hidden-region ancestry and exact region lookup.                  |
+| `@serve-tools/signal-db`           | `0.2.2` | Retained-query/editor-draft consumer guidance and recipe.                                                         |
+| `@serve-tools/signal-dom`          | `0.2.0` | Reconnectable binding scopes and the opt-in `/template` renderer with persistent `html` and managed `scopedHtml`. |
+| `@serve-tools/signal-shared-db`    | `0.3.2` | Matching retained-query/editor-draft guidance for shared-worker updates.                                          |
+| `@serve-tools/client-signals`      | `0.3.0` | Umbrella release selecting Signal DOM `^0.2.0`.                                                                   |
+| `@serve-tools/client-webtransport` | `0.1.3` | Legacy shared-datagram writable compatibility while preserving independent-queue capability checks.               |
+| `@serve-tools/ponyfill-composites` | `0.0.1` | First release with documented module-local structural identity and native-proposal limitations.                   |
+| `@serve-tools/polyfill-composites` | `0.0.1` | Native-preserving Composite installer and mutation-free native-aware export.                                      |
+| `@serve-tools/ponyfill-observable` | `0.0.1` | First release with independent cold executions, explicit imports, and documented proposal differences.            |
+| `@serve-tools/polyfill-observable` | `0.0.1` | Native-preserving Observable, Subscriber, and EventTarget.when installers and selective exports.                  |
+| `@serve-tools/rolldown-decorators` | `0.1.3` | Include the required runtime helper in built packages; reduce transform traversal and runtime sorting overhead.   |
+| `@serve-tools/skills`              | `0.0.6` | Package selection and availability guidance, including the new packages and private AUI boundary.                 |
+| `@serve-tools/vite-polyfills`      | `0.3.0` | Detect the new polyfills, expose their types, prevent recursive injection, and consolidate built-in definitions.  |
 
-The WebTransport and database patch versions were advanced locally and synchronized with the lockfile.
-Their previous local versions were already published and cannot be overwritten.
-The September 2 artifact comparison found the database JavaScript and declarations byte-identical to their published `0.2.1` and `0.3.1` artifacts; this pass did not modify that runtime, and the shipped guidance changes justify the patch releases.
-No dependency-wide version rewrite is needed because existing compatible ranges already admit these patches.
+DOM Fragment must precede Signal DOM, which must precede Client Signals.
+The Observable and Composites ponyfills must precede their polyfills, which must precede Vite Polyfills.
+The release planner validates internal dependency ranges and orders the batch.
+Compatible patch ranges do not require dependency-wide version rewrites.
 
-## Additional polyfill preparation
-
-The subsequent polyfill request adds `@serve-tools/polyfill-observable@0.0.1`, `@serve-tools/polyfill-composites@0.0.1`, and `@serve-tools/vite-polyfills@0.3.0` to the review queue.
-Publish the corresponding ponyfills before the new polyfill packages, then publish Vite Polyfills after both polyfill packages are available.
-These additions are not covered by the historical nine-package verification receipts below; regenerate the release plan and artifacts after validating this change.
-The Skill selector's prepared `0.0.6` also includes the new package-selection guidance.
-The new package tests, Vite integration tests, three-engine production smoke, strict packed-consumer checks, and package checks pass.
-The aggregate repository gates still require cleanup of AUI's private-package Skill/release/catalog entries and investigation of its Firefox menubar test, which passes in isolation but fails in consolidated browser runs.
+The database patch releases change shipped guidance, not runtime or declarations.
+Rolldown Decorators `0.1.2` is already published and cannot be overwritten; its tarball lacks the helper that its plugin loads, so the corrected packaging and measured optimizations require `0.1.3`.
+Changes to Client Router, HTTP Contract, and Lit Signals are test/benchmark-only; Async Operation and Router have development-dependency-only metadata changes, and Resource Management has a blank-line-only source change.
+Those packages do not need new releases.
 
 ## Existing release holds
 
@@ -66,38 +65,36 @@ It requires manual NVDA checks with Chrome and Firefox, and VoiceOver with Safar
 All manual rows remain unverified; automated engine tests and historical accessibility-tree captures are not substitutes.
 The existing documented behavior gaps also need an explicit release-scope decision rather than a claim of complete Base UI parity.
 
-## Evidence
+## Verification and evidence
 
-- A clean `npm ci --ignore-scripts` passed with a writable temporary npm cache.
-- The complete `npm run verify` passed again for this September 3 preparation pass, including Node/browser suites, Skills, release checks, and all workspace package checks; log: `/private/tmp/web-tools-ready-verify-2026-09-03.log`.
-- Managed template tests cover disconnect/reconnect reconciliation, pending-write suppression, retained listeners and directives, `once` behavior, hidden/closed-root content, adoption, reentrant setup, disposal, rollback, and persistent siblings across Chromium, Firefox, and WebKit.
-- The existing incidental writer-read tracking is preserved and characterized; source/read/commit semantics were not silently changed.
-- The Composites getter-replacement regression failed during the first verification attempt and was repaired by restoring intrinsic snapshots; its existing 12 tests and the final complete verification pass.
-- Observable's source type now rejects primitive inputs like its existing runtime; Composite's flat primitive-literal overload preserves literal types while retaining ordinary array and nested-object mutability.
-- The eight runtime packages passed `publint` and Are the Types Wrong with the ESM-only profile; the documentation-only Skill package passed its package-content check.
-- All nine prepared tarballs installed together into a fresh consumer outside the monorepo with scripts disabled and no workspace links.
-- That isolated consumer passed strict NodeNext TypeScript compilation and imported all eight runtime entrypoints plus Signal DOM's new `/template` subpath in Node.
-- Consumer runtime checks confirmed independent Observable executions, Composite identity and shallow freezing, resistance to getter-time intrinsic replacement, shared fragment-constructor identity, and no global installation.
-- The installed Skill selector includes the new template subpath and labels AUI as workspace-only and unpublished.
-- A minified bundle/module-graph check confirms neither AUI's base entrypoint nor Signal DOM's main entrypoint imports the tagged parser; this is not a runtime-performance claim.
-- Skill validation, release-planning tests, TypeScript-reference validation, and diff whitespace checks passed.
+The polyfill implementation was committed before the reduction pass.
+The [reduction report](benchmark/REDUCTION-2026-09-03.md) records retained improvements, rejected candidates, measurements, and the subsequent CI repairs.
+The private AUI Skill/release/catalog inconsistencies and the Firefox menubar pointer-state failure are fixed.
+AUI remains excluded from the public workspace inventory and release choices.
 
-The refreshed nine-package tarballs and SHA-256 files are in `/private/tmp/web-tools-ready-release-OzlQcV`, and the consumer is in `/private/tmp/web-tools-ready-consumer-1Kb7NM`.
-Registry and bundle-check receipts are in `/Users/jonathan/Documents/Codex/outputs/aui-managed-template-2026-09-03`.
-The previous September 2 tarballs are superseded by this preparation pass.
-They are temporary audit artifacts; the release workflow must regenerate verified tarballs from the approved commit.
-Full browser behavior was verified in the repository, not repeated inside this isolated Node/type consumer.
-The existing native-feature skip and unused lint-suppression warning are not release failures.
+At implementation commit `267992547de69eb0b9a2f7ac33dbd69a7c250918`, [CI run 33836755336](https://github.com/serve-tools/web-tools/actions/runs/33836755336) passed all five jobs: Node 22, Node 24, Node 26 full verification, Bun, and Deno.
+Final local browser verification passed 4,687 tests with one existing native-feature skip; thirty consecutive focused Firefox menubar suites also passed.
+The release metadata update requires a fresh successful CI run before merging and publishing.
+
+The earlier nine-package and five-package polyfill tarballs installed into isolated consumers with scripts disabled and no workspace links.
+Strict NodeNext type checks, runtime ownership and native-selection checks, and three-engine polyfill production smoke passed.
+These earlier tarballs are not the publication artifacts: the release workflow must rebuild, verify, and pack the final merged commit.
+Audit that immutable artifact and repeat the isolated consumer checks before approving publication.
 
 ## Authorized-release procedure
 
-1. Obtain separate approval for commit/push and the exact nine-package batch; none is authorized by this preparation request.
-2. Organize the validated working tree into reviewable commits without dropping the unrelated staged work or required workspace integration.
-3. Push the approved state to `main`; release preparation verifies that committed checkout again.
-4. Recheck npm versions, then dispatch the existing workflow once per package, sequentially in dependency order, with the exact package/version pairs above and the intended `latest` tag.
-5. Verify published versions, tags, tarballs, provenance, and consumer installation; resume only unpublished versions after any partial failure.
+1. Commit and push the final version metadata and this plan; wait for all CI jobs on the exact commit to pass.
+2. Merge the reviewed PR normally, without bypassing protections, and require CI on the resulting `main` commit to pass.
+3. Recheck npm and freeze the exact thirteen package/version pairs above; stop if the registry changes the intended batch.
+4. Dispatch the provenance-enabled release workflow on that exact `main` state with `package=all` and `tag=latest`.
+5. Wait for preparation to pass and publication to pause at the required `npm` environment review.
+6. Before normal environment approval, require the workflow SHA to match the reviewed `main` commit, download its sole `release-<run id>` artifact, and compare its ordered plan against the frozen list.
+7. Reject missing or extra packages, tarballs, or checksum files; verify every SHA-256 and every tarball's embedded package name/version, and repeat packed-consumer checks.
+8. Approve only that verified pending deployment through the normal environment review; do not bypass the gate or weaken provenance.
+9. Verify all published versions, `latest` tags, tarball integrity, provenance, and a fresh registry-only consumer installation.
+10. After any partial failure, re-query registry state and resume only still-unpublished versions using a freshly verified plan.
 
-**Do not use the workflow's `all` selector for this batch.**
-It selects unpublished versions from public workspaces; private AUI is excluded.
-Use explicit reviewed package/version pairs so unrelated public workspaces are not released accidentally.
-This plan does not authorize package publication.
+The `all` selector alone is not a release-scope guard.
+It is permitted here only with the exact immutable-artifact comparison before the required environment approval; an unexpected public workspace must stop approval.
+This replaces the earlier one-package-at-a-time recommendation without weakening the release boundary.
+Use the existing publishing credentials first; if authentication actually blocks progress, alert the user with `say` and request the specific required authentication.
