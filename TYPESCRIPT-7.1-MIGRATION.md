@@ -449,6 +449,84 @@ Fresh inventory, all four preparation tests, and the required adapter capability
 Evidence is under [`typescript-adapter-20260904/evidence`](/Users/jonathan/Documents/Codex/typescript-adapter-20260904/evidence), especially `compiler-verify-final.log`, `browser-consolidated-vitest5.log`, `compiler-inventory.json`, `compiler-preparation-tests.log`, and `compiler-probe.json`.
 The opt-in adapter implementation and its follow-on validation remain separate from this compiler commit.
 
+## Opt-in adapter execution record
+
+The follow-on implementation lives under `scripts/typescript-adapter`; it introduces no public package or published entrypoint.
+The keyboard demo can opt in with `npm run dev:typescript-adapter` or `npm run build:typescript-adapter`.
+Existing scripts continue to use CLI artifacts by default.
+The adapter checks exact TypeScript `7.1.0-dev.20260904.1`, keeps one asynchronous compiler session per invocation, and conservatively checks and emits the complete referenced graph for each successful generation.
+Source maps retain source text from the corresponding compiler snapshot.
+Production module loading pins a generation, including when an explicit refresh completes in the middle of a build.
+
+Independent review reproduced and fixed SSR condition selection, new-reference filter coverage, query preservation, and a mid-build race that previously produced result `22` from coherent generations whose results were `10` and `50`.
+Native filters now select supported specifier forms and absolute JavaScript paths; strict handler checks restrict resolution/loading to the current graph.
+This intentionally incurs more JavaScript hook calls than initial-graph-only filters while supporting configuration changes correctly.
+Vite supplies filesystem events; standalone usage has a cancellable native watcher with content reconciliation, serialized updates, and callback-safe disposal.
+
+### Verified local acceptance
+
+| Scenario                                                                          | Executable evidence                                                                                                                                                |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Clean and stale `dist`, A → B → C, public and private imports, CLI output parity  | `plugin.test.mjs`, `session.test.mjs`, `browser.test.mjs`                                                                                                          |
+| Direct/transitive edits and cross-package `const enum`                            | Session, watcher, and all three browser engines                                                                                                                    |
+| Conditional exports, externalization, actual side-effect-only execution           | `exports.test.mjs`, `plugin.test.mjs`, `resolution.test.mjs`                                                                                                       |
+| Nested create, atomic save/rename, delete/recreate, active-update and rapid edits | `watcher.test.mjs`                                                                                                                                                 |
+| Importer and dependency changed together                                          | Watcher assertions and Chromium/Firefox/WebKit result histories                                                                                                    |
+| Config/extended config/package exports/new external reference                     | `session.test.mjs`, `resolution.test.mjs`                                                                                                                          |
+| Canonical symlink identity                                                        | Export/session fixtures and isolated real workspace links                                                                                                          |
+| Compiler errors and repair                                                        | Diagnostic failures, Vite overlay, last successful page state, then current output                                                                                 |
+| Generated assets and config-time dependency                                       | `pilot.test.mjs`, preparation before Vite configuration loads                                                                                                      |
+| Decorators and composed source maps                                               | Exact runtime stamp and original throw location in all three browser engines                                                                                       |
+| Disposal and callback failure                                                     | Native watcher/child-process handle checks, reentrant/idempotent close, terminated test processes                                                                  |
+| Real keyboard pilot                                                               | `keyboard.test.mjs`: CLI and adapter chunk text/import graph identical, 2,792-byte `index-DWurnmyh.js`; real input reflects `Command` → `Command key` after reload |
+
+The three-engine synthetic browser fixture preserves HMR and observes only coherent results during concurrent and rapid edits.
+The real keyboard demo uses Vite's normal full-reload fallback because its application code does not accept HMR explicitly.
+Production generation pinning has a deterministic adversarial regression test; the dev results establish the tested browser interleavings, not a formal guarantee covering every possible request schedule.
+Asset/worker query imports (`?url`, `?worker`, `?sharedworker`) remain outside this pilot and reject explicitly; ordinary postfixes and `?raw` are covered.
+Experimental bundled development, broader demo rollout, public packaging, and dependency-script consolidation are separate adoption decisions.
+
+Local native watcher tests must run outside the macOS workspace sandbox, which reports `EMFILE` for the same watchers that pass outside it.
+The new focused CI matrix covers macOS/Linux/Windows on Node 24 and Linux on Node 22/26; actual CI outcomes and measurement results will be recorded before the final adoption decision.
+The combined adapter checkout passed `npm ci --ignore-scripts --cache /tmp/web-tools-npm-cache` and full `npm run verify`.
+The cache override avoided a sandbox permission failure in the ordinary user npm cache; it did not change dependency resolution.
+After final lifecycle hardening, the production/pilot tests and the complete three-engine plus real-keyboard browser suite passed again.
+The in-flight source-edit regression and all three compiler-session tests also pass.
+Logs: `evidence/adapter-verify-final.log`, `adapter-ci-install-final.log`, `plugin-disposal-final.log`, `adapter-browser-disposal-final.log`, and `session-inflight-final.log` in the adapter evidence workspace.
+
+### Measurements and adoption decision
+
+The final benchmark completed five independent CLI/adapter pairs in alternating AB/BA order on macOS arm64, Node `24.16.0`, TypeScript `7.1.0-dev.20260904.1`, and Chromium through Playwright `1.62.1`.
+Each pair checks identical fixture inputs, browser results, and identical final production JavaScript: one initially loaded chunk totaling 1,514 bytes.
+The separate real keyboard comparison remains 2,792 bytes in both modes.
+Raw samples, exact environment/source hashes, compiler phase output, API/hook counts, and process observations are in `evidence/benchmark-final.json`.
+Earlier failed or superseded harness records are retained separately and excluded from this result.
+
+| Metric                                                           | CLI median | Adapter median | Paired CLI/adapter ratio, descriptive 95% interval |
+| ---------------------------------------------------------------- | ---------: | -------------: | -------------------------------------------------- |
+| Cold startup to browser observation                              |   397.2 ms |       383.0 ms | 1.038 [1.022, 1.055]                               |
+| No-change startup with a fresh session                           |    87.7 ms |       334.4 ms | 0.261 [0.257, 0.266]                               |
+| Direct edit to browser observation                               |   122.6 ms |       215.0 ms | 0.575 [0.561, 0.589]                               |
+| Transitive edit to browser observation                           |   152.0 ms |       278.0 ms | 0.556 [0.524, 0.589]                               |
+| Config edit to changed module response and correct browser state |   267.4 ms |       372.2 ms | 0.701 [0.494, 0.993]                               |
+| Production bundling, separate from compilation                   |    13.0 ms |        13.0 ms | 0.971 [0.933, 1.011]                               |
+| Node host peak RSS                                               |  230.7 MiB |      233.3 MiB | 0.992 [0.979, 1.005]                               |
+| Sampled native compiler peak RSS                                 |  134.6 MiB |      333.8 MiB | 0.397 [0.370, 0.426]                               |
+
+Ratios above one favor the adapter for these latency/memory metrics.
+No-change startup recreates the adapter session while the CLI reuses its build-info files; it does not describe persistent-session HMR.
+CLI compilation uses the retained four builders and two checkers; the API uses its own defaults because it does not expose those controls.
+CLI aggregate phase timings and API request/phase timings are recorded separately rather than equating their internal accounting.
+Native RSS is sampled every 50 ms and can miss short-lived peaks; Node wrappers and the Node host are separated from native compiler processes.
+All ten measured workers report zero retained compiler processes after teardown.
+These are descriptive intervals for five pairs on one machine and one small fixture, with no outliers removed; they are not a repository-wide or cross-platform performance claim.
+
+Decision: retain the CLI workflow as the default and keep the adapter internal and opt-in.
+The small cold-start benefit does not justify the much slower fresh-session restarts and edits or the higher sampled native RSS.
+Production bundle bytes are unchanged, and production bundling/Node host memory differences are inconclusive in this sample.
+The current prototype does not pass the promotion gate for a public plugin or broader demo rollout.
+That closes this evaluation without changing the successful compiler migration; a performance redesign and any eventual public package are separate work.
+
 ## Resume checklist
 
 - [x] User authorized Phases 0/1; unrelated work was identified and preserved.
@@ -462,8 +540,10 @@ The opt-in adapter implementation and its follow-on validation remain separate f
 - [x] Representative dev startup, dependency rebuild, browser error recovery, production preview, and pinned interop generator passed.
 - [x] Descriptive build timings and their uncertainty are recorded.
 - [x] Compiler migration is complete independently of the adapter.
-- [ ] Separate task: optional adapter clean-output, transitive-edit, watcher, source-map, and export-semantics acceptance tests.
-- [ ] Separate task: adapter performance measurements and adoption decision.
+- [x] Follow-on adapter clean-output, transitive-edit, watcher, source-map, export-semantics, and real-demo local acceptance tests.
+- [x] Combined adapter full verification.
+- [ ] Adapter cross-platform CI.
+- [x] Repeated adapter performance measurements and adoption decision: keep CLI defaults; do not promote this prototype.
 
 ## Sources to refresh at the start
 

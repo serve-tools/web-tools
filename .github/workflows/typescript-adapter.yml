@@ -1,0 +1,45 @@
+name: TypeScript adapter
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: typescript-adapter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  adapter:
+    name: Adapter (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: ${{ matrix.node == 24 && 20 || 10 }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, macos-15, windows-2025]
+        node: [24]
+        include:
+          - os: ubuntu-24.04
+            node: 22
+          - os: ubuntu-24.04
+            node: 26
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - run: npm install --global npm@12.0.2
+      - run: npm ci --ignore-scripts
+      - run: npm run check:typescript-migration
+      - run: npm run test:typescript-adapter:node
+      - if: matrix.node == 24
+        run: npx playwright install --with-deps chromium firefox webkit
+      - if: matrix.node == 24
+        run: npm run test:typescript-adapter:browser
