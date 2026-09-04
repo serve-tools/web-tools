@@ -49,6 +49,8 @@ export async function runCompilerProbe(values = {}) {
 		node: process.version,
 		platform: process.platform,
 		arch: process.arch,
+		structuralChangePolicy: "restart the API once when fresh configuration roots differ from snapshot roots",
+		adapterSessionRestarts: 0,
 		probeSha256: createHash("sha256")
 			.update(await readFile(fileURLToPath(import.meta.url)))
 			.digest("hex"),
@@ -186,7 +188,8 @@ export async function runCompilerProbe(values = {}) {
 		const dependency = (value) =>
 			`export const enum Factor { Value = ${value} } export const factor: number = ${value};`;
 		await put("c/src/index.ts", dependency(3));
-		const api = new apis.async({ cwd: root, ...(native ? { tsserverPath: native } : {}) });
+		const apiOptions = { cwd: root, ...(native ? { tsserverPath: native } : {}) };
+		let api = new apis.async(apiOptions);
 		let snapshot;
 		try {
 			snapshot = await api.updateSnapshot({ openProjects: [path.join(root, "a/tsconfig.json")] });
@@ -252,11 +255,41 @@ export async function runCompilerProbe(values = {}) {
 						fileChanges: Object.fromEntries(
 							Object.entries(fileChanges).map(([kind, files]) => [
 								kind,
-								files.map((file) => ({ uri: pathToFileURL(file).href })),
+								kind === "invalidateAll"
+									? files
+									: files.map((file) => ({ uri: pathToFileURL(file).href })),
 							]),
 						),
 					});
 					await previous.dispose();
+					for (let attempt = 0; attempt < 2; ++attempt) {
+						const normalizeRoots = (files) =>
+							[...new Set(files.map((file) => api.getCanonicalFileName(path.normalize(file))))].sort();
+						const mismatches = [];
+						for (const config of projectConfigs) {
+							const parsed = await api.parseConfigFile(config);
+							const project = snapshot.getProject(config);
+							const expected = normalizeRoots(parsed.fileNames);
+							const actual = project ? normalizeRoots(project.parsedCommandLine.fileNames) : null;
+							if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+								mismatches.push({ config, expected, actual });
+							}
+						}
+						if (!mismatches.length) {
+							return;
+						}
+						assert.equal(
+							attempt,
+							0,
+							`Fresh API retained inconsistent project roots: ${JSON.stringify(mismatches)}`,
+						);
+						await snapshot.dispose();
+						snapshot = undefined;
+						await api.close();
+						api = new apis.async(apiOptions);
+						++report.adapterSessionRestarts;
+						snapshot = await api.updateSnapshot({ openProjects: projectConfigs });
+					}
 				};
 				stage = "clean-memory-bundle";
 				const initial = await emit();
@@ -326,7 +359,46 @@ export async function runCompilerProbe(values = {}) {
 				const addedOutput = path.join(root, "c/dist/added.js");
 				await put("c/src/added.ts", "export const added = 1;");
 				await update({ created: [added] });
-				assert.ok((await emit()).has(addedOutput), "New included source must emit");
+				const createdOutputs = await emit();
+				if (!createdOutputs.has(addedOutput)) {
+					const config = path.join(root, "c/tsconfig.json");
+					const parsed = await api.parseConfigFile(config);
+					const project = snapshot.getProject(config);
+					const programSourceFiles = await project.program.getSourceFileNames();
+					let invalidation;
+					try {
+						await update({ invalidateAll: true });
+						const outputs = await emit();
+						invalidation = {
+							includesExpectedOutput: outputs.has(addedOutput),
+							emittedOutputs: [...outputs.keys()],
+							projectRootNames: snapshot.getProject(config).parsedCommandLine.fileNames,
+						};
+					} catch (error) {
+						invalidation = { error: error.message };
+					}
+					assert.fail(
+						`New included source must emit\n${JSON.stringify(
+							{
+								createdFile: added,
+								createdFileURI: pathToFileURL(added).href,
+								createdFileRealpath: await realpath(added),
+								createdFileText: await readFile(added, "utf8"),
+								expectedOutput: addedOutput,
+								emittedOutputs: [...createdOutputs.keys()],
+								parsedFileNames: parsed.fileNames,
+								parsedErrors: parsed.errors,
+								projectConfigFile: project.configFileName,
+								projectRootNames: project.parsedCommandLine.fileNames,
+								projectOptions: project.parsedCommandLine.options,
+								programSourceFiles,
+								invalidation,
+							},
+							null,
+							2,
+						)}`,
+					);
+				}
 				await rm(added);
 				await update({ deleted: [added] });
 				assert.equal((await emit()).has(addedOutput), false, "Deleted source must leave the output set");
