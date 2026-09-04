@@ -38,6 +38,35 @@ export async function packRelease(root, releaseDirectory) {
 	return plan;
 }
 
+export async function createAttestationPlan(releaseDirectory) {
+	const planPath = path.join(releaseDirectory, "release-plan.json");
+	const plan = JSON.parse(await readFile(planPath, "utf8"));
+	if (!Array.isArray(plan) || plan.length === 0) {
+		throw new Error("Release plan has no attestation subjects");
+	}
+
+	return Promise.all(
+		plan.map(async ({ name, version, tarball }) => {
+			if (
+				!/^@serve-tools\/[a-z0-9-]+$/.test(name) ||
+				!version ||
+				!/^[0-9A-Za-z.+-]+$/.test(version) ||
+				!tarball ||
+				path.basename(tarball) !== tarball ||
+				!tarball.endsWith(".tgz")
+			) {
+				throw new Error("Release plan has an invalid attestation subject");
+			}
+
+			const digest = createHash("sha512")
+				.update(await readFile(path.join(releaseDirectory, tarball)))
+				.digest("hex");
+			const purl = `pkg:npm/${name.replace("@", "%40")}@${version}`;
+			return { digest: `sha512:${digest}`, purl, tarball };
+		}),
+	);
+}
+
 async function main() {
 	const releaseDirectory = process.env.RELEASE_DIRECTORY;
 	if (!releaseDirectory) {

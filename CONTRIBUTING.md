@@ -49,9 +49,19 @@ gh run watch "$RUN_ID" --exit-status
 Review the release plan before approving the protected `npm` environment.
 The `all` selector is resumable: after a partial publish, inspect npm, fix the cause, and dispatch it again to select only versions that remain unpublished.
 
-Brand-new packages require a one-time bootstrap because npm cannot configure a trusted publisher before a package exists.
-Create a short-lived granular token with only the required scope, write access, and bypass 2FA; store it only as the `NPM_TOKEN` secret on the `npm` environment.
-After the initial publications, configure trust, require 2FA and disallow tokens on every package, then delete the secret and revoke the token.
+Trusted Publishing requires that each package already exist on npm.
+For every existing package, configure its npm trusted publisher exactly as repository `serve-tools/web-tools`, workflow file `release.yml`, and environment `npm`.
+The release workflow uses npm CLI `12.0.2`, retains npm provenance, and fails before publishing if GitHub has not supplied its OIDC request credentials.
+Maintain npm 2FA for every maintainer; Trusted Publishing does not use or bypass a publishing token.
+
+The five first-release packages in the approved batch cannot use Trusted Publishing until their first version exists.
+Dispatch `Release` with mode `bootstrap` to verify and pack the selected release plan, then attest every selected tarball under the protected `npm` environment without publishing it.
+The immutable release artifact retains the exact tarball, while `provenance-<tarball>` contains its npm-compatible provenance bundle.
+A maintainer verifies the bundle, then uses an interactive `npm login` session with npm 2FA to publish that tarball with `npm publish <tarball> --access public --tag <tag> --provenance-file <bundle>`.
+Run the bootstrap publish from a clean temporary directory with an isolated npm config that has no `provenance` setting, because this repository's `.npmrc` enables `provenance=true` and npm does not allow any explicit `provenance` setting with `--provenance-file`.
+For a GitHub CLI verification, use the reviewed workflow identity and commit: `gh attestation verify <tarball> --bundle <bundle> --digest-alg sha512 --repo serve-tools/web-tools --cert-identity https://github.com/serve-tools/web-tools/.github/workflows/release.yml@refs/heads/main --source-ref refs/heads/main --source-digest <reviewed-sha> --deny-self-hosted-runners`.
+Do not create a granular access token or add an `NPM_TOKEN` secret for bootstrap.
+After verified first publication, configure the exact trusted-publisher settings above; the bootstrap constraint applies only to first publication, not later protected OIDC releases.
 
 If publishing fails, inspect npm before retrying because published versions are immutable.
 Resume with the first unpublished package; use a new patch version rather than attempting to replace an existing release.
