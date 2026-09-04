@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { open } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
+import { setTimeout } from "node:timers/promises";
 import { chromium, firefox, webkit } from "playwright";
 import { createServer } from "vite";
 import { createBrowserFixture } from "./browser-fixture.mjs";
@@ -129,6 +131,34 @@ async function runBrowserAcceptance(t, browserType) {
 		`Rapid edits exposed a mixed compiler generation: ${rapidHistory.join(", ")}`,
 	);
 	assert.equal(rapidHistory.at(-1), 146);
+
+	// Start outside Chokidar's 50 ms change throttle so it cannot mask a premature split-write event.
+	await setTimeout(60);
+	const splitStart = await browserHistory(page);
+	const partialEvents = [];
+	const observePartialWrite = (file) => {
+		if (file === fixture.dependency) {
+			partialEvents.push(file);
+		}
+	};
+	server.watcher.on("change", observePartialWrite);
+	const partial = await open(fixture.dependency, "w");
+	try {
+		// Separate truncation, incomplete content, and the final save into distinct filesystem events.
+		await setTimeout(10);
+		await partial.write("export const ");
+		await setTimeout(10);
+	} finally {
+		await partial.close();
+		server.watcher.off("change", observePartialWrite);
+	}
+	await fixture.writeDependency(13);
+	await assertBrowserState(
+		page,
+		{ asset: "prepared asset", decorator: "decorated", result: 171 },
+		splitStart.generation + 1,
+	);
+	assert.deepEqual(partialEvents, [], "The watcher delivered an unfinished source write to the compiler");
 
 	assert.equal(pageErrors.length, 0, pageErrors.join("\n"));
 	assert.ok(

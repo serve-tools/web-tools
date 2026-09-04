@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { Program } from "typescript/unstable/async";
 import { runCompilerProbe } from "./probe.mjs";
 
 test("installed compiler preserves API/CLI diagnostic parity and reports adapter capability", async () => {
@@ -28,4 +29,41 @@ test("installed compiler preserves API/CLI diagnostic parity and reports adapter
 			report.checks.some(({ name, status }) => name === "transitive-edit-with-stale-dist" && status === "passed"),
 		);
 	}
+});
+
+test("a missing created output reports disk, config, project, and emit evidence", async (context) => {
+	const emitToString = Program.prototype.emitToString;
+	if (typeof emitToString !== "function") {
+		context.skip("Compiler does not expose adapter emit capability");
+		return;
+	}
+	let removedOutput = false;
+	context.mock.method(Program.prototype, "emitToString", async function (...args) {
+		const result = await emitToString.apply(this, args);
+		const outputs = [...result.outputFiles];
+		if (removedOutput || !outputs.some(([file]) => /[\\/]added\.js$/.test(file))) {
+			return result;
+		}
+		removedOutput = true;
+		return {
+			...result,
+			outputFiles: new Map(outputs.filter(([file]) => !/[\\/]added\.js$/.test(file))),
+		};
+	});
+	const report = await runCompilerProbe();
+	const failure = report.checks.find(({ status }) => status === "failed");
+	assert.equal(failure?.name, "file-create-delete");
+	assert.match(failure.message, /^New included source must emit\n/);
+	const detail = JSON.parse(failure.message.slice(failure.message.indexOf("\n") + 1));
+	assert.equal(detail.createdFileText, "export const added = 1;");
+	assert.equal(detail.createdFileRealpath, detail.createdFile);
+	assert.ok(detail.parsedFileNames.some((file) => /[\\/]added\.ts$/.test(file)));
+	assert.ok(detail.projectRootNames.some((file) => /[\\/]added\.ts$/.test(file)));
+	assert.ok(detail.programSourceFiles.some((file) => /[\\/]added\.ts$/.test(file)));
+	assert.ok(detail.emittedOutputs.length > 0);
+	assert.equal(detail.emittedOutputs.includes(detail.expectedOutput), false);
+	assert.ok(detail.projectOptions.outDir);
+	assert.deepEqual(detail.parsedErrors, []);
+	assert.equal(detail.invalidation.includesExpectedOutput, true);
+	assert.ok(detail.invalidation.emittedOutputs.includes(detail.expectedOutput));
 });

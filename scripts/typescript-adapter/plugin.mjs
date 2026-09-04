@@ -140,8 +140,20 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 				return { ...statistics, compiler: current.timing };
 			},
 		},
-		config() {
-			return { optimizeDeps: { exclude: names } };
+		config(config) {
+			const result = { optimizeDeps: { exclude: names } };
+			if (config.server?.watch !== null) {
+				result.server = {
+					watch: {
+						// Settle writes before Chokidar's change-event throttle can discard their final event.
+						awaitWriteFinish: config.server?.watch?.awaitWriteFinish ?? {
+							stabilityThreshold: 50,
+							pollInterval: 10,
+						},
+					},
+				};
+			}
+			return result;
 		},
 		configResolved(config) {
 			resolvedConfig = config;

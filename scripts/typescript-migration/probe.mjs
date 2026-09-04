@@ -252,7 +252,9 @@ export async function runCompilerProbe(values = {}) {
 						fileChanges: Object.fromEntries(
 							Object.entries(fileChanges).map(([kind, files]) => [
 								kind,
-								files.map((file) => ({ uri: pathToFileURL(file).href })),
+								kind === "invalidateAll"
+									? files
+									: files.map((file) => ({ uri: pathToFileURL(file).href })),
 							]),
 						),
 					});
@@ -326,7 +328,46 @@ export async function runCompilerProbe(values = {}) {
 				const addedOutput = path.join(root, "c/dist/added.js");
 				await put("c/src/added.ts", "export const added = 1;");
 				await update({ created: [added] });
-				assert.ok((await emit()).has(addedOutput), "New included source must emit");
+				const createdOutputs = await emit();
+				if (!createdOutputs.has(addedOutput)) {
+					const config = path.join(root, "c/tsconfig.json");
+					const parsed = await api.parseConfigFile(config);
+					const project = snapshot.getProject(config);
+					const programSourceFiles = await project.program.getSourceFileNames();
+					let invalidation;
+					try {
+						await update({ invalidateAll: true });
+						const outputs = await emit();
+						invalidation = {
+							includesExpectedOutput: outputs.has(addedOutput),
+							emittedOutputs: [...outputs.keys()],
+							projectRootNames: snapshot.getProject(config).parsedCommandLine.fileNames,
+						};
+					} catch (error) {
+						invalidation = { error: error.message };
+					}
+					assert.fail(
+						`New included source must emit\n${JSON.stringify(
+							{
+								createdFile: added,
+								createdFileURI: pathToFileURL(added).href,
+								createdFileRealpath: await realpath(added),
+								createdFileText: await readFile(added, "utf8"),
+								expectedOutput: addedOutput,
+								emittedOutputs: [...createdOutputs.keys()],
+								parsedFileNames: parsed.fileNames,
+								parsedErrors: parsed.errors,
+								projectConfigFile: project.configFileName,
+								projectRootNames: project.parsedCommandLine.fileNames,
+								projectOptions: project.parsedCommandLine.options,
+								programSourceFiles,
+								invalidation,
+							},
+							null,
+							2,
+						)}`,
+					);
+				}
 				await rm(added);
 				await update({ deleted: [added] });
 				assert.equal((await emit()).has(addedOutput), false, "Deleted source must leave the output set");
