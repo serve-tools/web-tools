@@ -248,7 +248,14 @@ export async function runCompilerProbe(values = {}) {
 				};
 				const update = async (fileChanges) => {
 					const previous = snapshot;
-					snapshot = await api.updateSnapshot({ fileChanges });
+					snapshot = await api.updateSnapshot({
+						fileChanges: Object.fromEntries(
+							Object.entries(fileChanges).map(([kind, files]) => [
+								kind,
+								files.map((file) => ({ uri: pathToFileURL(file).href })),
+							]),
+						),
+					});
 					await previous.dispose();
 				};
 				stage = "clean-memory-bundle";
