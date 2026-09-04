@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { packRelease } from "./release-pack.mjs";
+import { createAttestationPlan, packRelease } from "./release-pack.mjs";
 
 test("packRelease records dependency-ordered tarballs and checksums", async (context) => {
 	const root = await mkdtemp(path.join(os.tmpdir(), "serve-tools-release-pack-"));
@@ -40,4 +40,19 @@ test("packRelease records dependency-ordered tarballs and checksums", async (con
 	const checksum = await readFile(path.join(releaseDirectory, `${plan[0].tarball}.sha256`), "utf8");
 	assert.equal(checksum, `${createHash("sha256").update(tarball).digest("hex")}  ${plan[0].tarball}\n`);
 	assert.deepEqual(JSON.parse(await readFile(path.join(releaseDirectory, "release-plan.json"), "utf8")), plan);
+	assert.deepEqual(await createAttestationPlan(releaseDirectory), [
+		{
+			digest: `sha512:${createHash("sha512").update(tarball).digest("hex")}`,
+			purl: "pkg:npm/%40serve-tools/release-fixture@1.2.3",
+			tarball: plan[0].tarball,
+		},
+	]);
+
+	await writeFile(path.join(releaseDirectory, "release-plan.json"), "[]\n");
+	await assert.rejects(createAttestationPlan(releaseDirectory), /no attestation subjects/);
+	await writeFile(
+		path.join(releaseDirectory, "release-plan.json"),
+		`${JSON.stringify([{ name: "@serve-tools/unsafe", version: "1.2.3", tarball: "../unsafe.tgz" }])}\n`,
+	);
+	await assert.rejects(createAttestationPlan(releaseDirectory), /invalid attestation subject/);
 });

@@ -2,11 +2,11 @@
 
 The user authorized publication after all work is committed, pushed, and CI passes.
 AUI remains private and is not part of this release.
-The September 4 registry and shipped-file audit found the twelve prepared versions below unpublished and identified one required patch for Rolldown Decorators.
+The September 4 registry and shipped-file audit found the thirteen prepared versions below unpublished and identified one required patch for Rolldown Decorators.
 
 ## Approved release batch
 
-Publish these thirteen versions with the `latest` tag through the existing provenance-enabled release workflow.
+Publish these thirteen versions with the `latest` tag through the provenance-enabled release workflow, subject to the first-release provenance blocker below.
 The table follows the release planner's dependency order.
 
 | Package                            | Version | Change                                                                                                            |
@@ -81,20 +81,34 @@ Strict NodeNext type checks, runtime ownership and native-selection checks, and 
 These earlier tarballs are not the publication artifacts: the release workflow must rebuild, verify, and pack the final merged commit.
 Audit that immutable artifact and repeat the isolated consumer checks before approving publication.
 
+## First-release bootstrap
+
+`@serve-tools/client-dom-fragment`, `@serve-tools/ponyfill-composites`, `@serve-tools/polyfill-composites`, `@serve-tools/ponyfill-observable`, and `@serve-tools/polyfill-observable` do not yet exist on npm, so npm cannot attach a trusted publisher to them.
+Dispatch the release workflow in `bootstrap` mode to verify, pack, and sign the selected tarballs under the protected `npm` environment without publishing them.
+The immutable release artifact retains each exact tarball, while `provenance-<tarball>` contains its matching npm-compatible provenance bundle.
+A maintainer completes npm 2FA through interactive `npm login`, then publishes the verified tarball with `npm publish <tarball> --access public --tag latest --provenance-file <bundle>`.
+Run that command from a clean temporary directory with an isolated npm config that has no `provenance` setting, because the repository `.npmrc` enables `provenance=true` and npm does not allow any explicit `provenance` setting with `--provenance-file`.
+This path must not create a granular access token or add `NPM_TOKEN` to GitHub.
+After verified first publication, configure npm Trusted Publishing exactly for repository `serve-tools/web-tools`, workflow file `release.yml`, and environment `npm` so later releases use the protected OIDC workflow.
+This is a staging constraint for these first versions only, not a permanent alternative to Trusted Publishing.
+
 ## Authorized-release procedure
 
 1. Commit and push the final version metadata and this plan; wait for all CI jobs on the exact commit to pass.
 2. Merge the reviewed PR normally, without bypassing protections, and require CI on the resulting `main` commit to pass.
 3. Recheck npm and freeze the exact thirteen package/version pairs above; stop if the registry changes the intended batch.
-4. Dispatch the provenance-enabled release workflow on that exact `main` state with `package=all` and `tag=latest`.
-5. Wait for preparation to pass and publication to pause at the required `npm` environment review.
-6. Before normal environment approval, require the workflow SHA to match the reviewed `main` commit, download its sole `release-<run id>` artifact, and compare its ordered plan against the frozen list.
-7. Reject missing or extra packages, tarballs, or checksum files; verify every SHA-256 and every tarball's embedded package name/version, and repeat packed-consumer checks.
-8. Approve only that verified pending deployment through the normal environment review; do not bypass the gate or weaken provenance.
-9. Verify all published versions, `latest` tags, tarball integrity, provenance, and a fresh registry-only consumer installation.
-10. After any partial failure, re-query registry state and resume only still-unpublished versions using a freshly verified plan.
+4. Dispatch the workflow once with `package=all` and mode `bootstrap`, then approve only the verified protected-environment attestation deployments.
+5. Download the immutable release artifact and the five first-release `provenance-<tarball>` artifacts, then verify each tarball, SHA-256, package name, version, and one-subject provenance bundle before interactive npm publication with maintainer 2FA.
+6. Configure npm Trusted Publishing for each verified first release.
+7. Dispatch the provenance-enabled release workflow on that exact `main` state with `package=all` and `tag=latest`.
+8. Wait for preparation to pass and publication to pause at the required `npm` environment review.
+9. Before normal environment approval, require the workflow SHA to match the reviewed `main` commit, download its sole `release-<run id>` artifact, and compare its ordered plan against the frozen list.
+10. Reject missing or extra packages, tarballs, or checksum files; verify every SHA-256 and every tarball's embedded package name/version, and repeat packed-consumer checks.
+11. Approve only that verified pending deployment through the normal environment review; do not bypass the gate or weaken provenance.
+12. Verify all published versions, `latest` tags, tarball integrity, provenance, and a fresh registry-only consumer installation.
+13. After any partial failure, re-query registry state and resume only still-unpublished versions using a freshly verified plan.
 
 The `all` selector alone is not a release-scope guard.
 It is permitted here only with the exact immutable-artifact comparison before the required environment approval; an unexpected public workspace must stop approval.
 This replaces the earlier one-package-at-a-time recommendation without weakening the release boundary.
-Use the existing publishing credentials first; if authentication actually blocks progress, alert the user with `say` and request the specific required authentication.
+Do not create publishing credentials for this release; if a first-release provenance path remains unavailable, stop and request the specific required direction.
