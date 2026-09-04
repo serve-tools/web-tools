@@ -124,6 +124,8 @@ That change is test-only, with an explicit development dependency and TypeScript
 The first remote CI run then exposed a separate Node 22 gap in the native HTTP interoperability fixture, which created routes without installing `URLPattern`.
 Adding conditional polyfill setup and an explicit private test dependency fixed that failure; the complete Node 22 test command passed 1,379 Vitest tests, 12 native tests, and 28 Signal DOM tests, with three existing Vitest skips.
 The interoperability fixture also passed on Node 24 without loading the polyfill.
+The first remote Node 26 job spent five minutes installing dependencies and reached its ten-minute workflow limit while browser tests were still progressing without reported failures.
+Its full-verification allowance was increased to twenty minutes, retaining all checks and the shorter limits for the other jobs.
 This report is not a claim that the repository is ready to publish unchanged.
 This reduction pass does not advance package versions or refresh the release plan for newly changed packages; those must be reviewed before a future release.
 Automated browser tests are also not manual assistive-technology verification.

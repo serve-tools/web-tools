@@ -16,7 +16,8 @@ jobs:
   verify:
     name: Verify (Node ${{ matrix.node }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    # Full verification includes cold browser installation and all three browser engines.
+    timeout-minutes: ${{ matrix.node == 26 && 20 || 10 }}
     strategy:
       fail-fast: false
       matrix:
