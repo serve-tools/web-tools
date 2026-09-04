@@ -1,6 +1,7 @@
 import { access, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
+import { pathToFileURL } from "node:url";
 import { API, formatDiagnostics } from "typescript/unstable/async";
 
 const compilerVersion = "7.1.0-dev.20260904.1";
@@ -356,7 +357,7 @@ function materializeFileChanges(changes) {
 
 	const result = {};
 	for (const [file, kind] of changes) {
-		(result[kind] ??= []).push(file);
+		(result[kind] ??= []).push({ uri: pathToFileURL(file).href });
 	}
 	for (const files of Object.values(result)) {
 		files.sort();
