@@ -5,7 +5,7 @@ import { disown, own } from "./dispose.js";
 
 /** Controls a captured set of reactive DOM bindings without changing their nodes. */
 export interface BindingScope {
-	/** Runs synchronous construction while capturing every reactive binding it creates; thenable results are rejected. */
+	/** Runs synchronous construction while capturing its managed bindings and terminal resources; thenables are rejected. */
 	capture<Build extends () => unknown>(
 		build: ReturnType<Build> extends PromiseLike<unknown> ? never : Build,
 	): ReturnType<Build>;
@@ -16,7 +16,7 @@ export interface BindingScope {
 	/** Stops captured bindings while retaining their nodes and restart factories. */
 	suspend(): void;
 
-	/** Permanently retires every captured binding. */
+	/** Permanently retires every captured binding and terminal resource. */
 	dispose(): void;
 }
 
@@ -29,6 +29,10 @@ interface CaptureFrame {
 interface CapturedBinding {
 	dispose: Disposer;
 	run(): void;
+}
+
+interface CapturedResource {
+	dispose: Disposer;
 }
 
 let currentCapture: CaptureFrame | undefined;
@@ -48,6 +52,17 @@ export const captureBinding = (owner: object | undefined, run: () => void): Capt
 	}
 
 	return frame.scope.add(owner, run, frame);
+};
+
+/** @internal Registers terminal cleanup in the current synchronous scope, if any. */
+export const captureBindingResource = (dispose: Disposer): CapturedResource | undefined => {
+	const frame = currentCapture;
+
+	if (!frame) {
+		return;
+	}
+
+	return frame.scope.addResource(dispose, frame);
 };
 
 class BindingScopeController implements BindingScope {
@@ -182,6 +197,19 @@ class BindingScopeController implements BindingScope {
 		return { dispose: record.retire, run: record.run };
 	}
 
+	addResource(dispose: Disposer, frame: CaptureFrame): CapturedResource {
+		if (this.#disposed) {
+			throw new TypeError("Cannot capture resources in a disposed scope");
+		}
+
+		const record = new BindingRecord(this, undefined, undefined, dispose);
+
+		this.#records.add(record);
+		frame.records.push(record);
+
+		return { dispose: record.retire };
+	}
+
 	delete(record: BindingRecord): void {
 		this.#records.delete(record);
 	}
@@ -214,7 +242,8 @@ class BindingRecord {
 	constructor(
 		private readonly scope: BindingScopeController,
 		private readonly owner: object | undefined,
-		private readonly callback: () => void,
+		private readonly callback: (() => void) | undefined,
+		private readonly cleanup?: Disposer,
 	) {
 		if (owner) {
 			own(owner, this.retire);
@@ -234,12 +263,17 @@ class BindingRecord {
 		}
 
 		this.stop();
+		this.cleanup?.();
 	};
 
-	readonly run = (): void => this.scope.run(this.callback);
+	readonly run = (): void => {
+		if (this.callback) {
+			this.scope.run(this.callback);
+		}
+	};
 
 	start(): void {
-		if (this.#retired || this.#current) {
+		if (this.#retired || this.#current || !this.callback) {
 			return;
 		}
 

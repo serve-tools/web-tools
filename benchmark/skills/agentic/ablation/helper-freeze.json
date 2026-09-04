@@ -1,0 +1,20 @@
+{
+	"frozenAt": "2026-08-31T13:38:58.930Z",
+	"reason": "Task-blind helper author repaired generic error/cleanup/type defects found in pre-measurement review. Earlier draft preserved in ablation-preparation/helper-v0.",
+	"hashes": {
+		"helpers/arraybuffer-base64.ts": "8ec6c8b85cfac3879fc3b6b56c0b1c9183fe1f02fb416e35896bbe5cd75f403b",
+		"helpers/async-operation.ts": "96e843417a222784f7583c819e67cdbd8faf1934215c6943333636a51b2879bf",
+		"helpers/client-messaging.ts": "a849aad40191b162f11e4d09d1beffb2d76d9a2faba9f80dd6f40f7286b5c50f",
+		"helpers/http-contract.ts": "acb027738fd0c782efc2a7e7715312028d05a5f383b0de88ffeabc8ad8eb36cd",
+		"helpers/http-stream.ts": "ddf4dc96e403adad8be4a903fcf38cfd9fe2b8aef93197fbd54115c3da3307a2",
+		"helpers/manifest.json": "154aeddef829597383c0412d9079e7dcc1608d517dab6d613068e50b824c6ba6",
+		"helpers/ponyfill-observable.ts": "1b0c259d97344bd1e0c03701c5607681a7c4c81f0b0711296b11e2653afc8be4",
+		"helpers/prioritized-task-scheduling.ts": "2c58a3e8f52dfe1ebbabda8ea4062c75857c278971a7879844f4e236b4c21768",
+		"helpers/reactive-state.ts": "5badbc9922b443f11b55c84ef1fff6366d65d333cc7cd105d3c057b351d5546c",
+		"helpers/realtime-protocol.ts": "903584ebebfff45a0f98571ad199ec900f519eb4b87edd5c81de4fa10714a92d",
+		"helpers/resource-management.ts": "7071dc4a1b28218205affbd9dfcfc0818f60d66fb5f711e9696c37e3936b5e2d",
+		"helpers/router.ts": "59a5513d8780c1506def970bf6fe1eaa72dcd433615b897ab254aa59aa23ea37",
+		"helpers/sse.ts": "a9d4d7a8566c157b8a3fe37e5b446ba402046fb681f20ad17a234a9e2a60a7bf",
+		"helper-tests.mjs": "7a05b1119e71dd89c01b81f6b9064e8d5275a8c73b57f2d08e087812e39daafc"
+	}
+}

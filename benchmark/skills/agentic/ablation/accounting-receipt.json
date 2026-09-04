@@ -1,0 +1,14 @@
+{
+	"checks": {
+		"normalCompletes": true,
+		"budgetFailsWithNaturalFinalUsage": true,
+		"hardCancellationIsNotFalselyComplete": true
+	},
+	"pass": true,
+	"elapsedMs": 16510.069959,
+	"observedTotalTokens": 32967,
+	"usageLimit": "The deliberate hard-cancellation scenario remains a lower bound; no final billing acknowledgement exists in this protocol.",
+	"evidenceDirectory": "/Users/jonathan/Documents/Codex/2026-08-31/ablation-accounting-smoke-final",
+	"recordsHash": "3e83d1069c3e22337ca24c40c29115bdd9aa2db88a176d7e0820588a778d3304",
+	"providerHash": "ebec167d554477dbee31531f6a0510c154027b83864c54fe9e18f1e9e547c8e2"
+}

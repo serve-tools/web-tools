@@ -5,30 +5,75 @@ This workspace is under development; [the implementation plan](design/plan.md) a
 No release has been authorized.
 The [component gallery](examples/index.html) covers all 38 tracked Base UI families and six AUI capabilities.
 Six families use native HTML directly; an example is not a claim of complete Base UI behavior parity or completed manual accessibility evaluation.
+The [accessibility acceptance checklist](design/accessibility.md) covers Chrome, Firefox, and Safari; its manual screen-reader results remain unverified.
 
 ```ts
 import { AUIElement } from "@serve-tools/aui/base";
 import { Signal } from "@serve-tools/signal";
-import { html, props, text } from "@serve-tools/signal-dom";
+import { scopedHtml } from "@serve-tools/aui/template";
 
 class CounterElement extends AUIElement {
 	#count = new Signal.State(0);
 
 	protected layout(content: DocumentFragment) {
-		html(
-			"button",
-			props({
-				type: "button",
-				onclick: () => this.#count.set(this.#count.get() + 1),
-			}),
-			text(this.#count),
-		)(content);
+		content.append(scopedHtml(this)`
+			<button type="button" @click=${() => this.#count.set(this.#count.get() + 1)}>${this.#count}</button>
+		`);
 	}
 }
 
 customElements.define("app-counter", CounterElement);
 document.body.append(document.createElement("app-counter"));
 ```
+
+## Managed and persistent tagged templates
+
+The opt-in `@serve-tools/aui/template` entrypoint re-exports the shared `@serve-tools/signal-dom/template` renderer: `html(owner)`, `scopedHtml(owner)`, `TemplateFragment`, `TemplateDirective`, and `PersistentFragment`.
+It does not register custom elements or make the base element import the renderer.
+Use `scopedHtml(this)` inside `layout(content)` as above to share the existing managed binding lifecycle.
+Its initial values are written synchronously without subscriptions; connection activates observation, removal suspends it, and reconnection synchronously reconciles the current values into the same nodes.
+Instance listeners and directive setup survive disconnect; consumed `once` listeners are not rearmed.
+A later layout failure also disposes each managed template's listeners and directive cleanups.
+Calling the returned fragment's `dispose()` permanently retires that view without removing its DOM, and reconnecting will not revive it.
+The managed tag requires an active synchronous binding capture and throws outside one; merely creating the tag function during layout does not allow later calls outside capture.
+Signal DOM's functional helpers remain supported in the same layout.
+
+Use standalone `html(owner)` only when observation should remain active while detached, even if called from `layout()`:
+
+```ts
+import { Signal } from "@serve-tools/signal";
+import { html } from "@serve-tools/aui/template";
+
+const owner = { count: new Signal.State(0) };
+const view = html(owner)`
+  <button @click=${() => owner.count.set(owner.count.get() + 1)}>${owner.count}</button>
+`;
+const button = view.querySelector("button")!;
+document.body.append(view);
+
+button.remove(); // Bindings remain active while detached.
+document.body.append(button);
+view.dispose(); // Stop effects/listeners/directives without removing the DOM.
+```
+
+Child values, whole attributes, `.property` bindings, `@event` bindings, and synchronous element directives accept the minimal Lit-style syntax shown in the [persistent-template example](examples/template.html).
+Signals update asynchronously after their initial synchronous write; plain values are written once.
+The fragment handle remains the cleanup owner after its children have been appended elsewhere.
+Separately created child templates are not implicitly owned by their parent; register their cleanup explicitly.
+Import reusable regions from this entrypoint's `PersistentFragment` re-export, or ensure the application shares the same installed `@serve-tools/client-dom-fragment` instance.
+Regions from a second package copy are not recognized as reusable regions.
+
+This is deliberately a smaller grammar than Lit: mixed attribute strings, raw-text interpolations, comment interpolations, and nested template-content interpolations are rejected before binding starts.
+Leading/trailing template whitespace is trimmed.
+Only `null` removes an attribute; boolean DOM state should use a property such as `.disabled`.
+Function listeners use the owner as `this`; listener objects retain their own `handleEvent` receiver and may carry native listener options.
+An unchanged-options handler update does not rearm a consumed `once` listener or an aborted listener.
+Templates use the owner's document when available, or `html(owner, ownerDocument)` for an explicit document; scoped custom-element registries are not selected by this entrypoint.
+
+Unlike `scopedHtml` bindings, standalone `html` bindings remain active when detached or hidden, including when constructed inside `AUIElement.layout()`.
+Use connection-owned resources separately, and retain a deterministic disposal policy for permanently retired templates.
+Weak scheduling is not a guarantee that external signals cannot retain a view.
+See [Own a persistent template](skills/serve-tools-aui/references/own-a-persistent-template.md) for cleanup, parser, and movement boundaries.
 
 ## Native composition
 
@@ -893,7 +938,7 @@ Calendar and File are separate AUI components described above; an inline calenda
 ## Layout and lifetime
 
 `layout(content)` runs once on first connection, after subclass fields are initialized.
-Build owned content into the supplied detached `DocumentFragment` using Signal DOM's existing functions.
+Build owned content into the supplied detached `DocumentFragment` using Signal DOM's existing functions or the explicit `scopedHtml(this)` tag.
 The base captures the bindings created synchronously during layout, then appends the content outside capture so nested custom elements own their own lifecycle.
 Reactive updates change existing nodes; layout does not rerun.
 

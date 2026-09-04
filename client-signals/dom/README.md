@@ -132,6 +132,45 @@ Templates created with a supplied target use that target's `ownerDocument`, incl
 Construct shared stylesheets in the document that will adopt them.
 Scoped reactive stylesheets should remain instance-owned; adopting one sheet into several roots retains the existing `adoptedCSS()` ownership semantics.
 
+## Tagged templates
+
+The opt-in `@serve-tools/signal-dom/template` subpath provides a shared minimal Lit-style renderer without changing the main entrypoint's functional `html(tagName, ...)` API.
+It exports persistent `html(owner, ownerDocument?)`, managed `scopedHtml(owner, ownerDocument?)`, `TemplateFragment`, `TemplateDirective`, and `PersistentFragment`.
+
+```ts
+import { Signal } from "@serve-tools/signal";
+import { createBindingScope } from "@serve-tools/signal-dom";
+import { scopedHtml } from "@serve-tools/signal-dom/template";
+
+const owner = {};
+const label = new Signal.State("Ready");
+const scope = createBindingScope();
+const view = scope.capture(() => scopedHtml(owner)`<button type="button">${label}</button>`);
+document.body.append(view);
+scope.resume();
+scope.suspend(); // Retain DOM, listeners, and directives; stop reactive observation.
+label.set("Current");
+scope.resume(); // Reconcile synchronously, even if the value did not change.
+scope.dispose(); // Retire bindings, listeners, and directive cleanups; retain DOM.
+```
+
+`scopedHtml` must be invoked as a tag inside synchronous binding capture; otherwise it throws before setup.
+The returned fragment's `dispose()` also retires that view independently, and capture rollback cleans up complete managed views if later construction fails.
+Listeners and directives run once per view, not once per connection; consumed `once` listeners are not rearmed by resume.
+Directives are not connection-resource factories: external listeners, timers, and observers still need explicit connection ownership.
+
+Use standalone `html(owner)` when observation must persist during removal, hiding, and movement.
+It deliberately ignores ambient capture, so retain the returned handle and call `view.dispose()` when permanently retiring it.
+Weak owner scheduling does not prevent an externally retained signal or handle from retaining its view.
+
+Both tags support child values, whole attributes, `.property`, `@event`, and synchronous opening-tag directives.
+Only `null` removes an attribute; use `.disabled=${boolean}` for native boolean properties.
+Mixed attribute strings, raw-text/comment interpolations, dynamic tag names, and nested template-content holes are rejected before setup; source boundary whitespace is trimmed.
+Dynamic child strings are text, but this is not an HTML sanitizer and sensitive property sinks retain their native security requirements.
+The owner supplies the document when available; an explicit second document argument overrides it.
+DOM writers retain the existing dependency-tracking behavior, including signal reads inside property setters.
+Read [Own tagged templates](skills/serve-tools-signal-dom/references/own-tagged-templates.md) for events, cleanup, and reusable-region boundaries.
+
 ## Shadow DOM, styles, and internals
 
 `css` creates a `CSSStyleSheet`; signal interpolations update that same sheet.

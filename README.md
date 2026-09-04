@@ -41,6 +41,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/client`](./client/client/) provides namespace-oriented access to the client libraries and focused capability subpaths.
 - [`@serve-tools/client-context`](./client/context/) provides interoperable context events, lifecycle-owned providers and consumers, and indexed late-registration replay.
 - [`@serve-tools/client-db`](./client/db/) provides promise-based IndexedDB operations, transactions, and scans.
+- [`@serve-tools/client-dom-fragment`](./client/dom-fragment/) preserves reusable DOM regions through moves, visibility changes, and nested edits.
 - [`@serve-tools/client-event-source`](./client/event-source/) provides typed JSON events over the native EventSource API.
 - [`@serve-tools/client-input`](./client/input/) observes pointer and drag-and-drop input sessions with explicit lifecycle ownership.
 - [`@serve-tools/client-interaction`](./client/interaction/) provides one-shot clipboard, picker, sharing, and eyedropper interactions with explicit outcomes.
@@ -89,6 +90,8 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/polyfill-request-idle-callback`](./polyfills/request-idle-callback/) installs the `requestIdleCallback` and `cancelIdleCallback` globals.
 - [`@serve-tools/polyfill-resource-management`](./polyfills/resource-management/) installs ECMAScript Explicit Resource Management globals.
 - [`@serve-tools/polyfill-urlpattern`](./polyfills/urlpattern/) installs `URLPattern` while preserving a native implementation.
+- [`@serve-tools/ponyfill-observable`](./ponyfills/observable/) provides a Web Observable API subset with a fresh execution per consumption and no global mutation.
+- [`@serve-tools/ponyfill-composites`](./ponyfills/composites/) creates interned composite values without modifying the global environment.
 - [`@serve-tools/ponyfill-arraybuffer-base64`](./ponyfills/arraybuffer-base64/) encodes `Uint8Array` values as base64 in Node.js without global mutation.
 - [`@serve-tools/ponyfill-decorator-metadata`](./ponyfills/decorator-metadata/) provides a stable module-scoped metadata symbol without global mutation.
 - [`@serve-tools/ponyfill-prioritized-task-scheduling`](./ponyfills/prioritized-task-scheduling/) provides prioritized tasks, continuations, and task controls without global mutation.
@@ -118,6 +121,7 @@ Within this repository, Codex discovers the repo-only `maintain-serve-tools` Ski
 It routes maintenance work to the affected package's canonical Skill without publishing maintainer instructions in package tarballs.
 
 The repository also includes a paired [package Skill evaluation benchmark](./benchmark/skills/) covering package selection, cross-package composition, focused reference retrieval, public API use, and generated TypeScript compilation.
+The [agentic evaluation](./benchmark/skills/agentic/) compares ordinary docs, current Skills, and reusable recipes through autonomous discovery, implementation, repair, and withheld behavioral checks.
 Run `npm run check:skill-bench` for its offline self-test or `npm run benchmark:skills -- --help` to configure repeated live model comparisons.
 
 ## Development

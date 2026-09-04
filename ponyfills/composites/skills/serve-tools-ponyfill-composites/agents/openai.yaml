@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Composites Ponyfill"
+  short_description: "Create interned composite Map and Set keys"
+  default_prompt: "Use $serve-tools-ponyfill-composites to create explicit-import Composite values without global mutation."

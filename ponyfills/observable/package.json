@@ -1,0 +1,43 @@
+{
+	"name": "@serve-tools/ponyfill-observable",
+	"version": "0.0.1",
+	"description": "Web Observable API subset with independent execution per consumption and no global mutation",
+	"keywords": [
+		"abortsignal",
+		"cold",
+		"observable",
+		"ponyfill",
+		"typescript",
+		"web-platform"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/observable#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "ponyfills/observable"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/ponyfill-observable.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"benchmark": "vitest run --config vitest.benchmark.config.ts",
+		"build": "tsc --build tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run test:node && npm run test:browser",
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"test:node": "vitest run --config vitest.config.ts",
+		"typecheck": "tsc --project tsconfig.test.json"
+	}
+}

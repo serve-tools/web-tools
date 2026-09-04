@@ -19,6 +19,9 @@
 		},
 		{
 			"path": "../../client/context/tsconfig.json"
+		},
+		{
+			"path": "../../polyfills/resource-management/tsconfig.json"
 		}
 	]
 }

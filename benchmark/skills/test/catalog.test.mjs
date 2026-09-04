@@ -11,8 +11,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.
 test("catalog discovers every runtime package Skill", async () => {
 	const catalog = await loadCatalog(root);
 
-	assert.equal(catalog.packages.length, 65);
-	assert.equal(new Set(catalog.packages.map((packageEntry) => packageEntry.name)).size, 65);
+	assert.equal(catalog.packages.length, 68);
+	assert.equal(new Set(catalog.packages.map((packageEntry) => packageEntry.name)).size, 68);
 
 	assert.ok(catalog.packages.every((packageEntry) => packageEntry.references.length > 0));
 	assert.ok(!catalog.packages.some((packageEntry) => packageEntry.name === "@serve-tools/skills"));

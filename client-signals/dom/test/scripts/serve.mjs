@@ -8,12 +8,14 @@ const roots = new Map([
 	["dom", dirname(fileURLToPath(import.meta.resolve("@serve-tools/signal-dom")))],
 	["effect", dirname(fileURLToPath(import.meta.resolve("@serve-tools/signal-effect")))],
 	["signal", dirname(fileURLToPath(import.meta.resolve("@serve-tools/signal")))],
+	["fragment", dirname(fileURLToPath(import.meta.resolve("@serve-tools/client-dom-fragment")))],
 ]);
 const port = Number(process.env.SIGNAL_DOM_TEST_PORT ?? 4173);
 const importMap = JSON.stringify({
 	imports: {
 		"@serve-tools/signal-effect": "/effect/signal-effect.js",
 		"@serve-tools/signal": "/signal/signal.js",
+		"@serve-tools/client-dom-fragment": "/fragment/client-dom-fragment.js",
 	},
 });
 

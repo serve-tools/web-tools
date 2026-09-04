@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools DOM Fragment"
+  short_description: "Preserve and move reusable DOM regions"
+  default_prompt: "Use $serve-tools-client-dom-fragment to build reusable DOM regions with explicit visibility and ownership."

@@ -35,6 +35,11 @@ const selections = [
 		"@serve-tools/client-input",
 	],
 	[
+		"persistent-dom-regions",
+		"Move, hide, restore, and detach a reusable DOM region while preserving the same input nodes, form values, and listeners without a wrapper element or a signal runtime.",
+		"@serve-tools/client-dom-fragment",
+	],
+	[
 		"clipboard-and-picker",
 		"Implement one-shot clipboard, file picker, share, and eyedropper actions while preserving cancellation and unsupported-platform outcomes.",
 		"@serve-tools/client-interaction",
@@ -258,6 +263,16 @@ const selections = [
 		"idle-callback-import",
 		"Schedule optional work with imported requestIdleCallback functions while guaranteeing that no globals are modified.",
 		"@serve-tools/ponyfill-request-idle-callback",
+	],
+	[
+		"cold-observable-import",
+		"Use the Web Observable API with a fresh independent execution per consumption and AbortSignal cancellation, without installing globals or selecting a shared native implementation.",
+		"@serve-tools/ponyfill-observable",
+	],
+	[
+		"composite-value-import",
+		"Create interned groups of named values for standard Map keys and Set values through an explicit import without installing a global.",
+		"@serve-tools/ponyfill-composites",
 	],
 	[
 		"prioritized-scheduling-import",
@@ -560,6 +575,7 @@ const remainingUsageTasks = [
 		"client-signals/db/test/signal-db.recipes.ts",
 		["SignalDB.Store", '.watch("notes"', "welcome"],
 		["client-signals/db/skills/serve-tools-signal-db/references/recipe-quick-start.md"],
+		["@serve-tools/signal", "@serve-tools/signal-effect"],
 	),
 	usage(
 		"signal-dom-render",
@@ -609,7 +625,7 @@ const remainingUsageTasks = [
 		"client-signals/shared-db/test/signal-shared-db.recipes.ts",
 		["SignalDB.connect", "new Signal.State", "database.watch", "selectedUser.dispose()", "database.close()"],
 		["client-signals/shared-db/skills/serve-tools-signal-shared-db/references/recipe-quick-start.md"],
-		["@serve-tools/signal"],
+		["@serve-tools/signal", "@serve-tools/signal-effect"],
 	),
 	usage(
 		"signal-shared-event-source",
@@ -708,6 +724,21 @@ const remainingUsageTasks = [
 		"client/db/test/client-db.recipes.ts",
 		["await using db", "DB.open<NotesSchema>", "oldVersion", "createIndex", "db.transaction", "for await"],
 		["client/db/skills/serve-tools-client-db/references/recipe-quick-start.md"],
+	),
+	usage(
+		"client-dom-fragment-preserve",
+		"Create a persistent region containing an input, hide and restore it while preserving its value, detach and reinsert it, and recognize its start boundary without treating arbitrary descendants as regions.",
+		["@serve-tools/client-dom-fragment"],
+		"client/dom-fragment/test/fragment.recipes.ts",
+		[
+			"new PersistentFragment",
+			"fragment.insertBefore",
+			"fragment.hidden",
+			"fragment.nodes",
+			"fragment.remove()",
+			"PersistentFragment.fromNode",
+		],
+		["client/dom-fragment/skills/serve-tools-client-dom-fragment/references/recipe-quick-start.md"],
 	),
 	usage(
 		"client-event-source-subscribe",
@@ -897,6 +928,22 @@ const remainingUsageTasks = [
 		[
 			"ponyfills/decorator-metadata/skills/serve-tools-ponyfill-decorator-metadata/references/recipe-quick-start.md",
 		],
+	),
+	usage(
+		"ponyfill-composites",
+		"Create an interned named-value Map key and retrieve its value with the same properties in a different order.",
+		["@serve-tools/ponyfill-composites"],
+		"ponyfills/composites/test/ponyfill-composites.recipes.ts",
+		["Composite", "new Map", "itemAtPosition.get", "y: 4, x: 1"],
+		["ponyfills/composites/skills/serve-tools-ponyfill-composites/references/recipe-quick-start.md"],
+	),
+	usage(
+		"ponyfill-observable",
+		"Consume a cold Web Observable with independent execution, event cancellation, and per-consumer take counters.",
+		["@serve-tools/ponyfill-observable"],
+		"ponyfills/observable/test/ponyfill-observable.recipes.ts",
+		["Observable", "when(target", ".take(3)", ".toArray({ signal })", "subscriber.addTeardown"],
+		["ponyfills/observable/skills/serve-tools-ponyfill-observable/references/recipe-quick-start.md"],
 	),
 	usage(
 		"ponyfill-prioritized-scheduling",

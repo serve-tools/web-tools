@@ -1,5 +1,102 @@
 import { expect, test } from "@playwright/test";
 
+test("tagged templates share explicit scope ownership without capturing persistent siblings", async ({ page }) => {
+	await page.goto("/__test__");
+	const result = await page.evaluate(async () => {
+		const [{ createBindingScope }, { html, scopedHtml }, { Signal }] = await Promise.all([
+			import("/dom/signal-dom.js"),
+			import("/dom/template.js"),
+			import("@serve-tools/signal"),
+		]);
+		const scope = createBindingScope();
+		const value = new Signal.State("initial");
+		const owner = {};
+		let cleaned = 0;
+		let persistent;
+		const managed = scope.capture(() => {
+			persistent = html(owner)`<p>${value}</p>`;
+			return scopedHtml(owner)`<p ${() => () => ++cleaned}>${value}</p>`;
+		});
+		const managedNode = managed.firstElementChild;
+		const persistentNode = persistent.firstElementChild;
+		document.body.append(managed, persistent);
+		const capturedSinks = Signal.subtle.introspectSinks(value).length;
+		scope.resume();
+		const activeSinks = Signal.subtle.introspectSinks(value).length;
+		value.set("queued");
+		scope.suspend();
+		await Promise.resolve();
+		const suspended = [managedNode.textContent, persistentNode.textContent, cleaned];
+		scope.resume();
+		const resumed = managedNode.textContent;
+		scope.dispose();
+		value.set("persistent only");
+		await Promise.resolve();
+		const disposed = [managedNode.textContent, persistentNode.textContent, cleaned];
+		persistent.dispose();
+		return {
+			capturedSinks,
+			activeSinks,
+			suspended,
+			resumed,
+			disposed,
+			finalSinks: Signal.subtle.introspectSinks(value).length,
+		};
+	});
+	expect(result).toEqual({
+		capturedSinks: 1,
+		activeSinks: 2,
+		suspended: ["initial", "queued", 0],
+		resumed: "queued",
+		disposed: ["queued", "persistent only", 1],
+		finalSinks: 0,
+	});
+});
+
+test("nested capture rollback retires complete tagged views without retiring prior resources", async ({ page }) => {
+	await page.goto("/__test__");
+	const result = await page.evaluate(async () => {
+		const [{ createBindingScope }, { scopedHtml }] = await Promise.all([
+			import("/dom/signal-dom.js"),
+			import("/dom/template.js"),
+		]);
+		const scope = createBindingScope();
+		const cleaned = [];
+		let clicks = 0;
+		let innerButton;
+		const outer = scope.capture(() => {
+			const view = scopedHtml(
+				{},
+			)`<button @click=${() => ++clicks} ${() => () => cleaned.push("outer")}>outer</button>`;
+			try {
+				scope.capture(() => {
+					const inner = scopedHtml(
+						{},
+					)`<button @click=${() => ++clicks} ${() => () => cleaned.push("inner")}>inner</button>`;
+					innerButton = inner.firstElementChild;
+					throw new Error("later construction failed");
+				});
+			} catch (error) {
+				if (error.message !== "later construction failed") {
+					throw error;
+				}
+			}
+			return view;
+		});
+		innerButton.click();
+		outer.firstElementChild.click();
+		const beforeDispose = { cleaned: [...cleaned], clicks };
+		scope.dispose();
+		outer.firstElementChild.click();
+		return { beforeDispose, cleaned, clicks };
+	});
+	expect(result).toEqual({
+		beforeDispose: { cleaned: ["inner"], clicks: 1 },
+		cleaned: ["inner", "outer"],
+		clicks: 1,
+	});
+});
+
 test("binding scopes preserve cross-realm nodes and reach hidden and closed-root bindings", async ({ page }) => {
 	await page.goto("/__test__");
 

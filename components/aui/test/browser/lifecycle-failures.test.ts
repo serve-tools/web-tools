@@ -87,9 +87,15 @@ test("connection failure drains resources and a later connection can retry", () 
 	const node = element.firstChild;
 	fail = false;
 	AUIElement.prototype.connectedCallback.call(element);
+	expect(connections).toHaveLength(2);
 	expect(element.firstChild).toBe(node);
 	expect(connections[1].signal.aborted).toBe(false);
 	expect(Signal.subtle.introspectSinks(value)).toHaveLength(1);
+
+	element.remove();
+	expect(connections[1].signal.aborted).toBe(true);
+	expect(cleaned).toEqual([2, 1, 2, 1]);
+	expect(Signal.subtle.introspectSinks(value)).toHaveLength(0);
 });
 
 test("cleanup finishes before reentrant insertion starts a new connection", async () => {
@@ -238,6 +244,37 @@ test("connected moves retain bindings and provide the current resource scope", (
 	}
 });
 
+test("an ordinary move during setup refreshes relationships after setup finishes", async () => {
+	const containers = [document.createElement("div"), document.createElement("div")];
+	fixtures.push(...containers);
+	document.body.append(...containers);
+	const order: string[] = [];
+	let connection: AUIElement.Connection;
+	const element = create(
+		class extends AUIElement {
+			protected connect(current: AUIElement.Connection): void {
+				connection = current;
+				order.push("setup starts");
+				containers[1].append(this);
+				order.push("setup ends");
+			}
+
+			protected moved(current: AUIElement.Connection): void {
+				expect(current).toBe(connection);
+				expect(current.signal.aborted).toBe(false);
+				order.push("moved");
+			}
+		},
+	);
+
+	containers[0].append(element);
+	expect(element.parentNode).toBe(containers[1]);
+	expect(order).toEqual(["setup starts", "setup ends"]);
+
+	await microtask();
+	expect(order).toEqual(["setup starts", "setup ends", "moved"]);
+});
+
 test("a failed topology refresh releases all current resources", () => {
 	const value = new Signal.State("ready");
 	let connection: AUIElement.Connection;
@@ -265,39 +302,48 @@ test("a failed topology refresh releases all current resources", () => {
 	expect(Signal.subtle.introspectSinks(value)).toHaveLength(0);
 });
 
-test("owned style nodes and connection resources follow adoption into another window", async () => {
-	const frame = document.createElement("iframe");
-	fixtures.push(frame);
-	frame.srcdoc = "<!doctype html><body></body>";
-	const loaded = new Promise<void>((resolve) => frame.addEventListener("load", () => resolve(), { once: true }));
-	document.body.append(frame);
-	await loaded;
-	const target = frame.contentDocument!;
-	const received: Document[] = [];
-	const element = create(
-		class extends AUIElement {
-			protected createLayoutRoot(): ShadowRoot {
-				return this.attachShadow({ mode: "open" });
-			}
+test.each(["explicit adoption", "direct insertion"])(
+	"owned style nodes and connection resources follow %s into another window",
+	async (method) => {
+		const frame = document.createElement("iframe");
+		fixtures.push(frame);
+		frame.srcdoc = "<!doctype html><body></body>";
+		const loaded = new Promise<void>((resolve) => frame.addEventListener("load", () => resolve(), { once: true }));
+		document.body.append(frame);
+		await loaded;
+		const target = frame.contentDocument!;
+		const received: Document[] = [];
+		const connections: AUIElement.Connection[] = [];
+		const element = create(
+			class extends AUIElement {
+				protected createLayoutRoot(): ShadowRoot {
+					return this.attachShadow({ mode: "open" });
+				}
 
-			protected layout(content: DocumentFragment): void {
-				html("style", text("span { color: rgb(12, 34, 56); }"))(content);
-				html("span", text("styled"))(content);
-			}
+				protected layout(content: DocumentFragment): void {
+					html("style", text("span { color: rgb(12, 34, 56); }"))(content);
+					html("span", text("styled"))(content);
+				}
 
-			protected connect(connection: AUIElement.Connection): void {
-				const owner = this.ownerDocument;
-				owner.addEventListener("aui-adopted", () => received.push(owner), { signal: connection.signal });
-			}
-		},
-	);
-	document.body.append(element);
-	const node = element.shadowRoot!.querySelector("span")!;
-	expect(getComputedStyle(node).color).toBe("rgb(12, 34, 56)");
-	target.body.append(target.adoptNode(element));
-	document.dispatchEvent(new Event("aui-adopted"));
-	target.dispatchEvent(new target.defaultView!.Event("aui-adopted"));
-	expect(received).toEqual([target]);
-	expect(element.shadowRoot!.querySelector("span")).toBe(node);
-	expect(target.defaultView!.getComputedStyle(node).color).toBe("rgb(12, 34, 56)");
-});
+				protected connect(connection: AUIElement.Connection): void {
+					connections.push(connection);
+					const owner = this.ownerDocument;
+					owner.addEventListener("aui-adopted", () => received.push(owner), { signal: connection.signal });
+				}
+			},
+		);
+		document.body.append(element);
+		const node = element.shadowRoot!.querySelector("span")!;
+		expect(getComputedStyle(node).color).toBe("rgb(12, 34, 56)");
+		target.body.append(method === "explicit adoption" ? target.adoptNode(element) : element);
+		expect(connections).toHaveLength(2);
+		expect(connections[0]!.signal.aborted).toBe(true);
+		expect(connections[1]!.signal).toBeInstanceOf(target.defaultView!.AbortSignal);
+		expect(connections[1]!.signal.aborted).toBe(false);
+		document.dispatchEvent(new Event("aui-adopted"));
+		target.dispatchEvent(new target.defaultView!.Event("aui-adopted"));
+		expect(received).toEqual([target]);
+		expect(element.shadowRoot!.querySelector("span")).toBe(node);
+		expect(target.defaultView!.getComputedStyle(node).color).toBe("rgb(12, 34, 56)");
+	},
+);

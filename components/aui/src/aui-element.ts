@@ -1,3 +1,5 @@
+/// <reference lib="esnext.disposable" preserve="true" />
+
 import { createBindingScope } from "@serve-tools/signal-dom";
 
 /** A custom element whose layout survives disconnection without retaining active subscriptions. */
@@ -16,24 +18,27 @@ export class AUIElement extends HTMLElement {
 	}
 
 	/** Builds owned content once into a detached fragment after subclass initialization. */
-	protected layout(_content: DocumentFragment): void {}
+	// biome-ignore lint/correctness/noUnusedFunctionParameters: Overrides may ignore the connection.
+	protected layout(content: DocumentFragment): void {}
 
 	/** Acquires resources for one connected interval; register cleanup as each resource is acquired. */
-	// biome-ignore lint/suspicious/noConfusingVoidType: Overrides may return void or a cleanup callback.
-	protected connect(_connection: AUIElement.Connection): void | (() => void) {}
+	// biome-ignore lint/correctness/noUnusedFunctionParameters: Overrides may ignore the connection.
+	protected connect(connection: AUIElement.Connection): void | (() => void) {}
 
 	/** Refreshes relationships that depend on the element's ancestors after a connected move. */
-	protected moved(_connection: AUIElement.Connection): void {}
+	// biome-ignore lint/correctness/noUnusedFunctionParameters: Overrides may ignore the connection.
+	protected moved(connection: AUIElement.Connection): void {}
+
+	// #region Lifecycle
 
 	/** Activates bindings and connection resources after insertion. */
 	connectedCallback(): void {
-		this.#reconcile();
+		this.#connect();
 	}
 
 	/** Stops observation synchronously when the element is actually disconnected. */
 	disconnectedCallback(): void {
 		if (this.isConnected) {
-			this.#move();
 			return;
 		}
 
@@ -48,8 +53,10 @@ export class AUIElement extends HTMLElement {
 	/** Reacquires resources from the new document without reconstructing layout. */
 	adoptedCallback(): void {
 		this.#disconnect();
-		this.#reconcile();
+		this.#connect();
 	}
+
+	// #endregion Lifecycle
 
 	#move(): void {
 		if (!this.#connection) {
@@ -73,23 +80,28 @@ export class AUIElement extends HTMLElement {
 
 	#initialize(): void {
 		const content = this.ownerDocument.createDocumentFragment();
+
 		let nodes: ChildNode[] = [];
 		let root: HTMLElement | ShadowRoot | undefined;
 
 		try {
 			root = this.createLayoutRoot();
+
 			this.#bindings.capture(() => this.layout(content));
+
 			nodes = [...content.childNodes];
+
 			this.#initialized = true;
+
 			root.append(content);
 		} catch (error) {
 			this.#failed = true;
-			const errors = [error];
+			const errors = [error as Error];
 
 			try {
 				this.#bindings.dispose();
 			} catch (cleanupError) {
-				errors.push(cleanupError);
+				errors.push(cleanupError as Error);
 			}
 
 			for (const node of nodes) {
@@ -102,15 +114,20 @@ export class AUIElement extends HTMLElement {
 		}
 	}
 
-	#reconcile(): void {
+	#connect(): void {
 		if (!this.isConnected || this.#failed) {
 			return;
 		}
+
 		if (this.#reconciling) {
 			this.#defer();
+
 			return;
 		}
+
 		if (this.#connection) {
+			this.#move();
+
 			return;
 		}
 
@@ -120,24 +137,29 @@ export class AUIElement extends HTMLElement {
 			if (!this.#initialized) {
 				this.#initialize();
 			}
+
 			if (!this.isConnected) {
 				return;
 			}
 
 			const connection = new Connection(this.ownerDocument);
+
 			this.#connection = connection;
 
 			if (!this.#bindings.resume() || this.#connection !== connection || !this.isConnected) {
 				this.#disconnect();
 				this.#interrupted();
+
 				return;
 			}
 
 			const cleanup = this.connect(connection);
+
 			if (cleanup !== undefined) {
 				if (typeof cleanup !== "function") {
 					throw new TypeError("AUI connect() must finish synchronously");
 				}
+
 				connection.addCleanup(cleanup);
 			}
 
@@ -163,9 +185,11 @@ export class AUIElement extends HTMLElement {
 		if (!this.isConnected) {
 			return;
 		}
+
 		if (this.#retrying) {
 			throw new Error("AUI connectivity repeatedly changed during activation");
 		}
+
 		this.#defer();
 	}
 
@@ -173,6 +197,7 @@ export class AUIElement extends HTMLElement {
 		if (this.#retryQueued || this.#retrying) {
 			return;
 		}
+
 		this.#retryQueued = true;
 
 		queueMicrotask(() => {
@@ -180,7 +205,7 @@ export class AUIElement extends HTMLElement {
 			this.#retrying = true;
 
 			try {
-				this.#reconcile();
+				this.#connect();
 			} finally {
 				this.#retrying = false;
 			}
@@ -189,24 +214,29 @@ export class AUIElement extends HTMLElement {
 
 	#disconnect(): void {
 		const connection = this.#connection;
+
 		this.#connection = undefined;
-		const wasReconciling = this.#reconciling;
+
+		const reconciling = this.#reconciling;
+
 		this.#reconciling = true;
-		const errors: unknown[] = [];
+
+		const errors: Error[] = [];
 
 		try {
 			this.#bindings.suspend();
 		} catch (error) {
-			errors.push(error);
+			errors.push(error as Error);
 		}
 
 		try {
 			connection?.close();
 		} catch (error) {
-			errors.push(error);
+			errors.push(error as Error);
 		}
 
-		this.#reconciling = wasReconciling;
+		this.#reconciling = reconciling;
+
 		throwErrors(errors, "AUI disconnection failed");
 	}
 }
@@ -248,14 +278,17 @@ class Connection implements AUIElement.Connection {
 		if (this.signal.aborted) {
 			return;
 		}
+
 		const cleanups = this.#cleanups;
+
 		this.#cleanups = undefined;
-		const errors: unknown[] = [];
+
+		const errors: Error[] = [];
 
 		try {
 			this.#controller.abort();
 		} catch (error) {
-			errors.push(error);
+			errors.push(error as Error);
 		}
 
 		if (cleanups) {
@@ -263,7 +296,7 @@ class Connection implements AUIElement.Connection {
 				try {
 					cleanups[index]();
 				} catch (error) {
-					errors.push(error);
+					errors.push(error as Error);
 				}
 			}
 		}
@@ -272,11 +305,12 @@ class Connection implements AUIElement.Connection {
 	}
 }
 
-const throwErrors = (errors: unknown[], message: string): void => {
+function throwErrors(errors: unknown[], message: string): asserts errors is [] {
 	if (errors.length === 1) {
 		throw errors[0];
 	}
+
 	if (errors.length > 1) {
 		throw new AggregateError(errors, message);
 	}
-};
+}

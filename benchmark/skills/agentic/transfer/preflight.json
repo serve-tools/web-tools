@@ -1,0 +1,43 @@
+{
+	"status": "ready",
+	"validatedAt": "2026-08-31T06:51:31.509Z",
+	"settings": {
+		"model": "gpt-5.6-luna",
+		"effort": "low",
+		"suite": "transfer",
+		"runs": 5,
+		"seeds": [7349, 9811],
+		"concurrency": 6,
+		"timeoutMs": 240000,
+		"maxActions": 32,
+		"maxChecks": 4,
+		"variants": ["docs", "current", "minimal"],
+		"taskIds": []
+	},
+	"fingerprints": {
+		"sourceHash": "aa23c6c22cfbb6fcc6ca5c8053ef9201c82ead5606a940ed9b20e9fcec1f55cc",
+		"conditionHashes": {
+			"docs": "7cfaa8c8e34faf450e8b3a04e433d48ad585ba8e5e79583c449c5e3c875bd858",
+			"current": "2fcfd967286e3ff5ff627fbe05ff50c0489120d1d5b5ff7ec8d8b1436b1891e5",
+			"minimal": "6e3e92161c0e0a35dd9e4697d516929efac0c5536127a38d21a98bfb7d7a5c4e"
+		},
+		"taskHashes": {
+			"workspace-links": "e9bec631efdf595b56a12095017e70d8a49e5246cc80a717bc562ccc40c9a1fa",
+			"page-operation": "86f1fe6bfd26dee885d80c68b9654c409f126aca68bba4f698edc7d46bfff9d4",
+			"preference-handler": "6c5ff2b2f0e7dc32ebc1bdb2922314635e30bc4730db66caa0cd7dda6b9fd4fb",
+			"reactive-cart": "cf0d5645877185b63b1ade32aee05a89ef9ae2cca5d126e00a787a2e1ea97478",
+			"blob-channel": "ae5e4cf36c9379ccf3dfbca51baf097857820e49f5333d75326eedf302d8ae81",
+			"binary-packet": "6c95c849981010df16169239292ff7d461a9667287e9619ff6e8d9290e0e177d",
+			"resource-lease": "59143338e54b05e4ed65f76bd61972aca30a71f0e0a1cdd9d7a62a89455a7a39",
+			"switchable-projection": "9013880a783c0a8bf44b13748993d83d9029a04e6588a4c1a09b26d54cf17329"
+		},
+		"runtimeHash": "ddd82fb7dc20463e7b09429308b82355560723bd3b572293a3d67bb501f8e745"
+	},
+	"testFiles": [
+		"benchmark/skills/agentic/transfer/protocol-tests.mjs",
+		"benchmark/skills/agentic/transfer/recipe-tests.mjs",
+		"benchmark/skills/agentic/transfer/task-tests.mjs"
+	],
+	"testOutput": "✔ replacement gate rejects uncertain quality or incomplete usage despite attractive means (1.990625ms)\n✔ source reuse stays descriptive and never rewrites behavioral failure (6.296ms)\n✔ blocked allocation preserves every matched treatment and deterministic ordering (0.6575ms)\n✔ identity audit rejects duplicated, missing, and unplanned observations (0.661208ms)\n✔ copy-first workflow enforces a recipe copy without grading documentation compliance (0.931959ms)\n✔ manifest routes eight standalone recipes with stable adapter markers (3.882208ms)\n✔ router recipe reverses defaults and rejects non-canonical integer inputs (331.912875ms)\n✔ async-operation recipe validates capacity, preserves backpressure, and propagates cancellation (139.048584ms)\n✔ http-contract recipe validates safe integers and serves typed JSON and bodyless branches (83.557292ms)\n✔ signal collection recipe rejects sparse/non-finite input before publishing reactive totals (82.035875ms)\n✔ client-messaging recipe transfers ownership, delivers subscriptions, cancels work, and closes ports (96.630167ms)\n✔ arraybuffer-base64 recipe distinguishes omitted options and preserves view boundaries (74.613584ms)\n✔ resource recipe preserves LIFO cleanup and the acquisition/work/cleanup error tree (72.13025ms)\n✔ dormant effect recipe covers synchronous start, scheduled changes, disabled publication, and disposal (62.465875ms)\n✔ transfer catalog and requirement matrices are complete (7.05175ms)\n✔ golden transfer fixtures pass frozen public and hidden checks (2744.032709ms)\n✔ hidden checks reject every compiling smoke-passing semantic mutant (4263.734375ms)\nℹ tests 17\nℹ suites 0\nℹ pass 17\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 7169.276708\n",
+	"auditHash": "5a59580eff875b1abd03bd63b53bb874386a675ccbc0567f9c97e39ae0581a1a"
+}

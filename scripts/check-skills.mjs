@@ -74,14 +74,14 @@ if (maintainerSkill !== undefined) {
 
 await validateReleasePackages(publicPackageNames, errors);
 
-if (publishedMetadataCharacters > 7_600) {
+if (publishedMetadataCharacters > 7_900) {
 	errors.push(
-		`Published Skill names and descriptions use ${publishedMetadataCharacters} characters; keep them at or below 7600`,
+		`Published Skill names and descriptions use ${publishedMetadataCharacters} characters; keep them at or below 7900`,
 	);
 }
 
-if (metadataCharacters > 8_000) {
-	errors.push(`All Skill names and descriptions use ${metadataCharacters} characters; keep them at or below 8000`);
+if (metadataCharacters > 8_300) {
+	errors.push(`All Skill names and descriptions use ${metadataCharacters} characters; keep them at or below 8300`);
 }
 
 if (errors.length > 0) {

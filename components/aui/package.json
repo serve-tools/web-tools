@@ -1,6 +1,7 @@
 {
 	"name": "@serve-tools/aui",
 	"version": "0.1.0",
+	"private": true,
 	"description": "Composable web components with native platform behavior and owned signal lifecycles",
 	"keywords": [
 		"accessibility",
@@ -55,6 +56,7 @@
 		"./slider": "./dist/slider-element.js",
 		"./switch": "./dist/switch-element.js",
 		"./tabs": "./dist/tabs-element.js",
+		"./template": "./dist/template.js",
 		"./toast-region": "./dist/toast-region-element.js",
 		"./toggle": "./dist/toggle-element.js",
 		"./toggle-group": "./dist/toggle-group-element.js",
@@ -67,7 +69,7 @@
 	],
 	"scripts": {
 		"build": "tsc --build tsconfig.json",
-		"build:dependencies": "npm run build --workspace @serve-tools/signal --workspace @serve-tools/signal-effect --workspace @serve-tools/signal-dom --workspace @serve-tools/client-context --workspace @serve-tools/client-input",
+		"build:dependencies": "npm run build --workspace @serve-tools/signal --workspace @serve-tools/signal-effect --workspace @serve-tools/signal-dom --workspace @serve-tools/client-context --workspace @serve-tools/client-input --workspace @serve-tools/polyfill-resource-management",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"dev": "npm run build:dependencies && npm run build && vite examples --host 127.0.0.1",
 		"test": "npm run build:dependencies && npm run build && npm run test:browser",
@@ -80,6 +82,7 @@
 		"@serve-tools/signal-dom": "^0.2.0"
 	},
 	"devDependencies": {
-		"@serve-tools/client-context": "0.1.4"
+		"@serve-tools/client-context": "0.1.4",
+		"@serve-tools/polyfill-resource-management": "^0.1.6"
 	}
 }

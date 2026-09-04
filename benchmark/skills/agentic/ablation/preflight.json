@@ -1,0 +1,74 @@
+{
+	"status": "ready",
+	"validatedAt": "2026-08-31T14:30:15.343Z",
+	"settings": {
+		"model": "gpt-5.6-luna",
+		"effort": "low",
+		"suite": "ablation",
+		"runs": 1,
+		"seeds": [13007, 17011],
+		"concurrency": 6,
+		"timeoutMs": 240000,
+		"maxActions": 32,
+		"maxChecks": 4,
+		"variants": ["docs", "current", "minimal", "helpers"],
+		"taskIds": []
+	},
+	"fingerprints": {
+		"sourceHash": "4c41cefb3c4c3665fbf9419fe6c6b773ccde840be710c8ad8a878c0e12515f5c",
+		"conditionHashes": {
+			"docs": "7cfaa8c8e34faf450e8b3a04e433d48ad585ba8e5e79583c449c5e3c875bd858",
+			"current": "2fcfd967286e3ff5ff627fbe05ff50c0489120d1d5b5ff7ec8d8b1436b1891e5",
+			"minimal": "53581f0cf0a9eec509c5daa20952ba379b5179ffbb3295ceaea237e581323071",
+			"helpers": "1d09f7c2d01ed49375ce7c4a9d3cd11ad48bb6f6873b9feb65316c4a0828c617"
+		},
+		"taskHashes": {
+			"with-cleanup-result": "a4d23b20a2ee1914a676b518a76ccfbfa5c7e72b92b0d8c102e5ad17abbaa61a",
+			"moved-cleanup-bag": "12dde52afae92f924749e47d424c56d465b1eb34000c2543a2eb8c33d7aad3e0",
+			"progress-fold": "c39e2ae5d61f41262b7345a6b44029262b9980542f34b7c3c99b76eab5c325ec",
+			"operation-branch-log": "fdba52f68f3700cb184f515e95e1ccdecb5b4a1c0c609dddcdf444e6edd7bdd6",
+			"reaction-threshold": "305e3144c9ac4fef2057085e16f4eb2d177ed3becb406668b320549712026b15",
+			"tag-window": "9342cb0127acb3a005def648ca179dbf7b0be724c7049e3d1995efb7a1f73c7f",
+			"delayed-echo-channel": "8325f938f0c60f47ef29204fd0f6a55509da15d782d4a12b0e5805f3c3098887",
+			"bounded-event-channel": "ebef895f49e89e80b9703612ee3aa9cbfa0906c303abed3c64a7b506c1cf5dad",
+			"download-link": "230ecc36038c55807ca4c01080ab4cb6a904f24e75ffb8e8ad95d7bb4b0f678a",
+			"request-target-inspector": "b92246ca9cc39af0ffe4d20904538da030c0aa377dd88f9fffcffeea9a3e14a0",
+			"etag-status-handler": "0bcfd3ce7a5c7a458f372bc8fdf9ece8e254cbabc60423dcba3f15479133e267",
+			"fixed-ping-client": "7855a4f487fb47905fbb79bd27906228718ee143735a035cdb1de0c93551c5e3",
+			"base64-selected-view": "61bca12be8d0b80d9424ca71172f52ce289c3f46198841a3f623b8cbbde4c478",
+			"base64-concatenated-views": "13cb10b88f2fbfa99f0f297ecce295a7624c529f9907f56b95ff73c7b12511f6",
+			"observable-cold-receipts": "1d8c1daca4087686a81b41b3fdb2590fd4325b5d0ec22b645cc28c5203e8fab8",
+			"observable-event-cancellation": "ae5837449c45f5f2e60cad9cfa2dbc36c7bc9fda3c071b44ceed07f27e7327dd",
+			"protocol-framed-audit": "eb543b201bef79526f873b3bdf833430bb6648557cb46d802c4c7e7af4f492f2",
+			"protocol-datagram-limit": "2c4759f07ce9b3bde0e763ea3bc9b78bd9ca77180308f752509917bf7410c9ee",
+			"http-stream-request-bridge": "103b4aab6301657d936127534654ce9be189e5e94702ef0ee7a978ff1026e19b",
+			"http-stream-subscription-cleanup": "2f4152d27617f1744a88b86fa23f9fe375f7e3d12f543ae5fa171674311c1121",
+			"sse-server-replay": "39a5cccac086c7bc0024b99c056e3e2b69d69744931ce87bcc031b408769c26d",
+			"sse-client-json-subscription": "75e626afd0676c6bc2f90a7ee5a43fc07c4a56cef01573452be2c1fa8a52ae53",
+			"scheduler-priority-promotion": "71c3de3699fa291a6560970531812cf06f80640dedec6b01277492e985c87831",
+			"scheduler-cancel-reschedule": "13eed6d2f0446e2c7af6bf683a8201968cfd16f41698bede2416bf3a4e6c1ca7"
+		},
+		"runtimeHash": "ddd82fb7dc20463e7b09429308b82355560723bd3b572293a3d67bb501f8e745"
+	},
+	"accountingReceipt": {
+		"checks": {
+			"normalCompletes": true,
+			"budgetFailsWithNaturalFinalUsage": true,
+			"hardCancellationIsNotFalselyComplete": true
+		},
+		"pass": true,
+		"elapsedMs": 16510.069959,
+		"observedTotalTokens": 32967,
+		"usageLimit": "The deliberate hard-cancellation scenario remains a lower bound; no final billing acknowledgement exists in this protocol.",
+		"evidenceDirectory": "/Users/jonathan/Documents/Codex/2026-08-31/ablation-accounting-smoke-final",
+		"recordsHash": "3e83d1069c3e22337ca24c40c29115bdd9aa2db88a176d7e0820588a778d3304",
+		"providerHash": "ebec167d554477dbee31531f6a0510c154027b83864c54fe9e18f1e9e547c8e2"
+	},
+	"tests": [
+		"benchmark/skills/agentic/ablation/blind-review-tests.mjs",
+		"benchmark/skills/agentic/ablation/helper-tests.mjs",
+		"benchmark/skills/agentic/ablation/protocol-tests.mjs",
+		"benchmark/skills/agentic/ablation/task-tests.mjs"
+	],
+	"testOutput": "✔ blind review samples one attempt per task and condition independent of outcomes and ordering (9.678875ms)\n✔ helper modules emit with their public package imports (17.928167ms)\n✔ cleanup, binary, protocol, stream, and scheduler helpers preserve runtime semantics (14.103333ms)\n✔ operation, observable, signal, and SSE helpers observe values and cleanup (10.139125ms)\n✔ router, contract, and messaging helpers retain package validation and ownership (6.1795ms)\n✔ short-guide arms differ only by optional helper availability (209.623208ms)\n✔ analysis records matched pairs and fails closed on corrupted measurements (70.832875ms)\n✔ 192 matched attempts balance every four-arm permutation within each seed (0.677375ms)\n✔ family inference does not turn zero observed variation into equivalence (45.906791ms)\n✔ 24 disclosed tasks cover twelve families and behavior mutations (0.430333ms)\n✔ both independently authored positive implementations pass every task (8766.460625ms)\n✔ every literal behavior mutant compiles, passes public smoke, and fails hidden checks (7202.210625ms)\nℹ tests 12\nℹ suites 0\nℹ pass 12\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\nℹ duration_ms 16134.8335\n"
+}

@@ -1,0 +1,110 @@
+[
+	{
+		"id": "resource-management",
+		"title": "Async cleanup scope",
+		"packages": ["@serve-tools/ponyfill-resource-management"],
+		"file": "resource-management.ts",
+		"description": "Reverse-order async cleanup around user work.",
+		"whenToUse": "Several acquired resources must always be released.",
+		"preservedSymbols": ["withAsyncResources"]
+	},
+	{
+		"id": "async-operation",
+		"title": "Operation collection",
+		"packages": ["@serve-tools/async-operation"],
+		"file": "async-operation.ts",
+		"description": "Drain owned values and retain the terminal result.",
+		"whenToUse": "A finite operation exposes progress and a result.",
+		"preservedSymbols": ["collectOperation"]
+	},
+	{
+		"id": "reactive-state",
+		"title": "Disposable signal effect",
+		"packages": ["@serve-tools/signal"],
+		"file": "reactive-state.ts",
+		"description": "Microtask-batched signal observation.",
+		"whenToUse": "Derived state should update an adapter until disposal.",
+		"preservedSymbols": ["effect"]
+	},
+	{
+		"id": "client-messaging",
+		"title": "Abort-owned message client",
+		"packages": ["@serve-tools/client-messaging"],
+		"file": "client-messaging.ts",
+		"description": "Message protocol ownership tied to a signal.",
+		"whenToUse": "A MessagePort client has a bounded lifetime.",
+		"preservedSymbols": ["connectUntilAborted"]
+	},
+	{
+		"id": "router",
+		"title": "Paged route",
+		"packages": ["@serve-tools/router"],
+		"file": "router.ts",
+		"description": "A reusable page-query route declaration.",
+		"whenToUse": "A route accepts an optional positive page parameter.",
+		"preservedSymbols": ["pagedRoute"]
+	},
+	{
+		"id": "http-contract",
+		"title": "Contract definition",
+		"packages": ["@serve-tools/http-contract"],
+		"file": "http-contract.ts",
+		"description": "Validate an HTTP contract once at construction.",
+		"whenToUse": "A shared Fetch contract is being declared.",
+		"preservedSymbols": ["defineContract"]
+	},
+	{
+		"id": "arraybuffer-base64",
+		"title": "View-safe base64",
+		"packages": ["@serve-tools/ponyfill-arraybuffer-base64"],
+		"file": "arraybuffer-base64.ts",
+		"description": "Encode a selected binary view in Node.",
+		"whenToUse": "Only a view slice should be serialized.",
+		"preservedSymbols": ["encodeView"]
+	},
+	{
+		"id": "ponyfill-observable",
+		"title": "First observable value",
+		"packages": ["@serve-tools/ponyfill-observable"],
+		"file": "ponyfill-observable.ts",
+		"description": "Await one value and unsubscribe.",
+		"whenToUse": "Only the first emission matters.",
+		"preservedSymbols": ["firstValue"]
+	},
+	{
+		"id": "realtime-protocol",
+		"title": "Binary round trip",
+		"packages": ["@serve-tools/realtime-protocol"],
+		"file": "realtime-protocol.ts",
+		"description": "Explicit protocol serialization boundary.",
+		"whenToUse": "Structured data crosses a binary transport boundary.",
+		"preservedSymbols": ["roundTrip"]
+	},
+	{
+		"id": "http-stream",
+		"title": "Frame decoder",
+		"packages": ["@serve-tools/realtime-protocol"],
+		"file": "http-stream.ts",
+		"description": "Decode length-prefixed stream payloads.",
+		"whenToUse": "HTTP body chunks contain protocol frames.",
+		"preservedSymbols": ["decodeFrames", "frame"]
+	},
+	{
+		"id": "sse",
+		"title": "Initial SSE event",
+		"packages": ["@serve-tools/server-event-source"],
+		"file": "sse.ts",
+		"description": "Fetch handler sending one initial JSON event.",
+		"whenToUse": "Every SSE connection starts with a snapshot.",
+		"preservedSymbols": ["createInitialEventSource"]
+	},
+	{
+		"id": "prioritized-task-scheduling",
+		"title": "Prioritized task",
+		"packages": ["@serve-tools/ponyfill-prioritized-task-scheduling"],
+		"file": "prioritized-task-scheduling.ts",
+		"description": "Post cancellable work at a chosen priority.",
+		"whenToUse": "Nonblocking work has known urgency.",
+		"preservedSymbols": ["postTask"]
+	}
+]

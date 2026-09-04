@@ -26,7 +26,7 @@ The isolated-update target requires the entire interval to reach 1.25, correspon
 
 The Mount 1,000 interval ends at approximately 0.9541, narrowly crossing the fixed 0.95238 boundary.
 That is inconclusive at the 5% acceptance threshold, not evidence that mounting is equally fast.
-Both observed mount medians are slower for AUI, so mounting remains optimization work before an overall performance claim or release readiness.
+Both observed mount medians were slower for AUI, but the later validation-history diagnostic below shows that the repeated-mount harness itself needs correction before those absolute values guide runtime optimization.
 
 Each isolated observation covers exactly 100 sequential completed updates, with one operation completed before the next begins, divided by 100.
 These are mean completed-update costs within blocks, not individual interaction latencies or interaction p95 values.
@@ -73,6 +73,21 @@ The formal raw SHA-256 is `74df3bf356cd787bdeffaf6e71974409efd0b8ea786b004a14e92
 The build metadata SHA-256 is `1e237a9df15ce8d5933001392dfaa159dbbc2efc6e860d2591483d5377b34637` and closes over 95 runtime and bundle inputs.
 The earlier primary, diagnostic, and individual-precision artifacts remain at `aui-comparison-2026-08-28`, `aui-checkbox-mount-diagnostic-2026-08-28`, and `aui-comparison-followup-2026-08-28` under the same outputs directory.
 All measurements used an Apple M5 Max, macOS release 25.6.0, Node 24.16.0, Rolldown 1.2.6, and Playwright 1.62.1 without concurrent builds or automated browser work.
+
+## Repeated-mount validation diagnostic, September 2, 2026
+
+The [durable AUI-only diagnostic](../benchmark/RESULTS.md) tested whether running a derived version of the full post-mount validation sink after every sample perturbs the next mount.
+Five counterbalanced pairs of fresh Chromium processes compared `validate-each` with the same exact sink run only after the warmup and recorded blocks.
+Both conditions timed the same public production AUI operation, kept teardown and validation outside the mount clock, and ended with identical exact form, label, identity, light-DOM, shadow-root, and shadow-element sinks.
+
+The paired geometric ratio of within-process medians was `3.931` for `validate-each / validate-final`, with a two-sided 95% interval of `3.067–5.037`.
+Median teardown remained `2.0–2.1 ms`, and the full validation itself took approximately `24–26 ms`.
+The result clears the diagnostic's fixed 10% sensitivity threshold and rejects this diagnostic's per-sample full-sink scheme for the next acceptance harness.
+
+This does not identify garbage collection or another browser subsystem as the cause, compare current AUI with Base UI, or satisfy the release gate.
+It also does not erase the frozen historical experiment.
+The next comparison must use current production bundles in fresh counterbalanced processes, an equivalent cheap exact invariant after every mount, and equivalent full exact validation after each block.
+Production mount-path changes should wait for that corrected comparison or a profile that identifies a bounded runtime mechanism.
 
 ## Existing DOM result, August 27, 2026
 

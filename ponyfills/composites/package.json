@@ -1,0 +1,43 @@
+{
+	"name": "@serve-tools/ponyfill-composites",
+	"version": "0.0.1",
+	"description": "Implements proposed ECMAScript Composite values without global mutation",
+	"keywords": [
+		"composite",
+		"interning",
+		"map-key",
+		"no-global-mutation",
+		"ponyfill",
+		"set-value",
+		"tc39",
+		"typescript"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/composites#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "ponyfills/composites"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/ponyfill-composites.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"benchmark": "node benchmark/run.mjs",
+		"build": "tsc --build tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "vitest run",
+		"typecheck": "tsc --project tsconfig.test.json"
+	}
+}

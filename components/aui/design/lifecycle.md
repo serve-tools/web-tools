@@ -1,6 +1,6 @@
 # AUI lifecycle decision
 
-Status: selected design; implementation and adversarial verification are in progress.
+Status: implemented with adversarial browser coverage; the separate mount-performance and manual accessibility release gates remain open.
 
 ## Decision
 
@@ -11,7 +11,7 @@ Ordinary consumers do not call `destroy()` or `dispose()` to prevent retention a
 
 Add an opt-in `createBindingScope()` to Signal DOM.
 Keep existing unscoped Signal DOM behavior and the effect package's terminal `start()`/`dispose()` contract unchanged.
-The proposed scope surface is deliberately small:
+The public scope surface is deliberately small:
 
 ```ts
 interface BindingScope {
