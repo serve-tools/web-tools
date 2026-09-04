@@ -25,6 +25,12 @@ Do not use either interchangeably for stable persistence formats without reviewi
 npm install @serve-tools/polyfill-composites
 ```
 
+#### Import from a CDN
+
+```js
+import "https://esm.run/@serve-tools/polyfill-composites";
+```
+
 ## Usage
 
 Import the package before code that expects `globalThis.Composite` to exist.

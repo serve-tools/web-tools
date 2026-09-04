@@ -16,6 +16,12 @@ stack.dispose();
 npm install @serve-tools/polyfill-resource-management
 ```
 
+#### Import from a CDN
+
+```js
+import "https://esm.run/@serve-tools/polyfill-resource-management";
+```
+
 ## Usage
 
 ### Install every global

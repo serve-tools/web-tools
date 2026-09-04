@@ -18,6 +18,12 @@ console.log(match?.pathname.groups.id); // "123"
 npm install @serve-tools/ponyfill-urlpattern
 ```
 
+#### Import from a CDN
+
+```js
+import * as ponyfillUrlpattern from "https://esm.run/@serve-tools/ponyfill-urlpattern";
+```
+
 ## Match URL components
 
 Provide an object to match individual components, or provide an absolute URL pattern string.

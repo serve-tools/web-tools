@@ -15,6 +15,12 @@ requestIdleCallback(() => console.log("idle"));
 npm install @serve-tools/ponyfill-request-idle-callback
 ```
 
+#### Import from a CDN
+
+```js
+import * as ponyfillRequestIdleCallback from "https://esm.run/@serve-tools/ponyfill-request-idle-callback";
+```
+
 ## Schedule and cancel idle work
 
 ```ts

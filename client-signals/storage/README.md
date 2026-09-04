@@ -19,6 +19,12 @@ console.log(theme.get()); // "dark"
 npm install @serve-tools/signal @serve-tools/signal-storage
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalStorage from "https://esm.run/@serve-tools/signal-storage";
+```
+
 ## Typed storage
 
 Describe the keys and their string values once.

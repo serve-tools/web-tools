@@ -11,6 +11,12 @@ Install any missing Navigation API or `URLPattern` polyfills globally before cre
 npm install @serve-tools/client-router
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientRouter from "https://esm.run/@serve-tools/client-router";
+```
+
 ## Define and start a router
 
 ```ts

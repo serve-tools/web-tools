@@ -9,6 +9,14 @@ Its root is a runtime-neutral session core; `runtime/node` adapts `@http3-server
 npm install @serve-tools/server-webtransport @http3-server/server
 ```
 
+#### Import from a CDN
+
+```js
+import * as serverWebtransport from "https://esm.run/@serve-tools/server-webtransport";
+```
+
+The package root uses web APIs and can run in a browser; hosting a network server requires a server runtime.
+
 ## Define handlers
 
 ```ts

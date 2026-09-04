@@ -27,6 +27,12 @@ import { connect, observe } from "@serve-tools/client-signals/websocket";
 npm install @serve-tools/client-signals
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientSignals from "https://esm.run/@serve-tools/client-signals";
+```
+
 ## Namespaces
 
 | Namespace            | Focused subpath                                   | Underlying package                        |

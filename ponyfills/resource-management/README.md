@@ -17,6 +17,12 @@ stack.dispose();
 npm install @serve-tools/ponyfill-resource-management
 ```
 
+#### Import from a CDN
+
+```js
+import * as ponyfillResourceManagement from "https://esm.run/@serve-tools/ponyfill-resource-management";
+```
+
 ## Usage
 
 ### Dispose a resource stack

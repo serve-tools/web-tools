@@ -30,6 +30,12 @@ using presence = client.subscribe("presence", { room: "lobby" }, (event) => {
 npm install @serve-tools/client-http-stream
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientHttpStream from "https://esm.run/@serve-tools/client-http-stream";
+```
+
 Use `@serve-tools/server-http-stream` for the matching Fetch handler.
 
 Each request or subscription is one `POST` exchange.

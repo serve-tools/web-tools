@@ -14,6 +14,12 @@ Symbol.metadata; // Symbol(Symbol.metadata)
 npm install @serve-tools/polyfill-decorator-metadata
 ```
 
+#### Import from a CDN
+
+```js
+import "https://esm.run/@serve-tools/polyfill-decorator-metadata";
+```
+
 ## Usage
 
 ### Install every global

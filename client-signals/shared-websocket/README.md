@@ -12,6 +12,12 @@ It adds no independent subscription runtime.
 npm install @serve-tools/signal-effect @serve-tools/signal-shared-websocket
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalSharedWebsocket from "https://esm.run/@serve-tools/signal-shared-websocket";
+```
+
 The WebSocket server must implement the binary request-and-subscription protocol used by `@serve-tools/client-websocket`.
 These packages provide the browser client and shared-worker bridge, not the server.
 

@@ -15,6 +15,12 @@ reportError(new Error("Background task failed"));
 npm install @serve-tools/polyfill-report-error
 ```
 
+#### Import from a CDN
+
+```js
+import "https://esm.run/@serve-tools/polyfill-report-error";
+```
+
 ## Usage
 
 Import the package before code that expects `globalThis.reportError` to exist.

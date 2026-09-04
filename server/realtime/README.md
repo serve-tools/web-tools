@@ -9,6 +9,14 @@ It maps complete binary messages to typed handlers without owning a socket, stre
 npm install @serve-tools/server-realtime
 ```
 
+#### Import from a CDN
+
+```js
+import * as serverRealtime from "https://esm.run/@serve-tools/server-realtime";
+```
+
+The package root uses web APIs and can run in a browser; hosting a network server requires a server runtime.
+
 Most servers should use `@serve-tools/server-http-stream`, `@serve-tools/server-websocket`, or `@serve-tools/server-webtransport`.
 Use this package to implement another adapter.
 

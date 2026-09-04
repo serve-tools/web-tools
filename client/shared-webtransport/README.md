@@ -12,6 +12,12 @@ Typed datagram `write()`, `subscribe()`, and `read()` operations are routed thro
 npm install @serve-tools/client-shared-webtransport
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientSharedWebtransport from "https://esm.run/@serve-tools/client-shared-webtransport";
+```
+
 The worker owns the physical session, reliable streams, datagram registry, and native datagram writer.
 Each page owns its logical client, subscriptions, and port.
 `maxDatagramSize` is a Promise because the native value is worker-owned.

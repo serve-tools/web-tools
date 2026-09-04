@@ -49,6 +49,12 @@ addEventListener(
 npm install @serve-tools/client-shared-websocket
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientSharedWebsocket from "https://esm.run/@serve-tools/client-shared-websocket";
+```
+
 Call `listen()` once in the shared worker to open the physical WebSocket, then call `connect()` in each page.
 Same-origin pages that open the same worker URL and name share one worker and one physical WebSocket.
 Each page still owns its client, subscription, and port.

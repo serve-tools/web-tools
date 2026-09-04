@@ -24,6 +24,12 @@ storage.delete("token"); // true if deleted, false if not present
 npm install @serve-tools/client-storage
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientStorage from "https://esm.run/@serve-tools/client-storage";
+```
+
 ## Usage
 
 ### Define storage

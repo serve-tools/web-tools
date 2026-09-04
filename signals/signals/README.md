@@ -10,6 +10,7 @@ const count = new Signal.Computed(() => items.length);
 const dispose = effect(() => console.log(count.get()));
 
 items.push("second");
+
 dispose();
 ```
 
@@ -17,6 +18,12 @@ dispose();
 
 ```shell
 npm install @serve-tools/signals
+```
+
+#### Import from a CDN
+
+```js
+import * as signals from "https://esm.run/@serve-tools/signals";
 ```
 
 ## Focused imports

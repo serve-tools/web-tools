@@ -25,6 +25,12 @@ console.log(await db.get("notes", "welcome")); // "Hello"
 npm install @serve-tools/client-db
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientDb from "https://esm.run/@serve-tools/client-db";
+```
+
 ## Usage
 
 ### Define and open a database

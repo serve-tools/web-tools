@@ -9,6 +9,12 @@ It normalizes lifecycle without preventing defaults or taking propagation policy
 npm install @serve-tools/client-input
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientInput from "https://esm.run/@serve-tools/client-input";
+```
+
 ## Pointer observation
 
 `observePointer` observes consecutive single-pointer interactions and keeps accepted pointers captured by the element.

@@ -15,6 +15,12 @@ await scheduler.postTask(() => updateVisibleContent(), { priority: "user-blockin
 npm install @serve-tools/ponyfill-prioritized-task-scheduling
 ```
 
+#### Import from a CDN
+
+```js
+import * as ponyfillPrioritizedTaskScheduling from "https://esm.run/@serve-tools/ponyfill-prioritized-task-scheduling";
+```
+
 ## Control task priority and cancellation
 
 ```ts

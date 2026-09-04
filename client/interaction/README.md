@@ -30,6 +30,12 @@ shareButton.addEventListener("click", async () => {
 npm install @serve-tools/client-interaction
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientInteraction from "https://esm.run/@serve-tools/client-interaction";
+```
+
 ## Interaction results
 
 Clipboard, share, eyedropper, and file-picker operations resolve to an `InteractionResult<Value>`:

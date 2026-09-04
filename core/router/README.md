@@ -35,6 +35,12 @@ projectRoute.match("https://example.com/projects/42?tab=files");
 npm install @serve-tools/router
 ```
 
+#### Import from a CDN
+
+```js
+import * as router from "https://esm.run/@serve-tools/router";
+```
+
 ## Platform requirement
 
 The runtime must provide `globalThis.URLPattern`.

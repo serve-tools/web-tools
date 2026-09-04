@@ -33,6 +33,12 @@ customElements.define("signal-counter", SignalCounter);
 npm install @serve-tools/lit-signals lit
 ```
 
+#### Import from a CDN
+
+```js
+import * as litSignals from "https://esm.run/@serve-tools/lit-signals";
+```
+
 Lit is a peer dependency.
 The package root re-exports the compatible `@serve-tools/client-context` runtime used by its context decorators.
 `@lit/context` remains structurally interoperable and is not a runtime dependency of this package.

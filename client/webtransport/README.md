@@ -40,6 +40,12 @@ await client.datagrams.write("cursor", { x: 20, y: 40 });
 npm install @serve-tools/client-webtransport
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientWebtransport from "https://esm.run/@serve-tools/client-webtransport";
+```
+
 Use `@serve-tools/server-webtransport` for the matching server.
 
 `write()` reuses a shared native writer.

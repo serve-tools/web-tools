@@ -3,6 +3,18 @@
 A dependency-free ponyfill for the Stage 1 TC39 [Composites proposal](https://github.com/tc39/proposal-composites).
 Import it explicitly; it does not install a global or select a native implementation.
 
+## Install
+
+```shell
+npm install @serve-tools/ponyfill-composites
+```
+
+#### Import from a CDN
+
+```js
+import * as ponyfillComposites from "https://esm.run/@serve-tools/ponyfill-composites";
+```
+
 ## Status
 
 This initial `0.0.x` line is experimental and follows an early-stage proposal whose design is expected to change.

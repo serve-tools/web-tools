@@ -12,6 +12,12 @@ Use this package directly when implementing a transport adapter or protocol diag
 npm install @serve-tools/realtime-protocol
 ```
 
+#### Import from a CDN
+
+```js
+import * as realtimeProtocol from "https://esm.run/@serve-tools/realtime-protocol";
+```
+
 ## Encode and validate a message
 
 ```ts

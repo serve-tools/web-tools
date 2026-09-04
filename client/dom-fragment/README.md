@@ -17,6 +17,18 @@ fragment.remove(); // Detach for later reuse.
 fragment.insertBefore(document.body);
 ```
 
+## Install
+
+```shell
+npm install @serve-tools/client-dom-fragment
+```
+
+#### Import from a CDN
+
+```js
+import * as clientDomFragment from "https://esm.run/@serve-tools/client-dom-fragment";
+```
+
 ## API
 
 | Member                                           | Behavior                                                                                                           |

@@ -15,6 +15,12 @@ const presence = observe(client, "presence", { input: { room: "lobby" } });
 npm install @serve-tools/signal-webtransport
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalWebtransport from "https://esm.run/@serve-tools/signal-webtransport";
+```
+
 The package re-exports the complete `@serve-tools/client-webtransport` API unchanged.
 The adapter applies to reliable subscriptions, not best-effort datagrams.
 Use the client's datagram API when every arriving datagram occurrence matters.

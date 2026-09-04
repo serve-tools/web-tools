@@ -20,6 +20,12 @@ console.log(total.get()); // 6
 npm install @serve-tools/signal @serve-tools/signal-collections
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalCollections from "https://esm.run/@serve-tools/signal-collections";
+```
+
 ## Public API
 
 - `SignalArray` tracks direct index and length reads independently from whole-collection reads.

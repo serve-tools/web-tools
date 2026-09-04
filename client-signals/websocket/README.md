@@ -9,6 +9,12 @@ It reuses the signal messaging observation engine, so the adapter adds no indepe
 npm install @serve-tools/signal-effect @serve-tools/signal-websocket
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalWebsocket from "https://esm.run/@serve-tools/signal-websocket";
+```
+
 The signal package re-exports the complete `@serve-tools/client-websocket` API unchanged.
 The WebSocket server must implement the binary request-and-subscription protocol used by `@serve-tools/client-websocket`.
 

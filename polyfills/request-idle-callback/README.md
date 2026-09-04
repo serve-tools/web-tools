@@ -16,6 +16,12 @@ cancelIdleCallback(handle);
 npm install @serve-tools/polyfill-request-idle-callback
 ```
 
+#### Import from a CDN
+
+```js
+import "https://esm.run/@serve-tools/polyfill-request-idle-callback";
+```
+
 ## Usage
 
 ### Install both globals

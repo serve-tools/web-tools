@@ -15,6 +15,12 @@ await scheduler.postTask(() => updateVisibleContent(), { priority: "user-blockin
 npm install @serve-tools/polyfill-prioritized-task-scheduling
 ```
 
+#### Import from a CDN
+
+```js
+import "https://esm.run/@serve-tools/polyfill-prioritized-task-scheduling";
+```
+
 ## Choose the import boundary
 
 - Import the package root for side effects that install the Scheduling API when it is missing.

@@ -18,6 +18,12 @@ Example[metadata].component; // true
 npm install @serve-tools/ponyfill-decorator-metadata
 ```
 
+#### Import from a CDN
+
+```js
+import * as ponyfillDecoratorMetadata from "https://esm.run/@serve-tools/ponyfill-decorator-metadata";
+```
+
 ## Public API
 
 - `metadata`: a module-scoped `Symbol("Symbol.metadata")` value.

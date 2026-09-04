@@ -18,6 +18,12 @@ if (state.status === "ready") console.log(state.event.lastEventId, state.event.d
 npm install @serve-tools/signal-shared-event-source
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalSharedEventSource from "https://esm.run/@serve-tools/signal-shared-event-source";
+```
+
 Use `@serve-tools/signal-shared-event-source/scope/shared-worker` for `listen()` and the package root or `/scope/window` for `connect()` and `observe()`.
 The complete event record remains page-owned Signal state, including `lastEventId`.
 Use the underlying shared client subscription when every event occurrence matters.

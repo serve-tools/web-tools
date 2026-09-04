@@ -16,6 +16,12 @@ visibility.get(); // "visible" or "hidden"
 npm install @serve-tools/signal @serve-tools/signal-event-target
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalEventTarget from "https://esm.run/@serve-tools/signal-event-target";
+```
+
 ## Event target state
 
 `EventTargetSignal` reads its initial value synchronously, listens eagerly for one event type, and rereads the value after each matching event.

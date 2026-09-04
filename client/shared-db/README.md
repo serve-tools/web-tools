@@ -23,6 +23,12 @@ Finite operations remain Promise-based; subscriptions provide the explicit bridg
 npm install @serve-tools/client-shared-db @serve-tools/client-db
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientSharedDb from "https://esm.run/@serve-tools/client-shared-db";
+```
+
 ## Usage
 
 Once the worker is listening, the connected database provides the familiar Promise-based point operations from `@serve-tools/client-db`.

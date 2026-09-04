@@ -9,6 +9,12 @@ The package implements the [Web Components Community Group Context Protocol](htt
 npm install @serve-tools/client-context
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientContext from "https://esm.run/@serve-tools/client-context";
+```
+
 ## Create a context
 
 `createContext()` returns its key unchanged while associating the key with a value type in TypeScript.

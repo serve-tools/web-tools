@@ -3,6 +3,18 @@
 A small, dependency-free subset of the proposed Web `Observable` API, with **a fresh execution for every consumption**.
 Import it explicitly; it neither changes globals nor selects a native `Observable` implementation.
 
+## Install
+
+```shell
+npm install @serve-tools/ponyfill-observable
+```
+
+#### Import from a CDN
+
+```js
+import * as ponyfillObservable from "https://esm.run/@serve-tools/ponyfill-observable";
+```
+
 ## Status
 
 This initial `0.0.x` line is an experimental API with deliberate semantic differences from the current WICG draft.

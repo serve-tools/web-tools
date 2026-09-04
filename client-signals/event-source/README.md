@@ -18,6 +18,12 @@ if (state.status === "ready") console.log(state.event.lastEventId, state.event.d
 npm install @serve-tools/signal-event-source
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalEventSource from "https://esm.run/@serve-tools/signal-event-source";
+```
+
 The package re-exports the complete `@serve-tools/client-event-source` API, including `connect()` and its types.
 The observation starts in `pending` state and becomes `ready` with the latest parsed event.
 The complete event record is retained so reactive consumers do not lose `lastEventId`.

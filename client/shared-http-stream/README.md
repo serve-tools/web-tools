@@ -30,6 +30,12 @@ using presence = client.subscribe("presence", "lobby", console.log);
 npm install @serve-tools/client-shared-http-stream
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientSharedHttpStream from "https://esm.run/@serve-tools/client-shared-http-stream";
+```
+
 The worker owns the underlying HTTP stream client and its authorization configuration.
 Each page owns its logical client, subscriptions, and `MessagePort`.
 Closing one page client does not close the worker-owned client used by other pages.

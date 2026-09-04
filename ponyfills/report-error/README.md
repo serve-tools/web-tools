@@ -14,6 +14,12 @@ reportError(new Error("Background task failed"));
 npm install @serve-tools/ponyfill-report-error
 ```
 
+#### Import from a CDN
+
+```js
+import * as ponyfillReportError from "https://esm.run/@serve-tools/ponyfill-report-error";
+```
+
 This is the fallback implementation rather than the native-aware selection layer.
 Use [`@serve-tools/polyfill-report-error`](../../polyfills/report-error/) when a missing global should be installed, or its `./reportError` subpath when an imported function should preserve the native platform implementation without changing globals.
 

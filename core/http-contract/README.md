@@ -11,6 +11,12 @@ OpenAPI 3.1 is optional derived output for validators that also implement Standa
 npm install @serve-tools/http-contract
 ```
 
+#### Import from a CDN
+
+```js
+import * as httpContract from "https://esm.run/@serve-tools/http-contract";
+```
+
 Install `@serve-tools/router` when your application imports it to declare routes.
 Your application selects and installs its own Standard Schema-compatible validator.
 

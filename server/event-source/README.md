@@ -23,6 +23,14 @@ events.send("presence", { online: 3 }, { id: "presence-42" });
 npm install @serve-tools/server-event-source
 ```
 
+#### Import from a CDN
+
+```js
+import * as serverEventSource from "https://esm.run/@serve-tools/server-event-source";
+```
+
+The package root uses web APIs and can run in a browser; hosting a network server requires a server runtime.
+
 The callable handler accepts `GET` requests and returns a UTF-8 `text/event-stream` response.
 `send()` JSON-stringifies event data and supports the spec `id` field; reconnecting EventSource requests expose that value as `connection.lastEventId` from the `Last-Event-ID` header.
 The default `message` event omits the optional `event:` field.

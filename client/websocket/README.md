@@ -28,6 +28,12 @@ using presence = client.subscribe("presence", { room: "lobby" }, (event) => {
 npm install @serve-tools/client-websocket
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientWebsocket from "https://esm.run/@serve-tools/client-websocket";
+```
+
 Use [`@serve-tools/server-websocket`](../../server/websocket/) for the matching server core and runtime adapters.
 Both packages depend on [`@serve-tools/realtime-protocol`](../../realtime/protocol/) for the same versioned binary wire contract.
 This client package does not expose a raw-frame API.

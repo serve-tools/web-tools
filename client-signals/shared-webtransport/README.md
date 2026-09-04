@@ -2,8 +2,16 @@
 
 `@serve-tools/signal-shared-webtransport` provides the shared WebTransport client together with reliable subscription Signal state.
 
+## Install
+
 ```shell
 npm install @serve-tools/signal-shared-webtransport
+```
+
+#### Import from a CDN
+
+```js
+import * as signalSharedWebtransport from "https://esm.run/@serve-tools/signal-shared-webtransport";
 ```
 
 Use `listen()` from `/scope/shared-worker`, then import `connect()` and `observe()` together from the package root or `/scope/window`.

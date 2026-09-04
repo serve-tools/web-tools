@@ -19,6 +19,12 @@ greeting.set("Ahoy"); // updates the paragraph to <p>Ahoy</p>
 npm install @serve-tools/signal @serve-tools/signal-dom
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalDom from "https://esm.run/@serve-tools/signal-dom";
+```
+
 At its core is a simple primitive:
 
 ```ts

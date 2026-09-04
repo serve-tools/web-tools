@@ -8,6 +8,12 @@ The `@serve-tools/client-keyboard` package normalizes platform-relative keyboard
 npm install @serve-tools/client-keyboard
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientKeyboard from "https://esm.run/@serve-tools/client-keyboard";
+```
+
 ## Keyboard chords
 
 ```ts

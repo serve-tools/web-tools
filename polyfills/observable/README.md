@@ -24,6 +24,12 @@ Do not present this package as guaranteeing proposal fidelity across native and 
 npm install @serve-tools/polyfill-observable
 ```
 
+#### Import from a CDN
+
+```js
+import "https://esm.run/@serve-tools/polyfill-observable";
+```
+
 ## Usage
 
 Import the package before code that expects all three platform hooks:

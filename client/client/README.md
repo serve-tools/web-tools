@@ -22,6 +22,12 @@ import { getKeyChordLabel } from "@serve-tools/client/keyboard";
 npm install @serve-tools/client
 ```
 
+#### Import from a CDN
+
+```js
+import * as client from "https://esm.run/@serve-tools/client";
+```
+
 ## Namespaces
 
 | Namespace            | Focused subpath                           | Underlying package                        |

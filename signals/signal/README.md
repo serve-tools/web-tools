@@ -24,6 +24,12 @@ Stage 1 proposals remain exploratory, so this package may change as the proposal
 npm install @serve-tools/signal
 ```
 
+#### Import from a CDN
+
+```js
+import * as signal from "https://esm.run/@serve-tools/signal";
+```
+
 ## Features
 
 - Reactive primitives aligned with the current proposal: `State`, `Computed`, and `Watcher`

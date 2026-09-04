@@ -9,6 +9,12 @@ It provides typed requests and subscriptions over a complete-message byte callba
 npm install @serve-tools/client-realtime
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientRealtime from "https://esm.run/@serve-tools/client-realtime";
+```
+
 Most applications should use `@serve-tools/client-websocket`, `@serve-tools/client-webtransport`, or `@serve-tools/client-http-stream`.
 Use this package when building another transport adapter.
 

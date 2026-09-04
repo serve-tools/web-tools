@@ -26,6 +26,12 @@ console.log(await operation.result); // logs "closed"
 npm install @serve-tools/async-operation
 ```
 
+#### Import from a CDN
+
+```js
+import * as asyncOperation from "https://esm.run/@serve-tools/async-operation";
+```
+
 ## Contract
 
 `new AsyncOperation(executor, options)` starts `executor` immediately and exposes five explicit lifecycle surfaces:

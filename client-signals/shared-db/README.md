@@ -19,6 +19,12 @@ user.get(); // { status: "pending" }
 npm install @serve-tools/signal @serve-tools/signal-shared-db
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalSharedDb from "https://esm.run/@serve-tools/signal-shared-db";
+```
+
 ## Connect to a typed shared database
 
 Define the database and listen for connections in a shared-worker entrypoint:

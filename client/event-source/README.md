@@ -21,6 +21,12 @@ using presence = events.subscribe("presence", ({ data, lastEventId }) => {
 npm install @serve-tools/client-event-source
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientEventSource from "https://esm.run/@serve-tools/client-event-source";
+```
+
 Each event's `data` field is parsed with `JSON.parse`, so event values are restricted to JSON-compatible types.
 The callback also receives the native event type, origin, and `lastEventId` used by EventSource reconnection.
 

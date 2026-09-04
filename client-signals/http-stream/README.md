@@ -15,6 +15,12 @@ const presence = observe(client, "presence", { input: { room: "lobby" } });
 npm install @serve-tools/signal-http-stream
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalHttpStream from "https://esm.run/@serve-tools/signal-http-stream";
+```
+
 The package re-exports the complete `@serve-tools/client-http-stream` API unchanged.
 `observe()` subscribes eagerly and returns `pending`, `ready`, `complete`, or `error` state.
 Dispose the observation independently from the HTTP client.

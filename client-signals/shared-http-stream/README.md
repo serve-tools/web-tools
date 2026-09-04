@@ -2,8 +2,16 @@
 
 `@serve-tools/signal-shared-http-stream` provides the SharedWorker HTTP stream client together with subscription Signal state.
 
+## Install
+
 ```shell
 npm install @serve-tools/signal-shared-http-stream
+```
+
+#### Import from a CDN
+
+```js
+import * as signalSharedHttpStream from "https://esm.run/@serve-tools/signal-shared-http-stream";
 ```
 
 Use `listen()` from `/scope/shared-worker`, then import `connect()` and `observe()` together from the package root or `/scope/window`.

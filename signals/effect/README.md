@@ -20,6 +20,12 @@ dispose();
 npm install @serve-tools/signal @serve-tools/signal-effect
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalEffect from "https://esm.run/@serve-tools/signal-effect";
+```
+
 Effect depends on `@serve-tools/signal`.
 Applications that import Signal directly should also declare it so package managers can share one compatible installation.
 

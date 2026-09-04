@@ -9,6 +9,14 @@ It pairs with `@serve-tools/client-http-stream` and runs anywhere that accepts a
 npm install @serve-tools/server-http-stream
 ```
 
+#### Import from a CDN
+
+```js
+import * as serverHttpStream from "https://esm.run/@serve-tools/server-http-stream";
+```
+
+The package root uses web APIs and can run in a browser; hosting a network server requires a server runtime.
+
 ## Create a handler
 
 ```ts

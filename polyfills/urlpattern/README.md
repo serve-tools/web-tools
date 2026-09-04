@@ -17,6 +17,12 @@ pattern.exec("https://example.com/books/42")?.pathname.groups.id; // "42"
 npm install @serve-tools/polyfill-urlpattern
 ```
 
+#### Import from a CDN
+
+```js
+import "https://esm.run/@serve-tools/polyfill-urlpattern";
+```
+
 ## Usage
 
 Import the package before code that expects `globalThis.URLPattern` to exist.

@@ -15,6 +15,12 @@ using note = db.watch("notes", "welcome");
 npm install @serve-tools/signal-db
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalDb from "https://esm.run/@serve-tools/signal-db";
+```
+
 `watch()`, `watchAll()`, `watchAllKeys()`, and `watchCount()` expose `pending`, `ready`, or `error` state and refresh when signal-backed inputs change.
 `watchAll()` and `watchAllKeys()` accept reactive `count` and `query` options, while `watchCount()` accepts a reactive `query` option.
 Committed point writes and read/write transactions made through the same `SignalDB` automatically invalidate affected stores.

@@ -10,6 +10,14 @@ Focused adapters integrate Node.js with `ws`, Bun, and crossws-based frameworks.
 npm install @serve-tools/server-websocket
 ```
 
+#### Import from a CDN
+
+```js
+import * as serverWebsocket from "https://esm.run/@serve-tools/server-websocket";
+```
+
+The package root uses web APIs and can run in a browser; hosting a network server requires a server runtime.
+
 Install the optional integration used by your server:
 
 ```shell

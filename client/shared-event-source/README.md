@@ -26,6 +26,12 @@ using presence = client.subscribe("presence", ({ data, lastEventId }) => console
 npm install @serve-tools/client-shared-event-source
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientSharedEventSource from "https://esm.run/@serve-tools/client-shared-event-source";
+```
+
 The worker owns the native EventSource and its browser-managed reconnection state.
 Each page owns its logical subscriptions and `MessagePort`.
 Parsed JSON event records retain `type`, `origin`, and `lastEventId` across the worker boundary.

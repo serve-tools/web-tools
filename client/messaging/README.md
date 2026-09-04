@@ -32,6 +32,12 @@ console.log(await client.request("greet", "Ada")); // "Hello, Ada!"
 npm install @serve-tools/client-messaging
 ```
 
+#### Import from a CDN
+
+```js
+import * as clientMessaging from "https://esm.run/@serve-tools/client-messaging";
+```
+
 ## Usage
 
 Declare each operation as a callable method with either zero parameters or one input parameter.

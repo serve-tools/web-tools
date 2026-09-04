@@ -52,6 +52,12 @@ Finite requests remain Promise-based.
 npm install @serve-tools/signal @serve-tools/signal-messaging
 ```
 
+#### Import from a CDN
+
+```js
+import * as signalMessaging from "https://esm.run/@serve-tools/signal-messaging";
+```
+
 The root re-exports the complete generic `@serve-tools/client-messaging` API.
 The `/scope/window` and `/scope/worker` entrypoints likewise combine their client APIs with the compatible Signal package.
 
