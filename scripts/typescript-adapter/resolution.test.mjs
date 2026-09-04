@@ -126,7 +126,7 @@ test("one production bundle reads one compiler generation", { timeout: 60_000 },
 		const refreshDuringTransform = {
 			name: "refresh-during-transform",
 			async transform(code, id) {
-				if (!refreshed && id.endsWith("/b/dist/value.js")) {
+				if (!refreshed && path.normalize(id) === path.join(fixture.root, "b/dist/value.js")) {
 					refreshed = true;
 					await fixture.writeDependency(7);
 					await plugin.api.refresh({ changed: [fixture.dependency] });

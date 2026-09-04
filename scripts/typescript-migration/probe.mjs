@@ -49,6 +49,7 @@ export async function runCompilerProbe(values = {}) {
 		node: process.version,
 		platform: process.platform,
 		arch: process.arch,
+		structuralChangePolicy: "created/deleted sources also invalidate all open project configs",
 		probeSha256: createHash("sha256")
 			.update(await readFile(fileURLToPath(import.meta.url)))
 			.digest("hex"),
@@ -247,6 +248,12 @@ export async function runCompilerProbe(values = {}) {
 					return files;
 				};
 				const update = async (fileChanges) => {
+					if (fileChanges.created?.length || fileChanges.deleted?.length) {
+						fileChanges = {
+							...fileChanges,
+							changed: [...new Set([...(fileChanges.changed ?? []), ...projectConfigs])],
+						};
+					}
 					const previous = snapshot;
 					snapshot = await api.updateSnapshot({
 						fileChanges: Object.fromEntries(

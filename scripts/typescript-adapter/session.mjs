@@ -82,7 +82,7 @@ export async function createCompilerSession({ configFile, cwd = process.cwd() })
 				const nextConfigs = new Set(graph.map(({ configFile: file }) => file));
 				const openProjects = [...nextConfigs].filter((file) => !openedConfigs.has(file));
 				const closeProjects = [...openedConfigs].filter((file) => !nextConfigs.has(file));
-				const changes = materializeFileChanges(pendingChanges);
+				const changes = materializeFileChanges(pendingChanges, nextConfigs);
 				const previousSnapshot = activeSnapshot;
 				const nextSnapshot = await api.updateSnapshot({
 					...(openProjects.length ? { openProjects } : {}),
@@ -350,17 +350,21 @@ function mergeFileChanges(previous, next) {
 	return merged;
 }
 
-function materializeFileChanges(changes) {
+function materializeFileChanges(changes, configFiles) {
 	if (!changes.size) {
 		return undefined;
 	}
 
 	const result = {};
 	for (const [file, kind] of changes) {
-		(result[kind] ??= []).push({ uri: pathToFileURL(file).href });
+		(result[kind] ??= []).push(file);
 	}
-	for (const files of Object.values(result)) {
-		files.sort();
+	if (result.created?.length || result.deleted?.length) {
+		// Native snapshots can retain stale include-glob roots after a structural file change.
+		result.changed = [...new Set([...(result.changed ?? []), ...configFiles])];
+	}
+	for (const [kind, files] of Object.entries(result)) {
+		result[kind] = files.sort().map((file) => ({ uri: pathToFileURL(file).href }));
 	}
 	return result;
 }

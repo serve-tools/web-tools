@@ -44,8 +44,19 @@ jobs:
       - if: ${{ !cancelled() && steps.install.outcome == 'success' && matrix.os == 'ubuntu-24.04' && matrix.node == 24 }}
         name: Use Ubuntu's primary archive for browser dependencies
         run: sudo sed -i 's|http[s]*://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+      - id: media
+        if: ${{ !cancelled() && steps.install.outcome == 'success' && matrix.os == 'windows-2025' }}
+        name: Ensure Windows browser media dependencies
+        shell: pwsh
+        run: |
+          $mediaFeature = Get-WindowsFeature Server-Media-Foundation
+          $mediaFeature | Format-Table
+          if (-not $mediaFeature.Installed) {
+            $installation = Install-WindowsFeature Server-Media-Foundation
+            if (-not $installation.Success) { throw "Windows media dependency installation failed" }
+          }
       - id: browsers
-        if: ${{ !cancelled() && steps.install.outcome == 'success' && matrix.node == 24 }}
-        run: npx playwright install --with-deps chromium firefox webkit
+        if: ${{ !cancelled() && steps.install.outcome == 'success' && steps.media.outcome != 'failure' && matrix.node == 24 }}
+        run: npx playwright install ${{ matrix.os != 'windows-2025' && '--with-deps' || '' }} chromium firefox webkit
       - if: ${{ !cancelled() && steps.browsers.outcome == 'success' && matrix.node == 24 }}
         run: npm run test:typescript-adapter:browser
