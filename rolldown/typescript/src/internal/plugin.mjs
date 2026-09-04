@@ -2,49 +2,83 @@ import path from "node:path";
 import { canonicalPath, hasSideEffects, readProjectPackages, resolveProjectExport } from "./exports.mjs";
 import { createCompilerSession } from "./session.mjs";
 
-/** Opt-in Vite/Rolldown adapter; package publishing and CLI builds still use physical dist files. */
-export async function typescriptProject({ configFile = "tsconfig.json", cwd = process.cwd(), conditions = [] } = {}) {
-	const compiler = await createCompilerSession({ configFile: path.resolve(cwd, configFile), cwd });
+/**
+ * Opt-in Vite/Rolldown adapter; package publishing and CLI builds still use physical dist files.
+ * @param {{ configFile?: string, cwd?: string, conditions?: readonly string[] }} [options]
+ */
+export function typescriptProject({ configFile = "tsconfig.json", cwd = process.cwd(), conditions = [] } = {}) {
+	let compiler;
 	let current;
 	let packages;
 	let sources = new Map();
 	let failure;
 	let disposed = false;
 	let disposal;
-	let pending = Promise.resolve();
 	let server;
 	let firstBuild = true;
 	let resolvedConfig;
+
 	const buildStates = new Map();
 	const statistics = { refreshes: 0, resolveCalls: 0, loadCalls: 0 };
 
-	async function refresh(fileChanges) {
+	const initialization = createCompilerSession({ configFile: path.resolve(cwd, configFile), cwd })
+		.then(async (value) => {
+			compiler = value;
+			if (!disposed) {
+				await compile();
+			}
+		})
+		.catch(async (error) => {
+			failure = error;
+			await compiler?.dispose();
+			throw error;
+		});
+
+	// Observe eager initialization immediately; host hooks still receive its original rejection.
+	let pending = initialization.catch(() => {});
+
+	async function compile(fileChanges) {
+		try {
+			const next = await compiler.refresh(fileChanges);
+			const nextPackages = await readProjectPackages(next.projects);
+			const nextSources = new Map();
+
+			for (const [id, output] of next.outputs) {
+				const source = output.sourceFileName ?? output.sourceFiles?.[0];
+
+				if (source && isJavaScript(id)) {
+					nextSources.set(await canonicalPath(source), id);
+				}
+			}
+
+			current = next;
+			packages = nextPackages;
+			sources = nextSources;
+			failure = undefined;
+
+			++statistics.refreshes;
+
+			return current;
+		} catch (error) {
+			failure = error;
+
+			throw error;
+		}
+	}
+
+	function refresh(fileChanges) {
 		const work = pending.then(async () => {
+			await initialization;
+
 			if (disposed) {
 				throw new Error("TypeScript adapter is disposed");
 			}
-			try {
-				const next = await compiler.refresh(fileChanges);
-				const nextPackages = await readProjectPackages(next.projects);
-				const nextSources = new Map();
-				for (const [id, output] of next.outputs) {
-					const source = output.sourceFileName ?? output.sourceFiles?.[0];
-					if (source && isJavaScript(id)) {
-						nextSources.set(await canonicalPath(source), id);
-					}
-				}
-				current = next;
-				packages = nextPackages;
-				sources = nextSources;
-				failure = undefined;
-				++statistics.refreshes;
-				return current;
-			} catch (error) {
-				failure = error;
-				throw error;
-			}
+
+			return compile(fileChanges);
 		});
+
 		pending = work.catch(() => {});
+
 		return work;
 	}
 
@@ -52,23 +86,18 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 		if (disposal) {
 			return disposal;
 		}
+
 		disposed = true;
+
 		disposal = (async () => {
 			await pending;
-			await compiler.dispose();
+			await compiler?.dispose();
 			buildStates.clear();
 		})();
+
 		return disposal;
 	}
 
-	try {
-		await refresh();
-	} catch (error) {
-		await dispose();
-		throw error;
-	}
-
-	const names = [...packages.keys()];
 	// Reference/config changes can introduce new package names and output directories.
 	// Native filters reject unsupported forms; handlers restrict interception to the current graph.
 	const resolutionFilter = /^(?:@[^/]+\/|[A-Za-z0-9_][^/:\\]*(?:\/|$)|\.{1,2}[\\/]|[\\/]|[A-Za-z]:[\\/])/;
@@ -81,20 +110,28 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 			if (!options.outDir) {
 				return false;
 			}
+
 			const relative = path.relative(options.outDir, id);
+
 			return relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
 		});
 	}
 
 	async function ready() {
+		await initialization;
+
 		let work;
+
 		do {
 			work = pending;
+
 			await work;
 		} while (work !== pending);
+
 		if (disposed) {
 			throw new Error("TypeScript adapter is disposed");
 		}
+
 		if (failure) {
 			throw failure;
 		}
@@ -107,17 +144,21 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 				const relative = path.relative(root, id);
 				return !relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative);
 			});
+
 		return pkg ? hasSideEffects(pkg.manifest.sideEffects, path.relative(pkg.root, id)) : true;
 	}
 
 	function relevant(file) {
 		const normalized = normalize(file);
+
 		if (/(?:^|\/)(?:node_modules|\.git|coverage|dist|test-results|playwright-report)(?:\/|$)/.test(normalized)) {
 			return false;
 		}
+
 		if (isOutput(file) || file.endsWith(".tsbuildinfo")) {
 			return false;
 		}
+
 		return (
 			roots().some((root) => file === root || file.startsWith(`${root}${path.sep}`)) ||
 			current.watchedFiles?.includes(file)
@@ -137,11 +178,14 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 				return failure;
 			},
 			get statistics() {
-				return { ...statistics, compiler: current.timing };
+				return { ...statistics, compiler: current?.timing };
 			},
 		},
-		config(config) {
-			const result = { optimizeDeps: { exclude: names } };
+		async config(config) {
+			await ready();
+
+			const result = { optimizeDeps: { exclude: [...packages.keys()] } };
+
 			if (config.server?.watch !== null) {
 				result.server = {
 					watch: {
@@ -153,27 +197,38 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 					},
 				};
 			}
+
 			return result;
 		},
 		configResolved(config) {
 			resolvedConfig = config;
 		},
-		configureServer(value) {
+		async configureServer(value) {
+			await ready();
+
 			server = value;
+
 			server.watcher.add(roots());
+
 			server.httpServer?.once("close", () => {
-				void dispose();
+				void dispose().catch((error) => value.config.logger.error(String(error)));
 			});
 		},
 		async buildStart() {
+			await initialization;
+
 			if (!firstBuild) {
 				await refresh();
 			}
+
 			firstBuild = false;
+
 			await ready();
+
 			if (!server) {
 				buildStates.set(this.environment ?? "rolldown", state());
 			}
+
 			for (const file of current.watchedFiles ??
 				current.projects.flatMap((project) => [project.configFile, ...project.rootNames])) {
 				this.addWatchFile(file);
@@ -186,7 +241,9 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 			filter: { id: resolutionFilter },
 			async handler(specifier, importer, options = {}) {
 				++statistics.resolveCalls;
+
 				await ready();
+
 				const { generation, packageMap, sourceMap } =
 					buildStates.get(this.environment ?? "rolldown") ?? state();
 				const environmentConditions = this.environment?.config.resolve.conditions ??
@@ -207,38 +264,49 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 				const clean = specifier.split(/[?#]/, 1)[0];
 				const postfix = specifier.slice(clean.length);
 				const publicExport = await resolveProjectExport(packageMap, clean, activeConditions);
+
 				if (publicExport) {
 					if (/\.d\.[cm]?ts$/.test(publicExport.id)) {
 						throw new Error(`Declaration is not a runtime export: ${specifier}`);
 					}
+
 					if (isJavaScript(publicExport.id) && !generation.outputs.has(publicExport.id)) {
 						throw new Error(`No compiler output for public export: ${specifier} (${publicExport.id})`);
 					}
+
 					return { ...publicExport, id: publicExport.id + postfix };
 				}
+
 				const importerPath = importer?.split(/[?#]/, 1)[0];
 				const candidate = path.isAbsolute(clean)
 					? clean
 					: importerPath && clean.startsWith(".")
 						? path.resolve(path.dirname(importerPath), clean)
 						: undefined;
+
 				if (!candidate) {
 					return null;
 				}
+
 				const id = await canonicalPath(candidate);
 				const sourceOutput = sourceMap.get(id);
+
 				if (sourceOutput) {
 					return { id: sourceOutput + postfix, moduleSideEffects: sideEffects(sourceOutput, packageMap) };
 				}
+
 				const choices = [id, `${id}.js`, `${id}.mjs`, path.join(id, "index.js")];
+
 				for (const choice of choices) {
 					if (isJavaScript(choice) && generation.outputs.has(choice)) {
 						return { id: choice + postfix, moduleSideEffects: sideEffects(choice, packageMap) };
 					}
 				}
+
 				if (isJavaScript(id) && isOutput(id, generation)) {
 					throw new Error(`Compiler output was removed: ${id}`);
 				}
+
 				return null;
 			},
 		},
@@ -246,17 +314,23 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 			filter: { id: outputFilter },
 			async handler(id) {
 				++statistics.loadCalls;
+
 				await ready();
+
 				const { generation, packageMap } = buildStates.get(this.environment ?? "rolldown") ?? state();
 				const file = await canonicalPath(id.split(/[?#]/, 1)[0]);
 				const output = generation.outputs.get(file);
+
 				if (!output || !isJavaScript(file)) {
 					return null;
 				}
+
 				const query = new URLSearchParams(id.split("?", 2)[1]?.split("#", 1)[0]);
+
 				if (["url", "worker", "sharedworker"].some((kind) => query.has(kind))) {
-					throw new Error(`The TypeScript pilot does not support asset or worker query imports: ${id}`);
+					throw new Error(`The TypeScript plugin does not support asset or worker query imports: ${id}`);
 				}
+
 				if (query.has("raw")) {
 					return {
 						code: `export default ${JSON.stringify(output.text)};`,
@@ -264,8 +338,11 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 						moduleSideEffects: false,
 					};
 				}
+
 				const mapOutput = generation.outputs.get(`${file}.map`);
+
 				let map = null;
+
 				if (mapOutput) {
 					map = JSON.parse(mapOutput.text);
 					map.sources = map.sources.map((source) =>
@@ -281,6 +358,7 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 						),
 					);
 				}
+
 				return {
 					code: output.text.replace(/\n?\/\/# sourceMappingURL=.*(?:\r?\n)?$/, "\n"),
 					map,
@@ -289,42 +367,59 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 			},
 		},
 		async hotUpdate(context) {
+			await initialization;
+
+			if (disposed) {
+				throw new Error("TypeScript adapter is disposed");
+			}
+
 			const file = await canonicalPath(context.file);
+
 			if (isOutput(file) || file.endsWith(".tsbuildinfo")) {
 				return [];
 			}
+
 			if (!relevant(file)) {
 				return;
 			}
+
 			const previous = current;
+
 			await refresh({
 				[{ create: "created", update: "changed", delete: "deleted" }[context.type]]: [file],
 			});
+
 			await ready();
+
 			server?.watcher.add(roots());
+
 			const graph = this.environment.moduleGraph;
 			const modules = new Set(context.modules);
+
 			for (const [id, module] of graph.idToModuleMap) {
 				if (!path.isAbsolute(id.split(/[?#]/, 1)[0])) {
 					continue;
 				}
+
 				const file = await canonicalPath(id.split(/[?#]/, 1)[0]);
+
 				if (previous.outputs.has(file) || current.outputs.has(file)) {
 					graph.invalidateModule(module, new Set(), context.timestamp, true);
+
 					modules.add(module);
 				}
 			}
+
 			return [...modules];
 		},
 		async closeBundle() {
-			if (!server) {
-				await dispose();
-			}
+			await dispose();
 		},
 		async closeWatcher() {
 			await dispose();
 		},
 	};
+
 	return plugin;
 }
 

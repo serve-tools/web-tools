@@ -3,10 +3,10 @@ import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promis
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
+import { typescript } from "@serve-tools/rolldown-typescript";
 import { rolldown } from "rolldown";
 import { build as viteBuild } from "vite";
 import { createBrowserFixture } from "./browser-fixture.mjs";
-import { typescriptProject } from "./plugin.mjs";
 
 test("Vite client and SSR builds use their environment-specific export conditions", { timeout: 60_000 }, async () => {
 	assert.equal(await bundleConditionalExport(false), "browser");
@@ -25,7 +25,7 @@ test("a refreshed package export selects the current compiler output", { timeout
 	try {
 		const entry = path.join(fixture.root, "package-export-entry.js");
 		await writeFile(entry, 'export { result } from "@fixture/a";\n');
-		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
 		assert.equal(await bundleExport(entry, plugin, builds, "result"), 10);
 
 		const alternateSource = path.join(fixture.root, "a/src/alternate.ts");
@@ -52,7 +52,7 @@ test("a newly referenced external project remains an in-memory bundled dependenc
 	let plugin;
 	let bundle;
 	try {
-		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
 		const source = path.join(external, "src/index.ts");
 		const configFile = path.join(external, "tsconfig.json");
 		const packageFile = path.join(external, "package.json");
@@ -121,7 +121,7 @@ test("one production bundle reads one compiler generation", { timeout: 60_000 },
 	let plugin;
 	let bundle;
 	try {
-		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
 		let refreshed = false;
 		const refreshDuringTransform = {
 			name: "refresh-during-transform",
@@ -171,7 +171,7 @@ async function bundleConditionalExport(ssr) {
 		]);
 		const entry = path.join(fixture.root, "conditional-entry.js");
 		await writeFile(entry, 'export { environment } from "@fixture/a";\n');
-		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
 		const result = await viteBuild({
 			root: fixture.root,
 			logLevel: "silent",
@@ -209,7 +209,7 @@ async function bundleSideEffect(sideEffects) {
 			entry,
 			'import "@fixture/b/value";\nexport const observed = globalThis.__adapterSideEffect ?? "absent";\n',
 		);
-		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
 		bundle = await rolldown({ input: entry, plugins: [plugin] });
 		const { output } = await bundle.generate({ format: "es" });
 		const chunk = output.find((item) => item.type === "chunk");
@@ -234,8 +234,7 @@ async function bundleQuery(query, importKind) {
 				? `import result from "@fixture/a${query}";\nexport { result };\n`
 				: `export { result } from "@fixture/a${query}";\n`,
 		);
-		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
-		const emitted = plugin.api.generation.outputs.get(path.join(fixture.root, "a/dist/index.js")).text;
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
 		const result = await viteBuild({
 			root: fixture.root,
 			logLevel: "silent",
@@ -244,6 +243,7 @@ async function bundleQuery(query, importKind) {
 		});
 		const output = Array.isArray(result) ? result[0].output : result.output;
 		const chunk = output.find((item) => item.type === "chunk");
+		const emitted = plugin.api.generation.outputs.get(path.join(fixture.root, "a/dist/index.js")).text;
 		return { emitted, module: await importCode(chunk.code) };
 	} finally {
 		await plugin?.api.dispose();

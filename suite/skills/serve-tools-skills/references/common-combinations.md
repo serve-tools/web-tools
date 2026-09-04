@@ -61,6 +61,10 @@ Use `@serve-tools/vite-polyfills` when Vite should inject feature-specific polyf
 For decorators, use `@serve-tools/rolldown-decorators` to transform syntax and implement decorator runtime semantics.
 Add `@serve-tools/polyfill-decorator-metadata` only when another decorator transform or runtime expects global `Symbol.metadata`; use the ponyfill only for explicitly shared module-scoped symbol identity.
 
+For experimental in-memory TypeScript compilation, use `@serve-tools/rolldown-typescript` with TypeScript `~7.1.0-0` and one supported Vite or Rolldown host.
+Put `typescript()` directly in the host's plugin array; the host awaits compiler initialization before serving or building.
+Keep declarations, artifacts, publishing, and configuration-time dependencies on the normal CLI path.
+
 ## Facade versus focused packages
 
 Use `@serve-tools/client` when one module intentionally exposes several client namespaces.

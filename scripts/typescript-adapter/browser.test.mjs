@@ -3,10 +3,10 @@ import { open } from "node:fs/promises";
 import path from "node:path";
 import { test } from "node:test";
 import { setTimeout } from "node:timers/promises";
+import { typescript } from "@serve-tools/rolldown-typescript";
 import { chromium, firefox, webkit } from "playwright";
 import { createServer } from "vite";
 import { createBrowserFixture } from "./browser-fixture.mjs";
-import { typescriptProject } from "./plugin.mjs";
 
 for (const [engine, browserType] of [
 	["Chromium", chromium],
@@ -36,7 +36,7 @@ async function runBrowserAcceptance(t, browserType) {
 	});
 
 	await fixture.assertNoDist();
-	plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+	plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
 	server = await createServer({
 		appType: "spa",
 		configFile: false,

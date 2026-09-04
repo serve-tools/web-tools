@@ -7,9 +7,12 @@ import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { API } from "typescript/unstable/async";
-import { CompilerSessionError, createCompilerSession } from "./session.mjs";
+import { CompilerSessionError, createCompilerSession } from "../../rolldown/typescript/src/internal/session.mjs";
 
 const compiler = fileURLToPath(new URL("../../node_modules/typescript/bin/tsc", import.meta.url));
+const compilerVersion = JSON.parse(
+	await readFile(new URL("../../node_modules/typescript/package.json", import.meta.url), "utf8"),
+).version;
 
 test("emits a referenced graph with CLI parity and updates one atomic generation at a time", async (context) => {
 	const fixture = await createFixture();
@@ -17,7 +20,7 @@ test("emits a referenced graph with CLI parity and updates one atomic generation
 	const session = await createCompilerSession({ configFile: fixture.configFile, cwd: fixture.root });
 	context.after(() => session.dispose());
 
-	assert.equal(session.compilerVersion, "7.1.0-dev.20260904.1");
+	assert.equal(session.compilerVersion, compilerVersion);
 	const initial = await session.refresh();
 	assert.equal(initial.generation, 1);
 	assert.equal(initial.projects.length, 4);

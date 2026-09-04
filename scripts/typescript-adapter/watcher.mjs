@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { watch } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
-import { createCompilerSession } from "./session.mjs";
+import { createCompilerSession } from "../../rolldown/typescript/src/internal/session.mjs";
 
 /** Watch a configured project with native directory watchers and serialized reconciliation. */
 export async function watchCompilerProject({

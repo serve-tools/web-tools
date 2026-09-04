@@ -1,7 +1,7 @@
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { typescript } from "@serve-tools/rolldown-typescript";
 import { build, createServer } from "vite";
-import { typescriptProject } from "./plugin.mjs";
 
 /** Run preparation before loading Vite configuration, then enable the internal adapter for one invocation. */
 export async function runPilot({ root, configFile = "tsconfig.json", mode = "dev", prepare, vite = {} }) {
@@ -10,7 +10,7 @@ export async function runPilot({ root, configFile = "tsconfig.json", mode = "dev
 		throw new Error(`Unsupported pilot mode: ${mode}`);
 	}
 	await prepare?.();
-	const plugin = await typescriptProject({ configFile: path.resolve(root, configFile), cwd: root });
+	const plugin = typescript({ configFile: path.resolve(root, configFile), cwd: root });
 	const config = {
 		...vite,
 		root,

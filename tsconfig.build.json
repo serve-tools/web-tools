@@ -178,6 +178,9 @@
 			"path": "./rolldown/decorators/tsconfig.build.json"
 		},
 		{
+			"path": "./rolldown/typescript/tsconfig.build.json"
+		},
+		{
 			"path": "./server/event-source/tsconfig.json"
 		},
 		{

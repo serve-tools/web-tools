@@ -3,7 +3,12 @@ import { mkdir, mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import test from "node:test";
-import { canonicalPath, hasSideEffects, readProjectPackages, resolveProjectExport } from "./exports.mjs";
+import {
+	canonicalPath,
+	hasSideEffects,
+	readProjectPackages,
+	resolveProjectExport,
+} from "../../rolldown/typescript/src/internal/exports.mjs";
 
 test("public exports preserve condition order, patterns, null boundaries, and side effects", async () => {
 	const root = await mkdtemp(path.join(os.tmpdir(), "ts-adapter-exports-"));

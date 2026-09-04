@@ -1,6 +1,6 @@
 ---
 name: serve-tools-rolldown-decorators
-description: Use @serve-tools/rolldown-decorators to transform modern TC39 decorators in Rolldown or Vite builds.
+description: Use @serve-tools/rolldown-decorators for TC39 decorators.
 ---
 
 # Use @serve-tools/rolldown-decorators

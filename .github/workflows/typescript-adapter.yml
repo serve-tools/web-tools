@@ -41,6 +41,8 @@ jobs:
       - run: npm run check:typescript-migration
       - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run test:typescript-adapter:node
+      - if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: npm run test:typescript-adapter:distribution
       - if: ${{ !cancelled() && steps.install.outcome == 'success' && matrix.os == 'ubuntu-24.04' && matrix.node == 24 }}
         name: Use Ubuntu's primary archive for browser dependencies
         run: sudo sed -i 's|http[s]*://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt

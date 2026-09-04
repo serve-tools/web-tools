@@ -2,6 +2,7 @@
 
 Prepared September 4, 2026.
 Status: Phases 0 and 1 complete and merged on September 4, 2026; the separate internal Vite/Rolldown pilot passed validation and evaluation, with CLI defaults retained.
+The user subsequently authorized extracting the pilot into an experimental distributable package; the packaging record below supersedes the earlier internal-only placement decision while retaining CLI defaults.
 The user subsequently authorized completing the remaining steps, landing the compiler migration, and including the accompanying package updates in that commit.
 Publication remains outside this task.
 
@@ -569,6 +570,96 @@ Production bundle bytes are unchanged; small production-bundling and Node-host m
 The current prototype does not pass the promotion gate for a public plugin or broader demo rollout.
 That closes this evaluation without changing the successful compiler migration; a performance redesign and any eventual public package are separate work.
 
+## Experimental package preparation — September 4, 2026
+
+The reusable implementation now lives in `rolldown/typescript` as `@serve-tools/rolldown-typescript@0.1.0`.
+The public `typescript()` factory accepts `configFile`, `cwd`, and additional export `conditions`; its plugin type supports Vite and Rolldown without importing either host's types.
+Only the factory/options/plugin types and explicit `api.dispose()` lifecycle contract are public.
+Compiler sessions, export resolution, generation maps, manual refresh, and timing remain implementation details.
+The standalone watcher remains in the internal harness.
+
+The keyboard pilot and plugin integration tests now import the built package by name.
+Root opt-in commands build the package before invoking the pilot; ordinary demo and package builds retain CLI defaults.
+The package uses normal resolution for the TypeScript manifest and loads the unstable API only after checking the supported version family.
+The first broader peer dependency and runtime gate accepted `7.1.x || 7.1.0-dev.20260904.1`: all stable 7.1 patch releases, plus the tested nightly.
+Valid build metadata is accepted according to npm SemVer rules; other minor versions and other prereleases are rejected.
+The session reports the actual installed compiler version.
+A focused policy test compares accepted/rejected examples with npm SemVer; this does not establish compatibility with unreleased compilers.
+Optional host peers are Vite `^8.2.2` and Rolldown `^1.2.7`, tested at `8.2.2` and `1.2.7`; the declared Node range is `^22.14.0 || >=24.0.0`.
+The original root/demo compiler range and intentional `5.9.3` fixture remain unchanged.
+
+Extraction review reproduced a compiler leak when Vite middleware mode closed without an HTTP-server close event.
+The plugin now disposes on `closeBundle` for that lifecycle too; a real middleware server executes the referenced graph, closes, and rejects further compiler work.
+The final focused Node suite passes all 22 tests.
+No other actionable issue remained in the independent runtime, metadata, and release review.
+
+The package includes generated declarations beside JavaScript, explicit ESM exports, the license, README, and a compile-checked consumer Skill.
+The Skill catalog includes its selection/usage tasks.
+Shorter routing descriptions for the new package and existing decorator/keyboard Skills keep published metadata at the existing 7,900-character limit without removing their guidance.
+The user selected package version `0.1.0` with the normal `latest` tag, anticipating TypeScript 7.1 stable before public use.
+The temporary prerelease-specific release-planner changes have been removed.
+Before npm publication, validate official TypeScript `7.1.0`; the current checkout retains its verified nightly, while stable 7.1 patch releases already satisfy the declared range.
+
+The distribution test packs the built package and installs it into a temporary dependency root outside this repository.
+It checks normal package resolution, a Rolldown-only installation with Vite absent, and then Vite installation; both public declaration checks use `skipLibCheck: false`.
+Both hosts build and execute emitted code with source maps, and the Vite dev server serves and executes the project.
+Referenced package `dist` and build-info files remain absent.
+The incompatible-compiler case also removes the unstable API export, proving that the actionable version error occurs first.
+The matrix now runs this packed-install test on all five existing OS/Node combinations; new hosted results are not inferred from the earlier internal-pilot CI runs.
+
+Evidence and the locally prepared release are under [`typescript-package-20260904`](/Users/jonathan/Documents/Codex/typescript-package-20260904).
+Clean installation, package typechecking, publint, ATTW's ESM profile, the required-capability compiler probe, the focused Node/browser/distribution suites, Skill checks, and release planning passed locally.
+The initial full verification found the missing Skill benchmark catalog entry; that coverage was added and its checks passed.
+Before the package-version correction, full `npm run verify` passed (`evidence/verify-final.log`), including the 22 adapter Node tests, Chromium/Firefox/WebKit plus the real keyboard pilot, and the external packed-install test with full declaration checking.
+The new matrix test is configured but has not yet run on hosted runners for this package extraction; earlier cross-platform results above apply to their recorded commits.
+The updated tarball is `release/serve-tools-rolldown-typescript-0.1.0.tgz`, with a SHA-256 companion and a release/attestation plan.
+After the version correction, clean installation, release tests, Skill checks, package checks, and the external Vite/Rolldown tarball test passed again (`evidence/distribution-0.1.0.log`, `package-check-0.1.0.log`).
+The version-only artifact is retained under `superseded-exact-compiler`, and the earlier prerelease artifact under `superseded-0.1.0-next.0`, as historical evidence.
+After broadening compiler support, the refreshed inventory preserves the intentional TypeScript 5.9.3 fixture and all 18 required-capability probes pass on `7.1.0-dev.20260904.1` (`evidence/compiler-probe-7.1-range.json`).
+The adapter Node suite now has 23 passing tests, including comparison of the peer range and runtime acceptance rules against npm SemVer for stable patches, the tested nightly, build metadata, and rejected versions.
+Full `npm run verify` passed again after this compiler-range change (`evidence/verify-7.1-range.log`), including all type, package, Skill, Node, browser, and external Vite/Rolldown tarball checks.
+Only prereleases of TypeScript 7.1 were available in the registry during this validation; stable 7.1 compatibility remains a declared target until an official release can run through the same suite.
+The rebuilt `0.1.0` tarball declares the broader range and includes the matching runtime gate; its SHA-256 is `b69772956e9ab51d6de949e13981e24abe2bf1780cb27bb5697d2e81962d712a` (30,172 bytes).
+This prepares distribution without publishing to npm or changing build defaults.
+
+### Synchronous plugin API follow-up
+
+The factory now returns the plugin synchronously, so hosts can use `plugins: [typescript()]` without an asynchronous configuration function.
+One eager initialization promise owns session creation and the first compilation.
+Vite awaits it in `config` before dependency optimization exclusions are read and in `configureServer` before watcher roots are added; `buildStart` gates direct Rolldown builds.
+Resolution and loading also wait for initialization and queued updates.
+Initialization failure closes the compiler and rejects host startup without an unhandled background rejection.
+Disposal can be requested immediately and waits for initialization or compilation already in progress; repeated calls share completion.
+Subsequent builds still refresh the graph, and diagnostic recovery remains available during development.
+
+The current user-selected compiler peer range `~7.1.0-0` is synchronized with the runtime gate, lockfile, docs, and npm SemVer comparison tests.
+It accepts stable 7.1 patch releases and 7.1.0 prereleases; the tested compiler remains `7.1.0-dev.20260904.1` on Node `v24.16.0`.
+The package version remains `0.1.0`.
+Package build/typecheck configuration explicitly includes its `.mjs` implementation and public TypeScript contract fixtures.
+
+Final focused validation passed: 27 adapter Node tests, 4 browser tests (Chromium, Firefox, WebKit, and keyboard demo), the external Vite/Rolldown packed-install test, package typechecking, publint/ATTW's ESM profile, Skill validation, and 6 Skill catalog tests.
+An independent lifecycle review verified installed Vite/Rolldown hook ordering; its early-disposal and background cleanup findings were addressed.
+`npm ci --ignore-scripts` passed.
+Full `npm run verify` was attempted and stopped during the root TypeScript build on existing unrelated configuration/type errors, including excluded dot-prefixed sources (`TS6307`) and missing browser globals (`TS2304`); those working-tree changes were preserved.
+This run does not supersede earlier successful full-verification records with a new full pass.
+
+Current evidence and the updated local release are in [`typescript-package-20260904/synchronous-api`](/Users/jonathan/Documents/Codex/typescript-package-20260904/synchronous-api).
+The `release/serve-tools-rolldown-typescript-0.1.0.tgz` SHA-256 is `47791c47a42888262eda65727fe32c90ee5a1b3e1773cb4ef735bca888263364`.
+Older tarballs above are historical artifacts and do not contain this synchronous API.
+No git or npm registry mutation was performed for this follow-up.
+
+### Commit preparation after formatting
+
+The user's formatting changes are preserved, and the package and suite guides now consistently document the synchronous `typescript()` factory, `~7.1.0-0` compiler range, and supported host/Node versions.
+The TypeScript package changes are isolated from unrelated staged AUI, Signal DOM, and configuration changes, including separate portions of shared manifests and suite documentation.
+Clean installation and the repository build pass for this isolated change set.
+The first full verification attempt reached the standalone watcher suite and failed once when an atomic replacement event was missed; the unchanged 27-test adapter Node suite passed on rerun.
+The unused-code check also passed after the clean checkout's required build outputs were generated.
+The remaining consolidated browser suites, all 4 adapter browser tests, and the external Vite/Rolldown packed-install test passed; Skill and formatting checks passed as well.
+This records an intermittent watcher failure rather than claiming an uninterrupted full-verification pass.
+Commit-validation logs are retained under [`typescript-package-20260904/commit-validation`](/Users/jonathan/Documents/Codex/typescript-package-20260904/commit-validation).
+The archived tarballs above predate the final formatting and documentation corrections.
+
 ## Resume checklist
 
 - [x] User authorized Phases 0/1; unrelated work was identified and preserved.
@@ -586,9 +677,18 @@ That closes this evaluation without changing the successful compiler migration; 
 - [x] Combined adapter full verification.
 - [x] Adapter cross-platform CI.
 - [x] Repeated adapter performance measurements and adoption decision: keep CLI defaults; do not promote this prototype.
+- [x] Subsequently authorized experimental package extraction, public declarations, and internal package consumption.
+- [x] External tarball installation, host/type validation, middleware cleanup, and full local verification.
+- [x] Package version 0.1.0, latest-tag metadata, tarball, checksum, and release plan prepared.
+- [x] Stable TypeScript 7.1 patch range, matching runtime guard, SemVer checks, and repeated full local verification.
+- [x] Synchronous `typescript()` factory, lifecycle review, public types/docs/consumers, and focused validation.
 
-No implementation or validation blocker remains in the authorized scope.
-The final adapter PR must pass its last revision's checks before landing; broader rollout, public packaging, and performance redesign remain separate work and are not prerequisites for this migration.
+The synchronous API implementation and focused validation are complete.
+The shared working tree has the unrelated configuration/type errors recorded above; the isolated TypeScript change set completed all verification stages with the recorded watcher rerun.
+The internal adapter PR subsequently passed its final checks and merged as `95789fa1d6489ecf2d1ad1e4d7ccae1febcf20b2`.
+The newly authorized experimental package preparation is recorded above; broader default rollout and performance redesign remain separate work.
+The prepared tarball can be distributed directly.
+Hosted checks on the extraction revision and an explicitly authorized npm bootstrap publication remain release actions; no registry publication or provenance attestation has been performed by this preparation.
 
 ## Sources to refresh at the start
 

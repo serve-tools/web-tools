@@ -1,6 +1,6 @@
 ---
 name: serve-tools-client-keyboard
-description: Use @serve-tools/client-keyboard for typed keyboard events, canonical chords, matching, labels, symbols, and ARIA shortcuts.
+description: Use @serve-tools/client-keyboard for key events, canonical chords, matching, labels, symbols and ARIA.
 ---
 
 # Use @serve-tools/client-keyboard

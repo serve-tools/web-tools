@@ -61,6 +61,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/http-contract`](./core/http-contract/) defines typed JSON HTTP operations with shared routes, schema-free Fetch clients, validated handlers, and optional OpenAPI projection.
 - [`@serve-tools/realtime-protocol`](./realtime/protocol/) provides the shared binary serializer, wire messages, guards, types, and reliable-stream framing.
 - [`@serve-tools/rolldown-decorators`](./rolldown/decorators/) transforms modern TC39 decorators in Rolldown and Vite builds.
+- [`@serve-tools/rolldown-typescript`](./rolldown/typescript/) is an experimental in-memory TypeScript project compiler for Vite and Rolldown.
 - [`@serve-tools/router`](./core/router/) provides runtime-neutral typed route declarations, URL matching, and reusable codecs for pathname and search values.
 - [`@serve-tools/server-event-source`](./server/event-source/) provides Fetch-compatible JSON Server-Sent Events.
 - [`@serve-tools/server-realtime`](./server/realtime/) provides the sans-I/O operation server for custom transport adapters.
