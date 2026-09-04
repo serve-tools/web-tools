@@ -126,6 +126,9 @@ Adding conditional polyfill setup and an explicit private test dependency fixed 
 The interoperability fixture also passed on Node 24 without loading the polyfill.
 The first remote Node 26 job spent five minutes installing dependencies and reached its ten-minute workflow limit while browser tests were still progressing without reported failures.
 Its full-verification allowance was increased to twenty minutes, retaining all checks and the shorter limits for the other jobs.
+The next run exposed a cold-start race in the client-router document reload fixture: readiness polling began before the iframe finished loading.
+Waiting for each actual iframe `load` event preserves all readiness, document-replacement, and render-count assertions without increasing the test timeout.
+A temporary 1.5-second fixture-response delay reproduced six failures before this test-only fix and passed all eighteen focused cross-browser tests afterward.
 This report is not a claim that the repository is ready to publish unchanged.
 This reduction pass does not advance package versions or refresh the release plan for newly changed packages; those must be reviewed before a future release.
 Automated browser tests are also not manual assistive-technology verification.
