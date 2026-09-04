@@ -33,6 +33,9 @@ jobs:
       - run: npm install --global npm@12.0.2
       - run: npm ci --ignore-scripts
       - if: matrix.node == 26
+        name: Use Ubuntu's primary archive for browser dependencies
+        run: sudo sed -i 's|http[s]*://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
+      - if: matrix.node == 26
         run: npx playwright install --with-deps chromium firefox webkit
       - if: matrix.node == 26
         run: npm run verify
