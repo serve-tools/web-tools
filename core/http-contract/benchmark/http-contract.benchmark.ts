@@ -9,7 +9,7 @@ import type { APIDefinition, RouteDeclaration } from "../src/lib/types.js";
 import { toOpenAPI } from "../src/openapi.js";
 import { createHandler } from "../src/server.js";
 
-const measurement = { samples: 6, warmup: 2 };
+const measurement = { samples: 15, warmup: 5 };
 const success = { value: { ok: true } };
 const invalid = { issues: [{ message: "Expected a JSON object" }] };
 
@@ -87,6 +87,7 @@ interface RuntimeClient {
 }
 
 test("HTTP contract representative runtime workloads", async () => {
+	let sink: unknown;
 	const nativeClient = createClient({
 		baseURL: "https://benchmark.invalid/",
 		fetch: jsonFetch,
@@ -131,50 +132,52 @@ test("HTTP contract representative runtime workloads", async () => {
 	await benchmark(
 		"http-contract/define-api/30-routes",
 		() => {
-			void defineAPI(createDefinition());
+			sink = defineAPI(createDefinition());
 		},
 		{
 			...measurement,
-			iterations: 300,
+			iterations: 1_000,
 		},
 	);
+	expect(sink).toHaveProperty("routes");
 	await benchmark(
 		"http-contract/client/create",
 		() => {
-			void createClient({ fetch: jsonFetch });
+			sink = createClient({ fetch: jsonFetch });
 		},
 		{
 			...measurement,
-			iterations: 15_000,
+			iterations: 300_000,
 		},
 	);
+	expect(sink).toHaveProperty("GET");
 	await benchmark(
 		"http-contract/client/native-get",
 		async () => {
 			await runtimeGET("/resources/0");
 		},
-		{ ...measurement, iterations: 800 },
+		{ ...measurement, iterations: 2_000 },
 	);
 	await benchmark(
 		"http-contract/client/native-parameter-get",
 		async () => {
 			await runtimeGET("/items/:id", { params: { id: 42 } });
 		},
-		{ ...measurement, iterations: 800 },
+		{ ...measurement, iterations: 2_000 },
 	);
 	await benchmark(
 		"http-contract/client/post-json",
 		async () => {
 			await runtimePOST("/items/:id", { params: { id: 42 }, body: { ok: true } });
 		},
-		{ ...measurement, iterations: 600 },
+		{ ...measurement, iterations: 1_500 },
 	);
 	await benchmark(
 		"http-contract/client/href-get",
 		async () => {
 			await runtimeGET("/href/:id", { href: "/href/42" });
 		},
-		{ ...measurement, iterations: 800 },
+		{ ...measurement, iterations: 2_000 },
 	);
 	await benchmark(
 		"http-contract/client/protocol-error-response",
@@ -191,66 +194,67 @@ test("HTTP contract representative runtime workloads", async () => {
 
 			throw new Error("The non-JSON response did not reject with ProtocolError");
 		},
-		{ ...measurement, iterations: 800 },
+		{ ...measurement, iterations: 2_000 },
 	);
 	await benchmark(
 		"http-contract/server/create-handler/30-routes",
 		() => {
-			void createBenchmarkHandler();
+			sink = createBenchmarkHandler();
 		},
 		{
 			...measurement,
-			iterations: 200,
+			iterations: 1_000,
 		},
 	);
+	expect(sink).toBeTypeOf("function");
 	await benchmark(
 		"http-contract/server/dispatch-first-of-30",
 		async () => {
 			await handler(new Request("https://benchmark.invalid/resources/0"));
 		},
-		{ ...measurement, iterations: 500 },
+		{ ...measurement, iterations: 3_000 },
 	);
 	await benchmark(
 		"http-contract/server/dispatch-last-of-30",
 		async () => {
 			await handler(new Request("https://benchmark.invalid/resources/25"));
 		},
-		{ ...measurement, iterations: 500 },
+		{ ...measurement, iterations: 3_000 },
 	);
 	await benchmark(
 		"http-contract/server/dispatch-static-hit",
 		async () => {
 			await handler(new Request("https://benchmark.invalid/items/me"));
 		},
-		{ ...measurement, iterations: 500 },
+		{ ...measurement, iterations: 3_000 },
 	);
 	await benchmark(
 		"http-contract/server/dispatch-parameter-hit",
 		async () => {
 			await handler(new Request("https://benchmark.invalid/items/42"));
 		},
-		{ ...measurement, iterations: 500 },
+		{ ...measurement, iterations: 3_000 },
 	);
 	await benchmark(
 		"http-contract/server/dispatch-404",
 		async () => {
 			await handler(new Request("https://benchmark.invalid/missing"));
 		},
-		{ ...measurement, iterations: 500 },
+		{ ...measurement, iterations: 3_000 },
 	);
 	await benchmark(
 		"http-contract/server/dispatch-405",
 		async () => {
 			await handler(new Request("https://benchmark.invalid/items/42", { method: "PUT" }));
 		},
-		{ ...measurement, iterations: 500 },
+		{ ...measurement, iterations: 3_000 },
 	);
 	await benchmark(
 		"http-contract/server/dispatch-invalid-parameter",
 		async () => {
 			await handler(new Request("https://benchmark.invalid/items/not-a-number"));
 		},
-		{ ...measurement, iterations: 500 },
+		{ ...measurement, iterations: 3_000 },
 	);
 	await benchmark(
 		"http-contract/server/dispatch-invalid-body",
@@ -263,20 +267,21 @@ test("HTTP contract representative runtime workloads", async () => {
 				}),
 			);
 		},
-		{ ...measurement, iterations: 400 },
+		{ ...measurement, iterations: 2_000 },
 	);
 	await benchmark(
 		"http-contract/server/dispatch-204",
 		async () => {
 			await handler(new Request("https://benchmark.invalid/empty", { method: "DELETE" }));
 		},
-		{ ...measurement, iterations: 500 },
+		{ ...measurement, iterations: 3_000 },
 	);
 	await benchmark(
 		"http-contract/openapi/project-30-routes",
 		() => {
-			toOpenAPI(api, { info: { title: "Benchmark", version: "1" } });
+			sink = toOpenAPI(api, { info: { title: "Benchmark", version: "1" } });
 		},
-		{ ...measurement, iterations: 80 },
+		{ ...measurement, iterations: 300 },
 	);
+	expect(sink).toHaveProperty("paths");
 });

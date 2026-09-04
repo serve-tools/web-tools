@@ -67,7 +67,23 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		throw Object.assign(new Error(`Expected the ${subprotocol} WebTransport protocol`), { name: "ProtocolError" });
 	}
 
+	let setupDatagramWriter: WritableStreamDefaultWriter<BufferSource> | undefined;
+
 	try {
+		const nativeDatagrams = transport.datagrams;
+		const datagramWritable =
+			typeof nativeDatagrams.createWritable === "function"
+				? nativeDatagrams.createWritable()
+				: nativeDatagrams.writable;
+
+		if (!datagramWritable) {
+			throw new DOMException("Writable WebTransport datagrams are not supported", "NotSupportedError");
+		}
+
+		const sharedDatagramWriter = datagramWritable.getWriter();
+
+		setupDatagramWriter = sharedDatagramWriter;
+
 		const operationStream = await abortable(transport.createBidirectionalStream(), options.signal, abortSetup);
 		const operationWriter = operationStream.writable.getWriter();
 		const operationDecoder = new FrameDecoder();
@@ -125,7 +141,6 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 		const listeners = new Map<string, Set<(value: unknown) => void>>();
 		const subscriptions = new Set<() => void>();
 		const pendingReads = new Set<(reason: unknown) => void>();
-		const sharedDatagramWriter = transport.datagrams.createWritable().getWriter();
 		const datagramDecodeOptions = {
 			maximumArrayBufferLength:
 				positiveSafeInteger(transport.datagrams.maxDatagramSize) ?? defaultMaximumDatagramLength,
@@ -174,7 +189,14 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 					throw datagramsClosed;
 				}
 
-				const writable = transport.datagrams.createWritable(writableOptions);
+				if (typeof nativeDatagrams.createWritable !== "function") {
+					throw new DOMException(
+						"Independent WebTransport datagram writables are not supported",
+						"NotSupportedError",
+					);
+				}
+
+				const writable = nativeDatagrams.createWritable(writableOptions);
 				const writer = writable.getWriter();
 				const kind = registry.register(name);
 
@@ -290,6 +312,8 @@ export async function connect<const P extends Protocol & ProtocolDefinition<P>>(
 
 		return Object.assign(client, { datagrams }) as Client<P>;
 	} catch (error) {
+		setupDatagramWriter?.releaseLock();
+
 		if (!options.signal?.aborted) {
 			transport.close({ reason: "Connection setup failed" });
 		}

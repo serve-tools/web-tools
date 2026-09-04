@@ -105,15 +105,11 @@ export function rolldownDecorators(): RolldownDecoratorsPlugin {
 					return null;
 				}
 
-				const program = meta.ast as unknown as Node;
-				const records = collectClasses(program);
-				const decorated = records.filter(({ node }) => hasDecorators(node));
+				const { decorated, names } = analyzeProgram(meta.ast as unknown as Node);
 
 				if (decorated.length === 0) {
 					return null;
 				}
-
-				const names = collectNames(program);
 
 				const helpers = {
 					apply: uniqueName(names, "__decorators_apply"),
@@ -453,8 +449,9 @@ function hasDecorators(node: ClassNode): boolean {
 	return node.decorators.length > 0 || node.body.body.some((member) => member.decorators.length > 0);
 }
 
-function collectClasses(program: Node): ClassRecord[] {
-	const classes: ClassRecord[] = [];
+function analyzeProgram(program: Node): { decorated: ClassRecord[]; names: Set<string> } {
+	const decorated: ClassRecord[] = [];
+	const names = new Set<string>();
 	const visited = new Set<object>();
 
 	const visit = (value: unknown, parent: Node | null): void => {
@@ -464,58 +461,35 @@ function collectClasses(program: Node): ClassRecord[] {
 
 		visited.add(value);
 
-		if (isNode(value) && (value.type === "ClassDeclaration" || value.type === "ClassExpression")) {
-			classes.push({ node: value as ClassNode, parent });
+		const node = isNode(value) ? value : null;
+
+		if (node && (node.type === "ClassDeclaration" || node.type === "ClassExpression")) {
+			if (hasDecorators(node as ClassNode)) {
+				decorated.push({ node: node as ClassNode, parent });
+			}
+		} else if (
+			node &&
+			(node.type === "Identifier" || node.type === "PrivateIdentifier") &&
+			typeof node.name === "string" &&
+			node.name.startsWith("__decorators_")
+		) {
+			names.add(node.name);
 		}
 
 		for (const child of Object.values(value)) {
 			if (Array.isArray(child)) {
 				for (const item of child) {
-					visit(item, isNode(value) ? value : parent);
+					visit(item, node ?? parent);
 				}
 			} else {
-				visit(child, isNode(value) ? value : parent);
+				visit(child, node ?? parent);
 			}
 		}
 	};
 
 	visit(program, null);
 
-	return classes;
-}
-
-function collectNames(program: Node): Set<string> {
-	const names = new Set<string>();
-	const visited = new Set<object>();
-	const pending: object[] = [program];
-
-	while (pending.length > 0) {
-		const value = pending.pop() as Record<string, unknown>;
-
-		if (visited.has(value)) {
-			continue;
-		}
-
-		visited.add(value);
-
-		if ((value.type === "Identifier" || value.type === "PrivateIdentifier") && typeof value.name === "string") {
-			names.add(value.name);
-		}
-
-		for (const child of Object.values(value)) {
-			if (Array.isArray(child)) {
-				for (const item of child) {
-					if (item && typeof item === "object") {
-						pending.push(item);
-					}
-				}
-			} else if (child && typeof child === "object") {
-				pending.push(child);
-			}
-		}
-	}
-
-	return names;
+	return { decorated, names };
 }
 
 function uniqueName(names: Set<string>, base: string): string {

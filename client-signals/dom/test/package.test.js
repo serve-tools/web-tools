@@ -6,6 +6,7 @@ const entries = {
 		"adoptedCSS",
 		"attrs",
 		"css",
+		"createBindingScope",
 		"dispose",
 		"elementInternals",
 		"group",

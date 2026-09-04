@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Observable Ponyfill"
+  short_description: "Use independent cold Observable executions"
+  default_prompt: "Use $serve-tools-ponyfill-observable for independently cancellable Observable consumption without global mutation."

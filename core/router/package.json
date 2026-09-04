@@ -40,6 +40,7 @@
 		"typecheck": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"devDependencies": {
-		"@serve-tools/polyfill-urlpattern": "^0.1.0"
+		"@serve-tools/polyfill-urlpattern": "^0.1.0",
+		"@serve-tools/ponyfill-urlpattern": "^0.1.1"
 	}
 }

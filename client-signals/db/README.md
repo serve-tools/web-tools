@@ -25,6 +25,25 @@ Finite operations, transactions, and scans retain the underlying client's Promis
 Dispose queries independently or close the wrapper to dispose every query and close its source connection.
 Disposal preserves an already published query snapshot; a pending refresh instead publishes a terminal `InvalidStateError`, and its later database result cannot overwrite that state.
 
+## Preserve drafts during refresh
+
+Every refresh publishes `{ status: "pending" }` without its previous value, including refreshes after committed writes.
+Do not turn pending into an empty collection or unmount an editor that already has data.
+The [retained-query recipe](./skills/serve-tools-signal-db/references/preserve-editor-drafts.md) keeps the last successful snapshot alongside the current loading/error state and preserves the same textarea during background refresh.
+It also treats a successful empty or missing result as new data, rather than retaining the old record forever.
+
+Copy the application-local helpers from the recipe; they are not package exports.
+
+```ts
+const editor = mountDraftEditor(db.watch("notes", "welcome"), container, (note) => note);
+
+// When this fixed record's view is retired:
+editor.dispose();
+```
+
+Own drafts separately from fetched records, and recreate the retained-query owner when the record key, filters, account, or tenant changes.
+The underlying `QueryState` and default refresh/disposal behavior are unchanged.
+
 ## Agent Skill
 
 The package includes an Agent Skill at [`skills/serve-tools-signal-db`](./skills/serve-tools-signal-db/SKILL.md).

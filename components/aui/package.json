@@ -1,0 +1,87 @@
+{
+	"name": "@serve-tools/aui",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Composable web components with native platform behavior and owned signal lifecycles",
+	"keywords": [
+		"accessibility",
+		"components",
+		"custom-elements",
+		"signals",
+		"web-components"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/components/aui#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "components/aui"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/aui.js",
+		"./accordion": "./dist/accordion-element.js",
+		"./alert-dialog": "./dist/alert-dialog-element.js",
+		"./autocomplete": "./dist/autocomplete-element.js",
+		"./avatar": "./dist/avatar-element.js",
+		"./base": "./dist/aui-element.js",
+		"./calendar": "./dist/calendar-element.js",
+		"./checkbox": "./dist/checkbox-element.js",
+		"./checkbox-group": "./dist/checkbox-group-element.js",
+		"./collapsible": "./dist/collapsible-element.js",
+		"./combobox": "./dist/combobox-element.js",
+		"./context-menu": "./dist/context-menu-element.js",
+		"./dialog": "./dist/dialog-element.js",
+		"./drawer": "./dist/drawer-element.js",
+		"./field": "./dist/field-element.js",
+		"./file": "./dist/file-element.js",
+		"./menu": "./dist/menu-element.js",
+		"./menubar": "./dist/menubar-element.js",
+		"./meter": "./dist/meter-element.js",
+		"./navigation-menu": "./dist/navigation-menu-element.js",
+		"./number-field": "./dist/number-field-element.js",
+		"./option": "./dist/option-element.js",
+		"./otp-field": "./dist/otp-field-element.js",
+		"./popover": "./dist/popover-element.js",
+		"./preview-card": "./dist/preview-card-element.js",
+		"./progress": "./dist/progress-element.js",
+		"./scroll-area": "./dist/scroll-area-element.js",
+		"./select": "./dist/select-element.js",
+		"./separator": "./dist/separator-element.js",
+		"./slider": "./dist/slider-element.js",
+		"./switch": "./dist/switch-element.js",
+		"./tabs": "./dist/tabs-element.js",
+		"./template": "./dist/template.js",
+		"./toast-region": "./dist/toast-region-element.js",
+		"./toggle": "./dist/toggle-element.js",
+		"./toggle-group": "./dist/toggle-group-element.js",
+		"./toolbar": "./dist/toolbar-element.js",
+		"./tooltip": "./dist/tooltip-element.js"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsc --build tsconfig.json",
+		"build:dependencies": "npm run build --workspace @serve-tools/signal --workspace @serve-tools/signal-effect --workspace @serve-tools/signal-dom --workspace @serve-tools/client-context --workspace @serve-tools/client-input --workspace @serve-tools/polyfill-resource-management",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"dev": "npm run build:dependencies && npm run build && vite examples --host 127.0.0.1",
+		"test": "npm run build:dependencies && npm run build && npm run test:browser",
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/client-input": "0.1.3",
+		"@serve-tools/signal": "^0.1.3",
+		"@serve-tools/signal-dom": "^0.2.0"
+	},
+	"devDependencies": {
+		"@serve-tools/client-context": "0.1.4",
+		"@serve-tools/polyfill-resource-management": "^0.1.6"
+	}
+}

@@ -17,6 +17,7 @@ import type {
 	WriteOptions,
 } from "../src/signal-shared-db.js";
 import { SignalDB } from "../src/signal-shared-db.js";
+import { retainQuerySnapshot } from "./signal-shared-db.recipes.js";
 
 interface User {
 	id: string;
@@ -230,6 +231,11 @@ const waitFor = async (assertion: () => void): Promise<void> => {
 	}
 
 	throw failure;
+};
+
+const flushEffects = async (): Promise<void> => {
+	await new Promise<void>((resolve) => queueMicrotask(resolve));
+	await new Promise<void>((resolve) => queueMicrotask(resolve));
 };
 
 describe("SignalDB", () => {
@@ -498,5 +504,146 @@ describe("SignalDB", () => {
 		await pending.promise;
 
 		expect(query.get()).toMatchObject({ status: "error", error: { name: "InvalidStateError" } });
+	});
+
+	it("retains no snapshot through an initial pending state or error", async () => {
+		const query = database.watch("users", one.id);
+		const retained = retainQuerySnapshot(query);
+
+		expect(retained.state.get()).toEqual({ current: { status: "pending" }, snapshot: undefined });
+
+		const failure = new Error("Subscription failed before the first read");
+
+		source.fail(failure);
+		await flushEffects();
+
+		expect(retained.state.get()).toEqual({ current: { status: "error", error: failure }, snapshot: undefined });
+
+		retained.dispose();
+	});
+
+	it("starts a replacement query owner without inheriting the previous snapshot", async () => {
+		const firstQuery = database.watch("users", one.id);
+
+		source.ready();
+		await firstQuery.refresh();
+
+		const firstRetained = retainQuerySnapshot(firstQuery);
+
+		expect(firstRetained.state.get().snapshot).toEqual({ status: "ready", value: one });
+
+		firstRetained.dispose();
+
+		const replacementQuery = database.watch("users", two.id);
+		const replacementRetained = retainQuerySnapshot(replacementQuery);
+
+		expect(replacementRetained.state.get()).toEqual({ current: { status: "pending" }, snapshot: undefined });
+
+		replacementRetained.dispose();
+	});
+
+	it("keeps the last successful snapshot through a pending refresh and later error", async () => {
+		const query = database.watch("users", one.id);
+
+		source.ready();
+		await query.refresh();
+
+		const retained = retainQuerySnapshot(query);
+		const pending = Promise.withResolvers<User | undefined>();
+
+		source.get = (() => pending.promise) as typeof source.get;
+
+		const refresh = query.refresh();
+
+		await flushEffects();
+
+		expect(retained.state.get()).toEqual({
+			current: { status: "pending" },
+			snapshot: { status: "ready", value: one },
+		});
+
+		const updated = { ...one, name: "Updated" };
+
+		pending.resolve(updated);
+		await refresh;
+		await flushEffects();
+
+		expect(retained.state.get()).toEqual({
+			current: { status: "ready", value: updated },
+			snapshot: { status: "ready", value: updated },
+		});
+
+		const failure = new Error("Refresh failed");
+
+		source.get = (() => Promise.reject(failure)) as typeof source.get;
+
+		await query.refresh();
+		await flushEffects();
+
+		expect(retained.state.get()).toEqual({
+			current: { status: "error", error: failure },
+			snapshot: { status: "ready", value: updated },
+		});
+
+		retained.dispose();
+	});
+
+	it("replaces stale snapshots with successful empty, zero, and missing values", async () => {
+		const users = database.watchAll("users");
+		const count = database.watchCount("users");
+		const selected = database.watch("users", one.id);
+
+		source.ready();
+		await Promise.all([users.refresh(), count.refresh(), selected.refresh()]);
+
+		const retainedUsers = retainQuerySnapshot(users);
+		const retainedCount = retainQuerySnapshot(count);
+		const retainedSelected = retainQuerySnapshot(selected);
+
+		source.users.clear();
+
+		await Promise.all([users.refresh(), count.refresh(), selected.refresh()]);
+		await flushEffects();
+
+		expect(retainedUsers.state.get().snapshot).toEqual({ status: "ready", value: [] });
+		expect(retainedCount.state.get().snapshot).toEqual({ status: "ready", value: 0 });
+		expect(retainedSelected.state.get().snapshot).toEqual({ status: "ready", value: undefined });
+
+		retainedUsers.dispose();
+		retainedCount.dispose();
+		retainedSelected.dispose();
+	});
+
+	it("freezes the retained view when disposed during a pending refresh", async () => {
+		const query = database.watch("users", one.id);
+
+		source.ready();
+		await query.refresh();
+
+		const retained = retainQuerySnapshot(query);
+		const pending = Promise.withResolvers<User | undefined>();
+
+		source.get = (() => pending.promise) as typeof source.get;
+
+		const refresh = query.refresh();
+
+		await flushEffects();
+
+		const frozen = retained.state.get();
+
+		expect(frozen).toEqual({
+			current: { status: "pending" },
+			snapshot: { status: "ready", value: one },
+		});
+
+		retained.dispose();
+
+		await expect(refresh).resolves.toBeUndefined();
+
+		pending.resolve(two);
+		await pending.promise;
+		await flushEffects();
+
+		expect(retained.state.get()).toBe(frozen);
 	});
 });

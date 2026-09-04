@@ -211,4 +211,117 @@ describe("signal update effects", () => {
 
 		expect(Signal.subtle.hasSinks(source)).toBe(false);
 	});
+
+	it("runs the first effect registered by render after that same update", async () => {
+		const tag = `serve-tools-render-effect-${crypto.randomUUID()}`;
+		class RenderEffectElement extends SignalWatcher(LitElement) {
+			readonly events: string[] = [];
+			#registered = false;
+			#updating = false;
+
+			protected override performUpdate(): void {
+				this.#updating = true;
+
+				try {
+					super.performUpdate();
+				} finally {
+					this.#updating = false;
+				}
+			}
+
+			protected override render(): void {
+				this.events.push("render");
+				if (!this.#registered) {
+					this.#registered = true;
+					this.updateEffect(() => {
+						this.events.push(`effect:${this.#updating}`);
+					});
+				}
+			}
+
+			protected override updated(): void {
+				this.events.push("updated");
+			}
+		}
+		customElements.define(tag, RenderEffectElement);
+		const element = document.createElement(tag) as RenderEffectElement;
+
+		document.body.append(element);
+		await element.updateComplete;
+		await Promise.resolve();
+
+		try {
+			expect(element.events).toEqual(["render", "updated", "effect:true"]);
+		} finally {
+			element.remove();
+		}
+	});
+
+	it("preserves live effect order when cleanup registers another effect", async () => {
+		const source = new Signal.State(0);
+		const element = await connect();
+		const events: string[] = [];
+		let disposeAdded: (() => void) | undefined;
+		const disposeFirst = element.updateEffect(() => {
+			const value = source.get();
+			events.push(`first:${value}`);
+
+			return () => {
+				events.push(`cleanup:${value}`);
+				disposeAdded ??= element.updateEffect(() => {
+					events.push(`added:${source.get()}`);
+				});
+			};
+		});
+		await Promise.resolve();
+		events.length = 0;
+
+		source.set(1);
+		await Promise.resolve();
+		await Promise.resolve();
+
+		try {
+			expect(events).toEqual(["cleanup:0", "first:1", "added:1"]);
+		} finally {
+			disposeFirst();
+			disposeAdded?.();
+			element.remove();
+		}
+	});
+
+	it("recovers after the first lazily initialized effect returns invalid cleanup", async () => {
+		const tag = `serve-tools-invalid-lazy-effect-${crypto.randomUUID()}`;
+		class InvalidLazyEffectElement extends SignalWatcher(LitElement) {
+			readonly events: string[] = [];
+			readonly source = new Signal.State(0);
+			#runs = 0;
+
+			constructor() {
+				super();
+				this.updateEffect(() => {
+					this.events.push(`invalid:${this.source.get()}`);
+					return ++this.#runs === 1 ? (1 as unknown as () => void) : undefined;
+				});
+				this.updateEffect(() => {
+					this.events.push(`other:${this.source.get()}`);
+				});
+			}
+		}
+		customElements.define(tag, InvalidLazyEffectElement);
+		const element = document.createElement(tag) as InvalidLazyEffectElement;
+
+		document.body.append(element);
+		await expect(element.updateComplete).rejects.toThrow("Expected an update effect cleanup function or undefined");
+		expect(element.events).toEqual(["invalid:0", "other:0"]);
+		element.events.length = 0;
+
+		element.source.set(1);
+		await Promise.resolve();
+
+		try {
+			expect(element.events).toEqual(["invalid:1", "other:1"]);
+		} finally {
+			element.remove();
+		}
+	});
 });

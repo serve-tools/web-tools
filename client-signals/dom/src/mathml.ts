@@ -8,8 +8,8 @@ export const mathml =
 		name: K,
 		...items: mathml.Item<K>[]
 	): mathml.Template<DOM.MathML.ElementMap[K]> =>
-	(target?: ParentNode) =>
-		render(document.createElementNS("http://www.w3.org/1998/Math/MathML", name), items as never, target);
+	(target) =>
+		render<DOM.MathML.ElementMap[K]>(name, items as never, target, "http://www.w3.org/1998/Math/MathML");
 
 /** Types used by {@link mathml}. */
 export namespace mathml {

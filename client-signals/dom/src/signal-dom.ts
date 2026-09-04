@@ -5,6 +5,7 @@ export { group } from "./group.js";
 export { html } from "./html.js";
 export { mathml } from "./mathml.js";
 export { props } from "./props.js";
+export { type BindingScope, createBindingScope } from "./scope.js";
 export { shadowRoot } from "./shadowRoot.js";
 export { adoptedCSS, type CSSValue, css } from "./style.js";
 export { svg } from "./svg.js";

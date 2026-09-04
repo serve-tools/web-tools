@@ -9,6 +9,7 @@
 	},
 	"devDependencies": {
 		"@serve-tools/http-contract": "file:../http-contract",
+		"@serve-tools/polyfill-urlpattern": "file:../../polyfills/urlpattern",
 		"@serve-tools/router": "file:../router",
 		"openapi-fetch": "0.17.0",
 		"openapi-typescript": "7.13.0",

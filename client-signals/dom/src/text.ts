@@ -1,11 +1,11 @@
 import type { Watchable } from "./.internals.js";
-import { handler } from "./.internals.js";
+import { getDocument, handler } from "./.internals.js";
 
 /** Creates a text node with the specified content. */
 export const text =
 	<P extends ParentNode = ParentNode>(content: Watchable<string | number | boolean>): text.Template<P> =>
 	(parent?: ParentNode) => {
-		const text = new Text("");
+		const text = getDocument(parent).createTextNode("");
 
 		handler(content, (value) => (text.data = String(value ?? "")), text);
 

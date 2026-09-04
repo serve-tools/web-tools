@@ -3,9 +3,9 @@ import type { html } from "./html.js";
 
 /** Creates an SVG element with the specified tag name and applies the given items to it. */
 export const svg =
-	<K extends DOM.SVG.Element.Name>(name: K, ...items: svg.Item<K>[]) =>
-	(target?: ParentNode) =>
-		render(document.createElementNS("http://www.w3.org/2000/svg", name), items as never, target);
+	<K extends DOM.SVG.Element.Name>(name: K, ...items: svg.Item<K>[]): svg.Template<DOM.SVG.ElementMap[K]> =>
+	(target) =>
+		render<DOM.SVG.ElementMap[K]>(name, items as never, target, "http://www.w3.org/2000/svg");
 
 /** Types used by {@link svg}. */
 export namespace svg {

@@ -11,8 +11,8 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../.
 test("catalog discovers every runtime package Skill", async () => {
 	const catalog = await loadCatalog(root);
 
-	assert.equal(catalog.packages.length, 64);
-	assert.equal(new Set(catalog.packages.map((packageEntry) => packageEntry.name)).size, 64);
+	assert.equal(catalog.packages.length, 69);
+	assert.equal(new Set(catalog.packages.map((packageEntry) => packageEntry.name)).size, 69);
 
 	assert.ok(catalog.packages.every((packageEntry) => packageEntry.references.length > 0));
 	assert.ok(!catalog.packages.some((packageEntry) => packageEntry.name === "@serve-tools/skills"));
@@ -79,6 +79,14 @@ test("corpus covers every runtime package and every evaluation kind", async () =
 	);
 
 	assert.ok(tasks.some((task) => task.source === "reve-core-inspired"));
+
+	const packageNames = new Set(catalog.packages.map((packageEntry) => packageEntry.name));
+	for (const task of tasks) {
+		assert.ok(
+			task.expected.packages.every((name) => packageNames.has(name)),
+			`${task.id} must only select public catalog packages`,
+		);
+	}
 });
 
 test("every runtime package has one exact public usage recipe and Skill reference", async () => {

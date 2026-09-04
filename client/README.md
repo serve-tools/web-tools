@@ -8,6 +8,7 @@ Each immediate subdirectory is an independently versioned npm workspace.
 - [`@serve-tools/client`](./client/) provides namespace-oriented access to the client libraries and focused capability subpaths.
 - [`@serve-tools/client-context`](./context/) provides interoperable context events, lifecycle-owned providers and consumers, and indexed late-registration replay.
 - [`@serve-tools/client-db`](./db/) provides promise-based IndexedDB operations, transactions, and scans.
+- [`@serve-tools/client-dom-fragment`](./dom-fragment/) preserves reusable DOM regions through moves, visibility changes, and nested edits.
 - [`@serve-tools/client-event-source`](./event-source/) consumes typed JSON Server-Sent Events through the native EventSource lifecycle.
 - [`@serve-tools/client-http-stream`](./http-stream/) provides typed HTTP requests and framed streaming subscriptions over Fetch.
 - [`@serve-tools/client-input`](./input/) observes pointer and drag-and-drop input sessions with explicit lifecycle ownership.

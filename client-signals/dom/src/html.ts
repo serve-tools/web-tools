@@ -6,7 +6,7 @@ import type { DOM } from "./types.js";
 export const html =
 	<K extends DOM.HTML.Element.Name>(name: K, ...items: html.Item<K>[]): html.Template<DOM.HTML.ElementMap[K]> =>
 	(target) =>
-		render(document.createElement(name), items as never, target);
+		render<DOM.HTML.ElementMap[K]>(name, items as never, target);
 
 /** Types used by {@link html}. */
 export namespace html {

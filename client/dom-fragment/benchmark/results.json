@@ -1,0 +1,298 @@
+{
+	"environment": {
+		"date": "2026-08-31",
+		"revision": "348a053ac8a644bd38f9f66b42a02793aeeb515e",
+		"state": "Uncommitted new client/dom-fragment package; unrelated worktree changes preserved",
+		"cpu": "Apple M5 Max",
+		"cores": 18,
+		"memoryGiB": 64,
+		"os": "macOS 26.6.1 (25G76)",
+		"node": "24.16.0",
+		"npm": "12.0.2",
+		"playwright": "1.62.1",
+		"chromium": "151.0.7922.34",
+		"rolldown": "1.2.6"
+	},
+	"command": "npm run benchmark --workspace @serve-tools/client-dom-fragment",
+	"warmupSamples": 5,
+	"independentRuns": 3,
+	"minifiedExecutableBytes": 2099,
+	"runs": [
+		[
+			{
+				"name": "dom-fragment/toggle-0",
+				"iterations": 200000,
+				"samples": 15,
+				"meanMilliseconds": 34.61333333651225,
+				"medianMilliseconds": 34.299999952316284,
+				"p95Milliseconds": 37.40000009536743,
+				"operationsPerSecond": 5778120.184369179
+			},
+			{
+				"name": "dom-fragment/move-0",
+				"iterations": 50000,
+				"samples": 15,
+				"meanMilliseconds": 31.153333338101707,
+				"medianMilliseconds": 31,
+				"p95Milliseconds": 34.5,
+				"operationsPerSecond": 1604964.6905311448
+			},
+			{
+				"name": "dom-fragment/toggle-1",
+				"iterations": 200000,
+				"samples": 15,
+				"meanMilliseconds": 70.29333333174388,
+				"medianMilliseconds": 69.80000007152557,
+				"p95Milliseconds": 74.10000002384186,
+				"operationsPerSecond": 2845220.030413349
+			},
+			{
+				"name": "dom-fragment/move-1",
+				"iterations": 50000,
+				"samples": 15,
+				"meanMilliseconds": 49.293333331743874,
+				"medianMilliseconds": 48.700000047683716,
+				"p95Milliseconds": 54.59999990463257,
+				"operationsPerSecond": 1014335.9480987067
+			},
+			{
+				"name": "dom-fragment/toggle-10",
+				"iterations": 20000,
+				"samples": 15,
+				"meanMilliseconds": 32.19333333174388,
+				"medianMilliseconds": 31.700000047683716,
+				"p95Milliseconds": 35.300000071525574,
+				"operationsPerSecond": 621246.6349447331
+			},
+			{
+				"name": "dom-fragment/move-10",
+				"iterations": 5000,
+				"samples": 15,
+				"meanMilliseconds": 18.080000003178913,
+				"medianMilliseconds": 17.899999976158142,
+				"p95Milliseconds": 20.799999952316284,
+				"operationsPerSecond": 276548.67251774756
+			},
+			{
+				"name": "dom-fragment/toggle-100",
+				"iterations": 2000,
+				"samples": 15,
+				"meanMilliseconds": 27.853333338101706,
+				"medianMilliseconds": 27.700000047683716,
+				"p95Milliseconds": 29.199999928474426,
+				"operationsPerSecond": 71804.691227535
+			},
+			{
+				"name": "dom-fragment/move-100",
+				"iterations": 1000,
+				"samples": 15,
+				"meanMilliseconds": 28.813333328564962,
+				"medianMilliseconds": 28.700000047683716,
+				"p95Milliseconds": 30.600000023841858,
+				"operationsPerSecond": 34706.15456381855
+			},
+			{
+				"name": "dom-fragment/unchanged-visibility",
+				"iterations": 10000000,
+				"samples": 15,
+				"meanMilliseconds": 30.053333338101705,
+				"medianMilliseconds": 29.90000009536743,
+				"p95Milliseconds": 31.199999928474426,
+				"operationsPerSecond": 332741792.3163275
+			},
+			{
+				"name": "dom-fragment/create-insert-remove",
+				"iterations": 40000,
+				"samples": 15,
+				"meanMilliseconds": 32.34000000158946,
+				"medianMilliseconds": 31.600000023841858,
+				"p95Milliseconds": 35.5,
+				"operationsPerSecond": 1236858.379654733
+			}
+		],
+		[
+			{
+				"name": "dom-fragment/toggle-0",
+				"iterations": 200000,
+				"samples": 15,
+				"meanMilliseconds": 35.59333333174388,
+				"medianMilliseconds": 35.09999990463257,
+				"p95Milliseconds": 38.700000047683716,
+				"operationsPerSecond": 5619029.781108762
+			},
+			{
+				"name": "dom-fragment/move-0",
+				"iterations": 50000,
+				"samples": 15,
+				"meanMilliseconds": 30.846666669845582,
+				"medianMilliseconds": 30.399999976158142,
+				"p95Milliseconds": 33.300000071525574,
+				"operationsPerSecond": 1620920.6827808698
+			},
+			{
+				"name": "dom-fragment/toggle-1",
+				"iterations": 200000,
+				"samples": 15,
+				"meanMilliseconds": 69.87333333492279,
+				"medianMilliseconds": 69.60000002384186,
+				"p95Milliseconds": 74,
+				"operationsPerSecond": 2862322.2974255863
+			},
+			{
+				"name": "dom-fragment/move-1",
+				"iterations": 50000,
+				"samples": 15,
+				"meanMilliseconds": 48.68666666348775,
+				"medianMilliseconds": 48.5,
+				"p95Milliseconds": 52,
+				"operationsPerSecond": 1026975.21573185
+			},
+			{
+				"name": "dom-fragment/toggle-10",
+				"iterations": 20000,
+				"samples": 15,
+				"meanMilliseconds": 31.940000001589457,
+				"medianMilliseconds": 31.600000023841858,
+				"p95Milliseconds": 34.60000002384186,
+				"operationsPerSecond": 626174.0763620764
+			},
+			{
+				"name": "dom-fragment/move-10",
+				"iterations": 5000,
+				"samples": 15,
+				"meanMilliseconds": 18.1,
+				"medianMilliseconds": 17.800000071525574,
+				"p95Milliseconds": 21,
+				"operationsPerSecond": 276243.0939226519
+			},
+			{
+				"name": "dom-fragment/toggle-100",
+				"iterations": 2000,
+				"samples": 15,
+				"meanMilliseconds": 28,
+				"medianMilliseconds": 28,
+				"p95Milliseconds": 29.299999952316284,
+				"operationsPerSecond": 71428.57142857143
+			},
+			{
+				"name": "dom-fragment/move-100",
+				"iterations": 1000,
+				"samples": 15,
+				"meanMilliseconds": 29.219999996821084,
+				"medianMilliseconds": 28.799999952316284,
+				"p95Milliseconds": 31.700000047683716,
+				"operationsPerSecond": 34223.13484287448
+			},
+			{
+				"name": "dom-fragment/unchanged-visibility",
+				"iterations": 10000000,
+				"samples": 15,
+				"meanMilliseconds": 31.13999999364217,
+				"medianMilliseconds": 31.09999990463257,
+				"p95Milliseconds": 32.5,
+				"operationsPerSecond": 321130378.99941206
+			},
+			{
+				"name": "dom-fragment/create-insert-remove",
+				"iterations": 40000,
+				"samples": 15,
+				"meanMilliseconds": 33.22666666507721,
+				"medianMilliseconds": 32.800000071525574,
+				"p95Milliseconds": 35.60000002384186,
+				"operationsPerSecond": 1203852.3275054214
+			}
+		],
+		[
+			{
+				"name": "dom-fragment/toggle-0",
+				"iterations": 200000,
+				"samples": 15,
+				"meanMilliseconds": 36.519999996821085,
+				"medianMilliseconds": 35.799999952316284,
+				"p95Milliseconds": 39.59999990463257,
+				"operationsPerSecond": 5476451.260060492
+			},
+			{
+				"name": "dom-fragment/move-0",
+				"iterations": 50000,
+				"samples": 15,
+				"meanMilliseconds": 31.89333333969116,
+				"medianMilliseconds": 31.800000071525574,
+				"p95Milliseconds": 34.700000047683716,
+				"operationsPerSecond": 1567725.7521958405
+			},
+			{
+				"name": "dom-fragment/toggle-1",
+				"iterations": 200000,
+				"samples": 15,
+				"meanMilliseconds": 69.7733333349228,
+				"medianMilliseconds": 69.20000004768372,
+				"p95Milliseconds": 72.40000009536743,
+				"operationsPerSecond": 2866424.612967379
+			},
+			{
+				"name": "dom-fragment/move-1",
+				"iterations": 50000,
+				"samples": 15,
+				"meanMilliseconds": 50.00666666825612,
+				"medianMilliseconds": 49.300000071525574,
+				"p95Milliseconds": 57.89999997615814,
+				"operationsPerSecond": 999866.6844102937
+			},
+			{
+				"name": "dom-fragment/toggle-10",
+				"iterations": 20000,
+				"samples": 15,
+				"meanMilliseconds": 32.266666666666666,
+				"medianMilliseconds": 32,
+				"p95Milliseconds": 34.90000009536743,
+				"operationsPerSecond": 619834.7107438017
+			},
+			{
+				"name": "dom-fragment/move-10",
+				"iterations": 5000,
+				"samples": 15,
+				"meanMilliseconds": 18.186666671435038,
+				"medianMilliseconds": 18,
+				"p95Milliseconds": 21.09999990463257,
+				"operationsPerSecond": 274926.68614492565
+			},
+			{
+				"name": "dom-fragment/toggle-100",
+				"iterations": 2000,
+				"samples": 15,
+				"meanMilliseconds": 27.866666666666667,
+				"medianMilliseconds": 27.700000047683716,
+				"p95Milliseconds": 29.299999952316284,
+				"operationsPerSecond": 71770.33492822967
+			},
+			{
+				"name": "dom-fragment/move-100",
+				"iterations": 1000,
+				"samples": 15,
+				"meanMilliseconds": 29.086666671435037,
+				"medianMilliseconds": 28.90000009536743,
+				"p95Milliseconds": 30.5,
+				"operationsPerSecond": 34380.01374636936
+			},
+			{
+				"name": "dom-fragment/unchanged-visibility",
+				"iterations": 10000000,
+				"samples": 15,
+				"meanMilliseconds": 29.5,
+				"medianMilliseconds": 28.899999976158142,
+				"p95Milliseconds": 36.60000002384186,
+				"operationsPerSecond": 338983050.84745765
+			},
+			{
+				"name": "dom-fragment/create-insert-remove",
+				"iterations": 40000,
+				"samples": 15,
+				"meanMilliseconds": 33.10000000794729,
+				"medianMilliseconds": 33,
+				"p95Milliseconds": 35.700000047683716,
+				"operationsPerSecond": 1208459.2142113603
+			}
+		]
+	]
+}

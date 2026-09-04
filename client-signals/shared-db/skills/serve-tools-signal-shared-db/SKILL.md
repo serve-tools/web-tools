@@ -15,4 +15,5 @@ Use `watch()`, `watchAll()`, `watchAllKeys()`, or `watchCount()` when the latest
 - [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.
 - To choose promise or signal semantics, read [Choose Promise or Signal semantics](references/choose-promise-or-signal-semantics.md).
 - To preserve refresh semantics, read [Preserve refresh semantics](references/preserve-refresh-semantics.md).
+- To retain loaded data without destroying an unsent draft, read [Preserve editor drafts](references/preserve-editor-drafts.md).
 - To own the lifecycle, read [Own the lifecycle](references/own-the-lifecycle.md).

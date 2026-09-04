@@ -1,0 +1,100 @@
+# Release plan — September 4, 2026
+
+The user authorized publication after all work is committed, pushed, and CI passes.
+AUI remains private and is not part of this release.
+The September 4 registry and shipped-file audit found the twelve prepared versions below unpublished and identified one required patch for Rolldown Decorators.
+
+## Approved release batch
+
+Publish these thirteen versions with the `latest` tag through the existing provenance-enabled release workflow.
+The table follows the release planner's dependency order.
+
+| Package                            | Version | Change                                                                                                            |
+| ---------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| `@serve-tools/client-dom-fragment` | `0.1.0` | First release of reusable DOM regions, including hidden-region ancestry and exact region lookup.                  |
+| `@serve-tools/signal-db`           | `0.2.2` | Retained-query/editor-draft consumer guidance and recipe.                                                         |
+| `@serve-tools/signal-dom`          | `0.2.0` | Reconnectable binding scopes and the opt-in `/template` renderer with persistent `html` and managed `scopedHtml`. |
+| `@serve-tools/signal-shared-db`    | `0.3.2` | Matching retained-query/editor-draft guidance for shared-worker updates.                                          |
+| `@serve-tools/client-signals`      | `0.3.0` | Umbrella release selecting Signal DOM `^0.2.0`.                                                                   |
+| `@serve-tools/client-webtransport` | `0.1.3` | Legacy shared-datagram writable compatibility while preserving independent-queue capability checks.               |
+| `@serve-tools/ponyfill-composites` | `0.0.1` | First release with documented module-local structural identity and native-proposal limitations.                   |
+| `@serve-tools/polyfill-composites` | `0.0.1` | Native-preserving Composite installer and mutation-free native-aware export.                                      |
+| `@serve-tools/ponyfill-observable` | `0.0.1` | First release with independent cold executions, explicit imports, and documented proposal differences.            |
+| `@serve-tools/polyfill-observable` | `0.0.1` | Native-preserving Observable, Subscriber, and EventTarget.when installers and selective exports.                  |
+| `@serve-tools/rolldown-decorators` | `0.1.3` | Include the required runtime helper in built packages; reduce transform traversal and runtime sorting overhead.   |
+| `@serve-tools/skills`              | `0.0.6` | Package selection and availability guidance, including the new packages and private AUI boundary.                 |
+| `@serve-tools/vite-polyfills`      | `0.3.0` | Detect the new polyfills, expose their types, prevent recursive injection, and consolidate built-in definitions.  |
+
+DOM Fragment must precede Signal DOM, which must precede Client Signals.
+The Observable and Composites ponyfills must precede their polyfills, which must precede Vite Polyfills.
+The release planner validates internal dependency ranges and orders the batch.
+Compatible patch ranges do not require dependency-wide version rewrites.
+
+The database patch releases change shipped guidance, not runtime or declarations.
+Rolldown Decorators `0.1.2` is already published and cannot be overwritten; its tarball lacks the helper that its plugin loads, so the corrected packaging and measured optimizations require `0.1.3`.
+Changes to Client Router, HTTP Contract, and Lit Signals are test/benchmark-only; Async Operation and Router have development-dependency-only metadata changes, and Resource Management has a blank-line-only source change.
+Those packages do not need new releases.
+
+## Existing release holds
+
+| Package or work                     | Reason                                                                                                                                                                                                                                                     |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@serve-tools/aui@0.1.0`            | Automated verification passes, but the [accepted plan](components/aui/design/plan.md#release-holds) still requires mount-performance and manual assistive-technology work. The new `/template` renderer is opt-in, not a migration of existing components. |
+| Agent benchmark reports and harness | Repository research/tooling, not a package release. Preserve frozen results; they do not justify replacing the published Skills wholesale.                                                                                                                 |
+
+An AUI preview is a separate decision requiring explicit narrower preview criteria, not an implicit waiver of the existing release gates.
+The independent `DisposableElement` remains internal; publishing the template entrypoint does not make it a supported component base.
+Observable and Composites are not held for renaming or a preview-tag decision: the requested first releases retain their current names and intentional contracts.
+Their initial versions do not promise exact native-proposal fidelity.
+
+## AUI work before release
+
+The [repeated-mount diagnostic](components/aui/benchmark/RESULTS.md) found that full validation after every sample perturbed later mount measurements: the paired mount-median ratio was 3.931, with a 95% interval of 3.067–5.037.
+This AUI-only result is not a production speedup or a new Base UI comparison, and it does not close the mount-performance gate.
+The next performance step is a separately frozen, symmetric AUI/Base UI comparison that separates repeated validation effects while preserving semantic checks.
+Only then select production optimizations using measured construction, connection, synchronization, and allocation costs.
+The shared template renderer remains opt-in and does not accelerate the existing Checkbox implementation.
+`scopedHtml(this)` now integrates tagged templates with the existing AUI layout scope; `html(owner)` remains persistent even inside a layout.
+Both originate in `@serve-tools/signal-dom/template`, with AUI's `/template` retained as a compatibility re-export.
+Failed layout construction rolls back managed template listeners and directives, while ordinary disconnect only suspends reactive observation.
+The base element does not import the parser, and no asynchronous signal conversion was made to native checkedness, validity, form values, or event ordering.
+Retained-computation scheduling and source/read/commit changes remain separate benchmark and compatibility work, not prerequisites for releasing Signal DOM's current managed adapter.
+
+The [accessibility acceptance checklist](components/aui/design/accessibility.md) covers Chrome, Firefox, and Safari.
+It requires manual NVDA checks with Chrome and Firefox, and VoiceOver with Safari, with supplemental VoiceOver checks in Chrome and Firefox.
+All manual rows remain unverified; automated engine tests and historical accessibility-tree captures are not substitutes.
+The existing documented behavior gaps also need an explicit release-scope decision rather than a claim of complete Base UI parity.
+
+## Verification and evidence
+
+The polyfill implementation was committed before the reduction pass.
+The [reduction report](benchmark/REDUCTION-2026-09-03.md) records retained improvements, rejected candidates, measurements, and the subsequent CI repairs.
+The private AUI Skill/release/catalog inconsistencies and the Firefox menubar pointer-state failure are fixed.
+AUI remains excluded from the public workspace inventory and release choices.
+
+At implementation commit `267992547de69eb0b9a2f7ac33dbd69a7c250918`, [CI run 33836755336](https://github.com/serve-tools/web-tools/actions/runs/33836755336) passed all five jobs: Node 22, Node 24, Node 26 full verification, Bun, and Deno.
+Final local browser verification passed 4,687 tests with one existing native-feature skip; thirty consecutive focused Firefox menubar suites also passed.
+The release metadata update requires a fresh successful CI run before merging and publishing.
+
+The earlier nine-package and five-package polyfill tarballs installed into isolated consumers with scripts disabled and no workspace links.
+Strict NodeNext type checks, runtime ownership and native-selection checks, and three-engine polyfill production smoke passed.
+These earlier tarballs are not the publication artifacts: the release workflow must rebuild, verify, and pack the final merged commit.
+Audit that immutable artifact and repeat the isolated consumer checks before approving publication.
+
+## Authorized-release procedure
+
+1. Commit and push the final version metadata and this plan; wait for all CI jobs on the exact commit to pass.
+2. Merge the reviewed PR normally, without bypassing protections, and require CI on the resulting `main` commit to pass.
+3. Recheck npm and freeze the exact thirteen package/version pairs above; stop if the registry changes the intended batch.
+4. Dispatch the provenance-enabled release workflow on that exact `main` state with `package=all` and `tag=latest`.
+5. Wait for preparation to pass and publication to pause at the required `npm` environment review.
+6. Before normal environment approval, require the workflow SHA to match the reviewed `main` commit, download its sole `release-<run id>` artifact, and compare its ordered plan against the frozen list.
+7. Reject missing or extra packages, tarballs, or checksum files; verify every SHA-256 and every tarball's embedded package name/version, and repeat packed-consumer checks.
+8. Approve only that verified pending deployment through the normal environment review; do not bypass the gate or weaken provenance.
+9. Verify all published versions, `latest` tags, tarball integrity, provenance, and a fresh registry-only consumer installation.
+10. After any partial failure, re-query registry state and resume only still-unpublished versions using a freshly verified plan.
+
+The `all` selector alone is not a release-scope guard.
+It is permitted here only with the exact immutable-artifact comparison before the required environment approval; an unexpected public workspace must stop approval.
+This replaces the earlier one-package-at-a-time recommendation without weakening the release boundary.
+Use the existing publishing credentials first; if authentication actually blocks progress, alert the user with `say` and request the specific required authentication.

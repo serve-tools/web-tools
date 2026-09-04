@@ -47,7 +47,10 @@ export interface ClientDatagrams<P extends Protocol> {
 	/** Writes one typed client-to-server datagram. */
 	write<Name extends ClientDatagramName<P>>(name: Name, value: ClientDatagramValue<P, Name>): Promise<void>;
 
-	/** Creates an independently scheduled writable for one precise datagram kind. */
+	/**
+	 * Creates an independently scheduled writable for one precise datagram kind.
+	 * Throws a synchronous NotSupportedError when the native transport only exposes a shared writable.
+	 */
 	createWritable<Name extends ClientDatagramName<P>>(
 		name: Name,
 		options?: DatagramWritableOptions,
@@ -117,7 +120,10 @@ export interface WebTransportLike {
 	close(info?: { readonly closeCode?: number; readonly reason?: string }): void;
 }
 
-/** The native-compatible unreliable datagram transport used by this client. */
+/**
+ * The native-compatible unreliable datagram transport used by this client.
+ * At least one outgoing API, createWritable or writable, must be available at runtime.
+ */
 export interface WebTransportDatagramsLike {
 	/** Delivers incoming datagram bytes from the remote peer. */
 	readonly readable: ReadableStream<Uint8Array>;
@@ -125,8 +131,11 @@ export interface WebTransportDatagramsLike {
 	/** The maximum datagram size reported by the native transport. */
 	readonly maxDatagramSize: number;
 
-	/** Creates an independently scheduled outgoing datagram queue. */
-	createWritable(options?: DatagramWritableOptions): WritableStream<BufferSource>;
+	/** The legacy shared outgoing stream, used by write() when createWritable is unavailable. */
+	readonly writable?: WritableStream<BufferSource>;
+
+	/** Creates an independently scheduled outgoing datagram queue, preferred when available. */
+	createWritable?(options?: DatagramWritableOptions): WritableStream<BufferSource>;
 }
 
 /** The native-compatible readable and writable sides of a reliable stream. */

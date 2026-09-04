@@ -3,6 +3,7 @@ import type { DOM } from "@serve-tools/signal-dom";
 import {
 	adoptedCSS,
 	attrs,
+	createBindingScope,
 	css,
 	dispose,
 	elementInternals,
@@ -14,6 +15,8 @@ import {
 	svg,
 	text,
 } from "@serve-tools/signal-dom";
+import type { TemplateDirective, TemplateFragment } from "@serve-tools/signal-dom/template";
+import { PersistentFragment, html as persistentHtml, scopedHtml } from "@serve-tools/signal-dom/template";
 
 const title = new Signal.State("title");
 const computedTitle = new Signal.Computed(() => title.get());
@@ -44,14 +47,36 @@ const htmlTemplate: typeof html = html;
 const htmlNode: DOM.HTML.Element = element();
 const shadowWithText = shadowRoot({ mode: "open" }, text("content"));
 const disposeResult: ReturnType<() => void> = dispose(document.createTextNode("content"));
+const bindingScope = createBindingScope();
+const captureResult: HTMLDivElement = bindingScope.capture(() => html("div")());
+const resumed: boolean = bindingScope.resume();
+const taggedScope = createBindingScope();
+const directive: TemplateDirective = (node) => () => node.removeAttribute("data-active");
+const tagged: TemplateFragment = taggedScope.capture(() => scopedHtml({}, document)`<p ${directive}>${title}</p>`);
+const persistent: TemplateFragment = persistentHtml({})`<p>${title}</p>`;
+const region = new PersistentFragment([tagged]);
+taggedScope.dispose();
+persistent.dispose();
+region.remove();
+
+// @ts-expect-error Template ownership requires an object.
+scopedHtml(null);
+
+// @ts-expect-error binding capture must finish synchronously
+bindingScope.capture(async () => html("div")());
+
+bindingScope.suspend();
+bindingScope.dispose();
 
 void [
 	CustomElement,
 	control,
+	captureResult,
 	disposeResult,
 	htmlNode,
 	htmlTemplate,
 	mathml,
+	resumed,
 	dispose(sheet),
 	svg,
 	shadowWithText,

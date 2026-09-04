@@ -13,6 +13,9 @@
 			"path": "./client/db/tsconfig.json"
 		},
 		{
+			"path": "./client/dom-fragment/tsconfig.json"
+		},
+		{
 			"path": "./client/event-source/tsconfig.json"
 		},
 		{
@@ -106,6 +109,9 @@
 			"path": "./client-signals/webtransport/tsconfig.json"
 		},
 		{
+			"path": "./components/aui/tsconfig.json"
+		},
+		{
 			"path": "./core/async-operation/tsconfig.json"
 		},
 		{
@@ -118,7 +124,13 @@
 			"path": "./lit/signals/tsconfig.json"
 		},
 		{
+			"path": "./polyfills/composites/tsconfig.json"
+		},
+		{
 			"path": "./polyfills/decorator-metadata/tsconfig.json"
+		},
+		{
+			"path": "./polyfills/observable/tsconfig.json"
 		},
 		{
 			"path": "./polyfills/prioritized-task-scheduling/tsconfig.json"
@@ -136,7 +148,13 @@
 			"path": "./polyfills/urlpattern/tsconfig.json"
 		},
 		{
+			"path": "./ponyfills/composites/tsconfig.json"
+		},
+		{
 			"path": "./ponyfills/decorator-metadata/tsconfig.json"
+		},
+		{
+			"path": "./ponyfills/observable/tsconfig.json"
 		},
 		{
 			"path": "./ponyfills/prioritized-task-scheduling/tsconfig.json"

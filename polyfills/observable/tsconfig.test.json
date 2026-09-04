@@ -1,0 +1,16 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"composite": false,
+		"lib": ["ES2025", "DOM"],
+		"noEmit": true,
+		"skipLibCheck": false,
+		"types": ["node", "vitest"]
+	},
+	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "test/**/.*.ts"],
+	"references": [
+		{
+			"path": "../../ponyfills/observable/tsconfig.json"
+		}
+	]
+}

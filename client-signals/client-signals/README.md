@@ -50,6 +50,8 @@ The root entrypoint exports namespaces rather than flattening their members, so 
 Use a focused subpath when only one adapter is needed.
 Each realtime namespace and focused subpath combines the complete underlying client surface with its Signal-specific `observe()` API.
 Client operations are direct re-exports and retain their original runtime identity.
+The `dom` namespace and focused `dom` subpath include `createBindingScope()` for layouts that suspend observation on removal and reconcile the same nodes on reconnection.
+Follow Signal DOM's synchronous capture and explicit resume, suspend, and terminal disposal contract.
 
 ```ts
 import { connect, observe } from "@serve-tools/client-signals/event-source";

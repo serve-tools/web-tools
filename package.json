@@ -20,6 +20,7 @@
 		"client/context/demo",
 		"client/db",
 		"client/db/demo",
+		"client/dom-fragment",
 		"client/event-source",
 		"client/http-stream",
 		"client/input",
@@ -58,6 +59,7 @@
 		"client-signals/storage",
 		"client-signals/websocket",
 		"client-signals/webtransport",
+		"components/aui",
 		"core/async-operation",
 		"core/http-contract",
 		"core/http-contract-interop",
@@ -65,14 +67,18 @@
 		"lit/signals",
 		"lit/signals/demo",
 		"polyfills/arraybuffer-base64",
+		"polyfills/composites",
 		"polyfills/decorator-metadata",
+		"polyfills/observable",
 		"polyfills/prioritized-task-scheduling",
 		"polyfills/report-error",
 		"polyfills/request-idle-callback",
 		"polyfills/resource-management",
 		"polyfills/urlpattern",
 		"ponyfills/arraybuffer-base64",
+		"ponyfills/composites",
 		"ponyfills/decorator-metadata",
+		"ponyfills/observable",
 		"ponyfills/prioritized-task-scheduling",
 		"ponyfills/report-error",
 		"ponyfills/request-idle-callback",
@@ -97,6 +103,17 @@
 		"benchmark:client": "npm run benchmark --workspace @serve-tools/client-db --workspace @serve-tools/client-messaging --workspace @serve-tools/client-shared-db --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-storage --workspace @serve-tools/client-websocket --workspace @serve-tools/signal-websocket",
 		"benchmark:realtime": "npm run benchmark --workspace @serve-tools/realtime-protocol --workspace @serve-tools/client-messaging --workspace @serve-tools/client-websocket --workspace @serve-tools/client-shared-websocket --workspace @serve-tools/client-http-stream --workspace @serve-tools/client-webtransport --workspace @serve-tools/signal-websocket",
 		"benchmark:skills": "node benchmark/skills/run.mjs",
+		"benchmark:skills:ablation": "node benchmark/skills/agentic/run.mjs --suite ablation --runs 1 --seeds 13007,17011 --variants docs,current,minimal,helpers --concurrency 6",
+		"benchmark:skills:ablation:accounting": "node benchmark/skills/agentic/ablation/accounting-smoke.mjs",
+		"benchmark:skills:ablation:analyze": "node benchmark/skills/agentic/ablation/analyze.mjs",
+		"benchmark:skills:ablation:preflight": "node benchmark/skills/agentic/ablation/preflight.mjs",
+		"benchmark:skills:agentic": "node benchmark/skills/agentic/run.mjs",
+		"benchmark:skills:agentic:analyze": "node benchmark/skills/agentic/analyze.mjs",
+		"benchmark:skills:agentic:audit": "node benchmark/skills/agentic/quality-audit.mjs",
+		"benchmark:skills:agentic:rescore": "node benchmark/skills/agentic/rescore.mjs",
+		"benchmark:skills:transfer": "node benchmark/skills/agentic/run.mjs --suite transfer --seeds 7349,9811 --concurrency 6",
+		"benchmark:skills:transfer:analyze": "node benchmark/skills/agentic/transfer/analyze.mjs",
+		"benchmark:skills:transfer:preflight": "node benchmark/skills/agentic/transfer/preflight.mjs",
 		"build": "npm run build:typescript && npm run build:extras",
 		"build:assets": "npm run build:assets --workspaces --if-present",
 		"build:bundles": "npm run build:bundle --workspaces --if-present",
@@ -108,7 +125,10 @@
 		"build:typescript:clean": "tsc --build tsconfig.build.json --clean",
 		"check:packages": "node scripts/check-packages.mjs",
 		"check:release": "node --test scripts/workspaces.test.mjs scripts/release-plan.test.mjs scripts/release-pack.test.mjs",
-		"check:skill-bench": "node --test benchmark/skills/test/*.test.mjs && node benchmark/skills/run.mjs --provider fixture --no-compile --quiet",
+		"check:skill-ablation": "node --test benchmark/skills/agentic/ablation/*-tests.mjs",
+		"check:skill-agentic": "node --test benchmark/skills/agentic/test/*.test.mjs && npm run check:skill-transfer && npm run check:skill-ablation",
+		"check:skill-bench": "node --test benchmark/skills/test/*.test.mjs && node benchmark/skills/run.mjs --provider fixture --no-compile --quiet && npm run check:skill-agentic",
+		"check:skill-transfer": "node --test benchmark/skills/agentic/transfer/*-tests.mjs",
 		"check:skills": "node scripts/check-skills.mjs",
 		"check:tsconfig-references": "node scripts/sync-tsconfig-references.mjs",
 		"check:unused": "knip --no-progress",
@@ -134,19 +154,19 @@
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "0.18.5",
-		"@biomejs/biome": "2.5.10",
+		"@biomejs/biome": "2.5.11",
 		"@playwright/test": "1.62.1",
 		"@types/bun": "1.4.0",
-		"@types/node": "26.3.0",
+		"@types/node": "26.4.1",
 		"@types/ws": "8.18.1",
 		"@vitest/browser-playwright": "4.1.11",
 		"@vitest/coverage-istanbul": "4.1.11",
 		"crossws": "0.4.12",
-		"dprint": "0.56.1",
-		"knip": "6.32.2",
+		"dprint": "0.57.0",
+		"knip": "6.34.0",
 		"playwright": "1.62.1",
 		"publint": "0.3.24",
-		"rolldown": "1.2.5",
+		"rolldown": "1.2.7",
 		"typescript": "7.0.2",
 		"vite": "8.2.2",
 		"vitest": "4.1.11",
@@ -174,7 +194,10 @@
 		"workspaces": {
 			".": {
 				"entry": [
-					"vitest.browser.projects.config.ts"
+					"vitest.browser.projects.config.ts",
+					"benchmark/skills/agentic/tasks/**/*.{mjs,ts}",
+					"benchmark/skills/agentic/transfer/{tasks,recipes}/**/*.{mjs,ts}",
+					"benchmark/skills/agentic/ablation/{tasks,helpers}/**/*.{mjs,ts}"
 				],
 				"ignoreBinaries": [
 					"go"
@@ -186,6 +209,12 @@
 			},
 			"client/client": {
 				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"client/dom-fragment": {
+				"entry": [
+					"benchmark/*.benchmark.ts",
 					"test/*.{recipes,types}.ts"
 				]
 			},
@@ -298,7 +327,8 @@
 					"test/*.recipes.ts"
 				],
 				"ignoreUnresolved": [
-					"/dom/signal-dom.js"
+					"/dom/signal-dom.js",
+					"/dom/template.js"
 				]
 			},
 			"client-signals/event-target": {
@@ -352,6 +382,14 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
+			"components/aui": {
+				"entry": [
+					"benchmark/**/*.{js,mjs}",
+					"examples/main.ts",
+					"examples/template.ts",
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"core/async-operation": {
 				"entry": [
 					"benchmark/*.benchmark.ts"
@@ -371,6 +409,7 @@
 			},
 			"lit/signals": {
 				"entry": [
+					"benchmark/**/*.{js,mjs}",
 					"src/{decorators,lit-signals}.ts",
 					"test/*.{recipes,types}.ts"
 				]
@@ -380,9 +419,19 @@
 					"test/*.recipes.ts"
 				]
 			},
+			"polyfills/composites": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"polyfills/decorator-metadata": {
 				"entry": [
 					"test/*.recipes.ts"
+				]
+			},
+			"polyfills/observable": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"polyfills/prioritized-task-scheduling": {
@@ -415,6 +464,13 @@
 					"test/*.recipes.ts"
 				]
 			},
+			"ponyfills/composites": {
+				"entry": [
+					"benchmark/*.benchmark.ts",
+					"benchmark/vitest.config.ts",
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"ponyfills/decorator-metadata": {
 				"entry": [
 					"test/*.recipes.ts"
@@ -424,6 +480,11 @@
 				"entry": [
 					"benchmark/*.benchmark.ts",
 					"test/*.recipes.ts"
+				]
+			},
+			"ponyfills/observable": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"ponyfills/report-error": {

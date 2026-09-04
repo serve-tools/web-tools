@@ -19,6 +19,7 @@ Treat the installed package README and focused package declarations as the API s
 - Create realtime clients and their Signal observations from the same capability namespace or focused subpath.
 - Use matching scope subpaths for messaging and SharedWorker-owned transports.
 - Follow the selected focused package Skill for lifecycle and semantic guidance.
+- Use `dom.createBindingScope()` for reconnectable layouts; capture synchronously, suspend on removal, and resume current values on reconnection.
 - Use `db` for one-connection query invalidation and `sharedDb` for coordinated cross-tab changes.
 - Pair direct or shared HTTP, WebSocket, and WebTransport clients with the identically scoped Signal namespace.
 - Pair direct or shared EventSource clients with `eventSource` or `sharedEventSource`, and retain `lastEventId` with the latest event state.

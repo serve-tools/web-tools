@@ -43,7 +43,12 @@ npm install @serve-tools/client-webtransport
 Use `@serve-tools/server-webtransport` for the matching server.
 
 `write()` reuses a shared native writer.
+It prefers native `datagrams.createWritable()` and falls back to `datagrams.writable` on legacy transports.
 `createWritable(name)` provides an independently scheduled writable for applications that need separate send groups or ordering.
+It requires native `datagrams.createWritable()` and throws a synchronous `NotSupportedError` on legacy transports, even when no scheduling options are supplied.
+That rejection does not register a datagram name, acquire another writer, or interrupt shared writes and reliable operations.
+Closing or aborting a supported independent writable affects only its own native queue.
+Connecting to a transport with neither outgoing datagram API rejects with `NotSupportedError` and closes the session.
 `subscribe()` observes future arrivals without replay or buffering; `read()` waits for exactly the next arrival.
 Subscriptions become inactive, and pending `read()` calls reject and remove their local subscriptions, when the client closes.
 

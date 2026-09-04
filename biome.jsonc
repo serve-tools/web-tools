@@ -34,8 +34,10 @@
 			"preset": "recommended",
 			"complexity": {
 				"noCommaOperator": "off",
+				"noBannedTypes": "off",
 				"noStaticOnlyClass": "off",
-				"noThisInStatic": "off"
+				"noThisInStatic": "off",
+				"useLiteralKeys": "off"
 			},
 			"style": {
 				"noNonNullAssertion": "off",
@@ -54,11 +56,12 @@
 			},
 			"suspicious": {
 				"noAssignInExpressions": "off",
+				"noConfusingVoidType": "off",
 				"noConstEnum": "off",
 				"noExplicitAny": "off",
-				"noThenProperty": "off",
 				"noMisleadingInstantiator": "off",
-				"noShadowRestrictedNames": "off"
+				"noShadowRestrictedNames": "off",
+				"noThenProperty": "off"
 			}
 		}
 	},

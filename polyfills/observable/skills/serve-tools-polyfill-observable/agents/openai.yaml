@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Observable Polyfill"
+  short_description: "Install missing Observable platform hooks safely"
+  default_prompt: "Use $serve-tools-polyfill-observable to install native-aware Observable platform hooks without replacing existing values."

@@ -16,3 +16,10 @@ const iteratorHelpers = definePolyfill({
 export const polyfillsPlugin = vitePolyfills({
 	polyfills: [...builtinPolyfills, iteratorHelpers],
 });
+
+const observablePolyfillIds = new Set(["observable", "subscriber", "event-target-when"]);
+
+/** A compile-tested configuration selecting only the Observable proposal features. */
+export const observablePolyfillsPlugin = vitePolyfills({
+	polyfills: builtinPolyfills.filter(({ id }) => observablePolyfillIds.has(id)),
+});

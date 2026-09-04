@@ -1,0 +1,50 @@
+{
+	"name": "@serve-tools/polyfill-composites",
+	"version": "0.0.1",
+	"description": "Provides a native-aware Composite import and global installation",
+	"keywords": [
+		"browser-compatibility",
+		"composite",
+		"interning",
+		"map-key",
+		"polyfill",
+		"set-value",
+		"tc39",
+		"typescript"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/polyfills/composites#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "polyfills/composites"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": [
+		"./dist/polyfill-composites.js",
+		"./dist/apply/Composite.js"
+	],
+	"type": "module",
+	"exports": {
+		".": "./dist/polyfill-composites.js",
+		"./Composite": "./dist/exports/Composite.js",
+		"./apply/Composite": "./dist/apply/Composite.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build --workspace @serve-tools/ponyfill-composites && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build --workspace @serve-tools/ponyfill-composites && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/ponyfill-composites": "^0.0.1"
+	}
+}

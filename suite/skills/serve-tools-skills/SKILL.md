@@ -1,6 +1,6 @@
 ---
 name: serve-tools-skills
-description: Use @serve-tools/skills to choose focused Serve Tools packages.
+description: Use @serve-tools/skills to choose packages.
 ---
 
 # Serve Tools package guide
@@ -17,3 +17,4 @@ Select only packages the requested implementation imports directly; do not add t
 
 After selecting packages, load each package's bundled Skill for API contracts and compile-checked recipes.
 Do not infer that similarly named base and signal-aware packages are interchangeable.
+The selector retains workspace-only packages when they are the correct architectural route and labels their npm availability explicitly.

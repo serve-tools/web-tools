@@ -1,0 +1,80 @@
+[
+	{
+		"id": "router",
+		"title": "Typed reversible route map",
+		"packages": ["@serve-tools/router", "@serve-tools/polyfill-urlpattern"],
+		"file": "router.ts",
+		"description": "A reversible route factory, canonical safe-integer codec, and ordered route-map matcher.",
+		"whenToUse": "Use when application code must build and match the same typed URLs without losing default, optional, or repeated search semantics.",
+		"preservedSymbols": ["canonicalSafeInteger", "createResourceRoute", "matchFirstRoute"]
+	},
+	{
+		"id": "async-operation",
+		"title": "Backpressured asynchronous operation",
+		"packages": ["@serve-tools/async-operation"],
+		"file": "async-operation.ts",
+		"description": "A bounded-capacity normalizer plus operation producer and concurrent drain helpers.",
+		"whenToUse": "Use when one owner needs ordered progress values, a terminal result, cooperative cancellation, and bounded producer run-ahead.",
+		"preservedSymbols": ["normalizeBoundedCapacity", "createPacedOperation", "collectOperation"]
+	},
+	{
+		"id": "http-contract-router",
+		"title": "Typed JSON HTTP contract and router",
+		"packages": ["@serve-tools/http-contract", "@serve-tools/router", "@serve-tools/polyfill-urlpattern"],
+		"file": "http-contract-router.ts",
+		"description": "A small Standard Schema adapter, typed router declaration, JSON contract, and native Fetch handler scaffold.",
+		"whenToUse": "Use when trusted server code must validate a JSON API while browser consumers retain status-discriminated types and typed route inputs.",
+		"preservedSymbols": ["standardSchema", "safeInteger", "recordRoute", "recordsAPI", "createRecordsHandler"]
+	},
+	{
+		"id": "signal-collections-effect",
+		"title": "Validated reactive collection",
+		"packages": ["@serve-tools/signal", "@serve-tools/signal-collections", "@serve-tools/signal-effect"],
+		"file": "signal-collections-effect.ts",
+		"description": "Dense finite-number validation, atomic SignalArray replacement, computed projection, and effect observation.",
+		"whenToUse": "Use when native-shaped collection mutations should update derived state without allowing sparse or non-finite inputs through an adapter boundary.",
+		"preservedSymbols": [
+			"normalizeDenseFiniteNumbers",
+			"createFiniteSeries",
+			"replaceFiniteSeries",
+			"createSeriesTotal",
+			"observeSeriesTotal"
+		]
+	},
+	{
+		"id": "client-messaging",
+		"title": "Owned local message session",
+		"packages": ["@serve-tools/client-messaging"],
+		"file": "client-messaging.ts",
+		"description": "A complete MessageChannel request, subscription, cancellation, transfer, and ownership scaffold.",
+		"whenToUse": "Use when one component owns both ends of a typed worker-style protocol and must close protocol resources separately from transport resources.",
+		"preservedSymbols": ["openLocalMessageSession", "requestTransferredCopy", "collectSequence"]
+	},
+	{
+		"id": "arraybuffer-base64-node",
+		"title": "Node Uint8Array base64 encoding",
+		"packages": ["@serve-tools/ponyfill-arraybuffer-base64/runtime/node"],
+		"file": "arraybuffer-base64-node.ts",
+		"description": "Strict option normalization and Node-only encoding helpers that preserve Uint8Array view boundaries.",
+		"whenToUse": "Use when Node code needs the Uint8Array toBase64 contract without modifying globals.",
+		"preservedSymbols": ["normalizeBase64Options", "encodeBytes", "encodeUTF8"]
+	},
+	{
+		"id": "resource-management",
+		"title": "Nested asynchronous resource scope",
+		"packages": ["@serve-tools/ponyfill-resource-management"],
+		"file": "resource-management.ts",
+		"description": "A package-symbol resource scope that preserves acquisition or work errors beneath every later cleanup failure.",
+		"whenToUse": "Use when mixed synchronous and asynchronous resources need LIFO cleanup and an exact SuppressedError tree.",
+		"preservedSymbols": ["ScopedResources", "runResourceScope"]
+	},
+	{
+		"id": "dormant-signal-effects",
+		"title": "Dormant gated signal effect",
+		"packages": ["@serve-tools/signal", "@serve-tools/signal-effect"],
+		"file": "dormant-signal-effects.ts",
+		"description": "A dormant effect controller with synchronous initial publication, microtask scheduling, an explicit disabled branch, and idempotent disposal.",
+		"whenToUse": "Use when cleanup must be registered before an effect starts or when enabled and disabled states both need observable publication.",
+		"preservedSymbols": ["normalizeInitialEnabled", "createGatedEffect"]
+	}
+]

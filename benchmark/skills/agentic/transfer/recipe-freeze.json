@@ -1,0 +1,17 @@
+{
+	"frozenAt": "2026-08-31T06:35:20.943Z",
+	"reason": "Recipe author completed nine independent recipe tests without reading new tasks; preserve this bundle before task/grader completion.",
+	"hashes": {
+		"recipes/README.md": "4629a73c467cbf55d1332fcaaba6b3bf7764eddbf2e5a26ca6fdf34aa2575250",
+		"recipes/arraybuffer-base64-node.ts": "adcf9a7a6488f6dcd8bd08d6c6d75affe530f7609c519a316d37a9e8073b8edf",
+		"recipes/async-operation.ts": "4127c64b1f014f5d8f647db751b95c50563c298c61257b9d3ab3f4b1c048b095",
+		"recipes/client-messaging.ts": "a2f517bbc1eb690bc3940f94d85b99d160dae2d96e69008cd800b360e134a6cf",
+		"recipes/dormant-signal-effects.ts": "ce6b2ffb62c674493ba335c1ec4dc8b88694e2fcf7628a4ee027b3fd1f7b7dd2",
+		"recipes/http-contract-router.ts": "c9064ad54087ef819fe609ef7e7c19fd63a00f8c2d69016f30c66f458ba75f63",
+		"recipes/manifest.json": "379954c1f27e1ab49a3804ec240d4ec7d208cdc3ba9f20cd4d16bab1c3ff7583",
+		"recipes/resource-management.ts": "c1816806d6cd66df5a4bfa7a76aebc756d6a9f860f69bd530b9bcfeadeca8c34",
+		"recipes/router.ts": "bc73cfe56adcb86c8a9b23e96031e2860ed074ab9feab6a795edf06cdac21e99",
+		"recipes/signal-collections-effect.ts": "767a3467fbd33b809e88c59fb124a298e9bd9b65a43510bb85439c725f55346d",
+		"recipe-tests.mjs": "9ee6561667d550108d2d04bb290c9c5abe401ac7c46ffb67fa33a66a68b97800"
+	}
+}

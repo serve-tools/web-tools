@@ -69,6 +69,7 @@ export class DisposableStack {
 		}
 
 		this.#state = StackState.Disposed;
+
 		disposeResources(this.#disposers);
 	}
 

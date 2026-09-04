@@ -30,6 +30,11 @@ const selections = [
 		"@serve-tools/client-input",
 	],
 	[
+		"persistent-dom-regions",
+		"Move, hide, restore, and detach a reusable DOM region while preserving the same input nodes, form values, and listeners without a wrapper element or a signal runtime.",
+		"@serve-tools/client-dom-fragment",
+	],
+	[
 		"clipboard-and-picker",
 		"Implement one-shot clipboard, file picker, share, and eyedropper actions while preserving cancellation and unsupported-platform outcomes.",
 		"@serve-tools/client-interaction",
@@ -253,6 +258,26 @@ const selections = [
 		"idle-callback-import",
 		"Schedule optional work with imported requestIdleCallback functions while guaranteeing that no globals are modified.",
 		"@serve-tools/ponyfill-request-idle-callback",
+	],
+	[
+		"cold-observable-import",
+		"Use the Web Observable API with a fresh independent execution per consumption and AbortSignal cancellation, without installing globals or selecting a shared native implementation.",
+		"@serve-tools/ponyfill-observable",
+	],
+	[
+		"observable-global",
+		"Install missing Observable and Subscriber globals and EventTarget.prototype.when while preserving existing native values; the cold fallback's documented proposal differences are acceptable.",
+		"@serve-tools/polyfill-observable",
+	],
+	[
+		"composite-value-global",
+		"Third-party code expects globalThis.Composite. Install the experimental fallback only when the global is absent, preserving an existing implementation and accepting module-local fallback identity.",
+		"@serve-tools/polyfill-composites",
+	],
+	[
+		"composite-value-import",
+		"Create interned groups of named values for standard Map keys and Set values through an explicit import without installing a global.",
+		"@serve-tools/ponyfill-composites",
 	],
 	[
 		"prioritized-scheduling-import",
@@ -546,6 +571,7 @@ const remainingUsageTasks = [
 		"client-signals/db/test/signal-db.recipes.ts",
 		["SignalDB.Store", '.watch("notes"', "welcome"],
 		["client-signals/db/skills/serve-tools-signal-db/references/recipe-quick-start.md"],
+		["@serve-tools/signal", "@serve-tools/signal-effect"],
 	),
 	usage(
 		"signal-dom-render",
@@ -595,7 +621,7 @@ const remainingUsageTasks = [
 		"client-signals/shared-db/test/signal-shared-db.recipes.ts",
 		["SignalDB.connect", "new Signal.State", "database.watch", "selectedUser.dispose()", "database.close()"],
 		["client-signals/shared-db/skills/serve-tools-signal-shared-db/references/recipe-quick-start.md"],
-		["@serve-tools/signal"],
+		["@serve-tools/signal", "@serve-tools/signal-effect"],
 	),
 	usage(
 		"signal-shared-event-source",
@@ -694,6 +720,21 @@ const remainingUsageTasks = [
 		"client/db/test/client-db.recipes.ts",
 		["await using db", "DB.open<NotesSchema>", "oldVersion", "createIndex", "db.transaction", "for await"],
 		["client/db/skills/serve-tools-client-db/references/recipe-quick-start.md"],
+	),
+	usage(
+		"client-dom-fragment-preserve",
+		"Create a persistent region containing an input, hide and restore it while preserving its value, detach and reinsert it, and recognize its start boundary without treating arbitrary descendants as regions.",
+		["@serve-tools/client-dom-fragment"],
+		"client/dom-fragment/test/fragment.recipes.ts",
+		[
+			"new PersistentFragment",
+			"fragment.insertBefore",
+			"fragment.hidden",
+			"fragment.nodes",
+			"fragment.remove()",
+			"PersistentFragment.fromNode",
+		],
+		["client/dom-fragment/skills/serve-tools-client-dom-fragment/references/recipe-quick-start.md"],
 	),
 	usage(
 		"client-event-source-subscribe",
@@ -865,6 +906,22 @@ const remainingUsageTasks = [
 		["polyfills/urlpattern/skills/serve-tools-polyfill-urlpattern/references/recipe-quick-start.md"],
 	),
 	usage(
+		"polyfill-observable",
+		"Install native-preserving Observable globals and collect one event through EventTarget.when, then use a mutation-free native-aware Observable import for a sequence.",
+		["@serve-tools/polyfill-observable"],
+		"polyfills/observable/test/polyfill-observable.recipes.ts",
+		["target.when", ".take(1)", ".toArray()", "Observable.from"],
+		["polyfills/observable/skills/serve-tools-polyfill-observable/references/recipe-quick-start.md"],
+	),
+	usage(
+		"polyfill-composites",
+		"Install a native-preserving Composite global and use a native-aware named import to retrieve a Map value using equivalent properties in a different order.",
+		["@serve-tools/polyfill-composites"],
+		"polyfills/composites/test/polyfill-composites.recipes.ts",
+		["globalThis.Composite", "new Map", "positions.get", "y: 4, x: 1"],
+		["polyfills/composites/skills/serve-tools-polyfill-composites/references/recipe-quick-start.md"],
+	),
+	usage(
 		"ponyfill-arraybuffer-base64",
 		"Use the explicit Node base64 ponyfill to encode a URL-safe unpadded identifier without mutating Uint8Array.",
 		["@serve-tools/ponyfill-arraybuffer-base64"],
@@ -883,6 +940,22 @@ const remainingUsageTasks = [
 		[
 			"ponyfills/decorator-metadata/skills/serve-tools-ponyfill-decorator-metadata/references/recipe-quick-start.md",
 		],
+	),
+	usage(
+		"ponyfill-composites",
+		"Create an interned named-value Map key and retrieve its value with the same properties in a different order.",
+		["@serve-tools/ponyfill-composites"],
+		"ponyfills/composites/test/ponyfill-composites.recipes.ts",
+		["Composite", "new Map", "itemAtPosition.get", "y: 4, x: 1"],
+		["ponyfills/composites/skills/serve-tools-ponyfill-composites/references/recipe-quick-start.md"],
+	),
+	usage(
+		"ponyfill-observable",
+		"Consume a cold Web Observable with independent execution, event cancellation, and per-consumer take counters.",
+		["@serve-tools/ponyfill-observable"],
+		"ponyfills/observable/test/ponyfill-observable.recipes.ts",
+		["Observable", "when(target", ".take(3)", ".toArray({ signal })", "subscriber.addTeardown"],
+		["ponyfills/observable/skills/serve-tools-ponyfill-observable/references/recipe-quick-start.md"],
 	),
 	usage(
 		"ponyfill-prioritized-scheduling",

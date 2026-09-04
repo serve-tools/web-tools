@@ -9,6 +9,9 @@
 	"include": ["benchmark/**/*.ts", "src/**/*.ts", "vitest.benchmark.config.ts"],
 	"references": [
 		{
+			"path": "../../client/dom-fragment/tsconfig.json"
+		},
+		{
 			"path": "../../signals/signal/tsconfig.json"
 		},
 		{

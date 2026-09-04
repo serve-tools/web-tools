@@ -10,6 +10,7 @@ Treat the installed package README and public declarations as the API source of 
 ## Route by task
 
 - [Recipe: watch a database query](references/recipe-quick-start.md): compile-checked schema and query state.
+- [Preserve editor drafts](references/preserve-editor-drafts.md): retain the last successful snapshot during refresh without hiding errors or reusing data across record identities.
 
 - Use Promise operations for finite work and `watch()`, `watchAll()`, `watchAllKeys()`, or `watchCount()` for latest asynchronous state.
 - Handle `pending`, `ready`, and `error` explicitly.

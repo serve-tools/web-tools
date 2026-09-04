@@ -22,6 +22,14 @@ const REQUEST_IDLE_CALLBACK_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "request-idle-c
 const RESOLVED_REQUEST_IDLE_CALLBACK_VIRTUAL_MODULE_ID = "\0" + REQUEST_IDLE_CALLBACK_VIRTUAL_MODULE_ID;
 const CANCEL_IDLE_CALLBACK_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "cancel-idle-callback";
 const RESOLVED_CANCEL_IDLE_CALLBACK_VIRTUAL_MODULE_ID = "\0" + CANCEL_IDLE_CALLBACK_VIRTUAL_MODULE_ID;
+const COMPOSITE_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "composite";
+const RESOLVED_COMPOSITE_VIRTUAL_MODULE_ID = "\0" + COMPOSITE_VIRTUAL_MODULE_ID;
+const EVENT_TARGET_WHEN_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "event-target-when";
+const RESOLVED_EVENT_TARGET_WHEN_VIRTUAL_MODULE_ID = "\0" + EVENT_TARGET_WHEN_VIRTUAL_MODULE_ID;
+const OBSERVABLE_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "observable";
+const RESOLVED_OBSERVABLE_VIRTUAL_MODULE_ID = "\0" + OBSERVABLE_VIRTUAL_MODULE_ID;
+const SUBSCRIBER_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "subscriber";
+const RESOLVED_SUBSCRIBER_VIRTUAL_MODULE_ID = "\0" + SUBSCRIBER_VIRTUAL_MODULE_ID;
 
 describe("vitePolyfills", () => {
 	describe("plugin shape", () => {
@@ -134,6 +142,34 @@ describe("vitePolyfills", () => {
 			expect(code).toBe('import"@serve-tools/polyfill-request-idle-callback/apply/cancelIdleCallback";');
 			expect(load("other-module")).toBeNull();
 		});
+
+		it.each([
+			[
+				"Composite",
+				RESOLVED_COMPOSITE_VIRTUAL_MODULE_ID,
+				'import"@serve-tools/polyfill-composites/apply/Composite";',
+			],
+			[
+				"EventTarget.prototype.when",
+				RESOLVED_EVENT_TARGET_WHEN_VIRTUAL_MODULE_ID,
+				'import"@serve-tools/polyfill-observable/apply/EventTarget/when";',
+			],
+			[
+				"Observable",
+				RESOLVED_OBSERVABLE_VIRTUAL_MODULE_ID,
+				'import"@serve-tools/polyfill-observable/apply/Observable";',
+			],
+			[
+				"Subscriber",
+				RESOLVED_SUBSCRIBER_VIRTUAL_MODULE_ID,
+				'import"@serve-tools/polyfill-observable/apply/Subscriber";',
+			],
+		])("loads the selective %s installer", (_name, resolvedId, expected) => {
+			const plugin = vitePolyfills();
+			const load = plugin.load as (id: string) => string | null;
+
+			expect(load(resolvedId)).toBe(expected);
+		});
 	});
 
 	describe("transform behavior", () => {
@@ -172,6 +208,21 @@ describe("vitePolyfills", () => {
 				REQUEST_IDLE_CALLBACK_VIRTUAL_MODULE_ID,
 			],
 			["cancelIdleCallback", "cancelIdleCallback(handle);", "file.js", CANCEL_IDLE_CALLBACK_VIRTUAL_MODULE_ID],
+			["Composite", "const key = Composite({ x: 1 });", "file.js", COMPOSITE_VIRTUAL_MODULE_ID],
+			[
+				"an unrelated non-computed .when member",
+				'const state = workflow.when("ready");',
+				"file.js",
+				EVENT_TARGET_WHEN_VIRTUAL_MODULE_ID,
+			],
+			["Observable", "const stream = new Observable(subscribe);", "file.js", OBSERVABLE_VIRTUAL_MODULE_ID],
+			["Subscriber", "const subscriber = new Subscriber(observer);", "file.js", SUBSCRIBER_VIRTUAL_MODULE_ID],
+			[
+				"an application source directory named like a polyfill",
+				"const stream = new Observable(subscribe);",
+				"/app/polyfills/observable/component.ts",
+				OBSERVABLE_VIRTUAL_MODULE_ID,
+			],
 			["a type reference", "type Stack = DisposableStack;", "file.ts", DISPOSABLE_STACK_VIRTUAL_MODULE_ID],
 			["a declaration", "const DisposableStack = MyLocalThing;", "file.js", DISPOSABLE_STACK_VIRTUAL_MODULE_ID],
 			[
@@ -217,6 +268,7 @@ describe("vitePolyfills", () => {
 			["node_modules", "export default new DisposableStack();", "/project/node_modules/pkg/index.js"],
 			["unrelated symbols", "const x = Symbol.iterator;", "file.js"],
 			["string contents", 'const msg = "Symbol.dispose is cool";', "file.js"],
+			["a computed when property", 'target["when"]("change");', "file.js"],
 		] as const;
 
 		it.each(nonMatchingCases)("does not inject a polyfill for %s", async (_name, code, id) => {
@@ -254,10 +306,14 @@ describe("vitePolyfills", () => {
 			expect(ids).toEqual([
 				"async-disposable-stack",
 				"cancel-idle-callback",
+				"composite",
 				"disposable-stack",
+				"event-target-when",
 				"map-upsert",
+				"observable",
 				"request-idle-callback",
 				"scheduler",
+				"subscriber",
 				"suppressed-error",
 				"symbol-async-dispose",
 				"symbol-dispose",

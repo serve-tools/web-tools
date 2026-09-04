@@ -9,8 +9,11 @@
 		"skipLibCheck": false,
 		"types": ["node"]
 	},
-	"include": ["test/package.types.ts", "playwright.config.ts"],
+	"include": ["test/package.types.ts", "test/*.recipes.ts", "playwright.config.ts"],
 	"references": [
+		{
+			"path": "../../client/dom-fragment/tsconfig.json"
+		},
 		{
 			"path": "../../signals/signal/tsconfig.json"
 		},

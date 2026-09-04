@@ -2,12 +2,16 @@
 
 Select the narrowest package that owns the required behavior.
 
+- Cold Web Observable executions and AbortSignal-based subscriptions without global mutation: `@serve-tools/ponyfill-observable`.
+- Interned named-value Map keys and Set values without global mutation: `@serve-tools/ponyfill-composites`.
 - Owned async events, terminal results, backpressure, and cancellation: `@serve-tools/async-operation`.
+- Web components and a base element with automatically suspended signal bindings: `@serve-tools/aui` (workspace-only in this guide version; not yet published to npm).
 - Typed JSON HTTP contracts, schema-free Fetch clients, validated handlers, and optional OpenAPI: `@serve-tools/http-contract`.
 - Runtime-neutral typed route declarations, matching, and URL construction: `@serve-tools/router`.
 - Namespace facade for several browser utilities: `@serve-tools/client`.
 - Namespace facade for several Signal-aware browser clients: `@serve-tools/client-signals`.
 - DOM context providers and consumers with late-registration replay: `@serve-tools/client-context`.
+- Reusable DOM regions without signals: `@serve-tools/client-dom-fragment`.
 - Promise-based IndexedDB operations, transactions, and scans: `@serve-tools/client-db`.
 - Native EventSource, typed JSON events, reconnection, and event IDs: `@serve-tools/client-event-source`.
 - Binary HTTP requests, subscriptions, headers, and framed responses: `@serve-tools/client-http-stream`.
@@ -31,7 +35,7 @@ Select the narrowest package that owns the required behavior.
 - Typed WebSocket request and subscription server handlers: `@serve-tools/server-websocket`.
 - Typed WebTransport operation and datagram server handlers: `@serve-tools/server-webtransport`.
 - Realtime structured serialization, message guards, and reliable stream framing: `@serve-tools/realtime-protocol`.
-- Signal-aware functional HTML, SVG, and MathML templating: `@serve-tools/signal-dom`.
+- Signal-aware functional HTML, SVG, and MathML templating: `@serve-tools/signal-dom`; opt-in tagged HTML with persistent `html` or managed `scopedHtml`: `@serve-tools/signal-dom/template`.
 - EventTarget state and media queries as disposable read-only Signals: `@serve-tools/signal-event-target`.
 - Complete EventSource client with latest-event Signal state and IDs: `@serve-tools/signal-event-source`.
 - Complete messaging client with reactive subscription Signal state: `@serve-tools/signal-messaging`.
@@ -66,6 +70,8 @@ Select the narrowest package that owns the required behavior.
 - Install explicit-resource-management globals: `@serve-tools/polyfill-resource-management`.
 - Import resource-management classes without global mutation: `@serve-tools/ponyfill-resource-management`.
 - Install a native-preserving `URLPattern` global: `@serve-tools/polyfill-urlpattern`.
+- Install missing Observable globals and `EventTarget.prototype.when`: `@serve-tools/polyfill-observable`; the fallback has independent cold executions and is not a complete native implementation.
+- Install a missing experimental `Composite` global: `@serve-tools/polyfill-composites`; fallback identity remains module-local and does not gain native weak-collection restrictions.
 - Import `URLPattern` without global mutation: `@serve-tools/ponyfill-urlpattern`.
 - Detect and inject browser polyfills during Vite builds: `@serve-tools/vite-polyfills`.
 

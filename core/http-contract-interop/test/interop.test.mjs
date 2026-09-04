@@ -12,6 +12,10 @@ import { codec, route } from "@serve-tools/router";
 import createClient from "openapi-fetch";
 import openapiTS, { astToString } from "openapi-typescript";
 
+if (typeof globalThis.URLPattern !== "function") {
+	await import("@serve-tools/polyfill-urlpattern");
+}
+
 const require = createRequire(import.meta.url);
 const fixtureDirectory = dirname(fileURLToPath(import.meta.url));
 const interopDirectory = resolve(fixtureDirectory, "..");

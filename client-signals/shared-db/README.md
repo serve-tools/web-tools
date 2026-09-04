@@ -109,6 +109,25 @@ db.invalidate("users");
 Use `query.refresh()` instead when only one query should rerun.
 Mutations routed through the shared client are invalidated automatically.
 
+## Preserve drafts during refresh
+
+Every refresh publishes `{ status: "pending" }` without its previous value, including refreshes after another client commits a write.
+Do not turn pending into an empty collection or unmount an editor that already has data.
+The [retained-query recipe](./skills/serve-tools-signal-shared-db/references/preserve-editor-drafts.md) keeps the last successful snapshot alongside the current loading/error state and preserves the same textarea during background refresh.
+It also treats a successful empty or missing result as new data, rather than retaining the old record forever.
+
+Copy the application-local helpers from the recipe; they are not package exports.
+
+```ts
+const editor = mountDraftEditor(db.watch("users", "one"), container, (user) => user.name);
+
+// When this fixed record's view is retired:
+editor.dispose();
+```
+
+Own drafts separately from fetched records, and recreate the retained-query owner when the record key, filters, account, or tenant changes.
+The underlying `QueryState` and default refresh/disposal behavior are unchanged.
+
 ## Promise operations
 
 `get()`, `getAll()`, `getAllKeys()`, `has()`, and `count()` are finite queries.

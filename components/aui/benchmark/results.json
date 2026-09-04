@@ -1,0 +1,1755 @@
+{
+	"build": {
+		"bytes": 19131,
+		"fixtureSha256": "6ad3e4b8aa97b27c3c09b0c3cabae98d8523b411d19f94adb014722e3ec57c4f",
+		"outputPath": "/private/tmp/aui-mount-diagnostic.bundle.js",
+		"sha256": "c6055e1b76892bd71f48b3f1962c73f9a78d5b77ce2fade56582f3ab5e281655",
+		"rolldown": "1.2.7"
+	},
+	"createdAt": "2026-09-02T22:40:12.636Z",
+	"environment": {
+		"arch": "arm64",
+		"browser": {
+			"name": "chromium",
+			"version": "151.0.7922.34"
+		},
+		"cpus": 18,
+		"node": "v24.16.0",
+		"platform": "darwin",
+		"release": "25.6.0",
+		"totalMemoryBytes": 68719476736
+	},
+	"git": {
+		"revision": "348a053ac8a644bd38f9f66b42a02793aeeb515e",
+		"status": [
+			" M components/aui/README.md",
+			" M components/aui/design/coverage.md",
+			"AM components/aui/design/disposable-element.md",
+			" M components/aui/design/lifecycle.md",
+			" M components/aui/design/plan.md",
+			" M components/aui/examples/index.html",
+			"MM components/aui/package.json",
+			" M components/aui/skills/serve-tools-aui/SKILL.md",
+			" M components/aui/skills/serve-tools-aui/references/recipe-quick-start.md",
+			"AD components/aui/src/.experiment.ts",
+			"MM components/aui/src/aui-element.ts",
+			"AM components/aui/src/lib/.internals.ts",
+			"A  components/aui/src/lib/DisposableElement.ts",
+			" M components/aui/test/aui.recipes.ts",
+			"A  components/aui/test/browser/disposable-element.test.ts",
+			"MM components/aui/test/browser/lifecycle-failures.test.ts",
+			" M components/aui/tsconfig.json",
+			"MM components/aui/tsconfig.test.json",
+			"?? components/aui/benchmark/",
+			"?? components/aui/design/accessibility.md",
+			"?? components/aui/examples/template.html",
+			"?? components/aui/examples/template.ts",
+			"?? components/aui/skills/serve-tools-aui/references/own-a-persistent-template.md",
+			"?? components/aui/src/template.ts",
+			"?? components/aui/test/browser/template.test.ts",
+			"?? components/aui/test/template.types.ts"
+		]
+	},
+	"pairs": [
+		{
+			"order": ["validate-each", "validate-final"],
+			"pairIndex": 0,
+			"results": {
+				"validate-each": {
+					"condition": "validate-each",
+					"observations": [
+						{
+							"mountMs": 67,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 112.5,
+							"teardownMs": 2.7000000001862645
+						},
+						{
+							"mountMs": 129.90000000037253,
+							"teardownMs": 1.6999999997206032
+						},
+						{
+							"mountMs": 205.6999999997206,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 239,
+							"teardownMs": 2.2000000001862645
+						},
+						{
+							"mountMs": 274.20000000018626,
+							"teardownMs": 1.7999999998137355
+						},
+						{
+							"mountMs": 297.10000000009313,
+							"teardownMs": 3.2000000001862645
+						},
+						{
+							"mountMs": 321.39999999990687,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 37.3000000002794,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 67.60000000009313,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 108.39999999990687,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 132,
+							"teardownMs": 2.1000000000931323
+						}
+					],
+					"validations": [
+						{
+							"durationMs": 24.799999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.399999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.5,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.800000000279397,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 23.899999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 25.199999999720603,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.399999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 23.799999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.399999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.59999999962747,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.600000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.5,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 25.799999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						}
+					],
+					"warmups": [
+						{
+							"mountMs": 11.100000000093132,
+							"teardownMs": 0
+						},
+						{
+							"mountMs": 37.60000000009313,
+							"teardownMs": 3.1000000000931323
+						}
+					],
+					"summary": {
+						"mountMedianMs": 129.90000000037253,
+						"mountP95Ms": 321.39999999990687,
+						"teardownMedianMs": 2.1000000000931323,
+						"teardownP95Ms": 3.2000000001862645
+					}
+				},
+				"validate-final": {
+					"condition": "validate-final",
+					"observations": [
+						{
+							"mountMs": 38.10000000009313,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 38.700000000186265,
+							"teardownMs": 2.7999999998137355
+						},
+						{
+							"mountMs": 37.700000000186265,
+							"teardownMs": 2.6999999997206032
+						},
+						{
+							"mountMs": 38.89999999990687,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 37.5,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 37.59999999962747,
+							"teardownMs": 3
+						},
+						{
+							"mountMs": 37.200000000186265,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 37.3000000002794,
+							"teardownMs": 2.2999999998137355
+						},
+						{
+							"mountMs": 26.600000000093132,
+							"teardownMs": 2.099999999627471
+						},
+						{
+							"mountMs": 8.899999999906868,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 8.399999999906868,
+							"teardownMs": 1.8000000002793968
+						},
+						{
+							"mountMs": 8.200000000186265,
+							"teardownMs": 1.8999999999068677
+						}
+					],
+					"validations": [
+						{
+							"durationMs": 25.399999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.600000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						}
+					],
+					"warmups": [
+						{
+							"mountMs": 11.199999999720603,
+							"teardownMs": 0
+						},
+						{
+							"mountMs": 8.700000000186265,
+							"teardownMs": 2.6000000000931323
+						}
+					],
+					"summary": {
+						"mountMedianMs": 37.3000000002794,
+						"mountP95Ms": 38.89999999990687,
+						"teardownMedianMs": 2.1000000000931323,
+						"teardownP95Ms": 3
+					}
+				}
+			}
+		},
+		{
+			"order": ["validate-final", "validate-each"],
+			"pairIndex": 1,
+			"results": {
+				"validate-final": {
+					"condition": "validate-final",
+					"observations": [
+						{
+							"mountMs": 38.89999999990687,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 38.5,
+							"teardownMs": 2.3999999999068677
+						},
+						{
+							"mountMs": 38.200000000186265,
+							"teardownMs": 2.5
+						},
+						{
+							"mountMs": 38.89999999990687,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 36.89999999990687,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 36.6999999997206,
+							"teardownMs": 2.8000000002793968
+						},
+						{
+							"mountMs": 37.40000000037253,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 38.1999999997206,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 26.100000000093132,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 9.399999999906868,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 8.700000000186265,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 8.399999999906868,
+							"teardownMs": 2.1000000000931323
+						}
+					],
+					"validations": [
+						{
+							"durationMs": 25,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.399999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						}
+					],
+					"warmups": [
+						{
+							"mountMs": 10.899999999906868,
+							"teardownMs": 0
+						},
+						{
+							"mountMs": 8.299999999813735,
+							"teardownMs": 2.7000000001862645
+						}
+					],
+					"summary": {
+						"mountMedianMs": 36.89999999990687,
+						"mountP95Ms": 38.89999999990687,
+						"teardownMedianMs": 2,
+						"teardownP95Ms": 2.8000000002793968
+					}
+				},
+				"validate-each": {
+					"condition": "validate-each",
+					"observations": [
+						{
+							"mountMs": 68,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 111,
+							"teardownMs": 2.7000000001862645
+						},
+						{
+							"mountMs": 132.89999999990687,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 212.29999999981374,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 252.40000000037253,
+							"teardownMs": 2.1999999997206032
+						},
+						{
+							"mountMs": 270.39999999990687,
+							"teardownMs": 1.7999999998137355
+						},
+						{
+							"mountMs": 294.5,
+							"teardownMs": 2.900000000372529
+						},
+						{
+							"mountMs": 256.60000000009313,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 37.5,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 66.89999999990687,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 111.40000000037253,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 135.29999999981374,
+							"teardownMs": 2.1000000000931323
+						}
+					],
+					"validations": [
+						{
+							"durationMs": 24.899999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.59999999962747,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 25,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 25.600000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 25.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.899999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.5,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.199999999720603,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.600000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.5,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.299999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 23.899999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						}
+					],
+					"warmups": [
+						{
+							"mountMs": 10.799999999813735,
+							"teardownMs": 0
+						},
+						{
+							"mountMs": 38.10000000009313,
+							"teardownMs": 3.1000000000931323
+						}
+					],
+					"summary": {
+						"mountMedianMs": 132.89999999990687,
+						"mountP95Ms": 294.5,
+						"teardownMedianMs": 2,
+						"teardownP95Ms": 2.900000000372529
+					}
+				}
+			}
+		},
+		{
+			"order": ["validate-each", "validate-final"],
+			"pairIndex": 2,
+			"results": {
+				"validate-each": {
+					"condition": "validate-each",
+					"observations": [
+						{
+							"mountMs": 67.59999999962747,
+							"teardownMs": 1.8000000002793968
+						},
+						{
+							"mountMs": 112.10000000009313,
+							"teardownMs": 2.3999999999068677
+						},
+						{
+							"mountMs": 132.10000000009313,
+							"teardownMs": 1.6999999997206032
+						},
+						{
+							"mountMs": 204,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 235.20000000018626,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 265.3000000002794,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 289.79999999981374,
+							"teardownMs": 2.7000000001862645
+						},
+						{
+							"mountMs": 247.79999999981374,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 37.5,
+							"teardownMs": 1.8000000002793968
+						},
+						{
+							"mountMs": 66.60000000009313,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 111.8000000002794,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 137.5,
+							"teardownMs": 2.1000000000931323
+						}
+					],
+					"validations": [
+						{
+							"durationMs": 24.799999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.200000000186265,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 23.300000000279397,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 23.799999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.699999999720603,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 23.699999999720603,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.300000000279397,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.399999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.299999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.299999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 23.799999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.399999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						}
+					],
+					"warmups": [
+						{
+							"mountMs": 10.600000000093132,
+							"teardownMs": 0
+						},
+						{
+							"mountMs": 37.5,
+							"teardownMs": 2.8999999999068677
+						}
+					],
+					"summary": {
+						"mountMedianMs": 132.10000000009313,
+						"mountP95Ms": 289.79999999981374,
+						"teardownMedianMs": 2,
+						"teardownP95Ms": 2.7000000001862645
+					}
+				},
+				"validate-final": {
+					"condition": "validate-final",
+					"observations": [
+						{
+							"mountMs": 37.6999999997206,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 36.700000000186265,
+							"teardownMs": 2.3999999999068677
+						},
+						{
+							"mountMs": 36.700000000186265,
+							"teardownMs": 2.3999999999068677
+						},
+						{
+							"mountMs": 37.1999999997206,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 36.5,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 37.89999999990687,
+							"teardownMs": 2.900000000372529
+						},
+						{
+							"mountMs": 36.90000000037253,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 36.40000000037253,
+							"teardownMs": 2.099999999627471
+						},
+						{
+							"mountMs": 25.40000000037253,
+							"teardownMs": 2.099999999627471
+						},
+						{
+							"mountMs": 10,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 9,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 8.299999999813735,
+							"teardownMs": 1.8999999999068677
+						}
+					],
+					"validations": [
+						{
+							"durationMs": 24.800000000279397,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.5,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						}
+					],
+					"warmups": [
+						{
+							"mountMs": 10.300000000279397,
+							"teardownMs": 0
+						},
+						{
+							"mountMs": 8,
+							"teardownMs": 2.599999999627471
+						}
+					],
+					"summary": {
+						"mountMedianMs": 36.5,
+						"mountP95Ms": 37.89999999990687,
+						"teardownMedianMs": 2,
+						"teardownP95Ms": 2.900000000372529
+					}
+				}
+			}
+		},
+		{
+			"order": ["validate-final", "validate-each"],
+			"pairIndex": 3,
+			"results": {
+				"validate-final": {
+					"condition": "validate-final",
+					"observations": [
+						{
+							"mountMs": 37.39999999990687,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 37.200000000186265,
+							"teardownMs": 2.5
+						},
+						{
+							"mountMs": 39.799999999813735,
+							"teardownMs": 2.3999999999068677
+						},
+						{
+							"mountMs": 40.40000000037253,
+							"teardownMs": 2.3999999999068677
+						},
+						{
+							"mountMs": 37.299999999813735,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 36.5,
+							"teardownMs": 2.8999999999068677
+						},
+						{
+							"mountMs": 37.10000000009313,
+							"teardownMs": 2.2000000001862645
+						},
+						{
+							"mountMs": 37.799999999813735,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 26.299999999813735,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 9.899999999906868,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 9,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 8.200000000186265,
+							"teardownMs": 2.1000000000931323
+						}
+					],
+					"validations": [
+						{
+							"durationMs": 25.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 25,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						}
+					],
+					"warmups": [
+						{
+							"mountMs": 11,
+							"teardownMs": 0
+						},
+						{
+							"mountMs": 8.399999999906868,
+							"teardownMs": 2.6000000000931323
+						}
+					],
+					"summary": {
+						"mountMedianMs": 37.10000000009313,
+						"mountP95Ms": 40.40000000037253,
+						"teardownMedianMs": 2.1000000000931323,
+						"teardownP95Ms": 2.8999999999068677
+					}
+				},
+				"validate-each": {
+					"condition": "validate-each",
+					"observations": [
+						{
+							"mountMs": 69.5,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 112.89999999990687,
+							"teardownMs": 2.6000000000931323
+						},
+						{
+							"mountMs": 134.3000000002794,
+							"teardownMs": 2.099999999627471
+						},
+						{
+							"mountMs": 208.09999999962747,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 245.79999999981374,
+							"teardownMs": 2.3000000002793968
+						},
+						{
+							"mountMs": 278.60000000009313,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 296.5,
+							"teardownMs": 3.400000000372529
+						},
+						{
+							"mountMs": 298.79999999981374,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 112.79999999981374,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 136.59999999962747,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 209.59999999962747,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 251.5,
+							"teardownMs": 2.2000000001862645
+						}
+					],
+					"validations": [
+						{
+							"durationMs": 25.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.600000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 25,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 25.300000000279397,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.600000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.5,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 25.199999999720603,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.799999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.700000000186265,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.700000000186265,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.300000000279397,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.5,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						}
+					],
+					"warmups": [
+						{
+							"mountMs": 10.899999999906868,
+							"teardownMs": 0
+						},
+						{
+							"mountMs": 37.39999999990687,
+							"teardownMs": 3
+						}
+					],
+					"summary": {
+						"mountMedianMs": 208.09999999962747,
+						"mountP95Ms": 298.79999999981374,
+						"teardownMedianMs": 2.1000000000931323,
+						"teardownP95Ms": 3.400000000372529
+					}
+				}
+			}
+		},
+		{
+			"order": ["validate-each", "validate-final"],
+			"pairIndex": 4,
+			"results": {
+				"validate-each": {
+					"condition": "validate-each",
+					"observations": [
+						{
+							"mountMs": 68.40000000037253,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 113.09999999962747,
+							"teardownMs": 2.8000000002793968
+						},
+						{
+							"mountMs": 136,
+							"teardownMs": 2.099999999627471
+						},
+						{
+							"mountMs": 207.8000000002794,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 243.8000000002794,
+							"teardownMs": 2.1999999997206032
+						},
+						{
+							"mountMs": 274.60000000009313,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 290.60000000009313,
+							"teardownMs": 2.8999999999068677
+						},
+						{
+							"mountMs": 215.5,
+							"teardownMs": 2.2000000001862645
+						},
+						{
+							"mountMs": 36.799999999813735,
+							"teardownMs": 1.7999999998137355
+						},
+						{
+							"mountMs": 67.60000000009313,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 108.89999999990687,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 136.20000000018626,
+							"teardownMs": 1.8999999999068677
+						}
+					],
+					"validations": [
+						{
+							"durationMs": 25.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.59999999962747,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.699999999720603,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 23.90000000037253,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 25.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.799999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.399999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.799999999813735,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.399999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.300000000279397,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.399999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						}
+					],
+					"warmups": [
+						{
+							"mountMs": 11.200000000186265,
+							"teardownMs": 0
+						},
+						{
+							"mountMs": 37.700000000186265,
+							"teardownMs": 3.2999999998137355
+						}
+					],
+					"summary": {
+						"mountMedianMs": 136,
+						"mountP95Ms": 290.60000000009313,
+						"teardownMedianMs": 2,
+						"teardownP95Ms": 2.8999999999068677
+					}
+				},
+				"validate-final": {
+					"condition": "validate-final",
+					"observations": [
+						{
+							"mountMs": 38.40000000037253,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 37.60000000009313,
+							"teardownMs": 2.599999999627471
+						},
+						{
+							"mountMs": 37.200000000186265,
+							"teardownMs": 2.3999999999068677
+						},
+						{
+							"mountMs": 39.10000000009313,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 37.299999999813735,
+							"teardownMs": 1.900000000372529
+						},
+						{
+							"mountMs": 36.89999999990687,
+							"teardownMs": 3
+						},
+						{
+							"mountMs": 36.8000000002794,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 37,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 25.899999999906868,
+							"teardownMs": 2.1000000000931323
+						},
+						{
+							"mountMs": 10.200000000186265,
+							"teardownMs": 1.8999999999068677
+						},
+						{
+							"mountMs": 9.099999999627471,
+							"teardownMs": 2
+						},
+						{
+							"mountMs": 8.199999999720603,
+							"teardownMs": 1.900000000372529
+						}
+					],
+					"validations": [
+						{
+							"durationMs": 25.100000000093132,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						},
+						{
+							"durationMs": 24.899999999906868,
+							"sink": {
+								"checkedCount": 334,
+								"controlCount": 1000,
+								"formValueCount": 334,
+								"labelCount": 1000,
+								"lightDOMElementCount": 3000,
+								"shadowElementCount": 3000,
+								"shadowRootCount": 1000
+							}
+						}
+					],
+					"warmups": [
+						{
+							"mountMs": 10.5,
+							"teardownMs": 0
+						},
+						{
+							"mountMs": 8.100000000093132,
+							"teardownMs": 2.5
+						}
+					],
+					"summary": {
+						"mountMedianMs": 36.89999999990687,
+						"mountP95Ms": 39.10000000009313,
+						"teardownMedianMs": 2,
+						"teardownP95Ms": 3
+					}
+				}
+			}
+		}
+	]
+}
