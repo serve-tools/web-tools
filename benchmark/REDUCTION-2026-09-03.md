@@ -121,6 +121,9 @@ Full `npm run verify` then passed, including 4,687 browser tests with one existi
 An existing Node 22 router test failure was also reproduced (21 failures) and fixed by directly importing its ponyfill constructor instead of deleting a global and expecting a cached installer to rerun.
 The fixed router tests passed on Node 22 and 24, and the full Node 22 Vitest suite passed 1,379 tests with three existing platform-dependent skips.
 That change is test-only, with an explicit development dependency and TypeScript reference; router production code is unchanged.
+The first remote CI run then exposed a separate Node 22 gap in the native HTTP interoperability fixture, which created routes without installing `URLPattern`.
+Adding conditional polyfill setup and an explicit private test dependency fixed that failure; the complete Node 22 test command passed 1,379 Vitest tests, 12 native tests, and 28 Signal DOM tests, with three existing Vitest skips.
+The interoperability fixture also passed on Node 24 without loading the polyfill.
 This report is not a claim that the repository is ready to publish unchanged.
 This reduction pass does not advance package versions or refresh the release plan for newly changed packages; those must be reviewed before a future release.
 Automated browser tests are also not manual assistive-technology verification.
