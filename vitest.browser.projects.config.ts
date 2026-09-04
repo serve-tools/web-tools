@@ -52,7 +52,7 @@ const selectedProjects = projects.flatMap((project, index) => {
 		{
 			extends: project,
 			root: project.slice(0, project.lastIndexOf("/")),
-			test: { browser: { api: { port: defaultBrowserPort + index } } },
+			test: { api: { port: defaultBrowserPort + index } },
 		},
 	];
 });

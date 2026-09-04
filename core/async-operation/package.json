@@ -48,6 +48,6 @@
 		"typecheck": "tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"devDependencies": {
-		"ai": "7.0.91"
+		"ai": "7.0.92"
 	}
 }

@@ -16,7 +16,7 @@
 		"@serve-tools/client-interaction": "^0.1.2"
 	},
 	"devDependencies": {
-		"typescript": "7.0.2",
+		"typescript": "7.1.0-0 - 7.1.0",
 		"vite": "8.2.2"
 	},
 	"engines": {
