@@ -4,7 +4,7 @@ import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { createCompilerSession } from "./session.mjs";
 
-/** Watch a configured project with Node's native recursive watcher and serialized reconciliation. */
+/** Watch a configured project with native directory watchers and serialized reconciliation. */
 export async function watchCompilerProject({
 	configFile,
 	cwd,
@@ -14,7 +14,6 @@ export async function watchCompilerProject({
 	debounceMilliseconds = 20,
 }) {
 	const session = await createCompilerSession({ configFile, cwd });
-	const controller = new AbortController();
 	const watches = new Map();
 	let files = new Map();
 	let generation;
@@ -52,7 +51,7 @@ export async function watchCompilerProject({
 		});
 	}
 
-	async function scan(directory, recursive, result = new Map()) {
+	async function scan(directory, result) {
 		let entries;
 		try {
 			entries = await readdir(directory, { withFileTypes: true });
@@ -67,9 +66,7 @@ export async function watchCompilerProject({
 			if (ignored(file)) {
 				continue;
 			}
-			if (recursive && entry.isDirectory()) {
-				await scan(file, recursive, result);
-			} else if (entry.isFile() && /\.(?:[cm]?[jt]sx?|json)$/.test(file)) {
+			if (entry.isFile() && /\.(?:[cm]?[jt]sx?|json)$/.test(file)) {
 				try {
 					result.set(
 						file,
@@ -89,8 +86,8 @@ export async function watchCompilerProject({
 
 	async function readInputs() {
 		const result = new Map();
-		for (const [directory, { recursive }] of watches) {
-			await scan(directory, recursive, result);
+		for (const directory of watches.keys()) {
+			await scan(directory, result);
 		}
 		return result;
 	}
@@ -153,25 +150,61 @@ export async function watchCompilerProject({
 		if (closed) {
 			return;
 		}
-		const desiredDirectories = new Map(desiredEntries);
+		const desiredDirectories = new Map();
+		async function collect(directory, recursive) {
+			try {
+				const identity = await stat(directory);
+				if (!identity.isDirectory()) {
+					return;
+				}
+				desiredDirectories.set(directory, identity);
+				if (!recursive) {
+					return;
+				}
+				for (const entry of await readdir(directory, { withFileTypes: true })) {
+					const child = path.join(directory, entry.name);
+					if (entry.isDirectory() && !ignored(child)) {
+						await collect(child, true);
+					}
+				}
+			} catch (error) {
+				if (error.code !== "ENOENT") {
+					throw error;
+				}
+			}
+		}
+		for (const [directory, recursive] of desiredEntries) {
+			await collect(directory, recursive);
+		}
+		if (closed) {
+			return;
+		}
+
 		for (const [directory, entry] of watches) {
-			if (desiredDirectories.get(directory) === entry.recursive) {
+			const identity = desiredDirectories.get(directory);
+			if (identity?.dev === entry.dev && identity.ino === entry.ino) {
 				continue;
 			}
 			entry.watcher.close();
 			watches.delete(directory);
 		}
-		for (const [directory, recursive] of desiredDirectories) {
+		for (const [directory, { dev, ino }] of desiredDirectories) {
 			if (watches.has(directory)) {
 				continue;
 			}
-			const watcher = watch(directory, { recursive, signal: controller.signal }, (event, file) =>
-				schedule(event, file, directory),
-			);
-			watcher.on("error", (error) => {
-				void reportError(error);
-			});
-			watches.set(directory, { recursive, watcher });
+			try {
+				// Linux recursive fs.watch retains file watches on old inodes after atomic saves.
+				// Watching directories observes replacement files without retaining their inodes.
+				const watcher = watch(directory, (event, file) => schedule(event, file, directory));
+				watcher.on("error", (error) => {
+					void reportError(error);
+				});
+				watches.set(directory, { dev, ino, watcher });
+			} catch (error) {
+				if (error.code !== "ENOENT") {
+					throw error;
+				}
+			}
 		}
 	}
 
@@ -183,6 +216,7 @@ export async function watchCompilerProject({
 			while (!closed && handled < requested) {
 				const revision = requested;
 				try {
+					await updateWatches();
 					const next = await readInputs();
 					if (closed) {
 						break;
@@ -239,7 +273,6 @@ export async function watchCompilerProject({
 		return (closing ??= (async () => {
 			closed = true;
 			clearTimeout(timer);
-			controller.abort();
 			for (const { watcher } of watches.values()) {
 				watcher.close();
 			}

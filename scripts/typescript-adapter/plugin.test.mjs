@@ -85,3 +85,55 @@ test("explicit bundler externalization remains external", { timeout: 30_000 }, a
 		await fixture.dispose();
 	}
 });
+
+test("slash-form hot updates refresh dependencies and invalidate emitted modules with query suffixes", {
+	timeout: 30_000,
+}, async () => {
+	const fixture = await createBrowserFixture();
+	let plugin;
+	let build;
+	try {
+		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+		const slashPath = (file) => file.split(path.sep).join("/");
+		const entry = { id: `${slashPath(path.join(fixture.root, "a/dist/index.js"))}?v=1` };
+		const consumer = { id: `${slashPath(path.join(fixture.root, "b/dist/value.js"))}#fragment` };
+		const virtual = { id: "\0virtual-module" };
+		const invalidated = [];
+		const timestamp = 1234;
+		const moduleGraph = {
+			idToModuleMap: new Map([entry, consumer, virtual].map((module) => [module.id, module])),
+			invalidateModule(module, seen, updatedAt, isHmr) {
+				assert.ok(seen instanceof Set);
+				assert.equal(updatedAt, timestamp);
+				assert.equal(isHmr, true);
+				invalidated.push(module);
+			},
+		};
+
+		await fixture.writeDependency(7);
+		const refreshes = plugin.api.statistics.refreshes;
+		const modules = await plugin.hotUpdate.call(
+			{ environment: { moduleGraph } },
+			{
+				type: "update",
+				file: slashPath(fixture.dependency),
+				modules: [],
+				timestamp,
+			},
+		);
+		assert.equal(plugin.api.statistics.refreshes, refreshes + 1);
+		assert.deepEqual(invalidated, [entry, consumer]);
+		assert.deepEqual(modules, [entry, consumer]);
+
+		build = await rolldown({ input: path.join(fixture.root, "a/dist/index.js"), plugins: [plugin] });
+		const { output } = await build.generate({ format: "es" });
+		const chunk = output.find((item) => item.type === "chunk");
+		const bundled = await import(`data:text/javascript;base64,${Buffer.from(chunk.code).toString("base64")}`);
+		assert.equal(bundled.result, 50);
+		await fixture.assertNoDist();
+	} finally {
+		await build?.close();
+		await plugin?.api.dispose();
+		await fixture.dispose();
+	}
+});

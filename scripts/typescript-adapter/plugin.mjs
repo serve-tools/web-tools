@@ -277,22 +277,26 @@ export async function typescriptProject({ configFile = "tsconfig.json", cwd = pr
 			},
 		},
 		async hotUpdate(context) {
-			if (isOutput(context.file) || context.file.endsWith(".tsbuildinfo")) {
+			const file = await canonicalPath(context.file);
+			if (isOutput(file) || file.endsWith(".tsbuildinfo")) {
 				return [];
 			}
-			if (!relevant(context.file)) {
+			if (!relevant(file)) {
 				return;
 			}
 			const previous = current;
 			await refresh({
-				[{ create: "created", update: "changed", delete: "deleted" }[context.type]]: [context.file],
+				[{ create: "created", update: "changed", delete: "deleted" }[context.type]]: [file],
 			});
 			await ready();
 			server?.watcher.add(roots());
 			const graph = this.environment.moduleGraph;
 			const modules = new Set(context.modules);
 			for (const [id, module] of graph.idToModuleMap) {
-				const file = id.split(/[?#]/, 1)[0];
+				if (!path.isAbsolute(id.split(/[?#]/, 1)[0])) {
+					continue;
+				}
+				const file = await canonicalPath(id.split(/[?#]/, 1)[0]);
 				if (previous.outputs.has(file) || current.outputs.has(file)) {
 					graph.invalidateModule(module, new Set(), context.timestamp, true);
 					modules.add(module);

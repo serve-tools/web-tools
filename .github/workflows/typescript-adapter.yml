@@ -39,6 +39,9 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run check:typescript-migration
       - run: npm run test:typescript-adapter:node
+      - if: matrix.os == 'ubuntu-24.04' && matrix.node == 24
+        name: Use Ubuntu's primary archive for browser dependencies
+        run: sudo sed -i 's|http[s]*://azure.archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' /etc/apt/apt-mirrors.txt
       - if: matrix.node == 24
         run: npx playwright install --with-deps chromium firefox webkit
       - if: matrix.node == 24

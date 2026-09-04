@@ -119,6 +119,44 @@ test("native watcher reconciles writes, atomic saves, create/delete/recreate, er
 	}
 });
 
+test("native watcher follows file and directory replacements through subsequent writes", {
+	timeout: 30_000,
+}, async () => {
+	const fixture = await createBrowserFixture();
+	const output = path.join(fixture.root, "c/dist/index.js");
+	let generation;
+	let watcher;
+	try {
+		watcher = await watchCompilerProject({
+			configFile: fixture.configFile,
+			cwd: fixture.root,
+			onUpdate(value) {
+				generation = value;
+			},
+		});
+		const containsFactor = (factor) =>
+			new RegExp(`factor\\s*=\\s*${factor}\\b`).test(generation.outputs.get(output)?.text ?? "");
+		const original = await readFile(fixture.dependency, "utf8");
+		const replacement = `${fixture.dependency}.tmp`;
+		await writeFile(replacement, original.replaceAll("= 3", "= 7"));
+		await rename(replacement, fixture.dependency);
+		await until(() => containsFactor(7), "atomic replacement did not update");
+		await fixture.writeDependency(9);
+		await until(() => containsFactor(9), "write after atomic replacement was lost");
+
+		const sourceDirectory = path.dirname(fixture.dependency);
+		await rename(sourceDirectory, path.join(fixture.root, "previous-src"));
+		await mkdir(sourceDirectory);
+		await fixture.writeDependency(11);
+		await until(() => containsFactor(11), "replacement source directory did not update");
+		await fixture.writeDependency(13);
+		await until(() => containsFactor(13), "write in replacement source directory was lost");
+	} finally {
+		await watcher?.close();
+		await fixture.dispose();
+	}
+});
+
 test("callback failures are reported without an unhandled pump rejection", { timeout: 30_000 }, async () => {
 	const fixture = await createBrowserFixture();
 	const reported = [];
