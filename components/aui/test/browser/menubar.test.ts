@@ -1,10 +1,13 @@
-import { afterEach, describe, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { userEvent } from "vitest/browser";
 import { MenuElement } from "../../src/menu-element.js";
 import { MenubarElement } from "../../src/menubar-element.js";
 
 const fixtures: Element[] = [];
 const wait = () => new Promise<void>((resolve) => setTimeout(resolve));
+
+// Do not let a previous test's real pointer hover a newly inserted menu trigger.
+beforeEach(() => userEvent.hover(document.documentElement, { position: { x: 0, y: 0 } }));
 
 afterEach(() => {
 	for (const fixture of fixtures.splice(0).reverse()) {
@@ -133,8 +136,11 @@ describe("MenubarElement", () => {
 	test("switches open menus on mouse hover without touch behavior", async () => {
 		const { first, second } = create();
 		first.element.show();
-		await wait();
-		second.trigger.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, pointerType: "mouse" }));
+		await vi.waitFor(() => expect(document.activeElement).toBe(first.item));
+		second.trigger.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, pointerType: "touch" }));
+		expect(first.element.open).toBe(true);
+		expect(second.element.open).toBe(false);
+		await userEvent.hover(second.trigger);
 		await wait();
 		expect(second.element.open).toBe(true);
 		expect(document.activeElement).toBe(second.trigger);
@@ -144,10 +150,10 @@ describe("MenubarElement", () => {
 	test("does not hover-switch to an aria-disabled menu trigger", async () => {
 		const { first, second } = create();
 		first.element.show();
-		await wait();
+		await vi.waitFor(() => expect(document.activeElement).toBe(first.item));
 		first.trigger.focus();
 		second.trigger.ariaDisabled = "true";
-		second.trigger.dispatchEvent(new PointerEvent("pointerover", { bubbles: true, pointerType: "mouse" }));
+		await userEvent.hover(second.trigger);
 		await wait();
 		expect(first.element.open).toBe(true);
 		expect(second.element.open).toBe(false);

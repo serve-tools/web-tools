@@ -129,6 +129,10 @@ Its full-verification allowance was increased to twenty minutes, retaining all c
 The next run exposed a cold-start race in the client-router document reload fixture: readiness polling began before the iframe finished loading.
 Waiting for each actual iframe `load` event preserves all readiness, document-replacement, and render-count assertions without increasing the test timeout.
 A temporary 1.5-second fixture-response delay reproduced six failures before this test-only fix and passed all eighteen focused cross-browser tests afterward.
+An extra local browser run also reproduced the intermittent Firefox menubar hover failure.
+Event tracing showed that a synthetic hover opened the requested menu correctly, then the real pointer left over the previous trigger switched it back; a separate case moved focus before native opening completed.
+The tests now isolate real pointer position, await initial focus, and use trusted mouse hover while explicitly checking the synthetic touch-ignore branch.
+Thirty consecutive focused Firefox suites passed after these test-only corrections; component runtime behavior is unchanged.
 This report is not a claim that the repository is ready to publish unchanged.
 This reduction pass does not advance package versions or refresh the release plan for newly changed packages; those must be reviewed before a future release.
 Automated browser tests are also not manual assistive-technology verification.
