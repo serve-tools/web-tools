@@ -78,9 +78,8 @@ describe("MenubarElement", () => {
 		expect(document.activeElement).toBe(first.trigger);
 		element.style.direction = "rtl";
 		await userEvent.keyboard("{ArrowLeft}");
-		await wait();
+		await vi.waitFor(() => expect(document.activeElement).toBe(first.item));
 		expect(first.element.open).toBe(true);
-		expect(document.activeElement).toBe(first.item);
 		await userEvent.keyboard("{ArrowRight}");
 		expect(first.element.open).toBe(false);
 		expect(document.activeElement).toBe(first.trigger);
@@ -109,8 +108,7 @@ describe("MenubarElement", () => {
 	test("switches an open submenu from keyboard events relayed out of its popup", async () => {
 		const { element, first, second } = create();
 		await userEvent.click(first.trigger);
-		await wait();
-		expect(document.activeElement).toBe(first.item);
+		await vi.waitFor(() => expect(document.activeElement).toBe(first.item));
 		await userEvent.keyboard("{ArrowRight}");
 		await wait();
 		expect(first.element.open).toBe(false);
@@ -123,8 +121,7 @@ describe("MenubarElement", () => {
 	test("keeps unmatched child typeahead inside the child popup", async () => {
 		const { first, second } = create();
 		first.element.show();
-		await wait();
-		expect(document.activeElement).toBe(first.item);
+		await vi.waitFor(() => expect(document.activeElement).toBe(first.item));
 		await userEvent.keyboard("e");
 		expect(document.activeElement).toBe(first.item);
 		first.element.hide();
