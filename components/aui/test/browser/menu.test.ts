@@ -53,9 +53,8 @@ describe("MenuElement", () => {
 		expect(trigger.getAttribute("aria-haspopup")).toBe("menu");
 
 		await userEvent.click(trigger);
-		await wait();
+		await vi.waitFor(() => expect(document.activeElement).toBe(action));
 		expect(element.open).toBe(true);
-		expect(document.activeElement).toBe(action);
 		expect(trigger.getAttribute("aria-expanded")).toBe("true");
 		element.hide();
 	});
@@ -75,18 +74,16 @@ describe("MenuElement", () => {
 		});
 
 		await userEvent.click(external);
-		await wait();
+		await vi.waitFor(() => expect(document.activeElement).toBe(action));
 		expect(element.open).toBe(true);
 		expect(source).toBe(external);
-		expect(document.activeElement).toBe(action);
 		element.hide();
 	});
 
 	test("supports arrows, Home, End, disabled skipping, and typeahead", async () => {
 		const { action, check, element, link } = create();
 		element.show();
-		await wait();
-		expect(document.activeElement).toBe(action);
+		await vi.waitFor(() => expect(document.activeElement).toBe(action));
 		await userEvent.keyboard("{ArrowDown}");
 		expect(document.activeElement).toBe(check);
 		await userEvent.keyboard("{End}");
@@ -323,9 +320,8 @@ describe("MenuElement", () => {
 		fixtures.push(external);
 		external.popoverTargetElement = replacement;
 		external.click();
-		await wait();
+		await vi.waitFor(() => expect(document.activeElement).toBe(replacementItem));
 		expect(element.open).toBe(true);
-		expect(document.activeElement).toBe(replacementItem);
 		element.hide();
 	});
 
@@ -346,8 +342,7 @@ describe("MenuElement", () => {
 		popup.replaceWith(replacement);
 		element.trigger;
 		element.show();
-		await wait();
-		expect(document.activeElement).toBe(beta);
+		await vi.waitFor(() => expect(document.activeElement).toBe(beta));
 		await userEvent.keyboard("g");
 		expect(document.activeElement).toBe(gamma);
 		element.hide();
@@ -432,8 +427,7 @@ describe("MenuElement", () => {
 		expect(check.tabIndex).toBe(0);
 		disabled.remove();
 		element.show();
-		await wait();
-		expect(document.activeElement).toBe(check);
+		await vi.waitFor(() => expect(document.activeElement).toBe(check));
 		await userEvent.keyboard("{ArrowDown}");
 		expect(document.activeElement).toBe(link);
 		check.remove();
@@ -454,13 +448,11 @@ describe("MenuElement", () => {
 		link.hidden = true;
 		trigger.focus();
 		await userEvent.keyboard("{ArrowDown}");
-		await wait();
-		expect(document.activeElement).toBe(check);
+		await vi.waitFor(() => expect(document.activeElement).toBe(check));
 		element.hide();
 		trigger.focus();
 		await userEvent.keyboard("{ArrowUp}");
-		await wait();
-		expect(document.activeElement).toBe(check);
+		await vi.waitFor(() => expect(document.activeElement).toBe(check));
 		expect(disabled.disabled).toBe(true);
 		element.hide();
 	});
@@ -504,7 +496,7 @@ describe("MenuElement", () => {
 		const { action, check, element } = create();
 		element.orientation = "horizontal";
 		element.show();
-		await wait();
+		await vi.waitFor(() => expect(document.activeElement).toBe(action));
 		await userEvent.keyboard("{ArrowRight}");
 		expect(document.activeElement).toBe(check);
 		element.style.direction = "rtl";
@@ -514,7 +506,7 @@ describe("MenuElement", () => {
 	});
 
 	test("keeps nested menu collections independent and uses RTL-aware submenu arrows", async () => {
-		const { element, popup } = create();
+		const { action, element, popup } = create();
 		const name = `aui-submenu-${crypto.randomUUID()}`;
 		customElements.define(name, class extends MenuElement {});
 		const submenu = document.createElement(name) as MenuElement;
@@ -537,19 +529,18 @@ describe("MenuElement", () => {
 		expect(element.items).not.toContain(submenuItem);
 		expect(submenu.items).toEqual([submenuItem]);
 		element.show();
-		await wait();
+		await vi.waitFor(() => expect(document.activeElement).toBe(action));
 		element.focusItem(submenuTrigger);
 		await userEvent.keyboard("{ArrowRight}");
-		await wait();
+		await vi.waitFor(() => expect(document.activeElement).toBe(submenuItem));
 		expect(submenu.open).toBe(true);
-		expect(document.activeElement).toBe(submenuItem);
 		await userEvent.keyboard("{ArrowLeft}");
 		expect(submenu.open).toBe(false);
 		expect(document.activeElement).toBe(submenuTrigger);
 
 		element.style.direction = "rtl";
 		await userEvent.keyboard("{ArrowLeft}");
-		await wait();
+		await vi.waitFor(() => expect(document.activeElement).toBe(submenuItem));
 		expect(submenu.open).toBe(true);
 		await userEvent.keyboard("{ArrowRight}");
 		expect(submenu.open).toBe(false);
@@ -703,9 +694,8 @@ describe("MenuElement", () => {
 		frameDocument.body.append(frameDocument.adoptNode(element));
 		expect(clearTimeoutSpy).toHaveBeenCalledWith(timer);
 		element.show();
-		await wait();
+		await vi.waitFor(() => expect(frameDocument.activeElement).toBe(action));
 		expect(element.ownerDocument).toBe(frameDocument);
-		expect(frameDocument.activeElement).toBe(action);
 		const event = new (frameWindow as typeof window).KeyboardEvent("keydown", {
 			bubbles: true,
 			cancelable: true,
@@ -724,8 +714,7 @@ describe("MenuElement", () => {
 		document.body.append(outside);
 		fixtures.push(outside);
 		element.show();
-		await wait();
-		expect(document.activeElement).toBe(action);
+		await vi.waitFor(() => expect(document.activeElement).toBe(action));
 		await userEvent.keyboard("{Tab}");
 		expect(element.open).toBe(false);
 		expect(element.contains(document.activeElement)).toBe(false);
