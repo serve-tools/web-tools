@@ -199,6 +199,7 @@ try {
 async function countPreEmitDiagnostics(project) {
 	// Keep this order and gating aligned with TypeScript's compiler.GetDiagnosticsOfAnyProgram.
 	const { program } = project;
+	const options = project.parsedCommandLine.options;
 	const [configFileParsingDiagnostics, syntacticDiagnostics] = await Promise.all([
 		program.getConfigFileParsingDiagnostics(),
 		program.getSyntacticDiagnostics(),
@@ -214,7 +215,7 @@ async function countPreEmitDiagnostics(project) {
 
 	await program.getBindDiagnostics();
 
-	if (project.compilerOptions.listFilesOnly) {
+	if (options.listFilesOnly) {
 		return diagnosticCount;
 	}
 
@@ -225,9 +226,9 @@ async function countPreEmitDiagnostics(project) {
 		diagnosticCount += (await program.getGlobalDiagnostics()).length;
 	}
 
-	const emitDeclarations = project.compilerOptions.declaration || project.compilerOptions.composite;
+	const emitDeclarations = options.declaration || options.composite;
 
-	if (project.compilerOptions.noEmit && emitDeclarations && diagnosticCount === configFileParsingDiagnosticsLength) {
+	if (options.noEmit && emitDeclarations && diagnosticCount === configFileParsingDiagnosticsLength) {
 		diagnosticCount += (await program.getDeclarationDiagnostics()).length;
 	}
 

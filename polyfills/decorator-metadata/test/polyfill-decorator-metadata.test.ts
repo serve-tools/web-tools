@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-describe.sequential("decorator metadata polyfill", () => {
+describe("decorator metadata polyfill", { concurrent: false }, () => {
 	it("exports the fallback without modifying a missing global", async () => {
 		expect(Reflect.has(Symbol, "metadata")).toBe(false);
 
