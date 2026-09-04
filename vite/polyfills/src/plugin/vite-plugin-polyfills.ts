@@ -7,15 +7,28 @@ const PLUGIN_NAME = "vite-plugin-polyfills";
 const VIRTUAL_PREFIX = "virtual:@serve-tools/vite-polyfill/";
 const NULL_BYTE = "\0";
 const NODE_MODULES_SEGMENT = /(?:^|[/\\])node_modules[/\\]/;
+const BUILTIN_RUNTIME_PACKAGES = [
+	"@serve-tools/polyfill-composites",
+	"@serve-tools/polyfill-observable",
+	"@serve-tools/ponyfill-composites",
+	"@serve-tools/ponyfill-observable",
+];
+
+const isBuiltinRuntimeSpecifier = (id: string): boolean =>
+	BUILTIN_RUNTIME_PACKAGES.some((packageName) => id === packageName || id.startsWith(packageName + "/"));
 
 /** Ordered built-in polyfill definitions enabled when no explicit list is provided. */
 export const builtinPolyfills: readonly Polyfill[] = await Promise.all([
 	import("../polyfills/async-disposable-stack-polyfill.js"),
 	import("../polyfills/cancel-idle-callback-polyfill.js"),
+	import("../polyfills/composite-polyfill.js"),
 	import("../polyfills/disposable-stack-polyfill.js"),
+	import("../polyfills/event-target-when-polyfill.js"),
 	import("../polyfills/map-upsert-polyfill.js"),
+	import("../polyfills/observable-polyfill.js"),
 	import("../polyfills/request-idle-callback-polyfill.js"),
 	import("../polyfills/scheduler-polyfill.js"),
+	import("../polyfills/subscriber-polyfill.js"),
 	import("../polyfills/suppressed-error-polyfill.js"),
 	import("../polyfills/symbol-async-dispose-polyfill.js"),
 	import("../polyfills/symbol-dispose-polyfill.js"),
@@ -64,6 +77,7 @@ export function vitePolyfills(options: VitePolyfillsOptions = {}): Plugin {
 	const codeById = new Map<string, string>(
 		polyfills.map((polyfill) => [VIRTUAL_PREFIX + polyfill.id, polyfill.code]),
 	);
+	const runtimeModuleIds = new Set<string>();
 
 	if (codeById.size !== polyfills.length) {
 		throw new Error(`[${PLUGIN_NAME}] duplicate polyfill id`);
@@ -73,8 +87,25 @@ export function vitePolyfills(options: VitePolyfillsOptions = {}): Plugin {
 		name: PLUGIN_NAME,
 		enforce: "pre",
 
-		resolveId(id) {
-			return codeById.has(id) ? NULL_BYTE + id : null;
+		resolveId(id, importer) {
+			if (codeById.has(id)) {
+				return NULL_BYTE + id;
+			}
+
+			if (
+				!isBuiltinRuntimeSpecifier(id) &&
+				(!importer || (!importer.startsWith(NULL_BYTE + VIRTUAL_PREFIX) && !runtimeModuleIds.has(importer)))
+			) {
+				return null;
+			}
+
+			return this.resolve(id, importer, { skipSelf: true }).then((resolved) => {
+				if (resolved && !resolved.external) {
+					runtimeModuleIds.add(resolved.id);
+				}
+
+				return resolved;
+			});
 		},
 
 		load(id) {
@@ -89,7 +120,11 @@ export function vitePolyfills(options: VitePolyfillsOptions = {}): Plugin {
 				},
 			},
 			handler(_code, id, meta) {
-				if (NODE_MODULES_SEGMENT.test(id) || id.startsWith(NULL_BYTE + VIRTUAL_PREFIX)) {
+				if (
+					NODE_MODULES_SEGMENT.test(id) ||
+					runtimeModuleIds.has(id) ||
+					id.startsWith(NULL_BYTE + VIRTUAL_PREFIX)
+				) {
 					return null;
 				}
 

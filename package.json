@@ -67,7 +67,9 @@
 		"lit/signals",
 		"lit/signals/demo",
 		"polyfills/arraybuffer-base64",
+		"polyfills/composites",
 		"polyfills/decorator-metadata",
+		"polyfills/observable",
 		"polyfills/prioritized-task-scheduling",
 		"polyfills/report-error",
 		"polyfills/request-idle-callback",
@@ -416,9 +418,19 @@
 					"test/*.recipes.ts"
 				]
 			},
+			"polyfills/composites": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
 			"polyfills/decorator-metadata": {
 				"entry": [
 					"test/*.recipes.ts"
+				]
+			},
+			"polyfills/observable": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
 				]
 			},
 			"polyfills/prioritized-task-scheduling": {

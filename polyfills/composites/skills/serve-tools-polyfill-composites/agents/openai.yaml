@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Composites Polyfill"
+  short_description: "Install Composite without replacing native values"
+  default_prompt: "Use $serve-tools-polyfill-composites to install the native-aware Composite function safely."

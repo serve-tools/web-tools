@@ -70,6 +70,8 @@ Select the narrowest package that owns the required behavior.
 - Install explicit-resource-management globals: `@serve-tools/polyfill-resource-management`.
 - Import resource-management classes without global mutation: `@serve-tools/ponyfill-resource-management`.
 - Install a native-preserving `URLPattern` global: `@serve-tools/polyfill-urlpattern`.
+- Install missing Observable globals and `EventTarget.prototype.when`: `@serve-tools/polyfill-observable`; the fallback has independent cold executions and is not a complete native implementation.
+- Install a missing experimental `Composite` global: `@serve-tools/polyfill-composites`; fallback identity remains module-local and does not gain native weak-collection restrictions.
 - Import `URLPattern` without global mutation: `@serve-tools/ponyfill-urlpattern`.
 - Detect and inject browser polyfills during Vite builds: `@serve-tools/vite-polyfills`.
 

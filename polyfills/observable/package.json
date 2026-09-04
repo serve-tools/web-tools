@@ -1,0 +1,56 @@
+{
+	"name": "@serve-tools/polyfill-observable",
+	"version": "0.0.1",
+	"description": "Provides native-aware Observable imports and global installation",
+	"keywords": [
+		"abortsignal",
+		"browser-compatibility",
+		"event-target",
+		"observable",
+		"polyfill",
+		"subscriber",
+		"typescript",
+		"web-platform"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/polyfills/observable#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "polyfills/observable"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": [
+		"./dist/polyfill-observable.js",
+		"./dist/apply/Observable.js",
+		"./dist/apply/Subscriber.js",
+		"./dist/apply/EventTarget/when.js"
+	],
+	"type": "module",
+	"exports": {
+		".": "./dist/polyfill-observable.js",
+		"./Observable": "./dist/exports/Observable.js",
+		"./Subscriber": "./dist/exports/Subscriber.js",
+		"./EventTarget/when": "./dist/exports/EventTarget/when.js",
+		"./apply/Observable": "./dist/apply/Observable.js",
+		"./apply/Subscriber": "./dist/apply/Subscriber.js",
+		"./apply/EventTarget/when": "./dist/apply/EventTarget/when.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run build --workspace @serve-tools/ponyfill-observable && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build --workspace @serve-tools/ponyfill-observable && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/ponyfill-observable": "^0.0.1"
+	}
+}

@@ -2,9 +2,52 @@ import { describe, expect, it } from "vitest";
 import { vitePolyfills } from "../src/vite-polyfills.js";
 import { buildTest } from "./helpers.js";
 
+const polyfillGlobalNames = ["Composite", "Observable", "Subscriber"] as const;
+
+async function executeWithoutPolyfillGlobals<Receipt>(code: string): Promise<Receipt> {
+	const globalDescriptors = polyfillGlobalNames.map((name) => Object.getOwnPropertyDescriptor(globalThis, name));
+	const whenDescriptor = Object.getOwnPropertyDescriptor(EventTarget.prototype, "when");
+
+	try {
+		for (const name of polyfillGlobalNames) {
+			Reflect.deleteProperty(globalThis, name);
+		}
+
+		Reflect.deleteProperty(EventTarget.prototype, "when");
+
+		const module = (await import(`data:text/javascript;charset=utf-8,${encodeURIComponent(code)}`)) as {
+			receipt: Receipt;
+		};
+
+		return module.receipt;
+	} finally {
+		for (const [index, name] of polyfillGlobalNames.entries()) {
+			const descriptor = globalDescriptors[index];
+
+			if (descriptor) {
+				Object.defineProperty(globalThis, name, descriptor);
+			} else {
+				Reflect.deleteProperty(globalThis, name);
+			}
+		}
+
+		if (whenDescriptor) {
+			Object.defineProperty(EventTarget.prototype, "when", whenDescriptor);
+		} else {
+			Reflect.deleteProperty(EventTarget.prototype, "when");
+		}
+	}
+}
+
 describe("build integration", () => {
 	describe("polyfill package side effects", () => {
 		const installCases = [
+			["composites root", "@serve-tools/polyfill-composites", ['Object.defineProperty(globalThis, "Composite"']],
+			[
+				"selective Composite",
+				"@serve-tools/polyfill-composites/apply/Composite",
+				['Object.defineProperty(globalThis, "Composite"'],
+			],
 			[
 				"decorator metadata root",
 				"@serve-tools/polyfill-decorator-metadata",
@@ -24,6 +67,30 @@ describe("build integration", () => {
 					"globalThis.TaskSignal",
 					"globalThis.TaskPriorityChangeEvent",
 				],
+			],
+			[
+				"Observable root",
+				"@serve-tools/polyfill-observable",
+				[
+					'Object.defineProperty(globalThis, "Observable"',
+					'Object.defineProperty(globalThis, "Subscriber"',
+					'Object.defineProperty(EventTargetConstructor.prototype, "when"',
+				],
+			],
+			[
+				"selective Observable",
+				"@serve-tools/polyfill-observable/apply/Observable",
+				['Object.defineProperty(globalThis, "Observable"'],
+			],
+			[
+				"selective Subscriber",
+				"@serve-tools/polyfill-observable/apply/Subscriber",
+				['Object.defineProperty(globalThis, "Subscriber"'],
+			],
+			[
+				"selective EventTarget.prototype.when",
+				"@serve-tools/polyfill-observable/apply/EventTarget/when",
+				['Object.defineProperty(EventTargetConstructor.prototype, "when"'],
 			],
 			[
 				"selective scheduler",
@@ -122,12 +189,14 @@ describe("build integration", () => {
 		});
 
 		const pureCases = [
+			["composites", "@serve-tools/polyfill-composites", ["Composite"]],
 			["decorator metadata", "@serve-tools/polyfill-decorator-metadata", ["Symbol/metadata"]],
 			[
 				"prioritized task scheduling",
 				"@serve-tools/polyfill-prioritized-task-scheduling",
 				["scheduler", "TaskController", "TaskSignal", "TaskPriorityChangeEvent"],
 			],
+			["Observable", "@serve-tools/polyfill-observable", ["Observable", "Subscriber", "EventTarget/when"]],
 			[
 				"idle callbacks",
 				"@serve-tools/polyfill-request-idle-callback",
@@ -277,6 +346,131 @@ describe("build integration", () => {
 			expect(code).toBeDefined();
 			expect(code).toMatch(/URLPattern(?:\$\d+)? = class \{/);
 			expect(code).toContain('globalThis.URLPattern ?? Object.defineProperty(globalThis, "URLPattern"');
+		});
+	});
+
+	describe("Observable and Composite polyfills", () => {
+		it("injects every independently selected native-preserving installer", async () => {
+			const result = await buildTest({
+				files: {
+					"index.js": `
+						export const composite = Composite({ x: 1 });
+						export const observable = new Observable(() => {});
+						export const isSubscriber = (value) => value instanceof Subscriber;
+						export const events = new EventTarget().when("change");
+					`,
+				},
+				plugins: [vitePolyfills()],
+			});
+
+			const code = result.getChunk("index");
+
+			expect(code).toBeDefined();
+			expect(code).toContain('Object.defineProperty(globalThis, "Composite"');
+			expect(code).toContain('Object.defineProperty(globalThis, "Observable"');
+			expect(code).toContain('Object.defineProperty(globalThis, "Subscriber"');
+			expect(code).toContain('Object.defineProperty(EventTargetConstructor.prototype, "when"');
+		});
+
+		it("executes a workspace-linked bundle without self-injecting an installer cycle", async () => {
+			const result = await buildTest({
+				files: {
+					"index.js": `
+						const first = Composite({ x: 1, y: 2 });
+						const second = Composite({ y: 2, x: 1 });
+						const values = [];
+						const observable = new Observable((subscriber) => {
+							if (!(subscriber instanceof Subscriber)) throw new Error("Subscriber identity mismatch");
+							subscriber.next(1);
+							subscriber.complete();
+						});
+						observable.subscribe((value) => values.push(value));
+						const stream = new EventTarget().when("change");
+						export const receipt = {
+							compositeIdentity: first === second,
+							observableIdentity: stream instanceof Observable,
+							values,
+						};
+					`,
+				},
+				plugins: [vitePolyfills()],
+			});
+
+			const code = result.getChunk("index");
+
+			expect(code).toBeDefined();
+
+			const receipt = await executeWithoutPolyfillGlobals<{
+				compositeIdentity: boolean;
+				observableIdentity: boolean;
+				values: number[];
+			}>(code ?? "");
+
+			expect(receipt).toEqual({
+				compositeIdentity: true,
+				observableIdentity: true,
+				values: [1],
+			});
+		});
+
+		it("keeps explicit workspace-linked polyfill imports out of recursive detection", async () => {
+			const result = await buildTest({
+				files: {
+					"index.js": `
+						import { Composite as PonyfillComposite } from "@serve-tools/ponyfill-composites";
+						import {
+							Observable as PonyfillObservable,
+							Subscriber as PonyfillSubscriber,
+						} from "@serve-tools/ponyfill-observable";
+						import "@serve-tools/polyfill-composites";
+						import "@serve-tools/polyfill-observable";
+						const CompositeConstructor = globalThis["Composite"];
+						const ObservableConstructor = globalThis["Observable"];
+						const SubscriberConstructor = globalThis["Subscriber"];
+						const first = CompositeConstructor({ x: 1, y: 2 });
+						const second = CompositeConstructor({ y: 2, x: 1 });
+						const values = [];
+						const observable = new ObservableConstructor((subscriber) => {
+							if (!(subscriber instanceof SubscriberConstructor)) {
+								throw new Error("Subscriber identity mismatch");
+							}
+							subscriber.next(1);
+							subscriber.complete();
+						});
+						observable.subscribe((value) => values.push(value));
+						const stream = new EventTarget()["when"]("change");
+						export const receipt = {
+							compositeIdentity: first === second,
+							constructorIdentities: [
+								CompositeConstructor === PonyfillComposite,
+								ObservableConstructor === PonyfillObservable,
+								SubscriberConstructor === PonyfillSubscriber,
+							],
+							observableIdentity: stream instanceof ObservableConstructor,
+							values,
+						};
+					`,
+				},
+				plugins: [vitePolyfills()],
+			});
+
+			const code = result.getChunk("index");
+
+			expect(code).toBeDefined();
+
+			const receipt = await executeWithoutPolyfillGlobals<{
+				compositeIdentity: boolean;
+				constructorIdentities: boolean[];
+				observableIdentity: boolean;
+				values: number[];
+			}>(code ?? "");
+
+			expect(receipt).toEqual({
+				compositeIdentity: true,
+				constructorIdentities: [true, true, true],
+				observableIdentity: true,
+				values: [1],
+			});
 		});
 	});
 

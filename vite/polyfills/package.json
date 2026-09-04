@@ -1,10 +1,11 @@
 {
 	"name": "@serve-tools/vite-polyfills",
-	"version": "0.2.3",
+	"version": "0.3.0",
 	"description": "Detects and injects polyfills for unsupported JavaScript features in Vite",
 	"keywords": [
 		"browser-compatibility",
 		"cancel-idle-callback",
+		"composite",
 		"explicit-resource-management",
 		"feature-detection",
 		"get-or-insert",
@@ -14,6 +15,7 @@
 		"map-upsert",
 		"polyfill",
 		"polyfill-injection",
+		"observable",
 		"prioritized-task-scheduling",
 		"request-idle-callback",
 		"scheduler",
@@ -47,7 +49,9 @@
 	"exports": {
 		".": "./dist/vite-polyfills.js",
 		"./types": "./dist/types/index.d.ts",
+		"./types/composites": "./dist/types/composites.d.ts",
 		"./types/map-upsert": "./dist/types/map-upsert.d.ts",
+		"./types/observable": "./dist/types/observable.d.ts",
 		"./types/symbol-metadata": "./dist/types/symbol-metadata.d.ts"
 	},
 	"files": [
@@ -59,12 +63,14 @@
 		"build:assets": "mkdir -p dist/types && cp -R src/types/. dist/types/",
 		"check:package": "publint && attw --pack . --profile esm-only",
 		"clean": "rm -rf dist",
-		"test": "npm run build --workspace @serve-tools/polyfill-decorator-metadata --workspace @serve-tools/polyfill-prioritized-task-scheduling --workspace @serve-tools/polyfill-resource-management --workspace @serve-tools/polyfill-request-idle-callback --workspace @serve-tools/polyfill-urlpattern && vitest run",
+		"test": "npm run build --workspace @serve-tools/polyfill-composites --workspace @serve-tools/polyfill-decorator-metadata --workspace @serve-tools/polyfill-observable --workspace @serve-tools/polyfill-prioritized-task-scheduling --workspace @serve-tools/polyfill-resource-management --workspace @serve-tools/polyfill-request-idle-callback --workspace @serve-tools/polyfill-urlpattern && vitest run",
 		"typecheck": "tsc --project tsconfig.json --noEmit"
 	},
 	"dependencies": {
 		"@jsxtools/rolldown-transform": "^0.1",
+		"@serve-tools/polyfill-composites": "^0.0.1",
 		"@serve-tools/polyfill-decorator-metadata": "^0.1.2",
+		"@serve-tools/polyfill-observable": "^0.0.1",
 		"@serve-tools/polyfill-prioritized-task-scheduling": "^0.2.0",
 		"@serve-tools/polyfill-request-idle-callback": "^0.1.6",
 		"@serve-tools/polyfill-resource-management": "^0.1.6",

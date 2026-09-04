@@ -27,7 +27,16 @@ Their previous local versions were already published and cannot be overwritten.
 The September 2 artifact comparison found the database JavaScript and declarations byte-identical to their published `0.2.1` and `0.3.1` artifacts; this pass did not modify that runtime, and the shipped guidance changes justify the patch releases.
 No dependency-wide version rewrite is needed because existing compatible ranges already admit these patches.
 
-## Hold separately
+## Additional polyfill preparation
+
+The subsequent polyfill request adds `@serve-tools/polyfill-observable@0.0.1`, `@serve-tools/polyfill-composites@0.0.1`, and `@serve-tools/vite-polyfills@0.3.0` to the review queue.
+Publish the corresponding ponyfills before the new polyfill packages, then publish Vite Polyfills after both polyfill packages are available.
+These additions are not covered by the historical nine-package verification receipts below; regenerate the release plan and artifacts after validating this change.
+The Skill selector's prepared `0.0.6` also includes the new package-selection guidance.
+The new package tests, Vite integration tests, three-engine production smoke, strict packed-consumer checks, and package checks pass.
+The aggregate repository gates still require cleanup of AUI's private-package Skill/release/catalog entries and investigation of its Firefox menubar test, which passes in isolation but fails in consolidated browser runs.
+
+## Existing release holds
 
 | Package or work                     | Reason                                                                                                                                                                                                                                                     |
 | ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -90,6 +90,8 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/polyfill-request-idle-callback`](./polyfills/request-idle-callback/) installs the `requestIdleCallback` and `cancelIdleCallback` globals.
 - [`@serve-tools/polyfill-resource-management`](./polyfills/resource-management/) installs ECMAScript Explicit Resource Management globals.
 - [`@serve-tools/polyfill-urlpattern`](./polyfills/urlpattern/) installs `URLPattern` while preserving a native implementation.
+- [`@serve-tools/polyfill-composites`](./polyfills/composites/) installs a missing `Composite` global with the experimental ponyfill's documented identity limits.
+- [`@serve-tools/polyfill-observable`](./polyfills/observable/) installs missing `Observable`, `Subscriber`, and `EventTarget.prototype.when` APIs while preserving native implementations.
 - [`@serve-tools/ponyfill-observable`](./ponyfills/observable/) provides a Web Observable API subset with a fresh execution per consumption and no global mutation.
 - [`@serve-tools/ponyfill-composites`](./ponyfills/composites/) creates interned composite values without modifying the global environment.
 - [`@serve-tools/ponyfill-arraybuffer-base64`](./ponyfills/arraybuffer-base64/) encodes `Uint8Array` values as base64 in Node.js without global mutation.

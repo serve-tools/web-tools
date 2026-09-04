@@ -34,13 +34,19 @@ Install it in the same project as this plugin.
 | `async-disposable-stack` | Global `AsyncDisposableStack`                                            |
 | `suppressed-error`       | Global `SuppressedError`                                                 |
 | `url-pattern`            | Global `URLPattern`                                                      |
+| `observable`             | Global `Observable`                                                      |
+| `subscriber`             | Global `Subscriber`                                                      |
+| `event-target-when`      | `EventTarget.prototype.when`                                             |
+| `composite`              | Global `Composite`                                                       |
 | `map-upsert`             | `Map.prototype.{getOrInsert, getOrInsertComputed}` and `WeakMap` equivs. |
 | `request-idle-callback`  | Global `requestIdleCallback`                                             |
 | `cancel-idle-callback`   | Global `cancelIdleCallback`                                              |
 
-Detection matches member expressions like `Symbol.dispose`, `Symbol.metadata`, or `cache.getOrInsert(...)`, plus global constructor references like `new DisposableStack()` or `new URLPattern(...)`, and calls to `requestIdleCallback(...)` or `cancelIdleCallback(...)`.
+Detection matches member expressions like `Symbol.dispose`, `target.when(...)`, or `cache.getOrInsert(...)`, plus global references like `new Observable(...)`, `Composite(...)`, or `new URLPattern(...)`, and calls to `requestIdleCallback(...)` or `cancelIdleCallback(...)`.
 References inside string literals or comments are ignored because detection runs on the AST.
 The `url-pattern` feature uses `@serve-tools/polyfill-urlpattern` and preserves an existing native `URLPattern`.
+The Observable features use selective `@serve-tools/polyfill-observable` installers, so `EventTarget.prototype.when` uses the available native or polyfilled `Observable` constructor while preserving every implementation already present.
+The `composite` feature likewise uses the native-preserving `@serve-tools/polyfill-composites` installer.
 
 ## TypeScript
 
@@ -55,10 +61,13 @@ Or pick just the ones you use:
 
 ```ts
 /// <reference types="@serve-tools/vite-polyfills/types/map-upsert" />
+/// <reference types="@serve-tools/vite-polyfills/types/observable" />
+/// <reference types="@serve-tools/vite-polyfills/types/composites" />
 /// <reference types="@serve-tools/vite-polyfills/types/symbol-metadata" />
 ```
 
 The `symbol-metadata` declaration reuses the conflict-safe global type shipped by `@serve-tools/polyfill-decorator-metadata`.
+The `observable` and `composites` declarations reuse the ambient globals and `EventTarget` augmentation shipped by their corresponding polyfill packages.
 `Symbol.dispose`, `SuppressedError`, `DisposableStack`, and `AsyncDisposableStack` are already covered by TypeScript's built-in disposable libs.
 `requestIdleCallback` and `cancelIdleCallback` are covered by TypeScript's DOM lib.
 Those polyfills do not need a separate reference.
@@ -104,7 +113,7 @@ The default, custom, and selective configurations above are covered by the packa
 
 For each module Vite asks the plugin to transform, it:
 
-1. Skips the file if it lives in `node_modules`, is a virtual module, or does not have a JS/TS extension (`.js`, `.cjs`, `.mjs`, `.jsx`, `.ts`, `.cts`, `.mts`, `.tsx`, optionally followed by a query string).
+1. Skips the file if it lives in `node_modules`, belongs to an injected runtime module's resolved dependency graph, is a virtual module, or does not have a JS/TS extension (`.js`, `.cjs`, `.mjs`, `.jsx`, `.ts`, `.cts`, `.mts`, `.tsx`, optionally followed by a query string).
 2. Parses the source through the OXC-backed transform pipeline.
 3. Runs each registered polyfill's detection visitor against the parsed program.
 4. Prepends `import "virtual:@serve-tools/vite-polyfill/<id>";` for every polyfill that matched.
@@ -125,6 +134,15 @@ Each virtual module is served from memory by the plugin's `load` hook and contai
 The plugin requires Vite 8.2 and runs in Vite's Node.js process.
 Its built-in runtime modules target browser-like output environments, while custom polyfills may target any environment supported by the consuming Vite build.
 Detection is syntactic: an identifier or member expression with a built-in feature's name is considered a match even when application code shadows that name.
+In particular, any non-computed `.when` member reference selects `event-target-when` because the plugin cannot determine the receiver's runtime type.
+Applications that use an unrelated `.when` API can opt out precisely while retaining every other built-in:
+
+```ts
+vitePolyfills({
+	polyfills: builtinPolyfills.filter(({ id }) => id !== "event-target-when"),
+});
+```
+
 Each injected runtime must therefore be safe to execute more broadly than the feature's actual runtime use.
 
 ## Agent Skill

@@ -4,6 +4,8 @@ Platform-compatible implementations for explicit import without global mutation.
 
 Each immediate subdirectory is an independently versioned npm workspace.
 
+For native-preserving global installation instead, use the matching packages in [`polyfills/`](../polyfills/), including the Observable and Composites counterparts.
+
 ## Packages
 
 - [`@serve-tools/ponyfill-composites`](./composites/) creates interned composite values without modifying the global environment.

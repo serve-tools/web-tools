@@ -1,6 +1,6 @@
 ---
 name: serve-tools-vite-polyfills
-description: Use @serve-tools/vite-polyfills for syntax-detected, native-preserving polyfills in Vite builds.
+description: Use @serve-tools/vite-polyfills in Vite.
 ---
 
 # Use @serve-tools/vite-polyfills

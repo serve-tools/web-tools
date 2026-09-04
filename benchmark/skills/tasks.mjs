@@ -270,6 +270,16 @@ const selections = [
 		"@serve-tools/ponyfill-observable",
 	],
 	[
+		"observable-global",
+		"Install missing Observable and Subscriber globals and EventTarget.prototype.when while preserving existing native values; the cold fallback's documented proposal differences are acceptable.",
+		"@serve-tools/polyfill-observable",
+	],
+	[
+		"composite-value-global",
+		"Third-party code expects globalThis.Composite. Install the experimental fallback only when the global is absent, preserving an existing implementation and accepting module-local fallback identity.",
+		"@serve-tools/polyfill-composites",
+	],
+	[
 		"composite-value-import",
 		"Create interned groups of named values for standard Map keys and Set values through an explicit import without installing a global.",
 		"@serve-tools/ponyfill-composites",
@@ -908,6 +918,22 @@ const remainingUsageTasks = [
 		"polyfills/urlpattern/test/polyfill-urlpattern.recipes.ts",
 		["globalThis.URLPattern", "new URLPattern", "pathname", "pattern.exec", "pathname.groups.id"],
 		["polyfills/urlpattern/skills/serve-tools-polyfill-urlpattern/references/recipe-quick-start.md"],
+	),
+	usage(
+		"polyfill-observable",
+		"Install native-preserving Observable globals and collect one event through EventTarget.when, then use a mutation-free native-aware Observable import for a sequence.",
+		["@serve-tools/polyfill-observable"],
+		"polyfills/observable/test/polyfill-observable.recipes.ts",
+		["target.when", ".take(1)", ".toArray()", "Observable.from"],
+		["polyfills/observable/skills/serve-tools-polyfill-observable/references/recipe-quick-start.md"],
+	),
+	usage(
+		"polyfill-composites",
+		"Install a native-preserving Composite global and use a native-aware named import to retrieve a Map value using equivalent properties in a different order.",
+		["@serve-tools/polyfill-composites"],
+		"polyfills/composites/test/polyfill-composites.recipes.ts",
+		["globalThis.Composite", "new Map", "positions.get", "y: 4, x: 1"],
+		["polyfills/composites/skills/serve-tools-polyfill-composites/references/recipe-quick-start.md"],
 	),
 	usage(
 		"ponyfill-arraybuffer-base64",

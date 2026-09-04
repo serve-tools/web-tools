@@ -124,7 +124,13 @@
 			"path": "./lit/signals/tsconfig.json"
 		},
 		{
+			"path": "./polyfills/composites/tsconfig.json"
+		},
+		{
 			"path": "./polyfills/decorator-metadata/tsconfig.json"
+		},
+		{
+			"path": "./polyfills/observable/tsconfig.json"
 		},
 		{
 			"path": "./polyfills/prioritized-task-scheduling/tsconfig.json"
