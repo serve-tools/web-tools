@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import path from "node:path";
 import test from "node:test";
-import { Program } from "typescript/unstable/async";
+import { fileURLToPath } from "node:url";
+import { API, Program } from "typescript/unstable/async";
 import { runCompilerProbe } from "./probe.mjs";
 
 test("installed compiler preserves API/CLI diagnostic parity and reports adapter capability", async () => {
@@ -29,6 +31,34 @@ test("installed compiler preserves API/CLI diagnostic parity and reports adapter
 			report.checks.some(({ name, status }) => name === "transitive-edit-with-stale-dist" && status === "passed"),
 		);
 	}
+});
+
+test("the probe recovers stale project roots through a fresh API", async (context) => {
+	if (typeof Program.prototype.emitToString !== "function") {
+		context.skip("Compiler does not expose adapter emit capability");
+		return;
+	}
+	const updateSnapshot = API.prototype.updateSnapshot;
+	let injected = false;
+	context.mock.method(API.prototype, "updateSnapshot", async function (options) {
+		const snapshot = await updateSnapshot.call(this, options);
+		const created = options?.fileChanges?.created?.[0];
+		if (created && !injected) {
+			injected = true;
+			const file = fileURLToPath(created.uri);
+			const project = snapshot.getProject(path.join(path.dirname(path.dirname(file)), "tsconfig.json"));
+			project.parsedCommandLine.fileNames = [];
+		}
+		return snapshot;
+	});
+	const report = await runCompilerProbe();
+	assert.equal(injected, true);
+	assert.deepEqual(
+		report.checks.filter(({ status }) => status === "failed"),
+		[],
+	);
+	assert.ok(report.adapterSessionRestarts >= 1);
+	assert.equal(report.checks.find(({ name }) => name === "session-disposal")?.status, "passed");
 });
 
 test("a missing created output reports disk, config, project, and emit evidence", async (context) => {

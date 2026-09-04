@@ -49,7 +49,8 @@ export async function runCompilerProbe(values = {}) {
 		node: process.version,
 		platform: process.platform,
 		arch: process.arch,
-		structuralChangePolicy: "created/deleted sources also invalidate all open project configs",
+		structuralChangePolicy: "restart the API once when fresh configuration roots differ from snapshot roots",
+		adapterSessionRestarts: 0,
 		probeSha256: createHash("sha256")
 			.update(await readFile(fileURLToPath(import.meta.url)))
 			.digest("hex"),
@@ -187,7 +188,8 @@ export async function runCompilerProbe(values = {}) {
 		const dependency = (value) =>
 			`export const enum Factor { Value = ${value} } export const factor: number = ${value};`;
 		await put("c/src/index.ts", dependency(3));
-		const api = new apis.async({ cwd: root, ...(native ? { tsserverPath: native } : {}) });
+		const apiOptions = { cwd: root, ...(native ? { tsserverPath: native } : {}) };
+		let api = new apis.async(apiOptions);
 		let snapshot;
 		try {
 			snapshot = await api.updateSnapshot({ openProjects: [path.join(root, "a/tsconfig.json")] });
@@ -248,12 +250,6 @@ export async function runCompilerProbe(values = {}) {
 					return files;
 				};
 				const update = async (fileChanges) => {
-					if (fileChanges.created?.length || fileChanges.deleted?.length) {
-						fileChanges = {
-							...fileChanges,
-							changed: [...new Set([...(fileChanges.changed ?? []), ...projectConfigs])],
-						};
-					}
 					const previous = snapshot;
 					snapshot = await api.updateSnapshot({
 						fileChanges: Object.fromEntries(
@@ -266,6 +262,34 @@ export async function runCompilerProbe(values = {}) {
 						),
 					});
 					await previous.dispose();
+					for (let attempt = 0; attempt < 2; ++attempt) {
+						const normalizeRoots = (files) =>
+							[...new Set(files.map((file) => api.getCanonicalFileName(path.normalize(file))))].sort();
+						const mismatches = [];
+						for (const config of projectConfigs) {
+							const parsed = await api.parseConfigFile(config);
+							const project = snapshot.getProject(config);
+							const expected = normalizeRoots(parsed.fileNames);
+							const actual = project ? normalizeRoots(project.parsedCommandLine.fileNames) : null;
+							if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+								mismatches.push({ config, expected, actual });
+							}
+						}
+						if (!mismatches.length) {
+							return;
+						}
+						assert.equal(
+							attempt,
+							0,
+							`Fresh API retained inconsistent project roots: ${JSON.stringify(mismatches)}`,
+						);
+						await snapshot.dispose();
+						snapshot = undefined;
+						await api.close();
+						api = new apis.async(apiOptions);
+						++report.adapterSessionRestarts;
+						snapshot = await api.updateSnapshot({ openProjects: projectConfigs });
+					}
 				};
 				stage = "clean-memory-bundle";
 				const initial = await emit();

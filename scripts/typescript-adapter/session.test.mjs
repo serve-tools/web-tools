@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { API } from "typescript/unstable/async";
 import { CompilerSessionError, createCompilerSession } from "./session.mjs";
 
 const compiler = fileURLToPath(new URL("../../node_modules/typescript/bin/tsc", import.meta.url));
@@ -204,6 +205,118 @@ test("checks an intentional noEmit project without requesting emitted files", as
 		session.refresh({ changed: [sourceFile] }),
 		(error) => error instanceof CompilerSessionError && error.diagnostics.some(({ code }) => code === 4094),
 	);
+});
+
+test("restarts once for stale roots, preserves ordinary sessions, and includes both APIs in timing", async (context) => {
+	const fixture = await createFixture();
+	context.after(() => rm(fixture.root, { force: true, recursive: true }));
+	const instances = [];
+	const closed = new Set();
+	const timings = new Map();
+	let corruptNext = false;
+	const updateSnapshot = API.prototype.updateSnapshot;
+	const close = API.prototype.close;
+	const getTimingInfo = API.prototype.getTimingInfo;
+	context.mock.method(API.prototype, "updateSnapshot", async function (params) {
+		if (!instances.includes(this)) {
+			if (instances.length) {
+				assert.ok(closed.has(instances.at(-1)), "close the retired API before replacement");
+			}
+			instances.push(this);
+		}
+		const snapshot = await updateSnapshot.call(this, params);
+		if (corruptNext) {
+			corruptNext = false;
+			snapshot.getProject(fixture.configs.c).parsedCommandLine.fileNames = [];
+		}
+		return snapshot;
+	});
+	context.mock.method(API.prototype, "close", async function () {
+		await close.call(this);
+		closed.add(this);
+	});
+	context.mock.method(API.prototype, "getTimingInfo", async function () {
+		const timing = await getTimingInfo.call(this);
+		timings.set(this, timing);
+		return timing;
+	});
+	const session = await createCompilerSession({ configFile: fixture.configFile, cwd: fixture.root });
+	context.after(() => session.dispose());
+	const initial = await session.refresh();
+	assert.equal(initial.timing.apiRestartCount, 0);
+	await writeFile(fixture.sources.c, dependency(7));
+	const updated = await session.refresh({ changed: [fixture.sources.c] });
+	assert.equal(updated.timing.apiRestartCount, 0);
+	assert.equal(instances.length, 1);
+	assert.equal(closed.size, 0);
+
+	const addedSource = path.join(fixture.root, "c/src/added.ts");
+	await writeFile(addedSource, "export const added = 1;\n");
+	corruptNext = true;
+	const recovered = await session.refresh({ created: [addedSource] });
+	assert.equal(recovered.generation, updated.generation + 1);
+	assert.equal(recovered.timing.apiRestartCount, 1);
+	assert.equal(instances.length, 2);
+	assert.equal(closed.size, 1);
+	assert.ok(
+		recovered.projects.find(({ configFile }) => configFile === fixture.configs.c).rootNames.includes(addedSource),
+	);
+	assert.ok(recovered.outputs.has(path.join(fixture.root, "c/dist/added.js")));
+	assert.match(recovered.outputs.get(path.join(fixture.root, "b/dist/value.js")).text, /factor \* 7/);
+	for (const [key, value] of Object.entries(recovered.timing.api.totals)) {
+		assert.equal(value, timings.get(instances[0]).totals[key] + timings.get(instances[1]).totals[key], key);
+	}
+	assert.equal(recovered.timing.apiRequestCount, recovered.timing.api.totals.requestCount);
+	assert.equal(recovered.timing.api.recentRequests.length, 5);
+	assert.equal(
+		recovered.timing.configurationMs + recovered.timing.diagnosticsMs + recovered.timing.emitMs,
+		recovered.timing.totalMs,
+	);
+
+	await writeFile(fixture.sources.c, dependency(9));
+	const ordinary = await session.refresh({ changed: [fixture.sources.c] });
+	assert.equal(ordinary.timing.apiRestartCount, 0);
+	assert.equal(instances.length, 2);
+	assert.match(ordinary.outputs.get(path.join(fixture.root, "b/dist/value.js")).text, /factor \* 9/);
+	await session.dispose();
+	assert.equal(closed.size, 2);
+});
+
+test("fails closed after one unsuccessful root recovery and retains the next successful generation", async (context) => {
+	const fixture = await createFixture();
+	context.after(() => rm(fixture.root, { force: true, recursive: true }));
+	let corrupt = false;
+	let updates = 0;
+	const updateSnapshot = API.prototype.updateSnapshot;
+	context.mock.method(API.prototype, "updateSnapshot", async function (params) {
+		++updates;
+		const snapshot = await updateSnapshot.call(this, params);
+		if (corrupt) {
+			snapshot.getProject(fixture.configs.c).parsedCommandLine.fileNames = [];
+		}
+		return snapshot;
+	});
+	const session = await createCompilerSession({ configFile: fixture.configFile, cwd: fixture.root });
+	context.after(() => session.dispose());
+	const initial = await session.refresh();
+	await writeFile(fixture.sources.c, dependency(11));
+	corrupt = true;
+	const before = updates;
+	await assert.rejects(session.refresh({ changed: [fixture.sources.c] }), (error) => {
+		assert.ok(error instanceof CompilerSessionError);
+		assert.match(error.message, /inconsistent project roots after restart/);
+		assert.equal(error.timing.apiRestartCount, 1);
+		assert.ok(error.timing.apiRequestCount > 0);
+		assert.equal(error.timing.emitMs, 0);
+		return true;
+	});
+	assert.equal(updates - before, 2);
+	assert.match(initial.outputs.get(path.join(fixture.root, "b/dist/value.js")).text, /factor \* 3/);
+	corrupt = false;
+	const recovered = await session.refresh();
+	assert.equal(recovered.generation, initial.generation + 1);
+	assert.equal(recovered.timing.apiRestartCount, 0);
+	assert.match(recovered.outputs.get(path.join(fixture.root, "b/dist/value.js")).text, /factor \* 11/);
 });
 
 async function createFixture() {

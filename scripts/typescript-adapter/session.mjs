@@ -40,7 +40,7 @@ export async function createCompilerSession({ configFile, cwd = process.cwd() })
 
 	const canonicalCwd = await canonicalPath(cwd);
 	const canonicalConfigFile = await canonicalPath(path.resolve(canonicalCwd, configFile));
-	const api = new API({ cwd: canonicalCwd, collectTiming: true });
+	let api = new API({ cwd: canonicalCwd, collectTiming: true });
 	let activeSnapshot;
 	let disposed = false;
 	let disposeRequested = false;
@@ -66,40 +66,66 @@ export async function createCompilerSession({ configFile, cwd = process.cwd() })
 			}
 
 			pendingChanges = mergeFileChanges(pendingChanges, await normalizeFileChanges(fileChanges, canonicalCwd));
+			api ??= new API({ cwd: canonicalCwd, collectTiming: true });
 			await api.resetTimingInfo();
 			const started = performance.now();
 			const phase = { configuration: started, diagnostics: 0, emit: 0 };
+			const recovery = { restartCount: 0, apiTiming: undefined };
 			let graph;
 
 			try {
-				graph = await readConfigGraph(api, canonicalConfigFile);
-				const configDiagnostics = uniqueDiagnostics(graph.flatMap(({ parsed }) => parsed.errors));
-				if (configDiagnostics.length) {
-					phase.diagnostics = performance.now();
-					throw await diagnosticError(api, configDiagnostics, phase, started);
+				while (true) {
+					graph = await readConfigGraph(api, canonicalConfigFile);
+					const configDiagnostics = uniqueDiagnostics(graph.flatMap(({ parsed }) => parsed.errors));
+					if (configDiagnostics.length) {
+						phase.diagnostics = performance.now();
+						throw await diagnosticError(api, configDiagnostics, phase, started, recovery);
+					}
+
+					const nextConfigs = new Set(graph.map(({ configFile: file }) => file));
+					const openProjects = [...nextConfigs].filter((file) => !openedConfigs.has(file));
+					const closeProjects = [...openedConfigs].filter((file) => !nextConfigs.has(file));
+					const changes = materializeFileChanges(pendingChanges);
+					const previousSnapshot = activeSnapshot;
+					activeSnapshot = await api.updateSnapshot({
+						...(openProjects.length ? { openProjects } : {}),
+						...(closeProjects.length ? { closeProjects } : {}),
+						...(changes ? { fileChanges: changes } : {}),
+					});
+					openedConfigs = nextConfigs;
+					await previousSnapshot?.dispose();
+					const inconsistentConfig = await findInconsistentRoots(api, activeSnapshot, graph);
+					if (!inconsistentConfig) {
+						break;
+					}
+					if (recovery.restartCount) {
+						throw new Error(
+							`TypeScript retained inconsistent project roots after restart: ${inconsistentConfig}`,
+						);
+					}
+
+					// Native snapshots can retain stale include-glob roots despite file notifications.
+					await activeSnapshot.dispose();
+					activeSnapshot = undefined;
+					openedConfigs.clear();
+					recovery.apiTiming = await api.getTimingInfo();
+					try {
+						await api.close();
+					} finally {
+						api = undefined;
+					}
+					api = new API({ cwd: canonicalCwd, collectTiming: true });
+					++recovery.restartCount;
 				}
 
-				const nextConfigs = new Set(graph.map(({ configFile: file }) => file));
-				const openProjects = [...nextConfigs].filter((file) => !openedConfigs.has(file));
-				const closeProjects = [...openedConfigs].filter((file) => !nextConfigs.has(file));
-				const changes = materializeFileChanges(pendingChanges, nextConfigs);
-				const previousSnapshot = activeSnapshot;
-				const nextSnapshot = await api.updateSnapshot({
-					...(openProjects.length ? { openProjects } : {}),
-					...(closeProjects.length ? { closeProjects } : {}),
-					...(changes ? { fileChanges: changes } : {}),
-				});
-				activeSnapshot = nextSnapshot;
-				openedConfigs = nextConfigs;
 				pendingChanges = new Map();
-				await previousSnapshot?.dispose();
 				phase.diagnostics = performance.now();
 
 				const projects = [];
 				const watchedFiles = new Set();
 				const projectObjects = [];
 				for (const { configFile: file } of graph) {
-					const project = nextSnapshot.getProject(file);
+					const project = activeSnapshot.getProject(file);
 					if (!project) {
 						throw new Error(`TypeScript did not load configured project ${file}`);
 					}
@@ -122,7 +148,7 @@ export async function createCompilerSession({ configFile, cwd = process.cwd() })
 					).flat(),
 				);
 				if (diagnostics.length) {
-					throw await diagnosticError(api, diagnostics, phase, started);
+					throw await diagnosticError(api, diagnostics, phase, started, recovery);
 				}
 
 				phase.emit = performance.now();
@@ -137,7 +163,7 @@ export async function createCompilerSession({ configFile, cwd = process.cwd() })
 					if (result.emitSkipped || result.diagnostics.length) {
 						const emitDiagnostics = uniqueDiagnostics(result.diagnostics);
 						if (emitDiagnostics.length) {
-							throw await diagnosticError(api, emitDiagnostics, phase, started);
+							throw await diagnosticError(api, emitDiagnostics, phase, started, recovery);
 						}
 						throw new Error(`TypeScript skipped emit for ${projects[index].configFile}`);
 					}
@@ -176,7 +202,7 @@ export async function createCompilerSession({ configFile, cwd = process.cwd() })
 					}
 				}
 
-				const timing = await finishTiming(api, phase, started);
+				const timing = await finishTiming(api, phase, started, recovery);
 				return Object.freeze({
 					generation: ++generation,
 					projects: Object.freeze(projects),
@@ -193,7 +219,7 @@ export async function createCompilerSession({ configFile, cwd = process.cwd() })
 
 				throw new CompilerSessionError(error.message, {
 					cause: error,
-					timing: await finishTiming(api, phase, started),
+					timing: await finishTiming(api, phase, started, recovery),
 				});
 			}
 		});
@@ -216,7 +242,7 @@ export async function createCompilerSession({ configFile, cwd = process.cwd() })
 				activeSnapshot = undefined;
 				openedConfigs.clear();
 				pendingChanges.clear();
-				await api.close();
+				await api?.close();
 			}
 		});
 	};
@@ -289,6 +315,25 @@ async function projectMetadata(project) {
 	});
 }
 
+async function findInconsistentRoots(api, snapshot, graph) {
+	const rootSet = async (files) =>
+		new Set(await Promise.all(files.map(async (file) => api.getCanonicalFileName(await canonicalPath(file)))));
+	for (const { configFile, parsed } of graph) {
+		const project = snapshot.getProject(configFile);
+		if (!project) {
+			return configFile;
+		}
+		const [expected, actual] = await Promise.all([
+			rootSet(parsed.fileNames),
+			rootSet(project.parsedCommandLine.fileNames),
+		]);
+		if (expected.size !== actual.size || [...expected].some((file) => !actual.has(file))) {
+			return configFile;
+		}
+	}
+	return undefined;
+}
+
 async function findPackageFile(directory) {
 	let current = directory;
 	while (true) {
@@ -350,7 +395,7 @@ function mergeFileChanges(previous, next) {
 	return merged;
 }
 
-function materializeFileChanges(changes, configFiles) {
+function materializeFileChanges(changes) {
 	if (!changes.size) {
 		return undefined;
 	}
@@ -359,18 +404,14 @@ function materializeFileChanges(changes, configFiles) {
 	for (const [file, kind] of changes) {
 		(result[kind] ??= []).push(file);
 	}
-	if (result.created?.length || result.deleted?.length) {
-		// Native snapshots can retain stale include-glob roots after a structural file change.
-		result.changed = [...new Set([...(result.changed ?? []), ...configFiles])];
-	}
 	for (const [kind, files] of Object.entries(result)) {
 		result[kind] = files.sort().map((file) => ({ uri: pathToFileURL(file).href }));
 	}
 	return result;
 }
 
-async function diagnosticError(api, diagnostics, phase, started) {
-	const timing = await finishTiming(api, phase, started);
+async function diagnosticError(api, diagnostics, phase, started, recovery) {
+	const timing = await finishTiming(api, phase, started, recovery);
 	const formatted = formatDiagnostics(diagnostics, api).trim();
 	return new CompilerSessionError(formatted || "TypeScript compilation failed", {
 		diagnostics: Object.freeze(diagnostics),
@@ -399,17 +440,35 @@ function uniqueDiagnostics(diagnostics) {
 	);
 }
 
-async function finishTiming(api, phase, started) {
+async function finishTiming(api, phase, started, recovery) {
 	const finished = performance.now();
 	const diagnosticsStarted = phase.diagnostics || finished;
 	const emitStarted = phase.emit || finished;
-	const apiTiming = await api.getTimingInfo();
+	const apiTiming = mergeTimingInfo(recovery.apiTiming, await api?.getTimingInfo());
 	return Object.freeze({
 		configurationMs: diagnosticsStarted - phase.configuration,
 		diagnosticsMs: emitStarted - diagnosticsStarted,
 		emitMs: phase.emit ? finished - emitStarted : 0,
 		totalMs: finished - started,
 		apiRequestCount: apiTiming.totals.requestCount,
+		apiRestartCount: recovery.restartCount,
 		api: Object.freeze(apiTiming),
 	});
+}
+
+function mergeTimingInfo(previous, current) {
+	if (!previous) {
+		return current;
+	}
+	if (!current) {
+		return previous;
+	}
+	return {
+		enabled: previous.enabled && current.enabled,
+		totals: Object.fromEntries(
+			Object.entries(current.totals).map(([key, value]) => [key, previous.totals[key] + value]),
+		),
+		// The pinned compiler retains the five most recent request samples.
+		recentRequests: [...previous.recentRequests, ...current.recentRequests].slice(-5),
+	};
 }
