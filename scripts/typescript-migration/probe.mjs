@@ -133,7 +133,11 @@ export async function runCompilerProbe(values = {}) {
 				let snapshot;
 				try {
 					const parsed = await api.parseConfigFile(config);
-					assert.ok(parsed.fileNames.includes(path.join(root, "checks/src/index.ts")));
+					assert.ok(
+						parsed.fileNames.some(
+							(file) => path.normalize(file) === path.join(root, "checks/src/index.ts"),
+						),
+					);
 					snapshot = await api.updateSnapshot({ openProjects: [config] });
 					const project = snapshot.getProject(config);
 					assert.ok(project, "Configured project did not open");
@@ -197,6 +201,7 @@ export async function runCompilerProbe(values = {}) {
 			} else {
 				const configs = [];
 				const visit = async (config) => {
+					config = path.normalize(config);
 					if (configs.includes(config)) {
 						return;
 					}
@@ -236,7 +241,7 @@ export async function runCompilerProbe(values = {}) {
 							if (file.endsWith(".js") || file.endsWith(".d.ts")) {
 								assert.ok(output.sourceFileName, `Missing source association for ${file}`);
 							}
-							files.set(file, output.text);
+							files.set(path.normalize(file), output.text);
 						}
 					}
 					return files;
@@ -365,8 +370,9 @@ async function bundleResult(input, files, exports) {
 					{
 						name: "migration-fixture-outputs",
 						resolveId(id, importer) {
-							if (files.has(id)) {
-								return id;
+							const normalized = path.normalize(id);
+							if (files.has(normalized)) {
+								return normalized;
 							}
 							if (exports.has(id)) {
 								return exports.get(id);
@@ -380,7 +386,7 @@ async function bundleResult(input, files, exports) {
 							}
 						},
 						load(id) {
-							return files.get(id);
+							return files.get(path.normalize(id));
 						},
 					},
 				]
