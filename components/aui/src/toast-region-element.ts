@@ -1,5 +1,6 @@
 import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 export type ToastPriority = "assertive" | "polite";
 
@@ -205,15 +206,11 @@ export class ToastRegionElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		const slot = content.ownerDocument.createElement("slot");
-		slot.name = "toast";
-		slot.part.add("toast");
-		const polite = this.#createAnnouncer(content.ownerDocument, "polite");
-		const assertive = this.#createAnnouncer(content.ownerDocument, "assertive");
-		this.#announcerPolite = polite;
-		this.#announcerAssertive = assertive;
-		content.append(slot, polite, assertive);
+	protected override layout() {
+		this.#announcerPolite = this.#createAnnouncer(this.ownerDocument, "polite");
+		this.#announcerAssertive = this.#createAnnouncer(this.ownerDocument, "assertive");
+
+		return html`<slot name="toast" part="toast"></slot>${this.#announcerPolite}${this.#announcerAssertive}`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {

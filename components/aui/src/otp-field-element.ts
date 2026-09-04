@@ -2,6 +2,7 @@ import { isDirectInput, isFormElement } from "./.numeric.js";
 import { AttributeOwner } from "./.ownership.js";
 import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** Coordinates one native one-time-code input with optional inert visual segments. */
 export class OTPFieldElement extends AUIElement {
@@ -113,16 +114,8 @@ export class OTPFieldElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		const editor = this.ownerDocument.createElement("slot");
-		const visuals = this.ownerDocument.createElement("span");
-		visuals.setAttribute("part", "segments");
-		visuals.setAttribute("aria-hidden", "true");
-		visuals.setAttribute("inert", "");
-		const segments = this.ownerDocument.createElement("slot");
-		segments.name = "segment";
-		visuals.append(segments);
-		content.append(editor, visuals);
+	protected override layout() {
+		return html`<slot></slot><span part="segments" aria-hidden="true" inert><slot name="segment"></slot></span>`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {

@@ -15,8 +15,14 @@ import {
 	svg,
 	text,
 } from "@serve-tools/signal-dom";
-import type { TemplateDirective, TemplateFragment } from "@serve-tools/signal-dom/template";
-import { PersistentFragment, html as persistentHtml, scopedHtml } from "@serve-tools/signal-dom/template";
+import type { TemplateDirective, TemplateFragment, TemplateResult } from "@serve-tools/signal-dom/template";
+import {
+	createFragment,
+	isTemplateResult,
+	PersistentFragment,
+	scopedHtml,
+	html as templateHtml,
+} from "@serve-tools/signal-dom/template";
 
 const title = new Signal.State("title");
 const computedTitle = new Signal.Computed(() => title.get());
@@ -52,15 +58,22 @@ const captureResult: HTMLDivElement = bindingScope.capture(() => html("div")());
 const resumed: boolean = bindingScope.resume();
 const taggedScope = createBindingScope();
 const directive: TemplateDirective = (node) => () => node.removeAttribute("data-active");
-const tagged: TemplateFragment = taggedScope.capture(() => scopedHtml({}, document)`<p ${directive}>${title}</p>`);
-const persistent: TemplateFragment = persistentHtml({})`<p>${title}</p>`;
+const description: TemplateResult = templateHtml`<p ${directive}>${title}</p>`;
+const tagged: TemplateFragment = taggedScope.capture(() => createFragment(description, {}, document));
+const persistent: TemplateFragment = createFragment(templateHtml`<p>${title}</p>`, {});
+const detected: boolean = isTemplateResult(description);
+const legacyPersistent: TemplateFragment = templateHtml({})`<p>${title}</p>`;
+const legacyScopedTag = scopedHtml({}, document);
+const legacyScoped: TemplateFragment = taggedScope.capture(() => legacyScopedTag`<p>${title}</p>`);
 const region = new PersistentFragment([tagged]);
 taggedScope.dispose();
 persistent.dispose();
+legacyPersistent.dispose();
+legacyScoped.dispose();
 region.remove();
 
 // @ts-expect-error Template ownership requires an object.
-scopedHtml(null);
+createFragment(description, null);
 
 // @ts-expect-error binding capture must finish synchronously
 bindingScope.capture(async () => html("div")());
@@ -75,6 +88,7 @@ void [
 	disposeResult,
 	htmlNode,
 	htmlTemplate,
+	detected,
 	mathml,
 	resumed,
 	dispose(sheet),

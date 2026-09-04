@@ -4,6 +4,10 @@ The user authorized publication after all work is committed, pushed, and CI pass
 AUI remains private and is not part of this release.
 The September 4 registry and shipped-file audit found the thirteen prepared versions below unpublished and identified one required patch for Rolldown Decorators.
 
+The later AUI template migration is separate from that publication authorization.
+The user has authorized committing and pushing the migration for CI.
+Its AUI `0.1.0`, Signal DOM `0.3.0`, and Client Signals `0.3.1` candidates remain held for package publication, which requires separate authorization.
+
 ## Approved release batch
 
 Publish these thirteen versions with the `latest` tag through the provenance-enabled release workflow, subject to the first-release provenance blocker below.
@@ -37,10 +41,10 @@ Those packages do not need new releases.
 
 ## Existing release holds
 
-| Package or work                     | Reason                                                                                                                                                                                                                                                     |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@serve-tools/aui@0.1.0`            | Automated verification passes, but the [accepted plan](components/aui/design/plan.md#release-holds) still requires mount-performance and manual assistive-technology work. The new `/template` renderer is opt-in, not a migration of existing components. |
-| Agent benchmark reports and harness | Repository research/tooling, not a package release. Preserve frozen results; they do not justify replacing the published Skills wholesale.                                                                                                                 |
+| Package or work                     | Reason                                                                                                                                                                                                                                                                                                                                                  |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@serve-tools/aui@0.1.0`            | The corrected Checkbox latency and retention gates pass, but the [accepted plan](components/aui/design/plan.md#release-holds) still requires resolving the bundle-size shortfall and completing manual acceptance. The [template migration review](components/aui/design/template-migration.md) records the new production API and validation evidence. |
+| Agent benchmark reports and harness | Repository research/tooling, not a package release. Preserve frozen results; they do not justify replacing the published Skills wholesale.                                                                                                                                                                                                              |
 
 An AUI preview is a separate decision requiring explicit narrower preview criteria, not an implicit waiver of the existing release gates.
 The independent `DisposableElement` remains internal; publishing the template entrypoint does not make it a supported component base.
@@ -51,14 +55,16 @@ Their initial versions do not promise exact native-proposal fidelity.
 
 The [repeated-mount diagnostic](components/aui/benchmark/RESULTS.md) found that full validation after every sample perturbed later mount measurements: the paired mount-median ratio was 3.931, with a 95% interval of 3.067–5.037.
 This AUI-only result is not a production speedup or a new Base UI comparison, and it does not close the mount-performance gate.
-The next performance step is a separately frozen, symmetric AUI/Base UI comparison that separates repeated validation effects while preserving semantic checks.
-Only then select production optimizations using measured construction, connection, synchronization, and allocation costs.
-The shared template renderer remains opt-in and does not accelerate the existing Checkbox implementation.
-`scopedHtml(this)` now integrates tagged templates with the existing AUI layout scope; `html(owner)` remains persistent even inside a layout.
-Both originate in `@serve-tools/signal-dom/template`, with AUI's `/template` retained as a compatibility re-export.
-Failed layout construction rolls back managed template listeners and directives, while ordinary disconnect only suspends reactive observation.
-The base element does not import the parser, and no asynchronous signal conversion was made to native checkedness, validity, form values, or event ordering.
-Retained-computation scheduling and source/read/commit changes remain separate benchmark and compatibility work, not prerequisites for releasing Signal DOM's current managed adapter.
+The separately frozen, symmetric [current Checkbox comparison](components/aui/design/performance.md#current-checkbox-comparison-september-4-2026) now separates repeated validation effects while preserving semantic checks and passes all five workload median and p95 bounds.
+The distinct template experiment estimates 42% less mounting time and 59% less reconnection time than its own frozen baseline; neither comparison establishes whole-library superiority.
+The September 4 production migration changes every constructed AUI layout to return an inert `html` description.
+The base materializes that result inside its binding scope with the element as its event-handler context.
+Standalone callers use `createFragment(result, owner)`; deprecated `html(owner)` and `scopedHtml(owner)` preserve existing ownership behavior.
+Failed layout construction rolls back managed resources, while ordinary disconnect only suspends observation.
+Connection resources use lazy `DisposableStack` and AbortController allocation; environments without `DisposableStack` need the documented explicit polyfill.
+Native checkedness, validity, form values, and event ordering remain synchronous.
+Signal DOM `0.2.0` is already published, so this follow-up prepares `0.3.0` and Client Signals `0.3.1`, outside the historical batch above.
+See the [migration review](components/aui/design/template-migration.md) for final checks, source-locked measurements, and approval requirements.
 
 The [accessibility acceptance checklist](components/aui/design/accessibility.md) covers Chrome, Firefox, and Safari.
 It requires manual NVDA checks with Chrome and Firefox, and VoiceOver with Safari, with supplemental VoiceOver checks in Chrome and Firefox.

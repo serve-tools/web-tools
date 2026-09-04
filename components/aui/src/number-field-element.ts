@@ -1,6 +1,7 @@
 import { isDirectButton, isDirectInput, isFormElement } from "./.numeric.js";
 import { AttributeOwner } from "./.ownership.js";
 import { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** Immutable state proposed before an AUI number-field step action. */
 export interface NumberFieldChangeDetail {
@@ -226,13 +227,8 @@ export class NumberFieldElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		const decrement = this.ownerDocument.createElement("slot");
-		decrement.name = "decrement";
-		const input = this.ownerDocument.createElement("slot");
-		const increment = this.ownerDocument.createElement("slot");
-		increment.name = "increment";
-		content.append(decrement, input, increment);
+	protected override layout() {
+		return html`<slot name="decrement"></slot><slot></slot><slot name="increment"></slot>`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {

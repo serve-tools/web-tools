@@ -1,5 +1,5 @@
-import type { TemplateDirective, TemplateFragment } from "@serve-tools/aui/template";
-import { html, PersistentFragment, scopedHtml } from "@serve-tools/aui/template";
+import type { TemplateDirective, TemplateFragment, TemplateResult } from "@serve-tools/aui/template";
+import { createFragment, html, isTemplateResult, PersistentFragment, scopedHtml } from "@serve-tools/aui/template";
 import { Signal } from "@serve-tools/signal";
 
 const owner = document.createElement("div");
@@ -8,11 +8,14 @@ const directive: TemplateDirective = (element) => {
 	element.setAttribute("data-ready", "");
 	return () => element.removeAttribute("data-ready");
 };
-const view: TemplateFragment = html(owner)`<button ${directive}>${value}</button>`;
+const result: TemplateResult = html`<button ${directive}>${value}</button>`;
+const view: TemplateFragment = createFragment(result, owner);
+const nested: TemplateResult = html`<section>${result}</section>`;
+const recognized: boolean = isTemplateResult(result);
 const scopedView: TemplateFragment = scopedHtml(owner)`<button ${directive}>${value}</button>`;
 const fragment: DocumentFragment = view;
 const region: PersistentFragment = new PersistentFragment([view]);
-const explicitDocument: TemplateFragment = html({}, document)`<div>${region}</div>`;
+const explicitDocument: TemplateFragment = createFragment(html`<div>${region}</div>`, {}, document);
 const explicitScopedDocument: TemplateFragment = scopedHtml({}, document)`<div>${region}</div>`;
 const functionOwner: TemplateFragment = html(() => {})`<div></div>`;
 
@@ -29,4 +32,19 @@ scopedHtml("owner");
 // @ts-expect-error Directives must return synchronous cleanup, not a promise.
 const asynchronousDirective: TemplateDirective = async () => {};
 
-void [fragment, scopedView, explicitDocument, explicitScopedDocument, functionOwner, asynchronousDirective];
+void [
+	nested,
+	recognized,
+	fragment,
+	scopedView,
+	explicitDocument,
+	explicitScopedDocument,
+	functionOwner,
+	asynchronousDirective,
+];
+
+// @ts-expect-error Descriptions are inert values, not DOM fragments.
+const invalidFragment: DocumentFragment = result;
+// @ts-expect-error Instantiation requires an object context.
+createFragment(result, "owner");
+void invalidFragment;

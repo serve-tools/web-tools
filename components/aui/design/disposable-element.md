@@ -12,6 +12,7 @@ Disconnection, `dispose()`, and `[Symbol.dispose]()` abort all requested signals
 Cleanup failures do not prevent remaining cleanup or later reconnection.
 A single cleanup error is rethrown unchanged; multiple errors follow native `DisposableStack` suppression semantics.
 Repeated disposal is harmless; explicit disposal does not remove the element or automatically restart it.
+An actual reconnection event during cleanup still starts a fresh connection after the old transition finishes.
 Cleanup returned after a factory disconnects or disposes the host runs immediately, and remaining factories are skipped.
 
 Each `disconnectedSignal()` call creates an independent signal that stays live until the next disposal.
@@ -26,8 +27,10 @@ Same-document connected moves preserve resources.
 Document adoption ends old-document ownership and reacquires resources when connected.
 Ancestor-dependent behavior during a same-document move remains the subclass's responsibility.
 
-Connections follow browser lifecycle callbacks synchronously, including reentrant connections.
-Cleanup must capture its own resources, since another connection can start before an older factory returns or cleanup finishes.
+Connections follow browser lifecycle callbacks synchronously, while reentrant connection setup waits for the active setup or cleanup transition to finish.
+This prevents an old cleanup from releasing an identically keyed resource that a fresh connection just reacquired.
+A connection that changes connectivity again during its one immediate retry fails closed and reports an error instead of recurring.
+Cleanup must still capture its own resources because a later connection can reuse the same factory.
 As with other lifecycle callbacks, factories must not unconditionally disconnect and reconnect their own host.
 
 ## Archived constructor metadata sketch

@@ -12,7 +12,7 @@ Automated component tests are not screen-reader certification; validate the appl
 
 - For a minimal working element, read [Recipe: quick start](references/recipe-quick-start.md).
 - For reactive layouts and connection resources, read [Own the element lifecycle](references/own-the-element-lifecycle.md).
-- For managed `scopedHtml` or persistent `html` tagged templates, read [Own a template](references/own-a-persistent-template.md).
+- For inert `html` descriptions, explicit persistent fragments, or legacy tagged-template compatibility, read [Own a template](references/own-a-persistent-template.md).
 - For native Button, Input, Fieldset, Form, Radio, and Radio Group, or AUI Checkbox, Checkbox Group, Switch, Toggle, Toggle Group, Tabs, and Dialog, read [Compose native controls](references/compose-native-controls.md).
 - For Accordion, Collapsible, Avatar, Meter, Progress, and Separator composition, read [Compose disclosures and display elements](references/compose-disclosure-and-display.md).
 - For Popover, Tooltip, Preview Card, and Alert Dialog, read [Compose native overlays](references/compose-native-overlays.md).

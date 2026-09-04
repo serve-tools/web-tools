@@ -2,6 +2,7 @@ import type { CheckboxGroupController, CheckboxHandle } from "./.checkbox-group.
 import { getCheckboxGroup, getDirectCheckboxGroup, registerCheckbox } from "./.checkbox-group.js";
 import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** Immutable state proposed by a checkbox's `beforechange` event. */
 export interface CheckboxChangeDetail {
@@ -365,16 +366,8 @@ export class CheckboxElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		const control = this.ownerDocument.createElement("span");
-		control.setAttribute("part", "control");
-		control.setAttribute("aria-hidden", "true");
-
-		const indicator = this.ownerDocument.createElement("slot");
-		indicator.name = "indicator";
-		control.append(indicator);
-
-		content.append(control, this.ownerDocument.createElement("slot"));
+	protected override layout() {
+		return html`<span part="control" aria-hidden="true"><slot name="indicator"></slot></span><slot></slot>`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {

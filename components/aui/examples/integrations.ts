@@ -1,8 +1,8 @@
 import { AUIElement } from "@serve-tools/aui/base";
+import { html } from "@serve-tools/aui/template";
 import { ContextConsumer, ContextProvider, createContext } from "@serve-tools/client-context";
 import { observeDropTarget } from "@serve-tools/client-input/drop";
 import { Signal } from "@serve-tools/signal";
-import { html, text } from "@serve-tools/signal-dom";
 
 const workspaceContext = createContext<string>(Symbol("gallery-workspace"));
 
@@ -33,8 +33,8 @@ export class GalleryContextElement extends AUIElement {
 		callback: (value) => this.#value.set(value),
 	});
 
-	protected override layout(content: DocumentFragment): void {
-		html("output", text("Current workspace: "), text(this.#value))(content);
+	protected override layout() {
+		return html`<output>Current workspace: ${this.#value}</output>`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {
@@ -56,8 +56,8 @@ export class GalleryDropElement extends AUIElement {
 		this.#value.set(value ? `Received: ${value}` : "No token received.");
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		html("output", text(this.#value))(content);
+	protected override layout() {
+		return html`<output>${this.#value}</output>`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {

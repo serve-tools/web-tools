@@ -31,6 +31,8 @@ Capture is rejected while that scope is resuming or executing a binding, so it c
 Nested AUI elements create their own scope.
 Build the layout detached and commit it outside the capture context so another element's connection callbacks are not accidentally captured by its parent.
 The base invokes layout after subclass initialization, not from its base constructor.
+`layout(content)` may return an inert tagged `TemplateResult`; the base materializes it inside that capture with the element as owner.
+An imperative layout instead appends to `content` and returns `void`.
 
 `resume()` creates a fresh effect for each live binding record, stores the controller before starting it, and synchronously reconciles current values.
 It returns true only when activation completes or the scope is already active.
@@ -89,6 +91,8 @@ Repeated lifecycle callbacks must not create a second active controller for a bi
 Scopes own records created within their capture; they do not infer ownership by traversing the DOM.
 This includes bindings inside hidden groups and closed shadow roots.
 A conditional region's owner remains active while its host is connected, even while the region is hidden.
+Nested tagged descriptions share their outer capture and reconcile by descriptor identity; replacement or removal retires the old nested view promptly.
+Use an explicit `PersistentFragment` when a nested multi-node region must remain owned while parked, hidden, or restored.
 Nested custom elements that become detached suspend their own scopes independently.
 Slot reassignment does not transfer ownership or authorize a parent to dispose the assigned nodes.
 

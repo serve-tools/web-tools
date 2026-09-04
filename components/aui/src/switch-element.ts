@@ -1,5 +1,6 @@
 import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** Immutable state proposed by a switch's `beforechange` event. */
 export interface SwitchChangeDetail {
@@ -277,16 +278,8 @@ export class SwitchElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		const control = this.ownerDocument.createElement("span");
-		control.setAttribute("part", "control");
-		control.setAttribute("aria-hidden", "true");
-
-		const thumb = this.ownerDocument.createElement("slot");
-		thumb.name = "thumb";
-		control.append(thumb);
-
-		content.append(control, this.ownerDocument.createElement("slot"));
+	protected override layout() {
+		return html`<span part="control" aria-hidden="true"><slot name="thumb"></slot></span><slot></slot>`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {

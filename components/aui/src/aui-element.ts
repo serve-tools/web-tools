@@ -1,6 +1,8 @@
 /// <reference lib="esnext.disposable" preserve="true" />
 
 import { createBindingScope } from "@serve-tools/signal-dom";
+import type { TemplateResult } from "@serve-tools/signal-dom/template";
+import { createFragment, isTemplateResult } from "@serve-tools/signal-dom/template";
 
 /** A custom element whose layout survives disconnection without retaining active subscriptions. */
 export class AUIElement extends HTMLElement {
@@ -19,7 +21,7 @@ export class AUIElement extends HTMLElement {
 
 	/** Builds owned content once into a detached fragment after subclass initialization. */
 	// biome-ignore lint/correctness/noUnusedFunctionParameters: Overrides may ignore the connection.
-	protected layout(content: DocumentFragment): void {}
+	protected layout(content: DocumentFragment): void | TemplateResult {}
 
 	/** Acquires resources for one connected interval; register cleanup as each resource is acquired. */
 	// biome-ignore lint/correctness/noUnusedFunctionParameters: Overrides may ignore the connection.
@@ -87,7 +89,15 @@ export class AUIElement extends HTMLElement {
 		try {
 			root = this.createLayoutRoot();
 
-			this.#bindings.capture(() => this.layout(content));
+			this.#bindings.capture(() => {
+				const result = this.layout(content);
+
+				if (isTemplateResult(result)) {
+					content.append(createFragment(result, this, this.ownerDocument));
+				} else if (result !== undefined) {
+					throw new TypeError("AUI layout() must return a TemplateResult or finish synchronously");
+				}
+			});
 
 			nodes = [...content.childNodes];
 
@@ -254,51 +264,50 @@ export namespace AUIElement {
 }
 
 class Connection implements AUIElement.Connection {
-	#controller: AbortController;
-	#cleanups: (() => void)[] | undefined;
+	#closed = false;
+	#controller: AbortController | undefined;
+	#cleanups: DisposableStack | undefined;
 
-	constructor(document: Document) {
-		const Controller = document.defaultView?.AbortController ?? AbortController;
-		this.#controller = new Controller();
-	}
+	constructor(private readonly document: Document) {}
 
 	get signal(): AbortSignal {
-		return this.#controller.signal;
+		const Controller = this.document.defaultView?.AbortController ?? AbortController;
+		const controller = (this.#controller ??= new Controller());
+
+		if (this.#closed) {
+			controller.abort();
+		}
+
+		return controller.signal;
 	}
 
 	addCleanup(cleanup: () => void): void {
-		if (this.signal.aborted) {
+		if (this.#closed) {
 			cleanup();
 		} else {
-			(this.#cleanups ??= []).push(cleanup);
+			(this.#cleanups ??= new DisposableStack()).defer(cleanup);
 		}
 	}
 
 	close(): void {
-		if (this.signal.aborted) {
+		if (this.#closed) {
 			return;
 		}
 
-		const cleanups = this.#cleanups;
+		this.#closed = true;
 
-		this.#cleanups = undefined;
-
-		const errors: Error[] = [];
+		const errors: unknown[] = [];
 
 		try {
-			this.#controller.abort();
+			this.#controller?.abort();
 		} catch (error) {
-			errors.push(error as Error);
+			errors.push(error);
 		}
 
-		if (cleanups) {
-			for (let index = cleanups.length - 1; index >= 0; --index) {
-				try {
-					cleanups[index]();
-				} catch (error) {
-					errors.push(error as Error);
-				}
-			}
+		try {
+			this.#cleanups?.dispose();
+		} catch (error) {
+			errors.push(error);
 		}
 
 		throwErrors(errors, "AUI connection cleanup failed");

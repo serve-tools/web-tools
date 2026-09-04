@@ -1,6 +1,7 @@
+import "@serve-tools/polyfill-resource-management/apply/DisposableStack";
 import { Signal } from "@serve-tools/signal";
 import type { TemplateFragment } from "../src/template.js";
-import { html, PersistentFragment } from "../src/template.js";
+import { createFragment, html, PersistentFragment } from "../src/template.js";
 
 class SignalButton extends HTMLElement {
 	disabled = new Signal.State(false);
@@ -13,17 +14,21 @@ class SignalButton extends HTMLElement {
 		const rows = ["A", "B", "C"].map((name) => {
 			const element = document.createElement("p");
 			const count = new Signal.State(0);
-			const view = html(element)`
+			const view = createFragment(
+				html`
 				<label>Row ${name}: <input aria-label=${`Row ${name}`} .value=${name}></label>
 				<button @click=${() => count.set(count.get() + 1)}>Clicks: ${count}</button>
-			`;
+			`,
+				element,
+			);
 			element.append(view);
 			return { region: new PersistentFragment([element]), count, dispose: view.dispose };
 		});
 		const order = new Signal.State(rows.map((row) => row.region));
 		const visible = new Signal.State(true);
 		const contents = new Signal.Computed(() => (visible.get() ? order.get() : []));
-		const fragment = html(this)`
+		const fragment = createFragment(
+			html`
 			<button .disabled=${this.disabled} @click=${this.handleClick} ${(element: Element) => {
 				element.setAttribute("title", "This click handler uses @click and the component as this");
 				return () => {
@@ -48,7 +53,9 @@ class SignalButton extends HTMLElement {
 					row.dispose();
 				}
 			}}>${contents}</section>
-		`;
+		`,
+			this,
+		);
 		this.#view = fragment;
 		this.attachShadow({ mode: "open" }).append(fragment);
 	}

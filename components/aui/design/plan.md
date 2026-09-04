@@ -2,7 +2,9 @@
 
 Status: the August 28 component-family checkpoint was source-frozen and independently reviewed; its browser, automated accessibility, retention, and repository checks passed within their stated scopes.
 Current release readiness must be established from the active worktree rather than inferred from that checkpoint.
-The measured mount-performance gate is not satisfied, manual assistive-technology evaluation remains open, and pushing or releasing remains held by the user.
+The September 4 [template migration review](template-migration.md) records current production validation, a corrected Checkbox comparison that satisfies the measured mount gate, and refreshed retention and gallery checks.
+The larger bundle exceeds the fixed Base UI incremental target and manual assistive-technology evaluation remains open.
+The user has authorized committing, pushing, and completing CI; package publication remains held.
 
 ## Outcome and boundaries
 
@@ -17,8 +19,8 @@ Tooltip additionally uses native `CloseWatcher`, verified in all three current t
 Do not ship fallback implementations for those capabilities.
 Do not infer support for unrelated features, such as state-preserving moves or scoped custom-element registries, from this baseline.
 
-Local commits are authorized.
-Pushing, publishing, creating remote releases, and changing registry settings are not authorized.
+Commits, pushing the migration branch, and completing CI are authorized.
+Publishing packages, creating remote releases, and changing registry settings are not authorized.
 Keep the donor repository and pre-existing changes in web-tools untouched.
 
 ## Architecture
@@ -119,9 +121,12 @@ Inspect the demo in a real browser and complete the [accessibility acceptance pr
 Report environment failures, unverified assistive-technology combinations, behavior gaps, and inconclusive performance results explicitly.
 Reconcile `package.json`, `src/aui.ts`, declarations, browser export tests, gallery sections, README examples, and the consumer Skill against the same final public family set.
 Commit only scoped, verified work and preserve unrelated user changes.
-Stop before any push or release.
+Push the scoped migration branch and require passing CI; stop before any package release.
 
 ## Progress
+
+The table preserves the earlier component-family checkpoint and its original test counts.
+The September 4 production migration and refreshed acceptance results are recorded separately in [template-migration.md](template-migration.md), [performance.md](performance.md), and [retention.md).
 
 | Deliverable                               | Status                                                                                                                                                                                                                                                                                                                                                                            |
 | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -149,10 +154,10 @@ Stop before any push or release.
 
 The selected automated evidence is complete, but completion of an experiment is not the same as satisfying its acceptance gate.
 
-1. Resolve the mount-performance gate with a separately predeclared comparison; preserve the current failed and inconclusive results.
+1. Resolve the one-Checkbox size shortfall: the current 26,665 raw minified bytes exceed the fixed 14,477-byte Base UI incremental target. The corrected Checkbox latency gate passes; preserve all historical failed, inconclusive, and precision-limited experiments rather than replacing them with the current result.
 2. Complete every required row in the manual support matrix and the component checks in `accessibility.md`; identify every untested assistive-technology combination rather than inferring it from automated or adjacent-browser results.
 3. Decide which documented behavior gaps and unmeasured workloads are acceptable for the intended release, without calling this full Base UI parity.
-4. Obtain the user's authorization before any push or release.
+4. Obtain the user's separate authorization before publishing packages; the migration branch may be committed and pushed for CI.
 
 Any further runtime change requires corresponding correctness, ownership, and performance revalidation before relying on these final-source captures.
 The local gallery and package inventory are ready for review; the package is not declared release-ready.

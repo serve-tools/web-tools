@@ -1,4 +1,5 @@
 import { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** A native-like public form-control surface required from custom controls used by {@link FieldElement}. */
 export interface FieldControl extends HTMLElement {
@@ -322,13 +323,8 @@ export class FieldElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		for (const name of ["label", "control", "description", "error"] as const) {
-			const slot = content.ownerDocument.createElement("slot");
-			slot.name = name;
-			slot.part.add(name);
-			content.append(slot);
-		}
+	protected override layout() {
+		return html`<slot name="label" part="label"></slot><slot name="control" part="control"></slot><slot name="description" part="description"></slot><slot name="error" part="error"></slot>`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {
