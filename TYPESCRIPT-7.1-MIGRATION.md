@@ -1,7 +1,7 @@
 # TypeScript 7.1 migration plan
 
 Prepared September 4, 2026.
-Status: Phases 0 and 1 complete on September 4, 2026; the opt-in Vite/Rolldown adapter is a separate follow-on change.
+Status: Phases 0 and 1 complete and merged on September 4, 2026; the separate internal Vite/Rolldown pilot passed validation and evaluation, with CLI defaults retained.
 The user subsequently authorized completing the remaining steps, landing the compiler migration, and including the accompanying package updates in that commit.
 Publication remains outside this task.
 
@@ -198,7 +198,8 @@ Do not decide a public package name or publish a new tool before the implementat
 | Existing build/asset scripts                | Prepare tools needed to load configuration and any generated/copied assets                                         |
 
 Use the async API in the live adapter to avoid blocking the bundler event loop on synchronous compiler requests.
-Keep one session per coordinated build/dev invocation, not one compiler process per file or per transform.
+Keep one active API session per coordinated build/dev invocation and reuse it for ordinary edits, rather than starting a compiler per file or transform.
+If fresh parsed roots disagree with a native snapshot, close that API and retry once in a fresh session; a second mismatch fails before emission.
 Derive source/output associations from TypeScript's parsed configs, references, and emitted output filenames.
 The API does not itself provide a complete public solution-builder, watch host, or bundler package-resolution service in the inspected nightly.
 Our integration still owns the connection between those pieces.
@@ -230,7 +231,8 @@ This automatic behavior belongs to the adapter; TypeScript references alone do n
 
 ### Watcher design
 
-Use Node's built-in recursive `fs.watch` with cancellation for the standalone coordinator.
+Use Node's built-in `fs.watch` with cancellation for the standalone coordinator.
+Discover and watch directories individually: hosted Linux testing showed that Node's recursive watcher can retain a replaced file's old inode and miss subsequent writes.
 Reuse host watcher events in Vite integration where that avoids duplicate subscriptions; keep the snapshot-update logic independent of event ownership.
 Do not add a third-party watcher or require a TypeScript watch API.
 
@@ -414,7 +416,7 @@ Shared dependencies, the eleven compiler specifications, the lockfile, and the b
 The initial compiler migration changed only those manifests, the lockfile, the checker options access, and this plan.
 The initial migration left preparation-tool source and the probe hash unchanged; the range-only follow-up adds inventory regression coverage.
 
-Retain optional adapter implementation, watcher portability, broader export-resolution tests, HMR integration, and adoption/performance decisions for the separate Phase 2/3 task.
+The optional adapter was implemented and evaluated separately after subsequent user authorization; its execution record and adoption decision appear below.
 
 ### Manifest-range follow-up — September 4, 2026
 
@@ -431,8 +433,7 @@ Validation passed: the lockfile audit found only eleven dependency-specification
 Full verification includes Skill metadata checks, package checks, and Chromium/Firefox/WebKit browser suites; the final log is `evidence/range-update/verify-final.log`.
 The independent range review found no blocking issue.
 
-Next, review and land the compiler migration independently.
-Use the existing prepared fixture to begin the separate opt-in adapter pilot with one referenced-package production bundle, then snapshot updates and Vite HMR.
+The compiler migration was subsequently reviewed and landed independently, and the prepared fixture became the first executable contract for the separate adapter pilot.
 When selecting a newer compiler within the range, update the lockfile deliberately and rerun the compiler probes and repository validation before accepting it.
 
 ## Compiler landing and accompanying dependency updates
@@ -448,13 +449,16 @@ After the browser configuration update, root lint, all 135 TypeScript project ch
 Fresh inventory, all four preparation tests, and the required adapter capability probe also pass against the exact installed compiler.
 Evidence is under [`typescript-adapter-20260904/evidence`](/Users/jonathan/Documents/Codex/typescript-adapter-20260904/evidence), especially `compiler-verify-final.log`, `browser-consolidated-vitest5.log`, `compiler-inventory.json`, `compiler-preparation-tests.log`, and `compiler-probe.json`.
 The opt-in adapter implementation and its follow-on validation remain separate from this compiler commit.
+Compiler PR [#12](https://github.com/serve-tools/web-tools/pull/12) merged as `c5654a7cf7b453b8d7e1d273d0e1fb3114602b16` after [CI run 33895698244](https://github.com/serve-tools/web-tools/actions/runs/33895698244) passed Node 22/24/26, Bun 1.3.14, and Deno 2.9.5.
+The Node 26 job ran full repository verification, including all three browser engines.
+Post-merge [CI run 33896469482](https://github.com/serve-tools/web-tools/actions/runs/33896469482) and [Pages run 33896469602](https://github.com/serve-tools/web-tools/actions/runs/33896469602) also passed.
 
 ## Opt-in adapter execution record
 
 The follow-on implementation lives under `scripts/typescript-adapter`; it introduces no public package or published entrypoint.
 The keyboard demo can opt in with `npm run dev:typescript-adapter` or `npm run build:typescript-adapter`.
 Existing scripts continue to use CLI artifacts by default.
-The adapter checks exact TypeScript `7.1.0-dev.20260904.1`, keeps one asynchronous compiler session per invocation, and conservatively checks and emits the complete referenced graph for each successful generation.
+The adapter checks exact TypeScript `7.1.0-dev.20260904.1`, reuses an asynchronous compiler session for ordinary edits, and conservatively checks and emits the complete referenced graph for each successful generation.
 Source maps retain source text from the corresponding compiler snapshot.
 Production module loading pins a generation, including when an explicit refresh completes in the middle of a build.
 
@@ -487,31 +491,67 @@ Asset/worker query imports (`?url`, `?worker`, `?sharedworker`) remain outside t
 Experimental bundled development, broader demo rollout, public packaging, and dependency-script consolidation are separate adoption decisions.
 
 Local native watcher tests must run outside the macOS workspace sandbox, which reports `EMFILE` for the same watchers that pass outside it.
-The new focused CI matrix covers macOS/Linux/Windows on Node 24 and Linux on Node 22/26; actual CI outcomes and measurement results will be recorded before the final adoption decision.
+The focused CI matrix passed on macOS/Linux/Windows with Node 24 and on Linux with Node 22/26; detailed results follow below.
 The combined adapter checkout passed `npm ci --ignore-scripts --cache /tmp/web-tools-npm-cache` and full `npm run verify`.
 The cache override avoided a sandbox permission failure in the ordinary user npm cache; it did not change dependency resolution.
 After final lifecycle hardening, the production/pilot tests and the complete three-engine plus real-keyboard browser suite passed again.
 The in-flight source-edit regression and all three compiler-session tests also pass.
 Logs: `evidence/adapter-verify-final.log`, `adapter-ci-install-final.log`, `plugin-disposal-final.log`, `adapter-browser-disposal-final.log`, and `session-inflight-final.log` in the adapter evidence workspace.
+All ten Pages demo builds and Skill checks also passed (`adapter-pages-final.log`, `adapter-skills-final.log`).
+
+### Cross-platform follow-up
+
+Hosted Linux testing exposed a Node recursive-watcher failure after atomic file replacement: the next write stayed attached to the old inode and was not observed.
+The standalone watcher now watches directories individually, rediscovers nested directories before reconciliation, and reattaches replaced directory identities.
+A regression covers subsequent writes after both file and directory replacement.
+Windows testing exposed compiler/API slash paths compared with native filesystem paths; the probe now normalizes path identities, and the adapter canonicalizes Vite event and module-graph paths before reconciliation and invalidation.
+A focused HMR regression covers slash paths, query/fragment suffixes, ignored virtual modules, exact invalidation targets, and the updated executed result.
+Both compiler clients send changed/created/deleted inputs through the documented file-URI identifier form to avoid native-path ambiguity at the protocol boundary.
+
+The updated probe passes locally with required adapter capability (`evidence/compiler-probe-final.json`); its source SHA-256 is `ad44c41d43fde8dddc548dcf0c3eb2c3a78385a93434a9e5ced9a9e60e9e2e3e`.
+Earlier probe hashes and results above remain historical evidence for their tested source.
+All four native-watcher tests, all three plugin tests, and the complete four-test browser/keyboard suite pass locally after these fixes (`adapter-browser-portability.log`).
+Hosted compiler CI initially timed out downloading browser dependencies from the Azure Ubuntu mirror, before running tests.
+CI now selects Ubuntu's primary archive while preserving the same browser installation and verification commands.
+Linux browser testing also exposed a truncate/write race: Chokidar's per-path change throttle could discard the final event after the compiler captured incomplete text.
+The pilot now defaults Vite's write-settling policy to 50 ms of stability with 10 ms polling, while respecting explicit user watcher settings.
+A split-write regression and a temporary polling negative control reproduced the stale-output failure with settling disabled and passed with it enabled.
+The committed browser suite retains native platform watcher coverage, rapid edits, and explicit compiler-error recovery.
+Full local `npm run verify` passed after the watcher/path fixes (`evidence/adapter-verify-portability.log`).
+Windows then demonstrated a native snapshot-root problem: fresh configuration parsing found a newly created file, while the snapshot root list omitted it.
+Both `invalidateAll` and explicit configuration-change notifications retained the stale roots, so neither is used as a workaround.
+The session and standalone probe now compare fresh parsed roots with snapshot roots and replace the API once only when they disagree.
+The retired API closes before replacement construction; a second mismatch fails without emission or a generation increment.
+Timing includes both APIs and records the restart count.
+Six preparation tests, five session tests, and all 21 adapter Node tests pass locally, including injected stale-root recovery, ordinary-session reuse, persistent mismatch failure, later repair, and disposal (`compiler-probe-recovery-tests.log`, `adapter-node-recovery.log`).
+Full local verification also passed after root recovery (`adapter-verify-recovery.log`), and the final required-capability probe records the exact compiler and recovery policy in `compiler-probe-final.json`.
+
+At runtime commit `bf9af992e46247e614ad537cb44f66ab83df9ffa`, all five jobs in [adapter CI run 33897577037](https://github.com/serve-tools/web-tools/actions/runs/33897577037) passed.
+Each Node 24 platform passed Chromium, Firefox, WebKit, and the real keyboard pilot; Windows observed `Control and K` changing to `Control key and K` after reload (`evidence/windows-recovery-ci.log`).
+The three Node jobs and Bun/Deno checks in [repository CI run 33897577019](https://github.com/serve-tools/web-tools/actions/runs/33897577019) also passed, including full verification on Node 26.
+The final independent recovery review found no actionable correctness issues after inspecting bounded restarts, pending changes, generation publication, disposal, and combined timing.
+The final test-only adjustment normalizes the partial-write observer path on Windows so its assertion observes the same dependency as Vite's slash-form event paths.
+PR [#13](https://github.com/serve-tools/web-tools/pull/13) carries the separate internal adapter and this evidence record; its final revision reruns both CI workflows before landing.
 
 ### Measurements and adoption decision
 
-The final benchmark completed five independent CLI/adapter pairs in alternating AB/BA order on macOS arm64, Node `24.16.0`, TypeScript `7.1.0-dev.20260904.1`, and Chromium through Playwright `1.62.1`.
+After the path, write-settling, and root-recovery fixes, the final benchmark completed five independent CLI/adapter pairs in alternating AB/BA order on macOS arm64, Node `24.16.0`, TypeScript `7.1.0-dev.20260904.1`, and Chromium through Playwright `1.62.1`.
 Each pair checks identical fixture inputs, browser results, and identical final production JavaScript: one initially loaded chunk totaling 1,514 bytes.
 The separate real keyboard comparison remains 2,792 bytes in both modes.
-Raw samples, exact environment/source hashes, compiler phase output, API/hook counts, and process observations are in `evidence/benchmark-final.json`.
+Raw samples, exact environment/source hashes, compiler phase output, API/hook counts, and process observations are in `evidence/benchmark-recovery-final.json`.
+The preceding implementation measurements are retained as `benchmark-final.json`, `benchmark-portability-final.json`, `benchmark-settled-final.json`, and `benchmark-config-invalidation.json`; a portability run overlapping a compiler probe is retained as `benchmark-portability-probe-overlap.json` and excluded from the final results.
 Earlier failed or superseded harness records are retained separately and excluded from this result.
 
 | Metric                                                           | CLI median | Adapter median | Paired CLI/adapter ratio, descriptive 95% interval |
 | ---------------------------------------------------------------- | ---------: | -------------: | -------------------------------------------------- |
-| Cold startup to browser observation                              |   397.2 ms |       383.0 ms | 1.038 [1.022, 1.055]                               |
-| No-change startup with a fresh session                           |    87.7 ms |       334.4 ms | 0.261 [0.257, 0.266]                               |
-| Direct edit to browser observation                               |   122.6 ms |       215.0 ms | 0.575 [0.561, 0.589]                               |
-| Transitive edit to browser observation                           |   152.0 ms |       278.0 ms | 0.556 [0.524, 0.589]                               |
-| Config edit to changed module response and correct browser state |   267.4 ms |       372.2 ms | 0.701 [0.494, 0.993]                               |
-| Production bundling, separate from compilation                   |    13.0 ms |        13.0 ms | 0.971 [0.933, 1.011]                               |
-| Node host peak RSS                                               |  230.7 MiB |      233.3 MiB | 0.992 [0.979, 1.005]                               |
-| Sampled native compiler peak RSS                                 |  134.6 MiB |      333.8 MiB | 0.397 [0.370, 0.426]                               |
+| Cold startup to browser observation                              |   397.4 ms |       385.3 ms | 1.033 [1.016, 1.049]                               |
+| No-change startup with a fresh session                           |    88.0 ms |       343.0 ms | 0.256 [0.250, 0.263]                               |
+| Direct edit to browser observation                               |   137.4 ms |       208.3 ms | 0.577 [0.488, 0.684]                               |
+| Transitive edit to browser observation                           |   145.0 ms |       432.3 ms | 0.336 [0.330, 0.343]                               |
+| Config edit to changed module response and correct browser state |    77.6 ms |       331.8 ms | 0.326 [0.114, 0.933]                               |
+| Production bundling, separate from compilation                   |    12.2 ms |        13.6 ms | 0.923 [0.861, 0.991]                               |
+| Node host peak RSS                                               |  226.5 MiB |      230.1 MiB | 0.990 [0.983, 0.998]                               |
+| Sampled native compiler peak RSS                                 |  131.7 MiB |      333.3 MiB | 0.382 [0.324, 0.450]                               |
 
 Ratios above one favor the adapter for these latency/memory metrics.
 No-change startup recreates the adapter session while the CLI reuses its build-info files; it does not describe persistent-session HMR.
@@ -520,10 +560,12 @@ CLI aggregate phase timings and API request/phase timings are recorded separatel
 Native RSS is sampled every 50 ms and can miss short-lived peaks; Node wrappers and the Node host are separated from native compiler processes.
 All ten measured workers report zero retained compiler processes after teardown.
 These are descriptive intervals for five pairs on one machine and one small fixture, with no outliers removed; they are not a repository-wide or cross-platform performance claim.
+The benchmark's existing-file edits do not exercise the exceptional root-recovery restart; its additional cost is not measured here.
 
 Decision: retain the CLI workflow as the default and keep the adapter internal and opt-in.
-The small cold-start benefit does not justify the much slower fresh-session restarts and edits or the higher sampled native RSS.
-Production bundle bytes are unchanged, and production bundling/Node host memory differences are inconclusive in this sample.
+Fresh-session restarts, direct/transitive edits, configuration edits, and sampled native RSS favor the CLI.
+The small cold-start benefit does not justify those costs; no overall adapter benefit is established.
+Production bundle bytes are unchanged; small production-bundling and Node-host memory differences also favor the CLI in this sample.
 The current prototype does not pass the promotion gate for a public plugin or broader demo rollout.
 That closes this evaluation without changing the successful compiler migration; a performance redesign and any eventual public package are separate work.
 
@@ -542,8 +584,11 @@ That closes this evaluation without changing the successful compiler migration; 
 - [x] Compiler migration is complete independently of the adapter.
 - [x] Follow-on adapter clean-output, transitive-edit, watcher, source-map, export-semantics, and real-demo local acceptance tests.
 - [x] Combined adapter full verification.
-- [ ] Adapter cross-platform CI.
+- [x] Adapter cross-platform CI.
 - [x] Repeated adapter performance measurements and adoption decision: keep CLI defaults; do not promote this prototype.
+
+No implementation or validation blocker remains in the authorized scope.
+The final adapter PR must pass its last revision's checks before landing; broader rollout, public packaging, and performance redesign remain separate work and are not prerequisites for this migration.
 
 ## Sources to refresh at the start
 

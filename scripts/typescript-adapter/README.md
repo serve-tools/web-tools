@@ -44,15 +44,23 @@ Production builds pin one successful generation throughout module loading even i
 Native hook filters select supported specifier forms and absolute JavaScript paths; handlers check the actual current project graph.
 These coarse filters allow newly referenced packages and changed output directories without silently falling back to stale disk files, at the cost of more JavaScript hook calls than filters fixed to the initial graph.
 
-One invocation owns one persistent asynchronous compiler session.
+One invocation reuses a single asynchronous compiler API for ordinary edits.
 The host closes it when a build or server ends; explicit `plugin.api.dispose()` is also idempotent.
 `plugin.api.refresh({ created, changed, deleted })` accepts absolute or cwd-relative filenames for programmatic updates.
 `plugin.api.generation` exposes the last successful generation, including output text, project metadata, snapshot source content, and phase timings.
 Treat its maps as read-only.
 `plugin.api.error` records the last failed refresh, and `plugin.api.statistics` reports refresh and hook counts.
 
+The session compares freshly parsed root files with each native snapshot.
+If they disagree, it closes the API and retries once in a fresh session; ordinary edits retain the existing API.
+A second mismatch fails before publishing output, and timing reports include any restart.
+
 Vite supplies watcher events directly.
+The pilot defaults Vite's `awaitWriteFinish` to 50 ms of stability with 10 ms polling before delivering an event to the compiler.
+This prevents Chokidar's change-event throttle from losing the final write after a truncate/write save; it adds approximately 50–60 ms of watcher latency.
+Explicit user watcher settings remain honored, including disabling this protection.
 Standalone consumers can use `watchCompilerProject` from `watcher.mjs`, which uses cancellable native Node watchers, reconciles file contents, serializes compiler updates, and coalesces event bursts.
+It watches directories individually and reattaches replaced directories so later writes remain observable after atomic saves on Linux.
 Close the returned watcher when finished.
 Native watcher tests need to run outside the macOS workspace sandbox, which can report `EMFILE` despite the same test passing outside it.
 

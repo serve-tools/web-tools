@@ -137,7 +137,7 @@ async function runBrowserAcceptance(t, browserType) {
 	const splitStart = await browserHistory(page);
 	const partialEvents = [];
 	const observePartialWrite = (file) => {
-		if (file === fixture.dependency) {
+		if (path.normalize(file) === fixture.dependency) {
 			partialEvents.push(file);
 		}
 	};
