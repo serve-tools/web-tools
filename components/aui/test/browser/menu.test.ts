@@ -355,37 +355,54 @@ describe("MenuElement", () => {
 		const replacementItem = document.createElement("button");
 		replacementItem.role = "menuitem";
 		openingReplacement.append(replacementItem);
-		opening.element.addEventListener(
-			"toggle",
-			(event) => {
-				if (event.newState === "open") {
-					opening.element.prepend(openingReplacement);
-				}
-			},
-			{ once: true },
-		);
+		const openingToggled = new Promise<void>((resolve) => {
+			opening.element.addEventListener(
+				"toggle",
+				(event) => {
+					if (event.newState === "open") {
+						opening.element.prepend(openingReplacement);
+						resolve();
+					}
+				},
+				{ once: true },
+			);
+		});
 		opening.element.show();
-		await wait();
+		await openingToggled;
 		expect(opening.element.popup).toBe(openingReplacement);
 		expect(opening.popup.matches(":popover-open")).toBe(false);
 		expect(document.activeElement).not.toBe(replacementItem);
 
 		const closing = create();
+		const closingOpened = new Promise<void>((resolve) => {
+			closing.element.addEventListener(
+				"toggle",
+				(event) => {
+					if (event.newState === "open") {
+						resolve();
+					}
+				},
+				{ once: true },
+			);
+		});
 		closing.element.show();
-		await wait();
+		await closingOpened;
 		const closingReplacement = document.createElement("div");
 		closingReplacement.popover = "auto";
-		closing.element.addEventListener(
-			"toggle",
-			(event) => {
-				if (event.newState === "closed") {
-					closing.element.prepend(closingReplacement);
-				}
-			},
-			{ once: true },
-		);
+		const closingToggled = new Promise<void>((resolve) => {
+			closing.element.addEventListener(
+				"toggle",
+				(event) => {
+					if (event.newState === "closed") {
+						closing.element.prepend(closingReplacement);
+						resolve();
+					}
+				},
+				{ once: true },
+			);
+		});
 		closing.element.hide();
-		await wait();
+		await closingToggled;
 		expect(closing.element.popup).toBe(closingReplacement);
 		expect(closingReplacement.matches(":popover-open")).toBe(false);
 		expect(closing.element.open).toBe(false);
