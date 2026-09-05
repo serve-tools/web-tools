@@ -1,8 +1,30 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import test from "node:test";
 import { createReleasePlan, loadSemver } from "./release-plan.mjs";
 
 const { satisfies, valid } = loadSemver();
+
+test("loads npm's bundled semver without an npm executable on PATH", async () => {
+	const root = await mkdtemp(path.join(os.tmpdir(), "web-tools-npm-semver-"));
+	try {
+		await mkdir(path.join(root, "bin"));
+		await mkdir(path.join(root, "node_modules", "semver"), { recursive: true });
+		await writeFile(path.join(root, "bin", "npm-cli.js"), "");
+		await writeFile(path.join(root, "node_modules", "semver", "index.js"), "module.exports = { bundled: true };\n");
+		const script = `import { loadSemver } from ${JSON.stringify(new URL("./release-plan.mjs", import.meta.url).href)}; console.log(loadSemver().bundled);`;
+		const output = execFileSync(process.execPath, ["--input-type=module", "--eval", script], {
+			encoding: "utf8",
+			env: { ...process.env, PATH: "", npm_execpath: path.join(root, "bin", "npm-cli.js") },
+		});
+		assert.equal(output.trim(), "true");
+	} finally {
+		await rm(root, { recursive: true, force: true });
+	}
+});
 
 function packageData(name, version, dependencies = {}) {
 	return { location: name.slice(1).replace("/", "-"), manifest: { name, version, dependencies } };
