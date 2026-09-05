@@ -7,7 +7,7 @@
 		"skipLibCheck": false,
 		"types": ["node", "vitest"]
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "test/**/.*.ts"],
+	"include": ["src/**/*.ts"],
 	"references": [
 		{
 			"path": "../../ponyfills/observable/tsconfig.json"

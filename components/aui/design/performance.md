@@ -1,10 +1,48 @@
 # AUI performance and retention contract
 
-Status: the existing-DOM regression check meets its latency budget, and the complete-component retention experiment passes its bounded criteria.
-The final Checkbox comparison does not meet the complete performance acceptance gate because both mount workloads fail to establish the required regression bound.
-Completed-update workloads show a measured advantage within the scope below; no overall AUI advantage over Base UI is established.
+Status: the September 4 corrected Checkbox comparison meets its fixed median and p95 regression bounds, and the refreshed complete-component retention experiment passes its bounded criteria.
+The production template migration improves repeated mounting and reconnection against its own frozen baseline, but increases the one-Checkbox bundle beyond the fixed Base UI incremental target.
+No overall AUI advantage over Base UI is established across size, rendering, accessibility, and the full component library.
 
-## Final Checkbox comparison, August 28, 2026
+## Current Checkbox comparison, September 4, 2026
+
+Eight independent counterbalanced pairs compare current production AUI with pinned Base UI 1.7.0 and React/React DOM 19.2.8 in Chromium 151.0.7922.34.
+Every workload and condition uses a fresh browser process.
+The [revision-3 protocol](../benchmark/comparison/README.md) retains the enabled binary Checkbox contract, native labels, matching state and form vectors, CSS, and full semantic checks.
+It removes repeated full validation between individual mount observations, whose history contaminated the earlier harness.
+Full validation now runs after each warmup and recorded block, with bounded retained-reference checks inside the measured operation.
+
+The table reports medians of process medians and paired geometric Base UI/AUI ratios with two-sided 95% Student-t intervals over eight independent log ratios.
+Ratios above one favor AUI.
+All five workloads satisfy the unchanged 5% median and 10% p95 regression bounds; the isolated-update interval also exceeds the original 1.25 improvement target.
+
+| Workload                                |   AUI ms | Base UI ms | Median ratio, 95% interval | p95 ratio, 95% interval |
+| --------------------------------------- | -------: | ---------: | -------------------------- | ----------------------- |
+| Mount 100                               |   1.1925 |     2.1700 | 1.827 [1.792, 1.863]       | 1.981 [1.930, 2.033]    |
+| Mount 1,000                             |   8.4087 |    50.9138 | 6.041 [5.893, 6.193]       | 3.030 [2.346, 3.913]    |
+| Isolated update, exact-1,000 block mean | 0.000995 |   0.069516 | 70.876 [68.932, 72.874]    | 61.650 [59.675, 63.690] |
+| Batch 100, exact-20 block mean          |  0.06725 |    2.50831 | 36.332 [34.361, 38.416]    | 33.684 [31.437, 36.091] |
+| Batch 1,000 among 1,000                 |   0.6575 |   20.48125 | 30.708 [29.708, 31.742]    | 30.368 [28.376, 32.501] |
+
+The grouped p95 values describe block means, not individual interaction or batch tails.
+Every measured block clears the twenty-clock-quantum precision check before division.
+Two earlier attempts stopped on precision and remain preserved: revision 1 encountered a 0.09 ms 100-control update, and revision 2 encountered a 0.095 ms isolated exact-100 block, both below the approximately 0.1 ms minimum.
+The final protocol increases only those blocks equally for both conditions, strengthens untimed validation of actual control values and form data after odd and even grouped totals, and restarts all eight pairs without pooling incomplete runs.
+An analyzer code-order error was fixed after collection; the complete raw measurement was unchanged.
+
+The complete [raw result](/Users/jonathan/Documents/Codex/outputs/aui-template-migration-2026-09-04/comparison/formal-v3/results.json) has SHA-256 `0a77f0fb8345d746ea1338dcbcc17a22f086f8f217e2a0f447450e8a67bc0f99`.
+The [analysis](/Users/jonathan/Documents/Codex/outputs/aui-template-migration-2026-09-04/comparison/analysis.json) and build closure record exact dependencies, inputs, and environment.
+These results measure JavaScript completion, not layout, paint, click-to-screen latency, other components, or manual assistive technology.
+The much lower values than the August table are not attributable solely to production optimization: the measurement protocol also changed.
+
+### Template migration and size
+
+The separate [template experiment](../benchmark/template/MIGRATION-RESULTS.md) passes all its criteria and estimates 42% less mounting time and 59% less reconnection time than its frozen pre-migration fixture.
+Its update and movement medians remain within the 5% bound, and cold single-element timing remains precision-limited.
+The matched one-Checkbox bundle grows from 17,278 to 26,665 raw minified bytes, exceeding the fixed 14,477-byte Base UI incremental target by 12,188 bytes.
+That cost, the separate [retention evidence](retention.md), and manual release requirements remain part of the [migration review](template-migration.md).
+
+## Historical final Checkbox comparison, August 28, 2026
 
 Ten independent counterbalanced pairs compared the final public AUI Checkbox with Base UI 1.7.0 and production React/React DOM 19.2.8 in fresh Chromium 151 processes.
 Both fixtures used the same enabled binary state, direct native labels, name/value vectors, styles, and exact FormData checks.

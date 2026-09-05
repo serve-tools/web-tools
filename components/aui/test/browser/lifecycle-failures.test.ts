@@ -2,6 +2,7 @@ import { Signal } from "@serve-tools/signal";
 import { html, props, text } from "@serve-tools/signal-dom";
 import { afterEach, expect, test, vi } from "vitest";
 import { AUIElement } from "../../src/aui-element.js";
+import { html as template } from "../../src/template.js";
 
 const fixtures: Element[] = [];
 const microtask = () => new Promise<void>(queueMicrotask);
@@ -48,6 +49,66 @@ test("layout failure retires bindings and preserves authored children", () => {
 	expect(Signal.subtle.introspectSinks(value)).toHaveLength(0);
 	AUIElement.prototype.connectedCallback.call(element);
 	expect(layouts).toBe(1);
+});
+
+test("a returned template rolls back nested directive resources when setup fails", () => {
+	const cleanup = vi.fn();
+	const click = vi.fn();
+	const failure = new Error("nested setup failed");
+	let button: HTMLButtonElement;
+	let layouts = 0;
+	const element = create(
+		class extends AUIElement {
+			override connectedCallback(): void {}
+
+			protected layout() {
+				++layouts;
+
+				const child = template`<button @click=${click} ${(element: Element) => {
+					button = element as HTMLButtonElement;
+
+					return cleanup;
+				}}>child</button>`;
+
+				return template`<section>${child}</section><div ${() => {
+					throw failure;
+				}}></div>`;
+			}
+		},
+	);
+	const authored = document.createElement("input");
+	element.append(authored);
+	document.body.append(element);
+
+	expect(() => AUIElement.prototype.connectedCallback.call(element)).toThrow(failure);
+	expect(cleanup).toHaveBeenCalledOnce();
+	button!.click();
+	expect(click).not.toHaveBeenCalled();
+	expect(element.childNodes).toHaveLength(1);
+	expect(element.firstChild).toBe(authored);
+	AUIElement.prototype.connectedCallback.call(element);
+	expect(layouts).toBe(1);
+});
+
+test.each([
+	["an asynchronous result", () => Promise.resolve(template`<span>late</span>`)],
+	["a non-template value", () => "invalid"],
+])("rejects %s from layout", (_name, invalid) => {
+	const element = create(
+		class extends AUIElement {
+			override connectedCallback(): void {}
+
+			protected layout() {
+				return invalid() as never;
+			}
+		},
+	);
+	document.body.append(element);
+
+	expect(() => AUIElement.prototype.connectedCallback.call(element)).toThrow(
+		"AUI layout() must return a TemplateResult or finish synchronously",
+	);
+	expect(element.childNodes).toHaveLength(0);
 });
 
 test("connection failure drains resources and a later connection can retry", () => {

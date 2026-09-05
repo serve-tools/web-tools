@@ -26,6 +26,7 @@ export { DialogElement } from "./dialog-element.js";
 export { DrawerElement, type DrawerEventMap, type DrawerSide, type DrawerSnapDetail } from "./drawer-element.js";
 export { type FieldControl, FieldElement } from "./field-element.js";
 export { type FileChangeDetail, FileElement, type FileEventMap } from "./file-element.js";
+export { FormAssociatedElement } from "./form-associated-element.js";
 export { type MenuChangeDetail, MenuElement, type MenuEventMap, type MenuTarget } from "./menu-element.js";
 export { MenubarElement, type MenubarTarget } from "./menubar-element.js";
 export { MeterElement } from "./meter-element.js";

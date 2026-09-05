@@ -5,5 +5,5 @@
 		"rootDir": "src",
 		"lib": ["ES2025", "DOM"]
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts"]
+	"include": ["src/**/*.ts"]
 }

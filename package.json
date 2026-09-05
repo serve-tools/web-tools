@@ -394,10 +394,22 @@
 			"components/aui": {
 				"entry": [
 					"benchmark/**/*.{js,mjs}",
+					"benchmark/template/fixture.ts",
 					"examples/main.ts",
 					"examples/template.ts",
 					"test/*.{recipes,types}.ts"
-				]
+				],
+				"ignoreIssues": {
+					"benchmark/comparison/src/base-ui-weight.js": [
+						"unlisted"
+					],
+					"benchmark/comparison/src/base-ui.js": [
+						"unlisted"
+					],
+					"benchmark/comparison/src/react-native-weight.js": [
+						"unlisted"
+					]
+				}
 			},
 			"core/async-operation": {
 				"entry": [

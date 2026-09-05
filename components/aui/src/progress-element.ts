@@ -1,5 +1,6 @@
 import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** The current progress state. */
 export type ProgressStatus = "indeterminate" | "progressing" | "complete";
@@ -72,8 +73,8 @@ export class ProgressElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		content.append(this.#progress, this.ownerDocument.createElement("slot"));
+	protected override layout() {
+		return html`${this.#progress}<slot></slot>`;
 	}
 
 	#copyAttribute(name: string): void {

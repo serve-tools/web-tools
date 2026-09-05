@@ -41,8 +41,10 @@ Use `@serve-tools/client-messaging` for request and subscription transport witho
 Use `@serve-tools/aui` when the element should own a persistent layout and automatically suspend its signal bindings while disconnected.
 In this guide version, AUI is available only from the repository workspace and is not yet published to npm.
 Import `@serve-tools/signal-dom` for functional layout helpers and `@serve-tools/signal` when application code creates state directly.
-For tagged literals, use `scopedHtml` from `@serve-tools/signal-dom/template` inside a binding scope or AUI's synchronous layout; AUI's `/template` subpath re-exports the same renderer.
-Standalone `html(owner)` from the template subpath stays reactive while detached and needs explicit disposal, even inside an AUI layout.
+For tagged literals, use `html` from `@serve-tools/signal-dom/template` and materialize its inert result with `createFragment(result, owner)` inside a binding scope.
+AUI's `/template` subpath re-exports the same renderer; return an `html` result from `layout()` and the base supplies context and ownership automatically.
+Outside binding capture, `createFragment` creates a standalone view that stays reactive while detached and needs explicit disposal.
+Legacy `html(owner)` and `scopedHtml(owner)` adapters remain available for compatibility.
 Use Signal DOM alone when the application already owns its component lifecycle or only needs standalone DOM construction.
 
 ## Signal-aware Lit components

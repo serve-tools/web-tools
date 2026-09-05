@@ -39,6 +39,11 @@ No copied or substantially adapted upstream material was identified.
 
 ### Binary controls and toggles
 
+The form-foundation migration extracts existing AUI behavior into `src/form-associated-element.ts`, `src/.checked-control.ts`, and `src/.native-field.ts`.
+Reve's `FormAssociatedElement` and `FormFieldElement` were inspected for their separation of form mechanics from component-specific behavior; no Reve implementation or test code was copied or substantially adapted.
+The new foundation tests and public type fixtures were written for AUI's existing behavior and the new form-associated facade.
+The public `FormAssociatedElement` does not adopt Reve's Lit dependency, property decorators, string-only field state, validation library, or field markup.
+
 The authors attested independent implementation and tests, with Base UI used only to check observable behavior:
 
 - Checkbox: `src/checkbox-element.ts`, `test/browser/checkbox.test.ts`, and `design/checkbox.md`.

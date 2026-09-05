@@ -1,3 +1,4 @@
+import "@serve-tools/polyfill-resource-management/apply/DisposableStack";
 import {
 	AccordionElement,
 	AlertDialogElement,
@@ -36,8 +37,8 @@ import {
 	ToolbarElement,
 	TooltipElement,
 } from "@serve-tools/aui";
+import { html } from "@serve-tools/aui/template";
 import { Signal } from "@serve-tools/signal";
-import { html, props, text } from "@serve-tools/signal-dom";
 import { initializeCalendarAndFileExamples } from "./calendar-and-files.js";
 import { initializeFieldExamples } from "./forms.js";
 import { initializeGallery } from "./gallery.js";
@@ -51,13 +52,12 @@ initializeGallery();
 class CounterElement extends AUIElement {
 	#count = new Signal.State(0);
 
-	protected override layout(content: DocumentFragment): void {
-		html(
-			"button",
-			props({ type: "button", onclick: () => this.#count.set(this.#count.get() + 1) }),
-			text("Count: "),
-			text(this.#count),
-		)(content);
+	protected override layout() {
+		return html`<button type="button" @click=${this.increment}>Count: ${this.#count}</button>`;
+	}
+
+	increment(): void {
+		this.#count.set(this.#count.get() + 1);
 	}
 }
 

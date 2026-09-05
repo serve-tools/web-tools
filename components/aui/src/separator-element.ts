@@ -1,5 +1,6 @@
 import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** The separator's visual and semantic axis. */
 export type SeparatorOrientation = "horizontal" | "vertical";
@@ -53,8 +54,8 @@ export class SeparatorElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		content.append(this.#separator);
+	protected override layout() {
+		return html`${this.#separator}`;
 	}
 
 	#synchronize(): void {

@@ -35,7 +35,7 @@ Select the narrowest package that owns the required behavior.
 - Typed WebSocket request and subscription server handlers: `@serve-tools/server-websocket`.
 - Typed WebTransport operation and datagram server handlers: `@serve-tools/server-webtransport`.
 - Realtime structured serialization, message guards, and reliable stream framing: `@serve-tools/realtime-protocol`.
-- Signal-aware functional HTML, SVG, and MathML templating: `@serve-tools/signal-dom`; opt-in tagged HTML with persistent `html` or managed `scopedHtml`: `@serve-tools/signal-dom/template`.
+- Signal-aware functional HTML, SVG, and MathML templating: `@serve-tools/signal-dom`; opt-in tagged HTML descriptions with `html` and capture-aware `createFragment`: `@serve-tools/signal-dom/template`.
 - EventTarget state and media queries as disposable read-only Signals: `@serve-tools/signal-event-target`.
 - Complete EventSource client with latest-event Signal state and IDs: `@serve-tools/signal-event-source`.
 - Complete messaging client with reactive subscription Signal state: `@serve-tools/signal-messaging`.

@@ -14,6 +14,7 @@ import { DialogElement } from "@serve-tools/aui/dialog";
 import { DrawerElement } from "@serve-tools/aui/drawer";
 import { FieldElement } from "@serve-tools/aui/field";
 import { FileElement } from "@serve-tools/aui/file";
+import { FormAssociatedElement } from "@serve-tools/aui/form-associated";
 import { MenuElement } from "@serve-tools/aui/menu";
 import { MenubarElement } from "@serve-tools/aui/menubar";
 import { MeterElement } from "@serve-tools/aui/meter";
@@ -54,6 +55,7 @@ test("published component entries agree and imports do not register tag names", 
 		"DrawerElement",
 		"FieldElement",
 		"FileElement",
+		"FormAssociatedElement",
 		"MenuElement",
 		"MenubarElement",
 		"MeterElement",
@@ -91,6 +93,7 @@ test("published component entries agree and imports do not register tag names", 
 	expect(aui.DrawerElement).toBe(DrawerElement);
 	expect(aui.FieldElement).toBe(FieldElement);
 	expect(aui.FileElement).toBe(FileElement);
+	expect(aui.FormAssociatedElement).toBe(FormAssociatedElement);
 	expect(aui.MenuElement).toBe(MenuElement);
 	expect(aui.MenubarElement).toBe(MenubarElement);
 	expect(aui.MeterElement).toBe(MeterElement);
@@ -117,6 +120,7 @@ test("published component entries agree and imports do not register tag names", 
 	expect(customElements.get("aui-collapsible")).toBeUndefined();
 	expect(customElements.get("aui-dialog")).toBeUndefined();
 	expect(customElements.get("aui-field")).toBeUndefined();
+	expect(customElements.get("aui-form-associated")).toBeUndefined();
 	expect(customElements.get("aui-avatar")).toBeUndefined();
 	expect(customElements.get("aui-meter")).toBeUndefined();
 	expect(customElements.get("aui-progress")).toBeUndefined();

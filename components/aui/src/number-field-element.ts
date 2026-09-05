@@ -1,6 +1,8 @@
+import { NativeFieldElement, setNativeFieldState, synchronizeNativeFieldAttributes } from "./.native-field.js";
 import { isDirectButton, isDirectInput, isFormElement } from "./.numeric.js";
 import { AttributeOwner } from "./.ownership.js";
-import { AUIElement } from "./aui-element.js";
+import type { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** Immutable state proposed before an AUI number-field step action. */
 export interface NumberFieldChangeDetail {
@@ -27,7 +29,7 @@ const repeatInterval = 75;
 
 /** Coordinates an authored native number input and optional native step buttons. */
 // biome-ignore lint/suspicious/noUnsafeDeclarationMerging: the interface adds typed DOM event overloads only.
-export class NumberFieldElement extends AUIElement {
+export class NumberFieldElement extends NativeFieldElement {
 	static readonly observedAttributes = ["disabled", "max", "min", "readonly", "required", "step"];
 
 	#activeChanged = false;
@@ -112,10 +114,7 @@ export class NumberFieldElement extends AUIElement {
 			this.#pendingValue = undefined;
 			this.#synchronize();
 		} else {
-			const oracle = this.ownerDocument.createElement("input");
-			oracle.type = "number";
-			oracle.value = string;
-			this.#pendingValue = oracle.value;
+			this.#pendingValue = this.#numberString(string);
 		}
 	}
 
@@ -131,10 +130,7 @@ export class NumberFieldElement extends AUIElement {
 		}
 		const input = this.input;
 		if (!input) {
-			const oracle = this.ownerDocument.createElement("input");
-			oracle.type = "number";
-			oracle.valueAsNumber = value;
-			this.#pendingValue = oracle.value;
+			this.#pendingValue = this.#numberValue(value).value;
 			return;
 		}
 		input.valueAsNumber = value;
@@ -166,46 +162,6 @@ export class NumberFieldElement extends AUIElement {
 		this.setAttribute("step", String(value));
 	}
 
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
-	}
-
-	get readOnly(): boolean {
-		return this.hasAttribute("readonly");
-	}
-
-	set readOnly(value: boolean) {
-		this.toggleAttribute("readonly", Boolean(value));
-	}
-
-	get required(): boolean {
-		return this.hasAttribute("required");
-	}
-
-	set required(value: boolean) {
-		this.toggleAttribute("required", Boolean(value));
-	}
-
-	get validity(): ValidityState | null {
-		return this.input?.validity ?? null;
-	}
-
-	get validationMessage(): string {
-		return this.input?.validationMessage ?? "";
-	}
-
-	checkValidity(): boolean {
-		return this.input?.checkValidity() ?? true;
-	}
-
-	reportValidity(): boolean {
-		return this.input?.reportValidity() ?? true;
-	}
-
 	/** Silently invokes the native input's `stepUp()`. */
 	stepUp(increment?: number): void {
 		this.input?.stepUp(increment);
@@ -222,17 +178,8 @@ export class NumberFieldElement extends AUIElement {
 		this.#synchronize();
 	}
 
-	protected override createLayoutRoot(): ShadowRoot {
-		return this.attachShadow({ mode: "open" });
-	}
-
-	protected override layout(content: DocumentFragment): void {
-		const decrement = this.ownerDocument.createElement("slot");
-		decrement.name = "decrement";
-		const input = this.ownerDocument.createElement("slot");
-		const increment = this.ownerDocument.createElement("slot");
-		increment.name = "increment";
-		content.append(decrement, input, increment);
+	protected override layout() {
+		return html`<slot name="decrement"></slot><slot></slot><slot name="increment"></slot>`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {
@@ -246,12 +193,12 @@ export class NumberFieldElement extends AUIElement {
 			childList: true,
 			subtree: true,
 		});
+		connection.addCleanup(() => observer.disconnect());
 		this.addEventListener("pointerdown", this.#onPointerDown, { capture: true, signal: connection.signal });
 		this.addEventListener("click", this.#onClick, { capture: true, signal: connection.signal });
 		this.addEventListener("input", this.#onNativeInput, { capture: true, signal: connection.signal });
 		this.ownerDocument.addEventListener("reset", this.#onFormReset, { capture: true, signal: connection.signal });
 		connection.addCleanup(() => {
-			observer.disconnect();
 			if (this.#connectionSignal === connection.signal) {
 				this.#connectionSignal = undefined;
 			}
@@ -370,7 +317,6 @@ export class NumberFieldElement extends AUIElement {
 		}
 		return undefined;
 	}
-
 	#canStep(): boolean {
 		const input = this.#input;
 		return Boolean(this.#isActive() && input && !input.matches(":disabled") && !input.readOnly);
@@ -607,9 +553,9 @@ export class NumberFieldElement extends AUIElement {
 	#synchronize(): void {
 		const input = this.#input;
 		if (!input) {
-			this.#setState("disabled", this.disabled);
-			this.#setState("readonly", this.readOnly);
-			this.#setState("invalid", false);
+			setNativeFieldState(this.#internals, "disabled", this.disabled);
+			setNativeFieldState(this.#internals, "readonly", this.readOnly);
+			setNativeFieldState(this.#internals, "invalid", false);
 			return;
 		}
 
@@ -620,13 +566,7 @@ export class NumberFieldElement extends AUIElement {
 				this.#owned.releaseAttribute(input, name);
 			}
 		}
-		for (const name of ["disabled", "readonly", "required"] as const) {
-			if (this.hasAttribute(name)) {
-				this.#owned.own(input, name, "");
-			} else {
-				this.#owned.releaseAttribute(input, name);
-			}
-		}
+		synchronizeNativeFieldAttributes(this, input, this.#owned);
 
 		const disabled = input.disabled || input.readOnly;
 		for (const button of [this.#decrementButton, this.#incrementButton]) {
@@ -637,17 +577,9 @@ export class NumberFieldElement extends AUIElement {
 			const authorDisabled = this.#owned.authorValue(button, "disabled") !== null;
 			this.#owned.own(button, "disabled", disabled || authorDisabled ? "" : null);
 		}
-		this.#setState("disabled", input.disabled);
-		this.#setState("readonly", input.readOnly);
-		this.#setState("invalid", !input.validity.valid);
-	}
-
-	#setState(state: string, present: boolean): void {
-		if (present) {
-			this.#internals.states.add(state);
-		} else {
-			this.#internals.states.delete(state);
-		}
+		setNativeFieldState(this.#internals, "disabled", input.disabled);
+		setNativeFieldState(this.#internals, "readonly", input.readOnly);
+		setNativeFieldState(this.#internals, "invalid", !input.validity.valid);
 	}
 }
 

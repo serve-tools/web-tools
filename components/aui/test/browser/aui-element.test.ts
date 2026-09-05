@@ -2,6 +2,7 @@ import { Signal } from "@serve-tools/signal";
 import { group, html, props, text } from "@serve-tools/signal-dom";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { AUIElement } from "../../src/aui-element.js";
+import { html as template } from "../../src/template.js";
 
 const fixtures: Element[] = [];
 const microtask = () => new Promise<void>(queueMicrotask);
@@ -22,6 +23,45 @@ const create = <T extends AUIElement>(constructor: new () => T): T => {
 };
 
 describe("AUIElement", () => {
+	test("owns a returned template and binds event handlers to the host", async () => {
+		const value = new Signal.State("before");
+		const receivers: unknown[] = [];
+		let layouts = 0;
+		const element = create(
+			class extends AUIElement {
+				field = "ready";
+
+				protected layout() {
+					expect(this.field).toBe("ready");
+					++layouts;
+
+					return template`<button @click=${function (this: unknown) {
+						receivers.push(this);
+					}}>${value}</button>`;
+				}
+			},
+		);
+
+		document.body.append(element);
+		const button = element.querySelector("button")!;
+		button.click();
+		expect(receivers).toEqual([element]);
+		expect(Signal.subtle.introspectSinks(value)).toHaveLength(1);
+
+		element.remove();
+		expect(Signal.subtle.introspectSinks(value)).toHaveLength(0);
+		value.set("detached");
+		await microtask();
+		expect(button.textContent).toBe("before");
+
+		document.body.append(element);
+		expect(element.querySelector("button")).toBe(button);
+		expect(button.textContent).toBe("detached");
+		expect(layouts).toBe(1);
+		button.click();
+		expect(receivers).toEqual([element, element]);
+	});
+
 	test("mounts once after fields exist and releases external signal sinks synchronously", async () => {
 		const value = new Signal.State("before");
 		let mounts = 0;
@@ -224,6 +264,42 @@ describe("AUIElement", () => {
 		expect(element.isConnected).toBe(false);
 		expect(starts).toBe(1);
 		expect(cleanups).toEqual([1, 2, 3]);
+	});
+
+	test("late connection resources are already ended", () => {
+		let connection: AUIElement.Connection;
+		const cleanup = vi.fn();
+		const element = create(
+			class extends AUIElement {
+				protected connect(current: AUIElement.Connection): void {
+					connection = current;
+				}
+			},
+		);
+
+		document.body.append(element);
+		element.remove();
+		expect(connection!.signal.aborted).toBe(true);
+		connection!.addCleanup(cleanup);
+		expect(cleanup).toHaveBeenCalledOnce();
+	});
+
+	test("cleanup registered by an abort callback runs before stacked cleanup", () => {
+		const order: string[] = [];
+		const element = create(
+			class extends AUIElement {
+				protected connect(connection: AUIElement.Connection): void {
+					connection.signal.addEventListener("abort", () => {
+						connection.addCleanup(() => order.push("abort cleanup"));
+					});
+					connection.addCleanup(() => order.push("stacked cleanup"));
+				}
+			},
+		);
+
+		document.body.append(element);
+		element.remove();
+		expect(order).toEqual(["abort cleanup", "stacked cleanup"]);
 	});
 
 	test("defers reconnection requested inside a queued setter until it unwinds", async () => {

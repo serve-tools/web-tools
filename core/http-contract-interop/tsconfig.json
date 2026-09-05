@@ -8,5 +8,5 @@
 		"strict": true,
 		"target": "ES2022"
 	},
-	"include": ["generated/**/*.d.ts", "test/**/*.ts"]
+	"include": ["generated/**/*.d.ts"]
 }

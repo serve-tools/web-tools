@@ -1,5 +1,6 @@
 import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** A passive meter whose host owns accessibility and whose native meter owns numeric parsing. */
 export class MeterElement extends AUIElement {
@@ -86,8 +87,8 @@ export class MeterElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		content.append(this.#meter, this.ownerDocument.createElement("slot"));
+	protected override layout() {
+		return html`${this.#meter}<slot></slot>`;
 	}
 
 	#copyAttribute(name: string): void {

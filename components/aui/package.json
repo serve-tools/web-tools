@@ -40,6 +40,7 @@
 		"./drawer": "./dist/drawer-element.js",
 		"./field": "./dist/field-element.js",
 		"./file": "./dist/file-element.js",
+		"./form-associated": "./dist/form-associated-element.js",
 		"./menu": "./dist/menu-element.js",
 		"./menubar": "./dist/menubar-element.js",
 		"./meter": "./dist/meter-element.js",
@@ -78,7 +79,7 @@
 	"dependencies": {
 		"@serve-tools/client-input": "0.1.3",
 		"@serve-tools/signal": "^0.1.3",
-		"@serve-tools/signal-dom": "^0.2.0"
+		"@serve-tools/signal-dom": "^0.3.0"
 	},
 	"devDependencies": {
 		"@serve-tools/client-context": "0.1.4",

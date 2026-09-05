@@ -3,17 +3,17 @@
 This public-import example is generated from the compile-checked `test/aui.recipes.ts` fixture in the package source.
 
 ```ts
-import { scopedHtml, html as template } from "@serve-tools/aui/template";
+import { createFragment, html } from "@serve-tools/aui/template";
 import { Signal } from "@serve-tools/signal";
 import { AUIElement, CheckboxElement } from "@serve-tools/aui";
 
 class CounterElement extends AUIElement {
 	#count = new Signal.State(0);
 
-	protected layout(content: DocumentFragment): void {
-		content.append(scopedHtml(this)`
+	protected layout() {
+		return html`
 			<button type="button" @click=${() => this.#count.set(this.#count.get() + 1)}>${this.#count}</button>
-		`);
+		`;
 	}
 }
 
@@ -47,7 +47,10 @@ console.assert(!checkbox.checked);
 
 // Opt-in persistent templates do not use AUIElement's disconnect/suspend lifecycle.
 const owner = { count: new Signal.State(0) };
-const view = template(owner)`<button @click=${() => owner.count.set(owner.count.get() + 1)}>${owner.count}</button>`;
+const view = createFragment(
+	html`<button @click=${() => owner.count.set(owner.count.get() + 1)}>${owner.count}</button>`,
+	owner,
+);
 const button = view.querySelector("button")!;
 document.body.append(view);
 button.remove();

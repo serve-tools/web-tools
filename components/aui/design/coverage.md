@@ -23,7 +23,7 @@ Every contract document records behavior that remains native, deliberately diffe
 ## Live package inventory
 
 The package surface must be read from `package.json` and `src/aui.ts` together.
-At this reconciliation point, the public map contains 36 explicit component and support subpaths: 32 AUI classes for Base UI families, Base, Option, Calendar, and File.
+The public map contains 38 explicit component and support subpaths: 32 AUI classes for Base UI families, Base, Option, Calendar, File, the template API, and FormAssociatedElement.
 The public barrel and subpaths cover every AUI class used for the 38-family inventory.
 Review status remains a separate fact from export presence.
 
@@ -146,6 +146,7 @@ Its cause is not established, and the failed log remains alongside the successfu
 | `types` entrypoint         | AUI publishes types through each explicit JavaScript export rather than a compatibility types barrel.                | Intentional difference                       |
 | `unstable-use-media-query` | Use CSS media queries or a separately justified DOM API.                                                             | Out of scope                                 |
 | Base and Option            | Public AUI support classes for component authors and selection families.                                             | Supporting exports, not Base UI family count |
+| FormAssociatedElement      | Optional form-associated base with one platform internals object and native validation facade.                       | Supporting export, not a Base UI family      |
 | Calendar and File          | AUI-specific components outside the Base UI 1.7.0 family list.                                                       | Exported, reviewed AUI extras                |
 | Time, Context, Drag/Drop   | Existing Serve Tools/native integrations demonstrated by the gallery.                                                | Package-adjacent, not AUI family parity      |
 

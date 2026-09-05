@@ -1,6 +1,7 @@
 import { isDirectInput, isFormElement } from "./.numeric.js";
 import { AttributeOwner } from "./.ownership.js";
 import { AUIElement } from "./aui-element.js";
+import { createFragment, html } from "./template.js";
 
 export type SliderOrientation = "horizontal" | "vertical";
 
@@ -164,9 +165,10 @@ export class SliderElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		const style = this.ownerDocument.createElement("style");
-		style.textContent = `
+	protected override layout() {
+		this.#track.append(createFragment(html`<slot name="thumb"></slot><slot></slot>`, this));
+
+		return html`<style>
 			:host { display: inline-block; }
 			[part="track"] { display: inline-grid; gap: 0.5rem; position: relative; }
 			:host([orientation="vertical"]) [part="track"] { grid-auto-flow: column; }
@@ -174,12 +176,7 @@ export class SliderElement extends AUIElement {
 				direction: rtl;
 				writing-mode: vertical-lr;
 			}
-		`;
-		const thumbs = this.ownerDocument.createElement("slot");
-		thumbs.name = "thumb";
-		const ranges = this.ownerDocument.createElement("slot");
-		this.#track.append(thumbs, ranges);
-		content.append(style, this.#track);
+		</style>${this.#track}`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {

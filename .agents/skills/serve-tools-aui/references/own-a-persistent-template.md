@@ -1,14 +1,18 @@
 # Own a template
 
-Import `html`, `scopedHtml`, and, when needed, `PersistentFragment` from `@serve-tools/aui/template`, a compatibility re-export of `@serve-tools/signal-dom/template`.
-Use `scopedHtml(this)` synchronously inside `AUIElement.layout()` for managed rendering; it requires an active binding capture and is not available from `connect()` or asynchronous callbacks.
-Capture writes initial values without subscribing; connect/resume starts observation and force-reconciles current values, and disconnect stops it without replacing nodes.
+Import `html`, `createFragment`, and, when needed, `PersistentFragment` from `@serve-tools/aui/template`, a re-export of `@serve-tools/signal-dom/template`.
+Bare `html\`...\``produces an inert`TemplateResult`; it performs no binding work until`createFragment(result, owner, ownerDocument?)`materializes it.
+The returned`TemplateFragment`is a native`DocumentFragment`carrying an idempotent`dispose()`method.
+Appending it transfers its children, so retain the returned handle for cleanup.
+
+Return an `html` result from `AUIElement.layout()` when the base should own the layout.
+The base materializes that result inside its binding capture: initial values are synchronous, connect/resume starts observation and reconciles current values, and disconnect stops observation without replacing nodes.
 Instance listeners and directives survive disconnect, while explicit `view.dispose()` or a later layout failure retires them.
 An unchanged handler does not rearm a consumed `once` listener on reconnection.
-Use standalone `html(owner)` for intentionally persistent observation; it ignores ambient capture, including inside layout.
-Call `html(owner)` as a tag with a stable object owner; DOM owners use their document, or pass an explicit document as the second argument.
-The tag returns a `TemplateFragment`, a native `DocumentFragment` carrying an idempotent `dispose()` method.
-Appending it transfers its children, so retain the returned handle for cleanup.
+
+Call `createFragment()` with a stable object owner for a standalone view.
+It is capture-aware: inside a binding capture the view follows that scope; outside capture it remains active while detached, hidden, or moved until explicitly disposed.
+DOM owners use their document, or pass an explicit document as the third argument.
 
 Use `${value}` for child values, `name=${value}` for a whole attribute, `.property=${value}` for a property, `@event=${handler}` for a listener, and `${directive}` in an opening tag for a synchronous element modifier.
 State and Computed values bind reactively; plain values are written once.
@@ -23,8 +27,8 @@ Interpolations in raw-text elements, comments, nested template content, and tag 
 Do not treat the parser as a full Lit implementation, HTML sanitizer, or scoped-custom-element registry implementation.
 Author template structure yourself; dynamic text is inserted as text, but assigning `.innerHTML` or another sensitive property retains the native sink's security requirements.
 
-Standalone bindings and instance-owned listeners remain active during removal, hiding, and movement.
-Managed bindings stop when the enclosing scope suspends, including hidden content; hiding a region alone does not suspend them.
+Standalone bindings and instance-owned listeners remain active during removal, hiding, and movement until their fragment is disposed.
+Views materialized inside a managed scope stop when that scope suspends, including hidden content; hiding a region alone does not suspend them.
 Keep document/window observers and other connection resources in the existing connection lifecycle.
 Retire a persistent template with `view.dispose()`; stopping its effects also suppresses already queued updates.
 Weak owner scheduling avoids an extra global strong owner list, but externally retained signals or handles may retain the owner.
@@ -36,10 +40,15 @@ Setup failure cleans up previously acquired resources; a directive must clean it
 Disposal during setup stops later bindings and immediately runs any cleanup returned afterward.
 Promise-returning directives are rejected; asynchronous work must implement its own cancellation and cannot be rolled back automatically.
 
-Use `PersistentFragment` for reusable multi-node children, especially reordered or temporarily removed rows.
+Nested `html` descriptions are supported in child values, including signal and iterable children.
+An active nested view follows descriptor identity through iterable reordering; removing or replacing its descriptor disposes it promptly.
+Use `PersistentFragment` for reusable multi-node children that must remain owned while parked, hidden, or restored.
 Use this entrypoint's re-export or the same installed `@serve-tools/client-dom-fragment` instance; regions from a second package copy are not recognized as reusable regions.
 Ordinary document fragments are one-shot inputs.
-Iterables are snapshotted before moving their nodes; this is replacement/movement, not keyed reconciliation.
+Iterables are snapshotted before moving nodes and nested descriptions are reconciled by descriptor identity; this is not value-keyed reconciliation.
 Node identity and DOM-owned values survive, but native detach/insert can still affect focus, selection, and custom-element callbacks.
 Do not remove the renderer's text/comment boundaries independently.
-The parent template does not automatically own separately created child templates, including hidden children; register their disposal explicitly in an owning directive.
+Separately created fragment instances are not implicitly owned by a parent; register their disposal explicitly in an owning directive.
+
+`html(owner)` and `scopedHtml(owner)` remain deprecated compatibility tags.
+Do not use them in new code.

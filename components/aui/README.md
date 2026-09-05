@@ -6,19 +6,18 @@ No release has been authorized.
 The [component gallery](examples/index.html) covers all 38 tracked Base UI families and six AUI capabilities.
 Six families use native HTML directly; an example is not a claim of complete Base UI behavior parity or completed manual accessibility evaluation.
 The [accessibility acceptance checklist](design/accessibility.md) covers Chrome, Firefox, and Safari; its manual screen-reader results remain unverified.
+The [template migration review](design/template-migration.md) records the current API, validation, measured performance, larger bundle, and remaining release decisions.
 
 ```ts
 import { AUIElement } from "@serve-tools/aui/base";
 import { Signal } from "@serve-tools/signal";
-import { scopedHtml } from "@serve-tools/aui/template";
+import { html } from "@serve-tools/aui/template";
 
 class CounterElement extends AUIElement {
 	#count = new Signal.State(0);
 
-	protected layout(content: DocumentFragment) {
-		content.append(scopedHtml(this)`
-			<button type="button" @click=${() => this.#count.set(this.#count.get() + 1)}>${this.#count}</button>
-		`);
+	protected layout() {
+		return html`<button type="button" @click=${() => this.#count.set(this.#count.get() + 1)}>${this.#count}</button>`;
 	}
 }
 
@@ -26,40 +25,40 @@ customElements.define("app-counter", CounterElement);
 document.body.append(document.createElement("app-counter"));
 ```
 
-## Managed and persistent tagged templates
+## Tagged templates
 
-The opt-in `@serve-tools/aui/template` entrypoint re-exports the shared `@serve-tools/signal-dom/template` renderer: `html(owner)`, `scopedHtml(owner)`, `TemplateFragment`, `TemplateDirective`, and `PersistentFragment`.
-It does not register custom elements or make the base element import the renderer.
-Use `scopedHtml(this)` inside `layout(content)` as above to share the existing managed binding lifecycle.
-Its initial values are written synchronously without subscriptions; connection activates observation, removal suspends it, and reconnection synchronously reconciles the current values into the same nodes.
-Instance listeners and directive setup survive disconnect; consumed `once` listeners are not rearmed.
-A later layout failure also disposes each managed template's listeners and directive cleanups.
-Calling the returned fragment's `dispose()` permanently retires that view without removing its DOM, and reconnecting will not revive it.
-The managed tag requires an active synchronous binding capture and throws outside one; merely creating the tag function during layout does not allow later calls outside capture.
-Signal DOM's functional helpers remain supported in the same layout.
+The opt-in `@serve-tools/aui/template` entrypoint re-exports Signal DOM's tagged-template API: inert `html` descriptions, `createFragment()`, `TemplateResult`, `TemplateFragment`, `TemplateDirective`, and `PersistentFragment`.
+It does not register custom elements.
+`html` only describes DOM; `createFragment(result, owner, ownerDocument?)` materializes it with that owner's bindings and returns the persistent fragment handle.
 
-Use standalone `html(owner)` only when observation should remain active while detached, even if called from `layout()`:
+Return an `html` result from `AUIElement.layout()` for ordinary component layout, as in the quick start.
+The base creates the fragment inside its binding capture, so initial values are written synchronously, removal suspends observation, and reconnection reconciles current values into the retained nodes.
+Layout may still return `void` after appending imperative content to its supplied fragment.
+
+For a standalone persistent view, retain and explicitly dispose the fragment:
 
 ```ts
 import { Signal } from "@serve-tools/signal";
-import { html } from "@serve-tools/aui/template";
+import { createFragment, html } from "@serve-tools/aui/template";
 
 const owner = { count: new Signal.State(0) };
-const view = html(owner)`
+const view = createFragment(html`
   <button @click=${() => owner.count.set(owner.count.get() + 1)}>${owner.count}</button>
-`;
+`, owner);
 const button = view.querySelector("button")!;
 document.body.append(view);
 
 button.remove(); // Bindings remain active while detached.
 document.body.append(button);
-view.dispose(); // Stop effects/listeners/directives without removing the DOM.
+view.dispose(); // Stop effects, listeners, and directives without removing the DOM.
 ```
 
 Child values, whole attributes, `.property` bindings, `@event` bindings, and synchronous element directives accept the minimal Lit-style syntax shown in the [persistent-template example](examples/template.html).
 Signals update asynchronously after their initial synchronous write; plain values are written once.
 The fragment handle remains the cleanup owner after its children have been appended elsewhere.
-Separately created child templates are not implicitly owned by their parent; register their cleanup explicitly.
+Nested `html` descriptions work in child values, including signal and iterable children.
+An active nested view follows descriptor identity through iterable reordering; removing or replacing its descriptor retires that nested view promptly.
+Use `PersistentFragment` when content must remain owned while parked, hidden, or restored later.
 Import reusable regions from this entrypoint's `PersistentFragment` re-export, or ensure the application shares the same installed `@serve-tools/client-dom-fragment` instance.
 Regions from a second package copy are not recognized as reusable regions.
 
@@ -68,14 +67,40 @@ Leading/trailing template whitespace is trimmed.
 Only `null` removes an attribute; boolean DOM state should use a property such as `.disabled`.
 Function listeners use the owner as `this`; listener objects retain their own `handleEvent` receiver and may carry native listener options.
 An unchanged-options handler update does not rearm a consumed `once` listener or an aborted listener.
-Templates use the owner's document when available, or `html(owner, ownerDocument)` for an explicit document; scoped custom-element registries are not selected by this entrypoint.
-
-Unlike `scopedHtml` bindings, standalone `html` bindings remain active when detached or hidden, including when constructed inside `AUIElement.layout()`.
-Use connection-owned resources separately, and retain a deterministic disposal policy for permanently retired templates.
+Use an explicit `ownerDocument` argument to create a fragment for another document; scoped custom-element registries are not selected by this entrypoint.
+Standalone fragments remain active when detached or hidden until disposed.
+Use connection-owned resources separately, and retain a deterministic disposal policy for permanently retired fragments.
 Weak scheduling is not a guarantee that external signals cannot retain a view.
 See [Own a persistent template](../../.agents/skills/serve-tools-aui/references/own-a-persistent-template.md) for cleanup, parser, and movement boundaries.
 
+`html(owner)` and `scopedHtml(owner)` remain deprecated compatibility tags.
+New code should use bare `html` with `createFragment()` or return an `html` result from `layout()`.
+
 ## Native composition
+
+### Shared form foundations
+
+`FormAssociatedElement` is an optional base for controls whose custom-element host owns form participation.
+Import it from `@serve-tools/aui/form-associated`; it extends `AUIElement` without adding form machinery to other base-element consumers.
+A concrete control must replay pre-definition own properties after its own state initializes; the base deliberately does not call overridden setters during construction.
+See the [initialization recipe](design/form-foundations.md#initialization) for late upgrades.
+It provides one protected `internals` object and the native `form`, `labels`, `validity`, `validationMessage`, `willValidate`, `checkValidity()`, `reportValidity()`, and `setCustomValidity()` facade.
+The shared `name`, `disabled`, `readOnly`, and `required` properties reflect their corresponding attributes; component-specific callbacks still own synchronization and constraint policy.
+
+Subclasses use `internals.setFormValue(value, state)` to define submission and restoration data.
+There is no assumed string `value`, checkedness, hidden input, automatic validation timing, or field markup.
+Subclasses retain their own reset and restoration callbacks and their constraint policy.
+`setCustomValidity()` stores the coerced message in protected `customValidity` and calls protected `synchronizeValidity()` synchronously.
+Override that hook when a control combines custom errors with its own constraints; the default handles only the custom error.
+Construction attaches internals without calling subclass synchronization hooks.
+
+Checkbox, Switch, Select, and Combobox use this base.
+Checkbox and Switch also share an internal checked-control base for default checkedness, activation, focus, submission, and validity.
+Number Field and OTP Field instead share an internal native-field base: their retained native input remains the sole form and validity owner.
+Those internal bases are not public entrypoints, and this migration does not change the components' markup or interaction contracts.
+The [foundation migration contract](design/form-foundations.md) records the ownership boundaries and validation scope.
+
+### Authored native controls
 
 Button, Input, Fieldset, Form, Radio, and Radio Group use native HTML directly.
 They intentionally have no AUI replacement class or import.
@@ -938,8 +963,8 @@ Calendar and File are separate AUI components described above; an inline calenda
 ## Layout and lifetime
 
 `layout(content)` runs once on first connection, after subclass fields are initialized.
-Build owned content into the supplied detached `DocumentFragment` using Signal DOM's existing functions or the explicit `scopedHtml(this)` tag.
-The base captures the bindings created synchronously during layout, then appends the content outside capture so nested custom elements own their own lifecycle.
+Return an inert `html` description for the base to materialize inside its binding capture, or append imperative content to the supplied detached `DocumentFragment` and return `void`.
+The base appends materialized content outside capture so nested custom elements own their own lifecycle.
 Reactive updates change existing nodes; layout does not rerun.
 
 The default destination is the host, and existing authored children are preserved.
@@ -980,7 +1005,8 @@ protected connect(connection: AUIElement.Connection) {
 
 `connect()` may also return one cleanup function.
 `addCleanup()` invokes late registrations immediately when the connection has already ended, including a disconnection during setup.
-Cleanup runs in reverse registration order and continues if one cleanup throws.
+Cleanup uses `DisposableStack`, runs in reverse registration order, and continues if one cleanup throws.
+The stack and AbortController are allocated only when requested; a signal first read after its connection ends is already aborted.
 Use the supplied signal for asynchronous work, and check cancellation before applying its result.
 Both layout and connection setup must return synchronously.
 
@@ -996,7 +1022,8 @@ A reentrant remove/reinsert is retried after the current setter unwinds; repeate
 
 ## Platform and package boundaries
 
-AUI targets browser documents with native dialog/popover, ElementInternals, custom CSS states, CSS positioning, and form association.
+AUI targets browser documents with native dialog/popover, ElementInternals, custom CSS states, CSS positioning, form association, and `DisposableStack`.
+For an environment without explicit resource management, install `@serve-tools/polyfill-resource-management` before importing and using AUI; AUI does not mutate globals on import.
 Tooltip additionally requires the native `CloseWatcher` API, verified in the current Chromium, Firefox, and WebKit test browsers.
 This capability keeps tooltip dismissal in the browser's native close-request system; AUI does not provide a fallback overlay stack.
 It does not install global polyfills or register element names when imported.
