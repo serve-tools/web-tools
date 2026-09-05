@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
@@ -118,7 +118,10 @@ test("emits a referenced graph with CLI parity and updates one atomic generation
 	await writeFile(fixture.sources.c, dependency(11));
 	const inFlight = session.refresh({ changed: [fixture.sources.c] });
 	await new Promise((resolve) => setImmediate(resolve));
-	await writeFile(fixture.sources.c, dependency(13));
+	// Publish a complete save so the concurrent compiler cannot observe writeFile's truncation window.
+	const pendingSource = `${fixture.sources.c}.tmp`;
+	await writeFile(pendingSource, dependency(13));
+	await rename(pendingSource, fixture.sources.c);
 	const latest = session.refresh({ changed: [fixture.sources.c] });
 	const concurrentGenerations = await Promise.all([inFlight, latest]);
 	assert.match(concurrentGenerations[1].outputs.get(bOutput).text, /factor \* 13/);
