@@ -6,7 +6,7 @@
 		"rootDir": ".",
 		"types": ["vitest"]
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts"],
+	"include": ["src/**/*.ts"],
 	"references": [
 		{
 			"path": "../event-source/tsconfig.json"

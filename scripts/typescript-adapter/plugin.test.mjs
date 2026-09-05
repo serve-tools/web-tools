@@ -4,11 +4,146 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { typescript } from "@serve-tools/rolldown-typescript";
 import { rolldown } from "rolldown";
+import { createServer } from "vite";
 import { createBrowserFixture } from "./browser-fixture.mjs";
-import { typescriptProject } from "./plugin.mjs";
 
 const compiler = fileURLToPath(new URL("../../node_modules/typescript/bin/tsc", import.meta.url));
+
+test("the synchronous plugin waits for compilation before Vite discovers dependencies", {
+	timeout: 30_000,
+}, async () => {
+	const fixture = await createBrowserFixture();
+	const plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
+	try {
+		assert.equal(typeof plugin, "object");
+		assert.equal(plugin.then, undefined);
+		assert.equal(plugin.api.generation, undefined);
+		const config = await plugin.config({});
+		assert.ok(config.optimizeDeps.exclude.includes("@fixture/a"));
+		assert.ok(config.optimizeDeps.exclude.includes("@fixture/b"));
+		assert.equal(plugin.api.statistics.refreshes, 1);
+		await plugin.buildStart.call({ addWatchFile() {} });
+		assert.equal(plugin.api.statistics.refreshes, 1, "the first build shares initialization");
+		plugin.buildEnd.call({});
+		await plugin.buildStart.call({ addWatchFile() {} });
+		assert.equal(plugin.api.statistics.refreshes, 2, "subsequent builds still refresh the compiler");
+		await fixture.assertNoDist();
+	} finally {
+		await plugin.api.dispose();
+		await fixture.dispose();
+	}
+});
+
+test("disposal before initialization finishes skips compilation and closes the compiler", {
+	timeout: 30_000,
+}, async () => {
+	const fixture = await createBrowserFixture();
+	const plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
+	try {
+		const disposal = plugin.api.dispose();
+		assert.equal(plugin.api.dispose(), disposal);
+		await disposal;
+		assert.equal(plugin.api.statistics.refreshes, 0);
+		await assert.rejects(plugin.config({}), /disposed/);
+		await assert.rejects(plugin.buildStart.call({ addWatchFile() {} }), /disposed/);
+		await fixture.assertNoDist();
+	} finally {
+		await plugin.api.dispose();
+		await fixture.dispose();
+	}
+});
+
+test("initial compiler errors reject Vite and Rolldown startup", { timeout: 30_000 }, async () => {
+	const fixture = await createBrowserFixture();
+	const plugins = [];
+	let build;
+	try {
+		await fixture.writeCompilerError();
+		const vitePlugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
+		plugins.push(vitePlugin);
+		await assert.rejects(
+			createServer({
+				root: fixture.root,
+				configFile: false,
+				logLevel: "silent",
+				plugins: [vitePlugin],
+				server: { middlewareMode: true, hmr: false },
+			}),
+			/2322|not assignable/,
+		);
+		const rolldownPlugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
+		plugins.push(rolldownPlugin);
+		build = await rolldown({
+			input: path.join(fixture.root, "a/dist/index.js"),
+			plugins: [rolldownPlugin],
+		});
+		await assert.rejects(build.generate({ format: "es" }), /2322|not assignable/);
+		await fixture.assertNoDist();
+	} finally {
+		await build?.close();
+		await Promise.all(plugins.map((plugin) => plugin.api.dispose()));
+		await fixture.dispose();
+	}
+});
+
+test("an initialization rejection is observed immediately and cleans up without host ownership", {
+	timeout: 30_000,
+}, async () => {
+	const fixture = await createBrowserFixture();
+	try {
+		await fixture.writeCompilerError();
+		const result = spawnSync(
+			process.execPath,
+			[
+				"--input-type=module",
+				"-e",
+				`
+import assert from "node:assert/strict";
+import { setTimeout } from "node:timers/promises";
+import { typescript } from "@serve-tools/rolldown-typescript";
+const plugin = typescript(${JSON.stringify({ configFile: fixture.configFile, cwd: fixture.root })});
+while (!plugin.api.error) await setTimeout(10);
+await setTimeout(25);
+await assert.rejects(plugin.config({}), /2322|not assignable/);
+// No explicit disposal: failed initialization must release the native session itself.
+`,
+			],
+			{ encoding: "utf8", timeout: 20_000 },
+		);
+		assert.equal(result.status, 0, result.error?.message ?? result.stderr);
+	} finally {
+		await fixture.dispose();
+	}
+});
+
+test("closing a Vite middleware server disposes its compiler without an HTTP close event", {
+	timeout: 30_000,
+}, async () => {
+	const fixture = await createBrowserFixture();
+	let plugin;
+	let server;
+	try {
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
+		server = await createServer({
+			root: fixture.root,
+			configFile: false,
+			logLevel: "silent",
+			plugins: [plugin],
+			server: { middlewareMode: true, hmr: false },
+		});
+		assert.equal(server.httpServer, null);
+		assert.equal((await server.ssrLoadModule(path.join(fixture.root, "a/src/index.ts"))).result, 10);
+		await server.close();
+		await assert.rejects(plugin.api.refresh(), /disposed/);
+		await fixture.assertNoDist();
+	} finally {
+		await server?.close();
+		await plugin?.api.dispose();
+		await fixture.dispose();
+	}
+});
 
 test("one-shot bundles and refreshed generations preserve CLI outputs and transitive semantics", {
 	timeout: 60_000,
@@ -17,7 +152,7 @@ test("one-shot bundles and refreshed generations preserve CLI outputs and transi
 	const builds = [];
 	let plugin;
 	try {
-		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
 		const bundle = async (input = path.join(fixture.root, "a/dist/index.js")) => {
 			const build = await rolldown({ input, plugins: [plugin] });
 			builds.push(build);
@@ -69,7 +204,7 @@ test("explicit bundler externalization remains external", { timeout: 30_000 }, a
 	let plugin;
 	let build;
 	try {
-		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
 		const entry = path.join(fixture.root, "external.js");
 		await writeFile(entry, 'export { result } from "@fixture/a";');
 		build = await rolldown({ input: entry, plugins: [plugin], external: ["@fixture/a"] });
@@ -93,7 +228,7 @@ test("slash-form hot updates refresh dependencies and invalidate emitted modules
 	let plugin;
 	let build;
 	try {
-		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
 		const slashPath = (file) => file.split(path.sep).join("/");
 		const entry = { id: `${slashPath(path.join(fixture.root, "a/dist/index.js"))}?v=1` };
 		const consumer = { id: `${slashPath(path.join(fixture.root, "b/dist/value.js"))}#fragment` };
@@ -110,6 +245,7 @@ test("slash-form hot updates refresh dependencies and invalidate emitted modules
 			},
 		};
 
+		await plugin.config({});
 		await fixture.writeDependency(7);
 		const refreshes = plugin.api.statistics.refreshes;
 		const modules = await plugin.hotUpdate.call(

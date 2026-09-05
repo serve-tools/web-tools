@@ -1,5 +1,6 @@
 import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** The current outcome of an avatar image request. */
 export type AvatarStatus = "idle" | "loading" | "loaded" | "error";
@@ -100,8 +101,8 @@ export class AvatarElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
-		content.append(this.#image, this.#fallback);
+	protected override layout() {
+		return html`${this.#image}${this.#fallback}`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {

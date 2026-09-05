@@ -2,7 +2,8 @@
 
 Status: the August 28 component-family checkpoint was source-frozen and independently reviewed; its browser, automated accessibility, retention, and repository checks passed within their stated scopes.
 Current release readiness must be established from the active worktree rather than inferred from that checkpoint.
-The measured mount-performance gate is not satisfied, manual assistive-technology evaluation remains open, and pushing or releasing remains held by the user.
+The September 4 [template migration review](template-migration.md) records current production validation, a corrected Checkbox comparison that satisfies the measured mount gate, and refreshed retention and gallery checks.
+The larger bundle exceeds the fixed Base UI incremental target, manual assistive-technology evaluation remains open, and pushing or releasing remains held by the user.
 
 ## Outcome and boundaries
 
@@ -123,6 +124,9 @@ Stop before any push or release.
 
 ## Progress
 
+The table preserves the earlier component-family checkpoint and its original test counts.
+The September 4 production migration and refreshed acceptance results are recorded separately in [template-migration.md](template-migration.md), [performance.md](performance.md), and [retention.md).
+
 | Deliverable                               | Status                                                                                                                                                                                                                                                                                                                                                                            |
 | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Donor inventory and API decisions         | Donor commit `080ad617486945851d0775278d1c8d215bdf75f7` is inventoried in `migration.md`; accepted AUI contracts replace rather than promise compatibility with its mixin and React entrypoints.                                                                                                                                                                                  |
@@ -149,7 +153,7 @@ Stop before any push or release.
 
 The selected automated evidence is complete, but completion of an experiment is not the same as satisfying its acceptance gate.
 
-1. Resolve the mount-performance gate with a separately predeclared comparison; preserve the current failed and inconclusive results.
+1. Resolve the one-Checkbox size shortfall: the current 26,665 raw minified bytes exceed the fixed 14,477-byte Base UI incremental target. The corrected Checkbox latency gate passes; preserve all historical failed, inconclusive, and precision-limited experiments rather than replacing them with the current result.
 2. Complete every required row in the manual support matrix and the component checks in `accessibility.md`; identify every untested assistive-technology combination rather than inferring it from automated or adjacent-browser results.
 3. Decide which documented behavior gaps and unmeasured workloads are acceptable for the intended release, without calling this full Base UI parity.
 4. Obtain the user's authorization before any push or release.

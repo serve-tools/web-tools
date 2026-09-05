@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Rolldown TypeScript"
+  short_description: "Compile TypeScript projects in Vite and Rolldown"
+  default_prompt: "Use $serve-tools-rolldown-typescript to configure an in-memory referenced TypeScript project for Vite or Rolldown."

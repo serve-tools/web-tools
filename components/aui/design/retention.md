@@ -1,8 +1,24 @@
 # AUI retained-heap evidence
 
-Status: the final complete-component experiment passes its deterministic cleanup, positive-control sensitivity, and post-GC criteria independently.
+Status: the September 4 production-template experiment passes its deterministic cleanup, positive-control sensitivity, and post-GC criteria independently.
 Historical foundation and Checkbox captures remain below with their original source and sensitivity limits.
 This evidence applies to the exact production bundles, Chromium version, and exercised fixture paths; it is not proof that every component graph is leak-free.
+
+## Production template migration, September 4, 2026
+
+The repeated complete-component experiment uses the unchanged five-pair protocol and exercises all 36 public constructors with the migrated returned-template layout.
+All 20 predeclared checks pass, and the analysis marks the result decision-grade.
+Every normal checkpoint returns external listeners, observers, timers, and Signal sinks to baseline, with no detached Signal writes or remaining top-layer state.
+The independent post-GC checks find zero additional DOM nodes, event listeners, and documents in every normal run.
+Median JavaScript heap growth is 362,748 bytes, within the fixed 2 MiB limit; median DOM-node slope is zero.
+
+The intentionally leaking condition retains 64 external roots and Signal sinks, adds 27,968 DOM nodes and 1,920 CDP event listeners in every run, and produces 6,705,920 bytes of median heap growth.
+It passes the unchanged sensitivity thresholds, so the normal result is not being accepted against an insensitive harness.
+Browser instrumentation resources remain identified separately from AUI resources.
+
+The final retention source closure is `f3b8bcd7ecd2a7403ecfefbb41f7473eb9d3c1f49980e1ab76a49a1f86ebb1b7`.
+The [raw captures](/Users/jonathan/Documents/Codex/outputs/aui-template-migration-2026-09-04/acceptance/retention/results/raw.json), [analysis](/Users/jonathan/Documents/Codex/outputs/aui-template-migration-2026-09-04/acceptance/retention/results/analysis.json), and [acceptance status](/Users/jonathan/Documents/Codex/outputs/aui-template-migration-2026-09-04/acceptance/STATUS.md) record the exact fixture, environment, source hashes, and limitations.
+This does not compare retained memory with Base UI and does not certify unexercised graphs or manual assistive technology.
 
 ## Final complete-component experiment, August 28, 2026
 

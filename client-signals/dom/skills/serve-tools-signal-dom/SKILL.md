@@ -13,6 +13,6 @@ Read only the references needed for the current task.
 - [Recipe: quick start](references/recipe-quick-start.md): compile-checked package setup.
 - To build platform dom directly, read [Build platform DOM directly](references/build-platform-dom-directly.md).
 - To preserve reactive lifecycles, read [Preserve reactive lifecycles](references/preserve-reactive-lifecycles.md).
-- For persistent or managed tagged literals, read [Own tagged templates](references/own-tagged-templates.md).
+- For inert tagged descriptions and persistent or managed fragments, read [Own tagged templates](references/own-tagged-templates.md).
 - To use advanced platform features deliberately, read [Use advanced platform features deliberately](references/use-advanced-platform-features-deliberately.md).
 - To migrate from `@signal-utils/dom`, read [Migrate from `@signal-utils/dom`](references/migrate-from-signal-utils-dom.md).

@@ -335,6 +335,11 @@ const selections = [
 		"@serve-tools/rolldown-decorators",
 	],
 	[
+		"rolldown-typescript-project",
+		"Experimentally compile one referenced TypeScript project graph in memory for a Vite or Rolldown invocation, while retaining normal CLI builds for declarations and distributable artifacts.",
+		"@serve-tools/rolldown-typescript",
+	],
+	[
 		"client-namespace-facade",
 		"One application shell intentionally exposes database, storage, messaging, input, and interaction utilities through a single namespace-oriented import surface.",
 		"@serve-tools/client",
@@ -550,6 +555,14 @@ const usageTasks = [
 		"rolldown/decorators/test/rolldown-decorators.recipes.ts",
 		["rolldownDecorators()"],
 		["rolldown/decorators/skills/serve-tools-rolldown-decorators/references/recipe-quick-start.md"],
+	),
+	usage(
+		"rolldown-typescript-plugin",
+		"Create an in-memory referenced TypeScript project plugin factory for one Vite or Rolldown invocation without executing the compiler in the exported compile-only recipe.",
+		["@serve-tools/rolldown-typescript"],
+		"rolldown/typescript/test/rolldown-typescript.recipes.ts",
+		["typescript(", 'configFile: "./tsconfig.json"', "return typescript("],
+		["rolldown/typescript/skills/serve-tools-rolldown-typescript/references/recipe-quick-start.md"],
 	),
 	usage(
 		"custom-vite-polyfill",

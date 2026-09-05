@@ -53,6 +53,7 @@ on:
           - "@serve-tools/ponyfill-urlpattern"
           - "@serve-tools/realtime-protocol"
           - "@serve-tools/rolldown-decorators"
+          - "@serve-tools/rolldown-typescript"
           - "@serve-tools/router"
           - "@serve-tools/server-http-stream"
           - "@serve-tools/server-event-source"

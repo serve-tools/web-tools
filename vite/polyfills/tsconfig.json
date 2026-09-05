@@ -1,6 +1,6 @@
 {
 	"extends": "../../tsconfig.json",
-	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "test/**/.*.ts"],
+	"include": ["src/**/*.ts"],
 	"references": [
 		{
 			"path": "../../polyfills/composites/tsconfig.json"

@@ -54,7 +54,7 @@ For every existing package, configure its npm trusted publisher exactly as repos
 The release workflow uses npm CLI `12.0.2`, retains npm provenance, and fails before publishing if GitHub has not supplied its OIDC request credentials.
 Maintain npm 2FA for every maintainer; Trusted Publishing does not use or bypass a publishing token.
 
-The five first-release packages in the approved batch cannot use Trusted Publishing until their first version exists.
+New packages cannot use Trusted Publishing until their first version exists.
 Dispatch `Release` with mode `bootstrap` to verify and pack the selected release plan, then attest every selected tarball under the protected `npm` environment without publishing it.
 The immutable release artifact retains the exact tarball, while `provenance-<tarball>` contains its npm-compatible provenance bundle.
 A maintainer verifies the bundle, then uses an interactive `npm login` session with npm 2FA to publish that tarball with `npm publish <tarball> --access public --tag <tag> --provenance-file <bundle>`.

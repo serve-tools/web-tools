@@ -45,10 +45,20 @@ export class DisposableElement extends HTMLElement {
 	// #region Internals
 
 	#connections: DisposableStack | undefined;
+	#connecting = false;
+	#connectQueued = false;
 	#controllers: AbortController[] = [];
+	#disposing = false;
+	#retrying = false;
 
 	#connect() {
 		if (!this.isConnected || this.#connections) {
+			return;
+		}
+
+		if (this.#connecting || this.#disposing) {
+			this.#connectQueued = true;
+
 			return;
 		}
 
@@ -58,37 +68,54 @@ export class DisposableElement extends HTMLElement {
 			return;
 		}
 
+		this.#connecting = true;
+
 		const connections = (this.#connections = new DisposableStack());
 
-		for (const disposable of disposables) {
-			if (connections.disposed) {
-				break;
-			}
-
-			try {
-				const cleanup = disposable(this);
-
-				if (typeof cleanup === "function") {
-					connections.disposed ? cleanup() : connections.defer(cleanup);
+		try {
+			for (const disposable of disposables) {
+				if (connections.disposed) {
+					break;
 				}
-			} catch (error) {
-				reportError(error);
+
+				try {
+					const cleanup = disposable(this);
+
+					if (typeof cleanup === "function") {
+						connections.disposed ? cleanup() : connections.defer(cleanup);
+					}
+				} catch (error) {
+					reportError(error);
+				}
 			}
+		} finally {
+			this.#connecting = false;
+			this.#reconnect();
 		}
 	}
 
 	#dispose() {
+		if (this.#disposing) {
+			return;
+		}
+
 		const connections = this.#connections;
 		const controllers = this.#controllers;
 
 		this.#connections = undefined;
 		this.#controllers = [];
+		this.#disposing = true;
 
-		for (const controller of controllers) {
-			controller.abort();
+		try {
+			for (const controller of controllers) {
+				controller.abort();
+			}
+
+			connections?.dispose();
+		} finally {
+			this.#disposing = false;
+			this.#reconnect();
 		}
-
-		connections?.dispose();
 	}
 
 	#signal(): AbortSignal {
@@ -97,6 +124,28 @@ export class DisposableElement extends HTMLElement {
 		this.#controllers.push(controller);
 
 		return controller.signal;
+	}
+
+	#reconnect(): void {
+		if (!this.#connectQueued || this.#connecting || this.#disposing) {
+			return;
+		}
+
+		this.#connectQueued = false;
+
+		if (this.#retrying) {
+			reportError(new Error("DisposableElement connectivity repeatedly changed during activation"));
+
+			return;
+		}
+
+		this.#retrying = true;
+
+		try {
+			this.#connect();
+		} finally {
+			this.#retrying = false;
+		}
 	}
 
 	// #endregion Internals

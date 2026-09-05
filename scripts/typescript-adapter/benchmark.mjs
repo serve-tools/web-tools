@@ -7,10 +7,10 @@ import os from "node:os";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { typescript } from "@serve-tools/rolldown-typescript";
 import { chromium } from "playwright";
 import { createServer, build as viteBuild } from "vite";
 import { createBrowserFixture } from "./browser-fixture.mjs";
-import { typescriptProject } from "./plugin.mjs";
 
 const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const scriptFile = fileURLToPath(import.meta.url);
@@ -247,7 +247,8 @@ async function startDevelopment({ browser, condition, fixture }) {
 		compiler = await runCompiler(fixture.root);
 	} else {
 		const compilerStarted = performance.now();
-		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
+		await plugin.config({});
 		compiler = adapterCompilerMeasurement(plugin.api.statistics.compiler, performance.now() - compilerStarted);
 	}
 	const compilerFinished = performance.now();
@@ -353,7 +354,8 @@ async function measureProductionBuild(condition, fixture) {
 	let plugin;
 	if (condition === "adapter") {
 		const compilerStarted = performance.now();
-		plugin = await typescriptProject({ configFile: fixture.configFile, cwd: fixture.root });
+		plugin = typescript({ configFile: fixture.configFile, cwd: fixture.root });
+		await plugin.config({});
 		compiler = adapterCompilerMeasurement(plugin.api.statistics.compiler, performance.now() - compilerStarted);
 	}
 	const beforeStatistics = plugin?.api.statistics ?? null;
@@ -946,8 +948,11 @@ async function sourceHashes() {
 		"TYPESCRIPT-7.1-MIGRATION.md",
 		"scripts/typescript-adapter/benchmark.mjs",
 		"scripts/typescript-adapter/browser-fixture.mjs",
-		"scripts/typescript-adapter/plugin.mjs",
-		"scripts/typescript-adapter/session.mjs",
+		"rolldown/typescript/src/rolldown-typescript.ts",
+		"rolldown/typescript/src/internal/plugin.mjs",
+		"rolldown/typescript/src/internal/exports.mjs",
+		"rolldown/typescript/src/internal/session.mjs",
+		"rolldown/typescript/src/internal/compiler-version.mjs",
 	];
 	return Object.fromEntries(
 		await Promise.all(files.map(async (file) => [file, hash(await readFile(path.join(repositoryRoot, file)))])),

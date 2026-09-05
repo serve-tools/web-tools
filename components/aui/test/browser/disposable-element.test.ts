@@ -1,4 +1,3 @@
-import "@serve-tools/polyfill-resource-management/apply/DisposableStack";
 import { afterEach, expect, test, vi } from "vitest";
 import { DisposableElement } from "../../src/lib/DisposableElement.js";
 
@@ -246,7 +245,32 @@ test("a cleanup can synchronously reappend its host with a fresh active signal",
 	expect(second.aborted).toBe(true);
 });
 
-test("a reentrant connection drains only its old scope and preserves the fresh one", () => {
+test("explicit disposal honors a reconnection event raised during cleanup", () => {
+	let connections = 0;
+	const element = create(
+		class extends DisposableElement {
+			static override readonly disposables: readonly DisposableElement.DisposableInitiator[] = [
+				(host) => {
+					++connections;
+
+					return () => {
+						if (connections === 1) {
+							host.remove();
+							document.body.append(host);
+						}
+					};
+				},
+			];
+		},
+	);
+
+	document.body.append(element);
+	element.dispose();
+	expect(element.isConnected).toBe(true);
+	expect(connections).toBe(2);
+});
+
+test("a reentrant connection drains its old scope before starting the fresh one", () => {
 	const order: string[] = [];
 	let connections = 0;
 	let events = 0;
@@ -283,13 +307,70 @@ test("a reentrant connection drains only its old scope and preserves the fresh o
 	);
 
 	document.body.append(element);
-	expect(order).toEqual(["setup 1", "setup 2", "later factory", "old cleanup"]);
+	expect(order).toEqual(["setup 1", "old cleanup", "setup 2", "later factory"]);
 	document.dispatchEvent(new Event("aui-disposable-reentrant"));
 	expect(events).toBe(1);
 	element[Symbol.dispose]();
-	expect(order).toEqual(["setup 1", "setup 2", "later factory", "old cleanup", "fresh cleanup"]);
+	expect(order).toEqual(["setup 1", "old cleanup", "setup 2", "later factory", "fresh cleanup"]);
 	document.dispatchEvent(new Event("aui-disposable-reentrant"));
 	expect(events).toBe(1);
+});
+
+test("old cleanup cannot remove a deduplicated listener from a reentrant connection", () => {
+	let connections = 0;
+	let events = 0;
+	const listener = () => ++events;
+	const element = create(
+		class extends DisposableElement {
+			static override readonly disposables: readonly DisposableElement.DisposableInitiator[] = [
+				(host) => {
+					++connections;
+					host.ownerDocument.addEventListener("aui-disposable-stable-listener", listener);
+
+					return () => host.ownerDocument.removeEventListener("aui-disposable-stable-listener", listener);
+				},
+				(host) => () => {
+					if (connections === 1) {
+						document.body.append(host);
+					}
+				},
+			];
+		},
+	);
+
+	document.body.append(element);
+	element.remove();
+	document.dispatchEvent(new Event("aui-disposable-stable-listener"));
+	expect(element.isConnected).toBe(true);
+	expect(connections).toBe(2);
+	expect(events).toBe(1);
+
+	element.remove();
+	document.dispatchEvent(new Event("aui-disposable-stable-listener"));
+	expect(events).toBe(1);
+});
+
+test("repeated reentrant connection fails closed without recursive retries", () => {
+	const reported = vi.spyOn(globalThis, "reportError").mockImplementation(() => {});
+	let connections = 0;
+	const element = create(
+		class extends DisposableElement {
+			static override readonly disposables: readonly DisposableElement.DisposableInitiator[] = [
+				(host) => {
+					++connections;
+					host.remove();
+					document.body.append(host);
+				},
+			];
+		},
+	);
+
+	document.body.append(element);
+	expect(element.isConnected).toBe(true);
+	expect(connections).toBe(2);
+	expect(reported).toHaveBeenCalledExactlyOnceWith(
+		expect.objectContaining({ message: "DisposableElement connectivity repeatedly changed during activation" }),
+	);
 });
 
 test("direct cross-document insertion recreates document-owned resources", () => {

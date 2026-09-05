@@ -58,6 +58,8 @@ Each realtime namespace and focused subpath combines the complete underlying cli
 Client operations are direct re-exports and retain their original runtime identity.
 The `dom` namespace and focused `dom` subpath include `createBindingScope()` for layouts that suspend observation on removal and reconcile the same nodes on reconnection.
 Follow Signal DOM's synchronous capture and explicit resume, suspend, and terminal disposal contract.
+Tagged descriptions are available separately from `@serve-tools/signal-dom/template`: use `html` and instantiate with `createFragment(result, owner)` inside the same binding scope.
+The umbrella's `dom.html` remains the functional element builder; the template subpath is not flattened into this namespace.
 
 ```ts
 import { connect, observe } from "@serve-tools/client-signals/event-source";

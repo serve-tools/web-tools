@@ -6,7 +6,7 @@
 		"rootDir": "src",
 		"tsBuildInfoFile": "tsconfig.tsbuildinfo"
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts"],
+	"include": ["src/**/*.ts"],
 	"references": [
 		{
 			"path": "../../realtime/protocol/tsconfig.json"

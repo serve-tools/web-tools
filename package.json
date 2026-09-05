@@ -86,6 +86,7 @@
 		"ponyfills/urlpattern",
 		"realtime/protocol",
 		"rolldown/decorators",
+		"rolldown/typescript",
 		"server/event-source",
 		"server/http-stream",
 		"server/realtime",
@@ -114,7 +115,7 @@
 		"benchmark:skills:transfer": "node benchmark/skills/agentic/run.mjs --suite transfer --seeds 7349,9811 --concurrency 6",
 		"benchmark:skills:transfer:analyze": "node benchmark/skills/agentic/transfer/analyze.mjs",
 		"benchmark:skills:transfer:preflight": "node benchmark/skills/agentic/transfer/preflight.mjs",
-		"benchmark:typescript-adapter": "node scripts/typescript-adapter/benchmark.mjs",
+		"benchmark:typescript-adapter": "npm run build --workspace @serve-tools/rolldown-typescript && node scripts/typescript-adapter/benchmark.mjs",
 		"build": "npm run build:typescript && npm run build:extras",
 		"build:assets": "npm run build:assets --workspaces --if-present",
 		"build:bundles": "npm run build:bundle --workspaces --if-present",
@@ -124,7 +125,7 @@
 		"build:pages": "node scripts/build-pages.mjs",
 		"build:typescript": "tsc --build tsconfig.build.json --builders 4 --checkers 2",
 		"build:typescript:clean": "tsc --build tsconfig.build.json --clean",
-		"build:typescript-adapter": "node scripts/typescript-adapter/pilot.mjs --build",
+		"build:typescript-adapter": "npm run build --workspace @serve-tools/rolldown-typescript && node scripts/typescript-adapter/pilot.mjs --build",
 		"check:packages": "node scripts/check-packages.mjs",
 		"check:release": "node --test scripts/workspaces.test.mjs scripts/release-plan.test.mjs scripts/release-pack.test.mjs",
 		"check:skill-ablation": "node --test benchmark/skills/agentic/ablation/*-tests.mjs",
@@ -136,7 +137,7 @@
 		"check:typescript-migration": "node --test scripts/typescript-migration/*.test.mjs",
 		"check:unused": "knip --no-progress",
 		"clean:build": "node scripts/clean-build.mjs",
-		"dev:typescript-adapter": "node scripts/typescript-adapter/pilot.mjs",
+		"dev:typescript-adapter": "npm run build --workspace @serve-tools/rolldown-typescript && node scripts/typescript-adapter/pilot.mjs",
 		"format": "dprint fmt",
 		"format:check": "dprint check",
 		"lint": "biome check",
@@ -150,18 +151,20 @@
 		"test:node:coverage": "npm run test:node --workspace @serve-tools/signal-dom",
 		"test:node:native": "node --test polyfills/arraybuffer-base64/test/*.test.js ponyfills/arraybuffer-base64/test/*.test.js ponyfills/request-idle-callback/test/runtime/node.test.js core/http-contract-interop/test/interop.test.mjs",
 		"test:node:vitest": "vitest run --config vitest.node.projects.config.ts",
-		"test:typescript-adapter:browser": "node --test scripts/typescript-adapter/browser.test.mjs scripts/typescript-adapter/keyboard.test.mjs",
-		"test:typescript-adapter:node": "node --test scripts/typescript-adapter/exports.test.mjs scripts/typescript-adapter/session.test.mjs scripts/typescript-adapter/plugin.test.mjs scripts/typescript-adapter/pilot.test.mjs scripts/typescript-adapter/watcher.test.mjs scripts/typescript-adapter/resolution.test.mjs",
+		"test:typescript-adapter:browser": "npm run build --workspace @serve-tools/rolldown-typescript && node --test scripts/typescript-adapter/browser.test.mjs scripts/typescript-adapter/keyboard.test.mjs",
+		"test:typescript-adapter:distribution": "npm run build --workspace @serve-tools/rolldown-typescript && node --test scripts/typescript-adapter/distribution.test.mjs",
+		"test:typescript-adapter:node": "npm run build --workspace @serve-tools/rolldown-typescript && node --test scripts/typescript-adapter/compiler-version.test.mjs scripts/typescript-adapter/exports.test.mjs scripts/typescript-adapter/session.test.mjs scripts/typescript-adapter/plugin.test.mjs scripts/typescript-adapter/pilot.test.mjs scripts/typescript-adapter/watcher.test.mjs scripts/typescript-adapter/resolution.test.mjs",
 		"typecheck": "npm run build:typescript && npm run typecheck:workspaces",
 		"typecheck:demos": "npm run typecheck:local --workspaces --if-present",
 		"typecheck:workspaces": "node scripts/typecheck-workspaces.mjs",
-		"verify": "npm run verify:node && npm run test:browser:consolidated && npm run test:typescript-adapter:browser",
+		"verify": "npm run verify:node && npm run test:browser:consolidated && npm run test:typescript-adapter:browser && npm run test:typescript-adapter:distribution",
 		"verify:node": "npm run lint && npm run check:unused && npm run format:check && npm run check:tsconfig-references && npm run typecheck && npm run test:node && npm run check:skills && npm run check:skill-bench && npm run check:release && npm run build:extras && npm run check:packages && npm run check:typescript-migration && npm run test:typescript-adapter:node"
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "0.18.5",
 		"@biomejs/biome": "2.5.12",
 		"@playwright/test": "1.62.1",
+		"@serve-tools/rolldown-typescript": "0.1.0",
 		"@types/bun": "1.4.0",
 		"@types/node": "26.4.1",
 		"@types/ws": "8.18.1",
@@ -391,10 +394,22 @@
 			"components/aui": {
 				"entry": [
 					"benchmark/**/*.{js,mjs}",
+					"benchmark/template/fixture.ts",
 					"examples/main.ts",
 					"examples/template.ts",
 					"test/*.{recipes,types}.ts"
-				]
+				],
+				"ignoreIssues": {
+					"benchmark/comparison/src/base-ui-weight.js": [
+						"unlisted"
+					],
+					"benchmark/comparison/src/base-ui.js": [
+						"unlisted"
+					],
+					"benchmark/comparison/src/react-native-weight.js": [
+						"unlisted"
+					]
+				}
 			},
 			"core/async-operation": {
 				"entry": [
@@ -579,6 +594,13 @@
 					"@serve-tools/polyfill-request-idle-callback",
 					"@serve-tools/polyfill-resource-management",
 					"@serve-tools/polyfill-urlpattern"
+				]
+			},
+			"rolldown/typescript": {
+				"entry": [
+					"src/rolldown-typescript.ts",
+					"test/*.recipes.ts",
+					"test/*.types.ts"
 				]
 			}
 		}

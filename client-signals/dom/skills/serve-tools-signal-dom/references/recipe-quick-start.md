@@ -5,7 +5,7 @@ This public-import example is generated from the compile-checked `test/signal-do
 ```ts
 import { Signal } from "@serve-tools/signal";
 import { attrs, createBindingScope, html, text } from "@serve-tools/signal-dom";
-import { html as persistentHtml, scopedHtml } from "@serve-tools/signal-dom/template";
+import { createFragment, html as templateHtml } from "@serve-tools/signal-dom/template";
 
 const count = new Signal.State(0);
 const label = new Signal.Computed(() => `Count: ${count.get()}`);
@@ -29,7 +29,7 @@ scope.resume();
 void output;
 
 const templateScope = createBindingScope();
-const view = templateScope.capture(() => scopedHtml({})`<output>${status}</output>`);
+const view = templateScope.capture(() => createFragment(templateHtml`<output>${status}</output>`, {}));
 document.body.append(view);
 templateScope.resume();
 templateScope.suspend();
@@ -37,7 +37,7 @@ status.set("Latest");
 templateScope.resume();
 templateScope.dispose(); // Also retires this view's listeners and directives, without removing DOM.
 
-const persistent = persistentHtml({})`<span>${status}</span>`;
+const persistent = createFragment(templateHtml`<span>${status}</span>`, {});
 document.body.append(persistent);
 persistent.dispose(); // Persistent observation always needs explicit retirement.
 ```

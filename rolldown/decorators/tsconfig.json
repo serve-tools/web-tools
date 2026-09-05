@@ -3,7 +3,7 @@
 	"compilerOptions": {
 		"types": ["node"]
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "test/**/.*.ts"],
+	"include": ["src/**/*.ts"],
 	"references": [
 		{
 			"path": "../../polyfills/decorator-metadata/tsconfig.json"

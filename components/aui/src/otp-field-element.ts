@@ -1,10 +1,12 @@
+import { NativeFieldElement, setNativeFieldState, synchronizeNativeFieldAttributes } from "./.native-field.js";
 import { isDirectInput, isFormElement } from "./.numeric.js";
 import { AttributeOwner } from "./.ownership.js";
 import { upgradeProperty } from "./.upgrade.js";
-import { AUIElement } from "./aui-element.js";
+import type { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** Coordinates one native one-time-code input with optional inert visual segments. */
-export class OTPFieldElement extends AUIElement {
+export class OTPFieldElement extends NativeFieldElement {
 	static readonly observedAttributes = ["disabled", "length", "readonly", "required"];
 
 	#input: HTMLInputElement | undefined;
@@ -65,64 +67,12 @@ export class OTPFieldElement extends AUIElement {
 		}
 	}
 
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
-	}
-
-	get readOnly(): boolean {
-		return this.hasAttribute("readonly");
-	}
-
-	set readOnly(value: boolean) {
-		this.toggleAttribute("readonly", Boolean(value));
-	}
-
-	get required(): boolean {
-		return this.hasAttribute("required");
-	}
-
-	set required(value: boolean) {
-		this.toggleAttribute("required", Boolean(value));
-	}
-
-	get validity(): ValidityState | null {
-		return this.input?.validity ?? null;
-	}
-
-	get validationMessage(): string {
-		return this.input?.validationMessage ?? "";
-	}
-
-	checkValidity(): boolean {
-		return this.input?.checkValidity() ?? true;
-	}
-
-	reportValidity(): boolean {
-		return this.input?.reportValidity() ?? true;
-	}
-
 	attributeChangedCallback(): void {
 		this.#synchronize();
 	}
 
-	protected override createLayoutRoot(): ShadowRoot {
-		return this.attachShadow({ mode: "open" });
-	}
-
-	protected override layout(content: DocumentFragment): void {
-		const editor = this.ownerDocument.createElement("slot");
-		const visuals = this.ownerDocument.createElement("span");
-		visuals.setAttribute("part", "segments");
-		visuals.setAttribute("aria-hidden", "true");
-		visuals.setAttribute("inert", "");
-		const segments = this.ownerDocument.createElement("slot");
-		segments.name = "segment";
-		visuals.append(segments);
-		content.append(editor, visuals);
+	protected override layout() {
+		return html`<slot></slot><span part="segments" aria-hidden="true" inert><slot name="segment"></slot></span>`;
 	}
 
 	protected override connect(connection: AUIElement.Connection): void {
@@ -150,6 +100,7 @@ export class OTPFieldElement extends AUIElement {
 			childList: true,
 			subtree: true,
 		});
+		connection.addCleanup(() => observer.disconnect());
 		for (const type of [
 			"beforeinput",
 			"input",
@@ -164,7 +115,6 @@ export class OTPFieldElement extends AUIElement {
 			this.addEventListener(type, this.#onEditorActivity, { capture: true, signal: connection.signal });
 		}
 		this.ownerDocument.addEventListener("reset", this.#onFormReset, { capture: true, signal: connection.signal });
-		connection.addCleanup(() => observer.disconnect());
 	}
 
 	#onFormReset = (event: Event): void => {
@@ -245,10 +195,10 @@ export class OTPFieldElement extends AUIElement {
 	#synchronize(): void {
 		const input = this.#input;
 		if (!input) {
-			this.#setState("disabled", this.disabled);
-			this.#setState("readonly", this.readOnly);
-			this.#setState("complete", false);
-			this.#setState("invalid", false);
+			setNativeFieldState(this.#internals, "disabled", this.disabled);
+			setNativeFieldState(this.#internals, "readonly", this.readOnly);
+			setNativeFieldState(this.#internals, "complete", false);
+			setNativeFieldState(this.#internals, "invalid", false);
 			this.#mirrorSegments("");
 			return;
 		}
@@ -271,19 +221,13 @@ export class OTPFieldElement extends AUIElement {
 				this.#owned.releaseAttribute(input, name);
 			}
 		}
-		for (const name of ["disabled", "readonly", "required"] as const) {
-			if (this.hasAttribute(name)) {
-				this.#owned.own(input, name, "");
-			} else {
-				this.#owned.releaseAttribute(input, name);
-			}
-		}
+		synchronizeNativeFieldAttributes(this, input, this.#owned);
 
 		this.#mirrorSegments(input.value);
-		this.#setState("disabled", input.disabled);
-		this.#setState("readonly", input.readOnly);
-		this.#setState("complete", length > 0 && input.value.length === length);
-		this.#setState("invalid", !input.validity.valid);
+		setNativeFieldState(this.#internals, "disabled", input.disabled);
+		setNativeFieldState(this.#internals, "readonly", input.readOnly);
+		setNativeFieldState(this.#internals, "complete", length > 0 && input.value.length === length);
+		setNativeFieldState(this.#internals, "invalid", !input.validity.valid);
 	}
 
 	#mirrorSegments(value: string): void {
@@ -301,14 +245,6 @@ export class OTPFieldElement extends AUIElement {
 				"data-active",
 				input === this.ownerDocument.activeElement && selectionStart === index ? "" : null,
 			);
-		}
-	}
-
-	#setState(state: string, present: boolean): void {
-		if (present) {
-			this.#internals.states.add(state);
-		} else {
-			this.#internals.states.delete(state);
 		}
 	}
 }

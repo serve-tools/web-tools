@@ -1,15 +1,18 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rename, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { API } from "typescript/unstable/async";
-import { CompilerSessionError, createCompilerSession } from "./session.mjs";
+import { CompilerSessionError, createCompilerSession } from "../../rolldown/typescript/src/internal/session.mjs";
 
 const compiler = fileURLToPath(new URL("../../node_modules/typescript/bin/tsc", import.meta.url));
+const compilerVersion = JSON.parse(
+	await readFile(new URL("../../node_modules/typescript/package.json", import.meta.url), "utf8"),
+).version;
 
 test("emits a referenced graph with CLI parity and updates one atomic generation at a time", async (context) => {
 	const fixture = await createFixture();
@@ -17,7 +20,7 @@ test("emits a referenced graph with CLI parity and updates one atomic generation
 	const session = await createCompilerSession({ configFile: fixture.configFile, cwd: fixture.root });
 	context.after(() => session.dispose());
 
-	assert.equal(session.compilerVersion, "7.1.0-dev.20260904.1");
+	assert.equal(session.compilerVersion, compilerVersion);
 	const initial = await session.refresh();
 	assert.equal(initial.generation, 1);
 	assert.equal(initial.projects.length, 4);
@@ -115,7 +118,10 @@ test("emits a referenced graph with CLI parity and updates one atomic generation
 	await writeFile(fixture.sources.c, dependency(11));
 	const inFlight = session.refresh({ changed: [fixture.sources.c] });
 	await new Promise((resolve) => setImmediate(resolve));
-	await writeFile(fixture.sources.c, dependency(13));
+	// Publish a complete save so the concurrent compiler cannot observe writeFile's truncation window.
+	const pendingSource = `${fixture.sources.c}.tmp`;
+	await writeFile(pendingSource, dependency(13));
+	await rename(pendingSource, fixture.sources.c);
 	const latest = session.refresh({ changed: [fixture.sources.c] });
 	const concurrentGenerations = await Promise.all([inFlight, latest]);
 	assert.match(concurrentGenerations[1].outputs.get(bOutput).text, /factor \* 13/);

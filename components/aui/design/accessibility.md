@@ -16,6 +16,10 @@ The unsupported test was removed, and the components do not duplicate their `Ele
 The August 28, 2026 gallery audit used Chromium's native accessibility tree and passed 80 checks across 15 snapshots.
 That result belongs only to the recorded source closure SHA-256 `e1fdd8ef04edf6b41f39e560264b1da6c2702b3790afce8d45986fcce4a31f5c`.
 It is historical evidence after any source change and must not be represented as a current-worktree result without rebuilding the gallery and repeating the capture.
+
+The September 4 production-template migration rebuilt the gallery and repeated all 80 checks successfully in Chromium 151.0.7922.34, with zero page or console errors.
+Its broad input closure SHA-256 was `7ba0464491f3a6fe09d45a810b59e69607f5fcf92b73cb9c8a965cf61f24b1e9` both before and after capture.
+The [current acceptance artifacts](/Users/jonathan/Documents/Codex/outputs/aui-template-migration-2026-09-04/acceptance/STATUS.md) preserve the source lock, full trees, and semantic checks.
 Neither DOM assertions nor an accessibility-tree capture proves what a screen reader announces or whether the interaction is usable.
 
 ## Manual support matrix

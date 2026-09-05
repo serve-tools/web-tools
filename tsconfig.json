@@ -16,5 +16,5 @@
 		"target": "es2025",
 		"types": []
 	},
-	"include": ["**/*.ts", "**/.*.ts"]
+	"include": ["**/*.ts"]
 }

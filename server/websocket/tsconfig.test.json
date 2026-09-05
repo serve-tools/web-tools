@@ -6,7 +6,7 @@
 		"noEmit": true,
 		"types": ["node", "vitest", "ws"]
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "test/**/.*.ts", "vitest*.config.ts"],
+	"include": ["src/**/*.ts", "vitest*.config.ts"],
 	"exclude": ["test/runtime"],
 	"references": [
 		{

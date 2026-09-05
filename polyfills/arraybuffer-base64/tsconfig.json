@@ -1,6 +1,6 @@
 {
 	"extends": "../../tsconfig.json",
-	"include": ["runtime/**/*.d.ts", "test/**/*.ts"],
+	"include": ["runtime/**/*.d.ts"],
 	"references": [
 		{
 			"path": "../../ponyfills/arraybuffer-base64/tsconfig.json"

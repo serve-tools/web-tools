@@ -1,5 +1,6 @@
 import { upgradeProperty } from "./.upgrade.js";
 import { AUIElement } from "./aui-element.js";
+import { html } from "./template.js";
 
 /** A committed calendar date and the user event that proposed it. */
 export interface CalendarChangeDetail {
@@ -203,13 +204,14 @@ export class CalendarElement extends AUIElement {
 		return this.attachShadow({ mode: "open" });
 	}
 
-	protected override layout(content: DocumentFragment): void {
+	protected override layout() {
 		this.#label.part.add("label");
 		this.#label.id = "month";
 		this.#grid.setAttribute("aria-labelledby", this.#label.id);
 		this.#grid.append(this.#weekdays, ...this.#rows);
-		content.append(this.#label, this.#grid, this.ownerDocument.createElement("slot"));
 		this.#render();
+
+		return html`${this.#label}${this.#grid}<slot></slot>`;
 	}
 
 	#onClick = (event: MouseEvent): void => {

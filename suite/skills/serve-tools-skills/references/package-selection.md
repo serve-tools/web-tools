@@ -35,7 +35,7 @@ Select the narrowest package that owns the required behavior.
 - Typed WebSocket request and subscription server handlers: `@serve-tools/server-websocket`.
 - Typed WebTransport operation and datagram server handlers: `@serve-tools/server-webtransport`.
 - Realtime structured serialization, message guards, and reliable stream framing: `@serve-tools/realtime-protocol`.
-- Signal-aware functional HTML, SVG, and MathML templating: `@serve-tools/signal-dom`; opt-in tagged HTML with persistent `html` or managed `scopedHtml`: `@serve-tools/signal-dom/template`.
+- Signal-aware functional HTML, SVG, and MathML templating: `@serve-tools/signal-dom`; opt-in tagged HTML descriptions with `html` and capture-aware `createFragment`: `@serve-tools/signal-dom/template`.
 - EventTarget state and media queries as disposable read-only Signals: `@serve-tools/signal-event-target`.
 - Complete EventSource client with latest-event Signal state and IDs: `@serve-tools/signal-event-source`.
 - Complete messaging client with reactive subscription Signal state: `@serve-tools/signal-messaging`.
@@ -57,6 +57,7 @@ Select the narrowest package that owns the required behavior.
 - Install a native-preserving global `Symbol.metadata`: `@serve-tools/polyfill-decorator-metadata`.
 - Import a module-scoped metadata symbol without global mutation: `@serve-tools/ponyfill-decorator-metadata`.
 - Transform modern TC39 decorators in Rolldown and Vite: `@serve-tools/rolldown-decorators`.
+- Experimentally compile a referenced TypeScript project graph in memory for Vite or Rolldown: `@serve-tools/rolldown-typescript`.
 - Install `Uint8Array.prototype.toBase64` in Node.js: `@serve-tools/polyfill-arraybuffer-base64`.
 - Import base64 encoding in Node.js without global mutation: `@serve-tools/ponyfill-arraybuffer-base64`.
 - Install idle-callback globals: `@serve-tools/polyfill-request-idle-callback`.
@@ -95,4 +96,5 @@ Select `@serve-tools/signal` separately only when application code imports it di
 - Choose a ponyfill when the fallback implementation itself is required, a non-apply polyfill export for native-first selection, and an apply entrypoint for global compatibility.
 - Choose the decorator metadata polyfill when emitted decorator code reads `Symbol.metadata`; choose its ponyfill only when every producer and consumer explicitly imports the same symbol.
 - Choose `@serve-tools/rolldown-decorators` for decorator syntax and runtime semantics; the metadata polyfill supplies only the global symbol key.
+- Choose `@serve-tools/rolldown-typescript` only for its supported in-memory compilation path; retain normal TypeScript CLI builds for declarations, package artifacts, publishing, generated assets, and configuration-time code.
 - Choose `@serve-tools/vite-polyfills` when support should be derived and injected by the build rather than selected in application code.

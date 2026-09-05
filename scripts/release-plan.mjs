@@ -160,7 +160,14 @@ export function createReleasePlan({ packages, publishedVersions, selector, reque
 
 export function loadSemver() {
 	// Release planning runs before npm ci, so use semver bundled by the repository's pinned global npm.
-	const globalRoot = execFileSync("npm", ["root", "--global"], { encoding: "utf8" }).trim();
+	if (process.env.npm_execpath) {
+		return createRequire(process.env.npm_execpath)("semver");
+	}
+
+	const globalRoot = execFileSync("npm", ["root", "--global"], {
+		encoding: "utf8",
+		shell: process.platform === "win32",
+	}).trim();
 	return require(path.join(globalRoot, "npm", "node_modules", "semver"));
 }
 

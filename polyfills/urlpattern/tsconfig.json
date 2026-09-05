@@ -5,7 +5,7 @@
 		"outDir": "dist",
 		"rootDir": "src"
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts"],
+	"include": ["src/**/*.ts"],
 	"references": [
 		{
 			"path": "../../ponyfills/urlpattern/tsconfig.json"

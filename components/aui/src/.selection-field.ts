@@ -11,7 +11,8 @@ import {
 	unregisterSelectionOwner,
 } from "./.selection.js";
 import { upgradeProperty } from "./.upgrade.js";
-import { AUIElement } from "./aui-element.js";
+import type { AUIElement } from "./aui-element.js";
+import { FormAssociatedElement } from "./form-associated-element.js";
 import { OptionElement } from "./option-element.js";
 
 /** Immutable selection proposed by a FACE collection field. */
@@ -55,8 +56,7 @@ const htmlNamespace = "http://www.w3.org/1999/xhtml";
 const isHTMLElement = (element: Element): element is HTMLElement => element.namespaceURI === htmlNamespace;
 
 /** Shared FACE collection mechanics for custom select and combobox controls. */
-export abstract class SelectionFieldElement extends AUIElement {
-	static readonly formAssociated = true;
+export abstract class SelectionFieldElement extends FormAssociatedElement {
 	static readonly observedAttributes = [
 		"aria-label",
 		"aria-labelledby",
@@ -77,10 +77,8 @@ export abstract class SelectionFieldElement extends AUIElement {
 	#controlAbort: AbortController | undefined;
 	#controlDisabled = false;
 	#controlReadOnly = false;
-	#customValidity = "";
 	#dirty = false;
 	#disabledByForm = false;
-	#internals = this.attachInternals();
 	#invalidOptions = new Set<OptionElement>();
 	#ownedLabels: HTMLLabelElement[] = [];
 	#ownedPopup: HTMLElement | undefined;
@@ -170,14 +168,6 @@ export abstract class SelectionFieldElement extends AUIElement {
 		this.#setRequestedValues(requested);
 	}
 
-	get name(): string {
-		return this.getAttribute("name") ?? "";
-	}
-
-	set name(value: string) {
-		this.setAttribute("name", String(value));
-	}
-
 	get multiple(): boolean {
 		return this.hasAttribute("multiple");
 	}
@@ -186,61 +176,7 @@ export abstract class SelectionFieldElement extends AUIElement {
 		this.toggleAttribute("multiple", Boolean(value));
 	}
 
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
-	}
-
-	get readOnly(): boolean {
-		return this.hasAttribute("readonly");
-	}
-
-	set readOnly(value: boolean) {
-		this.toggleAttribute("readonly", Boolean(value));
-	}
-
-	get required(): boolean {
-		return this.hasAttribute("required");
-	}
-
-	set required(value: boolean) {
-		this.toggleAttribute("required", Boolean(value));
-	}
-
-	get form(): HTMLFormElement | null {
-		return this.#internals.form;
-	}
-
-	get labels(): NodeList {
-		return this.#internals.labels;
-	}
-
-	get validity(): ValidityState {
-		return this.#internals.validity;
-	}
-
-	get validationMessage(): string {
-		return this.#internals.validationMessage;
-	}
-
-	get willValidate(): boolean {
-		return this.#internals.willValidate;
-	}
-
-	checkValidity(): boolean {
-		return this.#internals.checkValidity();
-	}
-
-	reportValidity(): boolean {
-		return this.#internals.reportValidity();
-	}
-
-	/** Sets or clears a persistent custom validity error, following the native control contract. */
-	setCustomValidity(message: string): void {
-		this.#customValidity = String(message);
+	protected override synchronizeValidity(): void {
 		this.#synchronize();
 	}
 
@@ -253,7 +189,7 @@ export abstract class SelectionFieldElement extends AUIElement {
 		for (const option of this.options()) {
 			invalidateSelectionId(option);
 		}
-		for (const label of this.#internals.labels) {
+		for (const label of this.internals.labels) {
 			if (label.nodeType === 1) {
 				invalidateSelectionId(label as Element);
 			}
@@ -787,7 +723,7 @@ export abstract class SelectionFieldElement extends AUIElement {
 	}
 
 	#synchronizeLabels(control: HTMLElement): void {
-		const labels = [...this.#internals.labels].filter(
+		const labels = [...this.internals.labels].filter(
 			(label): label is HTMLLabelElement => label.nodeType === 1 && (label as HTMLLabelElement).control === this,
 		);
 		for (const label of this.#ownedLabels) {
@@ -852,7 +788,7 @@ export abstract class SelectionFieldElement extends AUIElement {
 			this.#controlReadOnly = this.readOnly;
 		}
 
-		this.#internals.setFormValue(
+		this.internals.setFormValue(
 			this.#controlDisabled || this.#invalidOptions.size > 0 || !this.name
 				? null
 				: this.multiple
@@ -861,16 +797,16 @@ export abstract class SelectionFieldElement extends AUIElement {
 			JSON.stringify(this.#values),
 		);
 		const valueMissing = !this.#controlDisabled && this.required && this.#values.length === 0;
-		if (this.#customValidity) {
-			this.#internals.setValidity(
+		if (super.customValidity) {
+			this.internals.setValidity(
 				{ customError: true, ...(valueMissing ? { valueMissing: true } : {}) },
-				this.#customValidity,
+				super.customValidity,
 				control,
 			);
 		} else if (valueMissing) {
-			this.#internals.setValidity({ valueMissing: true }, "Please select an option.", control);
+			this.internals.setValidity({ valueMissing: true }, "Please select an option.", control);
 		} else {
-			this.#internals.setValidity({});
+			this.internals.setValidity({});
 		}
 	}
 

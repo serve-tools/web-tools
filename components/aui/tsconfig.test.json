@@ -6,7 +6,7 @@
 		"noEmit": true,
 		"types": ["vitest"]
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts", "test/**/*.ts", "examples/**/*.ts", "vitest*.config.ts"],
+	"include": ["src/**/*.ts", "src/**/.*.ts", "test/*.types.ts", "test/*.recipes.ts", "vitest*.config.ts"],
 	"references": [
 		{
 			"path": "../../client/input/tsconfig.json"
