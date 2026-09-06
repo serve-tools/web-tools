@@ -1,5 +1,5 @@
 import type { DB, DBEntry, StoreKey, StoreValue } from "../src/client-db.js";
-import type * as DBTypes from "../src/lib/.types.js";
+import type * as DBTypes from "../src/lib/_types.js";
 
 interface Schema {
 	users: DB.Store<{ id: string; name: string }, string, { byName: string }>;

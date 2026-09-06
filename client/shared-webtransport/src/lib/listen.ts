@@ -1,6 +1,6 @@
 import { listen as listenForMessages } from "@serve-tools/client-messaging/scope/worker";
 import { connect as connectWebTransport } from "@serve-tools/client-webtransport";
-import type * as T from "./.types.js";
+import type * as T from "./_types.js";
 import type {
 	ConnectOptions,
 	Protocol,
@@ -10,7 +10,7 @@ import type {
 	SharedWebTransportServer,
 	SubscribeOptions,
 	Subscription,
-} from "./.types.js";
+} from "./_types.js";
 
 type UntypedClient = {
 	request(name: string, input: unknown, options: RequestOptions): Promise<unknown>;

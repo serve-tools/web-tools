@@ -1,11 +1,11 @@
 # Release plan — September 4, 2026
 
 The user authorized publication after all work is committed, pushed, and CI passes.
-AUI remains private and is not part of this release.
+Base remains private and is not part of this release.
 The September 4 registry and shipped-file audit found the thirteen prepared versions below unpublished and identified one required patch for Rolldown Decorators.
 
-The later AUI template migration is separate from that publication authorization.
-Its AUI `0.1.0`, Signal DOM `0.3.0`, and Client Signals `0.3.1` candidates remain held for review; this task has no authorization to push or publish them.
+The later Base template migration is separate from that publication authorization.
+Its Base `0.1.0`, Signal DOM `0.3.0`, and Client Signals `0.3.1` candidates remain held for review; this task has no authorization to push or publish them.
 
 ## Approved release batch
 
@@ -25,7 +25,7 @@ The table follows the release planner's dependency order.
 | `@serve-tools/ponyfill-observable` | `0.0.1` | First release with independent cold executions, explicit imports, and documented proposal differences.            |
 | `@serve-tools/polyfill-observable` | `0.0.1` | Native-preserving Observable, Subscriber, and EventTarget.when installers and selective exports.                  |
 | `@serve-tools/rolldown-decorators` | `0.1.3` | Include the required runtime helper in built packages; reduce transform traversal and runtime sorting overhead.   |
-| `@serve-tools/skills`              | `0.0.6` | Package selection and availability guidance, including the new packages and private AUI boundary.                 |
+| `@serve-tools/skills`              | `0.0.6` | Package selection and availability guidance, including the new packages and private Base boundary.                |
 | `@serve-tools/vite-polyfills`      | `0.3.0` | Detect the new polyfills, expose their types, prevent recursive injection, and consolidate built-in definitions.  |
 
 DOM Fragment must precede Signal DOM, which must precede Client Signals.
@@ -40,32 +40,32 @@ Those packages do not need new releases.
 
 ## Existing release holds
 
-| Package or work                     | Reason                                                                                                                                                                                                                                                                                                                                                  |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@serve-tools/aui@0.1.0`            | The corrected Checkbox latency and retention gates pass, but the [accepted plan](components/aui/design/plan.md#release-holds) still requires resolving the bundle-size shortfall and completing manual acceptance. The [template migration review](components/aui/design/template-migration.md) records the new production API and validation evidence. |
-| Agent benchmark reports and harness | Repository research/tooling, not a package release. Preserve frozen results; they do not justify replacing the published Skills wholesale.                                                                                                                                                                                                              |
+| Package or work                      | Reason                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@serve-tools/base-components@0.1.0` | The corrected Checkbox latency and retention gates pass, but the [accepted plan](components/base/design/plan.md#release-holds) still requires resolving the bundle-size shortfall and completing manual acceptance. The [template migration review](components/base/design/template-migration.md) records the new production API and validation evidence. |
+| Agent benchmark reports and harness  | Repository research/tooling, not a package release. Preserve frozen results; they do not justify replacing the published Skills wholesale.                                                                                                                                                                                                                |
 
-An AUI preview is a separate decision requiring explicit narrower preview criteria, not an implicit waiver of the existing release gates.
+An Base preview is a separate decision requiring explicit narrower preview criteria, not an implicit waiver of the existing release gates.
 The independent `DisposableElement` remains internal; publishing the template entrypoint does not make it a supported component base.
 Observable and Composites are not held for renaming or a preview-tag decision: the requested first releases retain their current names and intentional contracts.
 Their initial versions do not promise exact native-proposal fidelity.
 
-## AUI work before release
+## Base work before release
 
-The [repeated-mount diagnostic](components/aui/benchmark/RESULTS.md) found that full validation after every sample perturbed later mount measurements: the paired mount-median ratio was 3.931, with a 95% interval of 3.067–5.037.
-This AUI-only result is not a production speedup or a new Base UI comparison, and it does not close the mount-performance gate.
-The separately frozen, symmetric [current Checkbox comparison](components/aui/design/performance.md#current-checkbox-comparison-september-4-2026) now separates repeated validation effects while preserving semantic checks and passes all five workload median and p95 bounds.
+The [repeated-mount diagnostic](components/base/benchmark/RESULTS.md) found that full validation after every sample perturbed later mount measurements: the paired mount-median ratio was 3.931, with a 95% interval of 3.067–5.037.
+This Base-only result is not a production speedup or a new Base UI comparison, and it does not close the mount-performance gate.
+The separately frozen, symmetric [current Checkbox comparison](components/base/design/performance.md#current-checkbox-comparison-september-4-2026) now separates repeated validation effects while preserving semantic checks and passes all five workload median and p95 bounds.
 The distinct template experiment estimates 42% less mounting time and 59% less reconnection time than its own frozen baseline; neither comparison establishes whole-library superiority.
-The September 4 production migration changes every constructed AUI layout to return an inert `html` description.
+The September 4 production migration changes every constructed Base layout to return an inert `html` description.
 The base materializes that result inside its binding scope with the element as its event-handler context.
 Standalone callers use `createFragment(result, owner)`; deprecated `html(owner)` and `scopedHtml(owner)` preserve existing ownership behavior.
 Failed layout construction rolls back managed resources, while ordinary disconnect only suspends observation.
 Connection resources use lazy `DisposableStack` and AbortController allocation; environments without `DisposableStack` need the documented explicit polyfill.
 Native checkedness, validity, form values, and event ordering remain synchronous.
 Signal DOM `0.2.0` is already published, so this follow-up prepares `0.3.0` and Client Signals `0.3.1`, outside the historical batch above.
-See the [migration review](components/aui/design/template-migration.md) for final checks, source-locked measurements, and approval requirements.
+See the [migration review](components/base/design/template-migration.md) for final checks, source-locked measurements, and approval requirements.
 
-The [accessibility acceptance checklist](components/aui/design/accessibility.md) covers Chrome, Firefox, and Safari.
+The [accessibility acceptance checklist](components/base/design/accessibility.md) covers Chrome, Firefox, and Safari.
 It requires manual NVDA checks with Chrome and Firefox, and VoiceOver with Safari, with supplemental VoiceOver checks in Chrome and Firefox.
 All manual rows remain unverified; automated engine tests and historical accessibility-tree captures are not substitutes.
 The existing documented behavior gaps also need an explicit release-scope decision rather than a claim of complete Base UI parity.
@@ -74,8 +74,8 @@ The existing documented behavior gaps also need an explicit release-scope decisi
 
 The polyfill implementation was committed before the reduction pass.
 The [reduction report](benchmark/REDUCTION-2026-09-03.md) records retained improvements, rejected candidates, measurements, and the subsequent CI repairs.
-The private AUI Skill/release/catalog inconsistencies and the Firefox menubar pointer-state failure are fixed.
-AUI remains excluded from the public workspace inventory and release choices.
+The private Base Skill/release/catalog inconsistencies and the Firefox menubar pointer-state failure are fixed.
+Base remains excluded from the public workspace inventory and release choices.
 
 At implementation commit `267992547de69eb0b9a2f7ac33dbd69a7c250918`, [CI run 33836755336](https://github.com/serve-tools/web-tools/actions/runs/33836755336) passed all five jobs: Node 22, Node 24, Node 26 full verification, Bun, and Deno.
 Final local browser verification passed 4,687 tests with one existing native-feature skip; thirty consecutive focused Firefox menubar suites also passed.

@@ -6,12 +6,5 @@
 		"lib": ["ES2025", "DOM"],
 		"noEmit": true
 	},
-	"include": [
-		"benchmark/**/*.ts",
-		"src/**/*.ts",
-		"src/**/.*.ts",
-		"test/**/*.ts",
-		"test/**/.*.ts",
-		"vitest*.config.ts"
-	]
+	"include": ["benchmark/**/*.ts", "src/**/*.ts", "test/**/*.ts", "test/**/.*.ts", "vitest*.config.ts"]
 }

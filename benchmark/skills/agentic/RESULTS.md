@@ -147,7 +147,7 @@ The package TypeScript build passed before the live run.
 All 30 focused evaluation tests pass, covering the golden artifacts, compiling semantic mutants, frozen discovery and tools, provider protocol and telemetry, paired statistics, and the new fairness/validation regressions.
 All 68 package Skills and the repository Skill validate.
 The new source passes Biome, the report/protocol Markdown passes dprint, and the diff whitespace check passes.
-Required repository-wide `npm run verify` remains blocked by unrelated unused AUI files/exports (`components/aui/src/.experiment.ts` and `captureError` in `components/aui/src/lib/.internals.ts`).
+Required repository-wide `npm run verify` remains blocked by unrelated unused Base files/exports (`components/base/src/.experiment.ts` and `captureError` in `components/base/src/lib/.internals.ts`).
 The older `check:skill-bench` suite also remains blocked by missing catalog/usage-task coverage for the concurrently added `@serve-tools/client-dom-fragment` package.
 
 ## Evidence and reproduction

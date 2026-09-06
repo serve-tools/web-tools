@@ -59,7 +59,7 @@
 		"client-signals/storage",
 		"client-signals/websocket",
 		"client-signals/webtransport",
-		"components/aui",
+		"components/base",
 		"core/async-operation",
 		"core/http-contract",
 		"core/http-contract-interop",
@@ -158,7 +158,7 @@
 		"typecheck:demos": "npm run typecheck:local --workspaces --if-present",
 		"typecheck:workspaces": "node scripts/typecheck-workspaces.mjs",
 		"verify": "npm run verify:node && npm run test:browser:consolidated && npm run test:typescript-adapter:browser && npm run test:typescript-adapter:distribution",
-		"verify:node": "npm run lint && npm run check:unused && npm run format:check && npm run check:tsconfig-references && npm run typecheck && npm run test:node && npm run check:skills && npm run check:skill-bench && npm run check:release && npm run build:extras && npm run check:packages && npm run check:typescript-migration && npm run test:typescript-adapter:node"
+		"verify:node": "npm run lint && npm run format:check && npm run check:tsconfig-references && npm run typecheck && npm run check:unused && npm run test:node && npm run check:skills && npm run check:skill-bench && npm run check:release && npm run build:extras && npm run check:packages && npm run check:typescript-migration && npm run test:typescript-adapter:node"
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "0.18.5",
@@ -391,7 +391,7 @@
 					"test/*.{recipes,types}.ts"
 				]
 			},
-			"components/aui": {
+			"components/base": {
 				"entry": [
 					"benchmark/**/*.{js,mjs}",
 					"benchmark/template/fixture.ts",

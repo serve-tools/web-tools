@@ -1,7 +1,7 @@
 import type { Context } from "@serve-tools/client-context";
 import type { Signal } from "@serve-tools/signal";
-import type { ContextElement, ContextUpdate } from "./.context.js";
-import { AtomicContextConsumer, initializeContextState, setContextState } from "./.context.js";
+import type { ContextElement, ContextUpdate } from "./_context.js";
+import { AtomicContextConsumer, initializeContextState, setContextState } from "./_context.js";
 
 /** Creates a read-only signal-backed accessor for a consumed context value. */
 export const consume =

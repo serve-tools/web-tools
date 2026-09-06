@@ -651,7 +651,7 @@ No git or npm registry mutation was performed for this follow-up.
 ### Commit preparation after formatting
 
 The user's formatting changes are preserved, and the package and suite guides now consistently document the synchronous `typescript()` factory, `~7.1.0-0` compiler range, and supported host/Node versions.
-The TypeScript package changes are isolated from unrelated staged AUI, Signal DOM, and configuration changes, including separate portions of shared manifests and suite documentation.
+The TypeScript package changes are isolated from unrelated staged Base, Signal DOM, and configuration changes, including separate portions of shared manifests and suite documentation.
 Clean installation and the repository build pass for this isolated change set.
 The first full verification attempt reached the standalone watcher suite and failed once when an atomic replacement event was missed; the unchanged 27-test adapter Node suite passed on rerun.
 The unused-code check also passed after the clean checkout's required build outputs were generated.

@@ -9,5 +9,5 @@ export type {
 	SharedEventSourceClient,
 	SubscribeOptions,
 	Subscription,
-} from "../.types.js";
+} from "../_types.js";
 export { connect } from "../connect.js";

@@ -1,10 +1,10 @@
 /// <reference lib="esnext.disposable" />
 /// <reference lib="webworker" />
 
-import type * as T from "../.types.js";
+import type * as T from "../_types.js";
 import { listen as listenForWebTransport } from "../listen.js";
 
-export type * from "../.types.js";
+export type * from "../_types.js";
 
 /** Opens one worker-owned WebTransport session shared by every connected page. */
 export const listen = listenForWebTransport;

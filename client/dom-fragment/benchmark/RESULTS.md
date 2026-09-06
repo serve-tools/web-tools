@@ -51,4 +51,4 @@ It avoids per-move snapshot arrays and retained Range state; custom-element call
 All 13 tests passed in each of Chromium, Firefox, and WebKit (39 test executions), covering identity, live iterables, nesting, dynamic edits, adoption, shadow roots, invalid destinations, damaged boundaries, and synchronous reentry.
 Typechecking, build, package-shape checks, Skills validation, formatting, and release-planning tests passed.
 Root `npm run verify` stopped at unrelated Knip findings.
-A final recheck leaves the existing AUI `.experiment.ts` file and `captureError` export as blockers outside this package.
+A final recheck leaves the existing Base `.experiment.ts` file and `captureError` export as blockers outside this package.

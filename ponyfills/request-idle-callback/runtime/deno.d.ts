@@ -1,1 +1,1 @@
-export * from "./.types.js";
+export * from "./_types.js";

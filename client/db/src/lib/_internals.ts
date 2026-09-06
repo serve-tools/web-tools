@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import type { DBTransaction, DBTransactionCallback, Method, Operation, SchemaDefinition, StoreName } from "./.types.js";
+import type { DBTransaction, DBTransactionCallback, Method, Operation, SchemaDefinition, StoreName } from "./_types.js";
 
 export const completion = (transaction: IDBTransaction, signal?: AbortSignal): Promise<void> =>
 	new Promise((resolve, reject) => {

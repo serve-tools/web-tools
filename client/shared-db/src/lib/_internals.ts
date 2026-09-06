@@ -13,7 +13,7 @@ import type {
 	RemoteQueryOptions,
 	RemoteWriteOptions,
 	StoreDefinition,
-} from "./.types.js";
+} from "./_types.js";
 
 export const encodeQuery = (query: IDBValidKey | IDBKeyRange | null | undefined): EncodedQuery => {
 	if (typeof query !== "object" || query === null || !(query instanceof IDBKeyRange)) {

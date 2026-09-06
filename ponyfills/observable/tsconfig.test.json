@@ -6,12 +6,5 @@
 		"types": ["node", "vitest"],
 		"lib": ["ES2025", "DOM"]
 	},
-	"include": [
-		"src/**/*.ts",
-		"src/**/.*.ts",
-		"test/**/*.ts",
-		"test/**/.*.ts",
-		"benchmark/**/*.ts",
-		"vitest.benchmark.config.ts"
-	]
+	"include": ["src/**/*.ts", "test/**/*.ts", "test/**/.*.ts", "benchmark/**/*.ts", "vitest.benchmark.config.ts"]
 }

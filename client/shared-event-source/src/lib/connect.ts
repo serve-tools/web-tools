@@ -1,5 +1,5 @@
 import { connect as connectPort } from "@serve-tools/client-messaging";
-import type * as T from "./.types.js";
+import type * as T from "./_types.js";
 import type {
 	BridgeProtocol,
 	EventMap,
@@ -9,7 +9,7 @@ import type {
 	SharedEventSourceClient,
 	SubscribeOptions,
 	Subscription,
-} from "./.types.js";
+} from "./_types.js";
 
 /** Connects a page client to the native EventSource owned by a shared worker. */
 export const connect = <const Events extends EventMap & EventMapDefinition<Events>>(

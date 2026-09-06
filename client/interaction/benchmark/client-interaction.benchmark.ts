@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 
 import { benchmark } from "../../benchmark.js";
-import { settle } from "../src/lib/.result.js";
+import { settle } from "../src/lib/_result.js";
 
 test("interaction settlement hot path", async () => {
 	const platformPromise = Promise.resolve(1);

@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 /// <reference lib="esnext.disposable" />
 
-import type * as T from "../.types.js";
+import type * as T from "../_types.js";
 import { connect as connectPort } from "../connect.js";
 
 export { RemoteError } from "@serve-tools/client-messaging";
@@ -13,7 +13,7 @@ export type {
 	SharedWebSocketServer,
 	SubscribeOptions,
 	Subscription,
-} from "../.types.js";
+} from "../_types.js";
 
 /** Connects a typed client to the physical WebSocket owned by a shared worker. */
 export const connect = connectPort;

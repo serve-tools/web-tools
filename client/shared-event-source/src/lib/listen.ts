@@ -1,6 +1,6 @@
 import { connect as connectEventSource } from "@serve-tools/client-event-source";
 import { listen as listenForMessages } from "@serve-tools/client-messaging/scope/worker";
-import type * as T from "./.types.js";
+import type * as T from "./_types.js";
 import type {
 	BridgeProtocol,
 	ConnectOptions,
@@ -9,7 +9,7 @@ import type {
 	EventMessage,
 	JSONValue,
 	SharedEventSourceServer,
-} from "./.types.js";
+} from "./_types.js";
 
 type UntypedClient = {
 	subscribe(name: string, listener: (event: EventMessage<JSONValue>) => void): { unsubscribe(): void };

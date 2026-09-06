@@ -37,7 +37,7 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 ## Packages
 
 - [`@serve-tools/async-operation`](./core/async-operation/) provides owned asynchronous work with typed events, terminal results, cancellation, backpressure, and disposal.
-- [`@serve-tools/aui`](./components/aui/) is the developing web-component library with owned signal lifecycles.
+- [`@serve-tools/base-components`](./components/base/) is the developing web-component library with owned signal lifecycles.
 - [`@serve-tools/client`](./client/client/) provides namespace-oriented access to the client libraries and focused capability subpaths.
 - [`@serve-tools/client-context`](./client/context/) provides interoperable context events, lifecycle-owned providers and consumers, and indexed late-registration replay.
 - [`@serve-tools/client-db`](./client/db/) provides promise-based IndexedDB operations, transactions, and scans.

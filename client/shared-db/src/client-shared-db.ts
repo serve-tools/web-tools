@@ -6,4 +6,4 @@ export type {
 	SharedDBSubscribeOptions,
 	SharedDBSubscriber,
 	SharedDBSubscription,
-} from "./lib/.types.js";
+} from "./lib/_types.js";

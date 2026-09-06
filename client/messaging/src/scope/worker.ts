@@ -1,6 +1,6 @@
 /// <reference lib="webworker" />
 
-import type { ProtocolDefinition } from "../lib/.types.js";
+import type { ProtocolDefinition } from "../lib/_types.js";
 import type * as T from "../lib/types.js";
 
 export type * from "../lib/types.js";

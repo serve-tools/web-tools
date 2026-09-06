@@ -1,7 +1,7 @@
 /// <reference lib="esnext.disposable" />
 /// <reference lib="webworker" />
 
-import type * as T from "../.types.js";
+import type * as T from "../_types.js";
 import { listen as listenForWebSocket } from "../listen.js";
 
 export type {
@@ -13,7 +13,7 @@ export type {
 	SharedWebSocketServer,
 	SubscribeOptions,
 	Subscription,
-} from "../.types.js";
+} from "../_types.js";
 
 /** Opens one physical WebSocket and serves it to every port connected to this shared worker. */
 export const listen = listenForWebSocket;

@@ -1,6 +1,6 @@
 import { connect as connectHTTPStream } from "@serve-tools/client-http-stream";
 import { listen as listenForMessages } from "@serve-tools/client-messaging/scope/worker";
-import type * as T from "./.types.js";
+import type * as T from "./_types.js";
 import type {
 	ConnectOptions,
 	Protocol,
@@ -10,7 +10,7 @@ import type {
 	SharedHTTPStreamServer,
 	SubscribeOptions,
 	Subscription,
-} from "./.types.js";
+} from "./_types.js";
 
 type UntypedClient = {
 	request(name: string, input: unknown, options: RequestOptions): Promise<unknown>;

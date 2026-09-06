@@ -3,7 +3,7 @@
 import type * as PublicTypes from "../src/client-messaging.js";
 import type { Handlers, MessageEndpoint, ProtocolType, RequestContext } from "../src/client-messaging.js";
 import { connect, serve, transfer } from "../src/client-messaging.js";
-import type * as Types from "../src/lib/.types.js";
+import type * as Types from "../src/lib/_types.js";
 import { connect as connectWindow } from "../src/scope/window.js";
 import { listen as listenWorker } from "../src/scope/worker.js";
 

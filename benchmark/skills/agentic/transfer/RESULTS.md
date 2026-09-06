@@ -102,7 +102,7 @@ A future confirmatory run needs a new protocol and independent freeze incorporat
 
 The package TypeScript build and all 68 package Skill plus 1 repository Skill checks passed.
 The focused evaluation suite has 30 original tests plus 19 transfer/post-run tests.
-Full repository verification remains blocked by unrelated AUI experimental unused-file/export findings; this follow-up does not claim a green whole-repository verification.
+Full repository verification remains blocked by unrelated Base experimental unused-file/export findings; this follow-up does not claim a green whole-repository verification.
 
 Evidence: [original report](/Users/jonathan/Documents/Codex/2026-08-31/recipe-transfer-240/report.md), [analysis](/Users/jonathan/Documents/Codex/2026-08-31/recipe-transfer-240/analysis.md), [fairness rescore](/Users/jonathan/Documents/Codex/2026-08-31/recipe-transfer-240/fairness/report.md), [quality rescore](/Users/jonathan/Documents/Codex/2026-08-31/recipe-transfer-240/quality/report.md), [blind audit A](/Users/jonathan/Documents/Codex/2026-08-31/recipe-transfer-240/blind-audit-a.md), [blind audit B](/Users/jonathan/Documents/Codex/2026-08-31/recipe-transfer-240/blind-audit-b.md).
 The evidence directory also retains all 240 artifacts/traces, exact conditions, planned identities, the frozen harness, runtime archive, and audit selection key.

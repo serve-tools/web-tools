@@ -1,7 +1,7 @@
 /// <reference lib="esnext.disposable" />
 /// <reference lib="webworker" />
 
-import type * as T from "../.types.js";
+import type * as T from "../_types.js";
 import { listen as listenForDatabase } from "../listen.js";
 
 export type {
@@ -12,7 +12,7 @@ export type {
 	SharedDBSubscribeOptions,
 	SharedDBSubscriber,
 	SharedDBSubscription,
-} from "../.types.js";
+} from "../_types.js";
 
 /** Opens a database and serves point operations to every port connected to this shared worker. */
 export const listen = listenForDatabase;

@@ -21,5 +21,5 @@ export type {
 	StoreKey,
 	StoreName,
 	StoreValue,
-} from "./lib/.types.js";
+} from "./lib/_types.js";
 export { DB } from "./lib/DB.js";

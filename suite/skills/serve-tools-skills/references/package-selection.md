@@ -5,7 +5,7 @@ Select the narrowest package that owns the required behavior.
 - Cold Web Observable executions and AbortSignal-based subscriptions without global mutation: `@serve-tools/ponyfill-observable`.
 - Interned named-value Map keys and Set values without global mutation: `@serve-tools/ponyfill-composites`.
 - Owned async events, terminal results, backpressure, and cancellation: `@serve-tools/async-operation`.
-- Web components and a base element with automatically suspended signal bindings: `@serve-tools/aui` (workspace-only in this guide version; not yet published to npm).
+- Web components and a base element with automatically suspended signal bindings: `@serve-tools/base-components` (workspace-only in this guide version; not yet published to npm).
 - Typed JSON HTTP contracts, schema-free Fetch clients, validated handlers, and optional OpenAPI: `@serve-tools/http-contract`.
 - Runtime-neutral typed route declarations, matching, and URL construction: `@serve-tools/router`.
 - Namespace facade for several browser utilities: `@serve-tools/client`.

@@ -4,7 +4,7 @@
 		"outDir": "dist",
 		"rootDir": "src"
 	},
-	"include": ["src/**/*.ts", "src/**/.*.ts"],
+	"include": ["src/**/*.ts"],
 	"references": [
 		{
 			"path": "../event-source/tsconfig.json"

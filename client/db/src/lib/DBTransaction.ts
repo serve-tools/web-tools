@@ -1,10 +1,10 @@
+import { completion, noop } from "./_internals.js";
 import type {
 	DBTransaction as DBTransactionInterface,
 	NativeTransaction,
 	SchemaDefinition,
 	StoreName,
-} from "./.types.js";
-import { completion, noop } from "./_internals.js";
+} from "./_types.js";
 import { DBObjectStore } from "./DBObjectStore.js";
 
 /** A transaction whose stores and completion are exposed through promises. */

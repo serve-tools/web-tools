@@ -117,8 +117,8 @@ The remaining code-size opportunities are small; larger reductions would require
 - Package typecheck, build, 42 Node tests and 126 browser tests pass; browser correctness ran in Chromium, Firefox and WebKit.
 - Publint and Are the Types Wrong ESM package checks pass.
 - Package Biome and Markdown formatting checks pass; 67 package Skills and the repository Skill validate.
-- Root `npm run verify` was attempted before and after selection, but stops at unrelated `components/aui/src/lib/DisposableElement.ts` lint.
-- A separate root Knip check flags unrelated AUI internal files; it reports no observable-package issue.
+- Root `npm run verify` was attempted before and after selection, but stops at unrelated `components/base/src/lib/DisposableElement.ts` lint.
+- A separate root Knip check flags unrelated Base internal files; it reports no observable-package issue.
 - Existing dependencies were reused; this is not clean-install validation. No git, GitHub or registry mutation was performed.
 
 Revision: `348a053ac8a644bd38f9f66b42a02793aeeb515e`, plus the pre-existing untracked observable package and unrelated dirty worktree changes.

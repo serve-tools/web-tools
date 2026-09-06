@@ -3,8 +3,8 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Handlers, Protocol, RequestContext } from "../src/client-messaging.js";
 import { connect, RemoteError, serve, transfer } from "../src/client-messaging.js";
-import type { ProtocolDefinition } from "../src/lib/.types.js";
 import { protocol } from "../src/lib/_internals.js";
+import type { ProtocolDefinition } from "../src/lib/_types.js";
 
 const open = <P extends Protocol & ProtocolDefinition<P>>(handlers: Handlers<P>) => {
 	const { port1, port2 } = new MessageChannel();

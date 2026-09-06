@@ -1,4 +1,4 @@
-import type { ErrorRecord, MessageEndpoint, Subscription, TransferResult, WireMessage } from "./.types.js";
+import type { ErrorRecord, MessageEndpoint, Subscription, TransferResult, WireMessage } from "./_types.js";
 import { RemoteError } from "./RemoteError.js";
 
 export const protocol = "@serve-tools/client-messaging/3";

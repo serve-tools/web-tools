@@ -1,4 +1,16 @@
-import type * as T from "./.types.js";
+import {
+	ConnectionState,
+	connectionClosedError,
+	errorRecord,
+	isTransferResult,
+	isWireMessage,
+	MessagePart,
+	noop,
+	post,
+	protocol,
+	protocolError,
+} from "./_internals.js";
+import type * as T from "./_types.js";
 import type {
 	AnyHandler,
 	Handlers,
@@ -13,19 +25,7 @@ import type {
 	Settlement,
 	SubscriptionContext,
 	WireMessage,
-} from "./.types.js";
-import {
-	ConnectionState,
-	connectionClosedError,
-	errorRecord,
-	isTransferResult,
-	isWireMessage,
-	MessagePart,
-	noop,
-	post,
-	protocol,
-	protocolError,
-} from "./_internals.js";
+} from "./_types.js";
 
 class ServerOperation implements RequestContext {
 	#controller?: AbortController;

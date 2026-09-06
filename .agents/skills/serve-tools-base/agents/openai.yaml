@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Base (workspace)"
+  short_description: "Build workspace-only Base components"
+  default_prompt: "Use $serve-tools-base to build a workspace-only Base component with a reactive layout and safe connection resources."

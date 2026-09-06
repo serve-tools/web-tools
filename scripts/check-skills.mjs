@@ -57,7 +57,7 @@ for (const { location: workspace, manifest: packageJSON, root: packageRoot } of 
 
 const repositorySkills = [
 	["maintain-serve-tools"],
-	["serve-tools-aui", "@serve-tools/aui", path.join(root, "components", "aui")],
+	["serve-tools-base", "@serve-tools/base-components", path.join(root, "components", "base")],
 ];
 
 for (const [name, packageName, packageRoot] of repositorySkills) {

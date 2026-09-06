@@ -13,7 +13,7 @@ import {
 	testProducerFailure,
 	testSuccessfulOperation,
 	testUpstreamAbort,
-} from "../.shared.js";
+} from "../_shared.js";
 
 describe("AsyncOperation", () => {
 	test("delivers ordered values and one terminal result", testSuccessfulOperation);

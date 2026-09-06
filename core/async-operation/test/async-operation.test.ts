@@ -14,7 +14,7 @@ import {
 	testProducerFailure,
 	testSuccessfulOperation,
 	testUpstreamAbort,
-} from "./.shared.js";
+} from "./_shared.js";
 
 describe("AsyncOperation", () => {
 	test("README example", testDemoOperation);

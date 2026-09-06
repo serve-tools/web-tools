@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 /// <reference lib="esnext.disposable" />
 
-import type * as T from "../.types.js";
+import type * as T from "../_types.js";
 import { connect as connectPort } from "../connect.js";
 
 export type {
@@ -12,7 +12,7 @@ export type {
 	SharedDBSubscribeOptions,
 	SharedDBSubscriber,
 	SharedDBSubscription,
-} from "../.types.js";
+} from "../_types.js";
 
 /** Connects a typed database client to a port owned by a shared database worker. */
 export const connect = connectPort;

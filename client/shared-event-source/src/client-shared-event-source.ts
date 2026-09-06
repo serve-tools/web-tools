@@ -8,4 +8,4 @@ export type {
 	SharedEventSourceServer,
 	SubscribeOptions,
 	Subscription,
-} from "./lib/.types.js";
+} from "./lib/_types.js";

@@ -1,5 +1,5 @@
-import type { DBQueryOptions, StoreDefinition, StoreKey, StoreValue } from "./.types.js";
 import { exists, requested } from "./_internals.js";
+import type { DBQueryOptions, StoreDefinition, StoreKey, StoreValue } from "./_types.js";
 
 /** Promise-based read operations over an object store or index. */
 export class DBQuery<Store extends StoreDefinition, Query extends IDBValidKey> {

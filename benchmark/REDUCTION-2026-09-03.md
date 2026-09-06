@@ -2,7 +2,7 @@
 
 Baseline: `f4da08e`, immediately after the Observable/Composites polyfill and Vite integration commit.
 This pass preserves public exports, dependencies, behavior, and browser targets.
-AUI remains private.
+Base remains private.
 No packages were published.
 Measurements below describe the reduction candidate before the later CI-preparation metadata changes.
 
@@ -11,7 +11,7 @@ Measurements below describe the reduction candidate before the later CI-preparat
 | Package             | Change                                                                                                 | Minified shipped modules, bytes | Representative entry bundle, bytes                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------- | -------------------------------------------------------- |
 | Vite polyfills      | Replace 17 awaited definition imports with one synchronous module and shared detectors                 | 7,553 → 4,296                   | 7,437 → 4,053                                            |
-| AUI                 | Share the equivalent overlay/numeric ownership implementation and 23 identical property-replay methods | 246,057 → 244,219               | 206,621 → 204,214                                        |
+| Base                | Share the equivalent overlay/numeric ownership implementation and 23 identical property-replay methods | 246,057 → 244,219               | 206,621 → 204,214                                        |
 | Composites          | Remove the temporary method-container object without changing intrinsic captures or callable metadata  | 1,374 → 1,324                   | 1,340 → 1,290                                            |
 | Rolldown decorators | Remove stable-sort decoration arrays and combine class/name discovery into one traversal               | 9,989 → 9,776                   | Plugin: 6,743 → 6,567; decorated consumer: 3,049 → 3,012 |
 
@@ -21,20 +21,20 @@ Test, benchmark, and documentation additions are excluded from that implementati
 These numbers are not compressed transfer sizes and do not include declarations, source maps, or documentation.
 Dependencies and public export maps are unchanged.
 
-AUI's shared implementation is deliberately narrow.
+Base's shared implementation is deliberately narrow.
 Field's redundant-write protection and Toggle/Collapsible/Tabs' distinct ownership and release behavior remain local.
 NumberField and Slider's transactional property-upgrade recovery also remain local.
-Individual AUI subpaths range from 83 bytes smaller to 25 bytes larger; the umbrella saving must not be presented as a win for every subpath.
+Individual Base subpaths range from 83 bytes smaller to 25 bytes larger; the umbrella saving must not be presented as a win for every subpath.
 Two small private modules are added to remove repeated implementations.
 
 ## Exact package artifacts
 
-Real `npm pack --ignore-scripts` artifacts, after complete workspace builds and before CI preparation relocated the private AUI Skill out of its package:
+Real `npm pack --ignore-scripts` artifacts, after complete workspace builds and before CI preparation relocated the private Base Skill out of its package:
 
 | Package             | Tarball bytes     | Unpacked bytes        | Packed files |
 | ------------------- | ----------------- | --------------------- | ------------ |
 | Vite polyfills      | 15,397 → 12,561   | 67,775 → 44,479       | 74 → 26      |
-| AUI, private        | 324,952 → 321,655 | 1,686,887 → 1,666,349 | 171 → 177    |
+| Base, private       | 324,952 → 321,655 | 1,686,887 → 1,666,349 | 171 → 177    |
 | Composites          | 7,370 → 7,310     | 22,330 → 21,811       | 13 → 13      |
 | Rolldown decorators | 16,530 → 16,118   | 66,072 → 64,042       | 12 → 12      |
 
@@ -60,12 +60,12 @@ These are per-workload experimental intervals, not multiplicity-adjusted guarant
 | Decorator application, 8 entries                     | 10                | +2.01%                 | +1.29% to +2.74%   | Inconclusive |
 | Decorator transform, large false-positive `@` module | 10                | +0.97%                 | +0.05% to +1.89%   | Inconclusive |
 
-Vite's warmed creation/transform cases, all measured Composites cases, and the AUI ownership lifecycles do not establish a practically meaningful speed improvement.
+Vite's warmed creation/transform cases, all measured Composites cases, and the Base ownership lifecycles do not establish a practically meaningful speed improvement.
 Those changes are accepted for their measured size and structural benefits, not described as faster or equivalent.
 Vite cold import plus creation was approximately 46.9 → 45.1 ms; OS file caches were not flushed.
 The decorator application test includes class/descriptor/entry construction and validates decorator order.
 The transform tests use the real parser and public transform hook, including the no-decorator countercase.
-The AUI fixture includes construction, authored mutation, replacement, explicit owned-node removal, microtask delivery, and cleanup checks.
+The Base fixture includes construction, authored mutation, replacement, explicit owned-node removal, microtask delivery, and cleanup checks.
 Results do not establish application-wide latency, retained-memory improvements, screen-reader support, or Firefox/Safari performance.
 
 Batch p95 is the tail of whole batch durations, not individual-operation latency.
@@ -73,7 +73,7 @@ Decorator application with 32 entries and transformation with 8 classes also imp
 
 ## Rejected experiments and retained safeguards
 
-- The universal six-family AUI ownership class grew affected subpaths by 166–448 bytes and blurred distinct redundant-write and live-Map release semantics.
+- The universal six-family Base ownership class grew affected subpaths by 166–448 bytes and blurred distinct redundant-write and live-Map release semantics.
   It was replaced with exact-duplicate sharing only.
 - Removing `RuntimeRoute.serialization` was invalid: `acceptsNativePathValue` consumes that property structurally.
   A subsequent contract-reference rewrite needed own-property guards to preserve isolation from late prototype changes and saved only 6 bytes while adding dispatch checks.
@@ -91,7 +91,7 @@ Decorator application with 32 entries and transformation with 8 classes also imp
 
 The combined Composites pilot was stopped because its module-local intern registry accumulated across cases.
 Accepted measurements isolate fresh hits, 32-property hits, and large-registry misses in separate browser processes.
-The initial AUI fixture incorrectly expected host detachment to release still-owned toggle children; both baseline and candidate failed.
+The initial Base fixture incorrectly expected host detachment to release still-owned toggle children; both baseline and candidate failed.
 The corrected fixture explicitly removes owned nodes, and both pass the same smoke check.
 Neither invalid pilot contributes accepted timing evidence.
 The Lit fixture also initially mixed current and snapshot Signal runtimes; this was caught by its baseline smoke check before any timing.
@@ -105,17 +105,17 @@ Node validation passed 1,382 Vitest tests, 12 native tests, and 28 Signal DOM sc
 The consolidated browser run passed 4,678 tests with one skipped across Chromium, Firefox, and WebKit.
 The previously observed Firefox menubar failure did not recur in this final run.
 After rejecting the Lit candidate, its production source and built watcher were verified baseline-identical, and all 48 focused Lit browser tests passed with the three new regression cases retained.
-The reduction-phase root verification passed lint, unused-code checks, formatting, reference checks, typechecks, and all Node tests before stopping at the private-AUI metadata gate described below.
+The reduction-phase root verification passed lint, unused-code checks, formatting, reference checks, typechecks, and all Node tests before stopping at the private-Base metadata gate described below.
 Release-script tests, complete extra builds, and all public package checks passed.
 An independent read-only review checked the accepted changes and exposed the rejected HTTP structural/prototype dependencies.
 
-Initial `npm run verify` runs stopped at pre-existing private-AUI metadata inconsistencies:
+Initial `npm run verify` runs stopped at pre-existing private-Base metadata inconsistencies:
 
-- AUI retains a package Skill even though the validator disallows package Skills in private workspaces.
-- The release workflow still lists private `@serve-tools/aui`.
-- The separate public-Skill benchmark corpus still expects AUI despite its exclusion from the public catalog.
+- Base retains a package Skill even though the validator disallows package Skills in private workspaces.
+- The release workflow still lists private `@serve-tools/base-components`.
+- The separate public-Skill benchmark corpus still expects Base despite its exclusion from the public catalog.
 
-Those metadata issues were resolved during commit preparation: the AUI Skill moved to `.agents/skills/serve-tools-aui`, its reference and compile-checked recipe validation remains enabled, and AUI was removed from public benchmark tasks and release choices.
+Those metadata issues were resolved during commit preparation: the Base Skill moved to `.agents/skills/serve-tools-base`, its reference and compile-checked recipe validation remains enabled, and Base was removed from public benchmark tasks and release choices.
 The metadata budget was preserved by shortening the maintainer Skill description.
 Full `npm run verify` then passed, including 4,687 browser tests with one existing skip; the extra nine executions are the three retained Lit regressions across three engines.
 An existing Node 22 router test failure was also reproduced (21 failures) and fixed by directly importing its ponyfill constructor instead of deleting a global and expecting a cached installer to rerun.
@@ -139,7 +139,7 @@ Automated browser tests are also not manual assistive-technology verification.
 
 ## Reproduction
 
-Package-local harnesses are in `vite/polyfills/benchmark`, `rolldown/decorators/benchmark`, `components/aui/benchmark/ownership`, `ponyfills/composites/benchmark`, and `lit/signals/benchmark/lazy-effects`.
+Package-local harnesses are in `vite/polyfills/benchmark`, `rolldown/decorators/benchmark`, `components/base/benchmark/ownership`, `ponyfills/composites/benchmark`, and `lit/signals/benchmark/lazy-effects`.
 They accept explicit baseline/candidate distribution paths.
 The HTTP benchmark now also selects built distributions through `HTTP_CONTRACT_BENCH_ROOT`, uses longer batches and observable sinks, and logs a deterministic subject hash.
 Its rejected experiment is not included among retained speed claims.
@@ -150,7 +150,7 @@ Raw logs, source/module inventories, every public-entry bundle measurement, exac
 
 The final four-package comparisons comprise 60 independent pairs (120 fresh processes).
 Another 15 isolated pairs (30 fresh processes) evaluated the rejected Lit candidate.
-Invalid or superseded pilots and pre-format AUI reruns are excluded.
+Invalid or superseded pilots and pre-format Base reruns are excluded.
 
 To rerun a selected comparison with the frozen snapshot still present:
 
@@ -160,7 +160,7 @@ python3 /Users/jonathan/Documents/Codex/outputs/web-tools-reduction-2026-09-03/a
 ```
 
 Do not run timing commands concurrently with builds, tests, or other benchmarks.
-The same script supports `decorator-runtime`, `vite-cold`, `vite-warm`, `aui-lifecycle`, isolated `composites-<workload>` cases, and isolated `lit-lazy-effects-<workload>` cases.
+The same script supports `decorator-runtime`, `vite-cold`, `vite-warm`, `base-lifecycle`, isolated `composites-<workload>` cases, and isolated `lit-lazy-effects-<workload>` cases.
 The Lit comparison must use the preserved rejected-candidate bundle, not the restored current production source.
 
 Further candidates require more evidence rather than another mechanical extraction: media-type parsing needs a differential quoting/escaping corpus; route pre-sorting needs adversarial precedence workloads; shared Checkbox/Switch or composite-host controllers need paired component coverage and subpath size controls.

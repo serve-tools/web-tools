@@ -146,7 +146,7 @@ The concrete improvement is a more discriminating evaluation: it now detects bot
 All 67 focused tests passed: 34 original harness tests, 19 transfer tests, and 14 ablation tests, including both independent positive implementations per task, all deliberate mutations, and the new correction controls.
 Package build and all 69 package/repository Skill validations passed during this work.
 Final lint and diff-whitespace checks passed, with one unrelated existing lint warning.
-Full `npm run verify` stopped at unrelated AUI unused-file/export findings: `components/aui/src/.experiment.ts` and `captureError` in `components/aui/src/lib/.internals.ts`.
+Full `npm run verify` stopped at unrelated Base unused-file/export findings: `components/base/src/.experiment.ts` and `captureError` in `components/base/src/lib/.internals.ts`.
 Later verification stages did not run through that command, so this is not a clean whole-repository verification result.
 
 Evidence directory: `/Users/jonathan/Documents/Codex/2026-08-31/optional-helper-ablation-192`.

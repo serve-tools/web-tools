@@ -1,5 +1,5 @@
 import { connect as connectPort } from "@serve-tools/client-messaging";
-import type * as T from "./.types.js";
+import type * as T from "./_types.js";
 import type {
 	Protocol,
 	ProtocolDefinition,
@@ -8,7 +8,7 @@ import type {
 	SharedWebTransportClient,
 	SubscribeOptions,
 	Subscription,
-} from "./.types.js";
+} from "./_types.js";
 
 /** Connects a typed page client to a WebTransport session owned by a `SharedWorker`. */
 export const connect = <const P extends Protocol & ProtocolDefinition<P>>(

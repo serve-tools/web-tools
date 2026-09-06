@@ -1,17 +1,3 @@
-import type * as T from "./.types.js";
-import type {
-	Client,
-	ClientOperation,
-	EventListener,
-	MessageEndpoint,
-	MessageEventLike,
-	OperationKind,
-	Protocol,
-	ProtocolDefinition,
-	RequestOptions,
-	SubscribeOptions,
-	Subscription,
-} from "./.types.js";
 import {
 	ConnectionState,
 	callSafely,
@@ -26,6 +12,20 @@ import {
 	protocolError,
 	remoteError,
 } from "./_internals.js";
+import type * as T from "./_types.js";
+import type {
+	Client,
+	ClientOperation,
+	EventListener,
+	MessageEndpoint,
+	MessageEventLike,
+	OperationKind,
+	Protocol,
+	ProtocolDefinition,
+	RequestOptions,
+	SubscribeOptions,
+	Subscription,
+} from "./_types.js";
 
 /**
  * Connects a typed client to a worker or message port.

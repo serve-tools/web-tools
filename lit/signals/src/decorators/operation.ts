@@ -4,7 +4,7 @@ import type { OperationView } from "@serve-tools/async-operation";
 import { Signal } from "@serve-tools/signal";
 import type { ReactiveControllerHost } from "lit";
 
-import { ConnectionResourceController } from "./.connection-resource.js";
+import { ConnectionResourceController } from "./_connection-resource.js";
 
 /** Configures the connection lifetime of an operation-view accessor. */
 export interface OperationOptions {

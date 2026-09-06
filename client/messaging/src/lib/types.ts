@@ -12,4 +12,4 @@ export type {
 	Subscription,
 	SubscriptionContext,
 	TransferResult,
-} from "./.types.js";
+} from "./_types.js";

@@ -1,5 +1,5 @@
-import type { TransferResult } from "./.types.js";
 import { transferBrand } from "./_internals.js";
+import type { TransferResult } from "./_types.js";
 
 /**
  * Associates a worker-to-client result or subscription value with the objects that should be transferred.

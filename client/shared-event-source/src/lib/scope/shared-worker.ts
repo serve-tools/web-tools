@@ -8,5 +8,5 @@ export type {
 	EventMessage,
 	JSONValue,
 	SharedEventSourceServer,
-} from "../.types.js";
+} from "../_types.js";
 export { listen } from "../listen.js";

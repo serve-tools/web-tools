@@ -1,5 +1,6 @@
 /// <reference lib="esnext.disposable" />
 
+import { completed, completion, execute, exists, invoke, result } from "./_internals.js";
 import type {
 	DBCountOptions,
 	DBDeleteOptions,
@@ -24,8 +25,7 @@ import type {
 	StoreKey,
 	StoreName,
 	StoreValue,
-} from "./.types.js";
-import { completed, completion, execute, exists, invoke, result } from "./_internals.js";
+} from "./_types.js";
 import { DBTransaction } from "./DBTransaction.js";
 
 const enum ScanOutput {
