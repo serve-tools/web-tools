@@ -30,7 +30,12 @@ const result = client.request("wait", 10_000, {
 });
 
 cancelButton.onclick = () =&gt; controller.abort();
-await result;</code></pre>
+try {
+	await result;
+} catch (error) {
+	if (error !== controller.signal.reason) throw error;
+	output.value = "Request cancelled.";
+}</code></pre>
 			</div>
 		</main>
 		<script type="module" src="./src/main.ts"></script>

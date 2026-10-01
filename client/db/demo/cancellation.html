@@ -28,11 +28,16 @@ const controller = new AbortController();
 cancelButton.onclick = () =&gt; controller.abort();
 let count = 0;
 
-for await (const _contact of db.scanValues("contacts", {
-	batchSize: 1,
-	signal: controller.signal,
-})) {
-	output.value = `Scanned ${++count} contact(s)…`;
+try {
+	for await (const _contact of db.scanValues("contacts", {
+		batchSize: 1,
+		signal: controller.signal,
+	})) {
+		output.value = `Scanned ${++count} contact(s)…`;
+	}
+} catch (error) {
+	if (error !== controller.signal.reason) throw error;
+	output.value = `Cancelled after ${count} contact(s).`;
 }</code></pre>
 			</div>
 		</main>

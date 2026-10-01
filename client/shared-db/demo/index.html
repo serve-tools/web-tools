@@ -65,8 +65,11 @@ await database.add("tasks", {
 	updatedAt: Date.now(),
 });
 
-subscription.unsubscribe();
-database.close();</code></pre>
+addEventListener("pagehide", () =&gt; {
+	subscription.unsubscribe();
+	database.close();
+	worker.port.close();
+}, { once: true });</code></pre>
 				</div>
 			</section>
 		</main>
