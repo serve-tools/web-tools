@@ -59,6 +59,11 @@ Do not put a submission `name` on checkable menu buttons or mirror them with hid
 
 ## Nest a submenu
 
+The gallery's menu styles accept an inherited `--menu-padding` custom property and draw borders with a box shadow.
+Its submenu offset subtracts only the padding so the first item's row aligns with its trigger.
+A forced-colors outline keeps the menu boundary visible without changing layout.
+This property belongs to the gallery styling layer, not the unstyled component contract.
+
 ```html
 <app-menu>
 	<button slot="trigger" type="button" popovertarget="share-menu">Share</button>

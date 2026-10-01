@@ -270,6 +270,16 @@ const selections = [
 		"@serve-tools/polyfill-observable",
 	],
 	[
+		"scoped-registry-firefox-global",
+		"Automatically install experimental scoped custom element registries only in Firefox when native support is incomplete, accepting coordinated DOM patches and leaving other browsers unchanged.",
+		"@serve-tools/polyfill-custom-element-registry",
+	],
+	[
+		"scoped-registry-explicit-installation",
+		"Explicitly install experimental iframe-backed scoped custom element registries into a selected browser realm, with no changes on import and deliberate coordinated DOM patches when called.",
+		"@serve-tools/ponyfill-custom-element-registry",
+	],
+	[
 		"composite-value-global",
 		"Third-party code expects globalThis.Composite. Install the experimental fallback only when the global is absent, preserving an existing implementation and accepting module-local fallback identity.",
 		"@serve-tools/polyfill-composites",
@@ -925,6 +935,38 @@ const remainingUsageTasks = [
 		"polyfills/observable/test/polyfill-observable.recipes.ts",
 		["target.when", ".take(1)", ".toArray()", "Observable.from"],
 		["polyfills/observable/skills/serve-tools-polyfill-observable/references/recipe-quick-start.md"],
+	),
+	usage(
+		"polyfill-custom-element-registry",
+		"Import the Firefox-only automatic scoped registry installer, then define a greeting element in its own registry and render it inside a shadow root associated with that registry.",
+		["@serve-tools/polyfill-custom-element-registry"],
+		"polyfills/custom-element-registry/test/scoped-registry.recipes.ts",
+		[
+			"new CustomElementRegistry",
+			"extends HTMLElement",
+			"registry.define",
+			"customElementRegistry: registry",
+			"root.innerHTML",
+		],
+		[
+			"polyfills/custom-element-registry/skills/serve-tools-polyfill-custom-element-registry/references/recipe-quick-start.md",
+		],
+	),
+	usage(
+		"ponyfill-custom-element-registry",
+		"Explicitly install the scoped registry fallback into a supplied browser window, define a greeting element using that window's HTMLElement constructor, and render it in a shadow root associated with a new registry.",
+		["@serve-tools/ponyfill-custom-element-registry"],
+		"ponyfills/custom-element-registry/test/scoped-registry.recipes.ts",
+		[
+			"installCustomElementRegistry(win)",
+			"new CustomElementRegistry",
+			"extends win.HTMLElement",
+			"registry.define",
+			"customElementRegistry: registry",
+		],
+		[
+			"ponyfills/custom-element-registry/skills/serve-tools-ponyfill-custom-element-registry/references/recipe-quick-start.md",
+		],
 	),
 	usage(
 		"polyfill-composites",

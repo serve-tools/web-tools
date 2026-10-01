@@ -168,8 +168,11 @@ describe("ScrollAreaElement", () => {
 		void element.metrics;
 		expect(railY.style.getPropertyPriority("--base-scroll-thumb-size")).toBe("");
 		expect(thumbY.style.getPropertyValue("touch-action")).toBe("none");
+		railY.style.setProperty("--base-scroll-thumb-size", "9px", "important");
+		await Promise.resolve();
+		expect(railY.style.getPropertyPriority("--base-scroll-thumb-size")).toBe("");
 		element.remove();
-		expect(railY.style.getPropertyValue("--base-scroll-thumb-size")).toBe("7px");
+		expect(railY.style.getPropertyValue("--base-scroll-thumb-size")).toBe("9px");
 		expect(railY.style.getPropertyPriority("--base-scroll-thumb-size")).toBe("important");
 		expect(railY.style.getPropertyValue("--base-scroll-thumb-offset")).toBe("3px");
 		expect(railY.style.getPropertyPriority("--base-scroll-thumb-offset")).toBe("important");

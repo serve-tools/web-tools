@@ -59,6 +59,9 @@ const resumed: boolean = bindingScope.resume();
 const taggedScope = createBindingScope();
 const directive: TemplateDirective = (node) => () => node.removeAttribute("data-active");
 const description: TemplateResult = templateHtml`<p ${directive}>${title}</p>`;
+const callbackDescription: TemplateResult = templateHtml`<p title=${() => title.get()}>${() => title.get()}</p>`;
+const formatter = (value: string): string => value.toUpperCase();
+const functionPropertyDescription: TemplateResult = templateHtml`<input .formatter=${() => formatter}>`;
 const tagged: TemplateFragment = taggedScope.capture(() => createFragment(description, {}, document));
 const persistent: TemplateFragment = createFragment(templateHtml`<p>${title}</p>`, {});
 const detected: boolean = isTemplateResult(description);
@@ -84,11 +87,13 @@ bindingScope.dispose();
 void [
 	CustomElement,
 	control,
+	callbackDescription,
 	captureResult,
 	disposeResult,
 	htmlNode,
 	htmlTemplate,
 	detected,
+	functionPropertyDescription,
 	mathml,
 	resumed,
 	dispose(sheet),

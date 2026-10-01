@@ -230,6 +230,49 @@ h1 {
 	tab-size: 2;
 	font-size: 0.8rem;
 	line-height: 1.65;
+	max-height: 32rem;
+}
+.source-toolbar {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	padding: 0.75rem 1.1rem;
+	border-top: 1px solid var(--line);
+	font-size: 0.8rem;
+}
+.source-toolbar label {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+.source-toolbar select {
+	max-width: 15rem;
+	padding: 0.35rem;
+}
+.source-toolbar button {
+	padding: 0.3rem 0.65rem;
+}
+.source-toolbar [role="status"] {
+	color: var(--accent);
+}
+.source-note {
+	margin: 0;
+	padding: 0 1.1rem 0.65rem;
+	color: var(--muted);
+	font-size: 0.8rem;
+}
+.source code {
+	font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+app-gallery-status {
+	display: block;
+	border-left: 3px solid var(--line);
+	padding: 0.75rem 1rem;
+}
+app-gallery-status:state(active) {
+	border-color: var(--accent);
+	background: #edf5ef;
 }
 .row {
 	display: flex;
@@ -585,9 +628,28 @@ app-drop-zone:state(drop-active) {
 }
 
 app-field {
+	display: block;
+	max-width: 32rem;
+}
+app-field::part(content) {
 	display: grid;
 	gap: 0.35rem;
-	max-width: 32rem;
+}
+app-field::part(label-content),
+app-field::part(control-content) {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+app-field [slot="label-actions"] {
+	margin-inline-start: auto;
+	font-size: 0.8rem;
+}
+app-field [slot="control"] {
+	min-width: 0;
+}
+app-field [slot="after"] {
+	white-space: nowrap;
 }
 app-field [slot="label"] {
 	font-weight: 550;
@@ -597,12 +659,8 @@ app-field [slot="error"] {
 	margin: 0;
 }
 app-field [slot="error"] {
-	display: none;
 	color: #a23529;
 	font-size: 0.85rem;
-}
-app-field:state(invalid) [slot="error"] {
-	display: block;
 }
 app-number-field {
 	display: inline-flex;
@@ -689,7 +747,11 @@ app-menu {
 }
 .preview [role="menu"] {
 	min-width: 13rem;
-	padding: 0.35rem;
+	padding: var(--menu-padding, 0.35rem);
+	border: 0;
+	box-shadow:
+		0 0 0 1px var(--line),
+		0 8px 30px #18332526;
 }
 .preview [role="menu"] :is(button, a) {
 	display: block;
@@ -703,7 +765,14 @@ app-menu {
 	display: block;
 }
 .preview [role="menu"] app-menu > [popover] {
-	position-area: inline-end;
+	position-area: inline-end span-block-end;
+	position-try-fallbacks:
+		flip-inline,
+		flip-block,
+		flip-inline flip-block;
+	margin: 0;
+	/* The shadow border takes no layout space; only the menu padding needs an offset. */
+	margin-block-start: calc(-1 * var(--menu-padding, 0.35rem));
 }
 .preview [role="menuitemcheckbox"][aria-checked="true"]::after,
 .preview [role="menuitemradio"][aria-checked="true"]::after {
@@ -770,7 +839,7 @@ app-navigation-menu [popover] a {
 	display: block;
 	padding: 0.45rem 0.65rem;
 }
-app-drawer > dialog {
+app-drawer[side="bottom"] > dialog {
 	inset: auto 0 0;
 	margin: 0 auto;
 	width: min(38rem, 100vw);
@@ -787,6 +856,64 @@ app-drawer > dialog {
 	margin: 0 auto 1rem;
 	background: #98b3a2;
 	cursor: grab;
+}
+app-drawer[side="left"] > dialog,
+app-drawer[side="right"] > dialog {
+	inset: 0 auto 0 0;
+	margin: 0;
+	width: min(22rem, 100vw);
+	max-width: 100vw;
+	height: 100dvh;
+	max-height: 100dvh;
+	border-radius: 0;
+	padding-inline: 2rem;
+	transform: translateX(var(--base-drawer-offset, 0px));
+	--drawer-entry: -100%;
+}
+app-drawer[side="right"] > dialog {
+	inset: 0 0 0 auto;
+	--drawer-entry: 100%;
+}
+.drawer-side-handle {
+	position: absolute;
+	inset: 1rem 0 auto auto;
+	width: 1.5rem;
+	height: 5rem;
+	cursor: ew-resize;
+}
+.drawer-side-handle::before {
+	content: "";
+	position: absolute;
+	inset: 0 0.5rem;
+	border-radius: 1rem;
+	background: #98b3a2;
+}
+app-drawer[side="right"] .drawer-side-handle {
+	inset: 1rem auto auto 0;
+}
+.drawer-navigation {
+	display: grid;
+	gap: 0.5rem;
+	margin-block: 2rem;
+}
+.drawer-navigation a {
+	padding: 0.75rem;
+	border-radius: 0.4rem;
+	background: #edf3ee;
+}
+@media (prefers-reduced-motion: no-preference) {
+	app-drawer[side="left"] > dialog[open],
+	app-drawer[side="right"] > dialog[open] {
+		animation: drawer-enter 220ms ease-out;
+	}
+}
+@keyframes drawer-enter {
+	from {
+		translate: var(--drawer-entry) 0;
+	}
+	to {
+		translate: 0 0;
+	}
 }
 app-toast-region {
 	display: block;
@@ -962,5 +1089,107 @@ app-file input {
 	main {
 		margin-left: 0;
 		padding: 2rem 1.25rem 4rem;
+	}
+}
+
+@media (forced-colors: active) {
+	.preview [role="menu"] {
+		outline: 1px solid CanvasText;
+	}
+}
+
+/* Design-system choices live on ordinary ancestors and inherit into the controls. */
+.styling-samples {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+	gap: 1.5rem;
+}
+.styling-theme {
+	--control-color: #28624c;
+	--control-radius: 0.25rem;
+	--track-radius: 1rem;
+}
+.styling-theme[data-theme="violet"] {
+	--control-color: #6843a5;
+	--control-radius: 50%;
+}
+.styling-theme[data-theme="ink"] {
+	--control-color: #26303b;
+	--control-radius: 0;
+	--track-radius: 0;
+}
+.styling-theme label {
+	display: flex;
+	align-items: center;
+	gap: 0.65rem;
+	margin-block: 1rem;
+}
+.styling-theme :is(app-checkbox, app-switch)::part(control) {
+	border: 0;
+	box-shadow: 0 0 0 1px var(--control-color);
+}
+.styling-theme app-checkbox::part(control) {
+	border-radius: var(--control-radius);
+}
+.styling-theme app-switch::part(control),
+.styling-theme app-switch [slot="thumb"] {
+	border-radius: var(--track-radius);
+}
+.styling-theme :is(app-checkbox, app-switch):state(checked)::part(control) {
+	background: var(--control-color);
+}
+.styling-theme :is(app-checkbox, app-switch):focus-visible {
+	outline: 2px solid var(--control-color);
+	outline-offset: 4px;
+}
+@media (forced-colors: active) {
+	.styling-theme :is(app-checkbox, app-switch)::part(control) {
+		outline: 1px solid ButtonText;
+	}
+	.styling-theme :is(app-checkbox, app-switch):state(checked)::part(control) {
+		outline-color: Highlight;
+	}
+}
+
+app-text-field {
+	max-width: 32rem;
+}
+app-text-field::part(content) {
+	gap: 0.35rem;
+}
+app-text-field::part(label-content),
+app-text-field::part(control-content) {
+	gap: 0.5rem;
+	align-items: center;
+}
+app-text-field::part(label) {
+	font-weight: 550;
+}
+app-text-field::part(control) {
+	box-sizing: border-box;
+	min-width: 0;
+	width: 100%;
+	padding: 0.65rem 0.8rem;
+	border: 0;
+	border-radius: 0.4rem;
+	box-shadow: inset 0 0 0 1px #b7c9bd;
+	background: white;
+	color: inherit;
+	font: inherit;
+}
+app-text-field::part(description) {
+	color: var(--muted);
+	font-size: 0.85rem;
+}
+app-text-field::part(error) {
+	color: #a23529;
+	font-size: 0.85rem;
+}
+app-text-field [slot="label-actions"] {
+	font-size: 0.8rem;
+}
+@media (forced-colors: active) {
+	app-text-field::part(control) {
+		outline: 1px solid CanvasText;
 	}
 }

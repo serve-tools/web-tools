@@ -49,7 +49,6 @@ export class GalleryContextElement extends BaseElement {
 
 /** Example native drop target using an abortable observer owned by the Base connection interval. */
 export class GalleryDropElement extends BaseElement {
-	#internals = this.attachInternals();
 	#value = new Signal.State("No token received.");
 
 	receive(value: string): void {
@@ -67,7 +66,7 @@ export class GalleryDropElement extends BaseElement {
 			{
 				start: (event) => {
 					if (accepts(event)) {
-						this.#internals.states.add("drop-active");
+						this.internals.states.add("drop-active");
 					}
 				},
 				over: (event) => {
@@ -76,7 +75,7 @@ export class GalleryDropElement extends BaseElement {
 					}
 				},
 				end: (state, event) => {
-					this.#internals.states.delete("drop-active");
+					this.internals.states.delete("drop-active");
 					if (state.reason === "drop" && event && accepts(event)) {
 						event.preventDefault();
 						this.receive(event.dataTransfer!.getData("text/plain"));

@@ -30,7 +30,7 @@ export abstract class NativePopoverElement extends BaseElement {
 	}
 
 	protected override connect(connection: BaseElement.Connection): void {
-		this.addEventListener("beforetoggle", this.#onBeforeToggle, { capture: true, signal: connection.signal });
+		this.addEventListener("beforetoggle", this.#onToggle, { capture: true, signal: connection.signal });
 		this.addEventListener("toggle", this.#onToggle, { capture: true, signal: connection.signal });
 	}
 
@@ -60,45 +60,32 @@ export abstract class NativePopoverElement extends BaseElement {
 		throw new Exception("Overlay element requires a direct child with a popover attribute", "InvalidStateError");
 	}
 
-	#onBeforeToggle = (event: ToggleEvent): void => {
-		if (event.target !== this.findPopup()) {
-			return;
-		}
-
-		const ToggleEventConstructor = this.ownerDocument.defaultView?.ToggleEvent ?? ToggleEvent;
-		const forwarded = new ToggleEventConstructor("beforetoggle", {
-			cancelable: event.cancelable,
-			newState: event.newState,
-			oldState: event.oldState,
-			source: event.source,
-		});
-		if (!this.dispatchEvent(forwarded)) {
-			event.preventDefault();
-		}
-		if (event.target !== this.findPopup()) {
-			if (event.newState === "open") {
-				event.preventDefault();
-			}
-			return;
-		}
-		this.beforeToggled(event);
-	};
-
 	#onToggle = (event: ToggleEvent): void => {
 		if (event.target !== this.findPopup()) {
 			return;
 		}
 
+		const before = event.type === "beforetoggle";
 		const ToggleEventConstructor = this.ownerDocument.defaultView?.ToggleEvent ?? ToggleEvent;
-		const forwarded = new ToggleEventConstructor("toggle", {
+		const forwarded = new ToggleEventConstructor(event.type, {
+			cancelable: before && event.cancelable,
 			newState: event.newState,
 			oldState: event.oldState,
 			source: event.source,
 		});
-		this.dispatchEvent(forwarded);
+		if (!this.dispatchEvent(forwarded) && before) {
+			event.preventDefault();
+		}
 		if (event.target !== this.findPopup()) {
+			if (before && event.newState === "open") {
+				event.preventDefault();
+			}
 			return;
 		}
-		this.toggled(event);
+		if (before) {
+			this.beforeToggled(event);
+		} else {
+			this.toggled(event);
+		}
 	};
 }

@@ -15,6 +15,10 @@ Weak scheduling does not guarantee that external signals or stop handles cannot 
 
 Use child `${value}`, whole `name=${value}`, `.property=${value}`, `@event=${handler}`, and opening-tag `${directive}` holes.
 State and Computed values update asynchronously after their initial synchronous write.
+Functions in child, whole-attribute, and property holes are tracked callbacks.
+The renderer calls a callback with the template owner as `this`, observes its signal reads, and updates its dependencies when later calls take another branch.
+It invokes the interpolated callback once per update and passes its return value to the hole without invoking returned functions; use `.formatter=${() => formatter}` to assign a function itself to a property.
+`@event` functions remain handlers, and opening-tag functions remain one-shot directives.
 Only `null` removes an attribute; boolean state usually belongs in a property such as `.disabled`.
 Function handlers receive the owner as `this`; objects receive their own `handleEvent` call.
 Listener options live on the function/object; unchanged options do not rearm consumed `once` listeners or aborted signals, including on managed resume.

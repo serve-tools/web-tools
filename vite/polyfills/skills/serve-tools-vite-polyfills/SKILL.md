@@ -7,6 +7,8 @@ description: Use @serve-tools/vite-polyfills in Vite.
 
 Treat the installed package README and public declarations as the API source of truth.
 Read only the references needed for the current task.
+The `custom-element-registry` built-in enables an experimental coordinated DOM patch only in Firefox when native scoped registries fail its capability check; consult the configuration and detection references before relying on it.
+Explicit registry ponyfill imports remain opt-in and do not trigger automatic installation, including when the package is workspace-linked.
 
 ## Route by task
 

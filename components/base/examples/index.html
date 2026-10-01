@@ -21,6 +21,13 @@
 			<header>
 				<p class="eyebrow">Web components / Native platform</p>
 				<h1>Component gallery</h1>
+				<p class="intro">
+					Try a preview, inspect its HTML, setup, TypeScript, and CSS, then open the same source in VS Code.
+				</p>
+				<p>
+					<a href="#component-internals">Shared element internals</a> · <a href="#component-form-associated"
+					>Form-associated foundation</a> · <a href="#component-field">Field composition</a>
+				</p>
 				<p><a href="./template.html">Try the persistent tagged-template example</a></p>
 				<p class="intro">
 					Real controls, ordinary HTML, and state that survives being moved. Explore the working examples
@@ -35,6 +42,37 @@
 			</header>
 			<p id="empty-results" hidden>No components match this search.</p>
 
+			<section class="component" id="component-internals" data-component="internals">
+				<h2>Shared element internals</h2>
+				<p>
+					BaseElement attaches one shared ElementInternals object lazily. This example sets default ARIA and
+					toggles <code>:state(active)</code> without calling <code>attachInternals()</code>.
+				</p>
+				<div class="preview"><app-gallery-status></app-gallery-status></div>
+				<details class="source">
+					<summary>Code and source files</summary>
+					<pre><code></code></pre>
+				</details>
+			</section>
+			<section class="component" id="component-form-associated" data-component="form-associated">
+				<h2>Form-associated foundation</h2>
+				<p>
+					The custom host owns the submitted value through FormAssociatedElement. Its retained native button
+					handles interaction. Try changing the priority, submitting, and resetting.
+				</p>
+				<div class="preview">
+					<form id="foundation-form">
+						<app-gallery-form-control name="priority"></app-gallery-form-control>
+						<button type="submit">Submit</button>
+						<button type="reset">Reset</button><output id="foundation-form-result"
+						>No priority submitted.</output>
+					</form>
+				</div>
+				<details class="source">
+					<summary>Code and source files</summary>
+					<pre><code></code></pre>
+				</details>
+			</section>
 			<section class="component" id="component-button" data-component="button">
 				<div class="component-header">
 					<h2><a href="#component-button">Button</a></h2><span class="badge">Native HTML</span>
@@ -58,13 +96,48 @@
 
 			<section class="component" id="component-input" data-component="input">
 				<div class="component-header">
-					<h2><a href="#component-input">Input</a></h2><span class="badge">Native HTML</span>
+					<h2><a href="#component-input">Input</a></h2><span class="badge">Text Field and native HTML</span>
 				</div>
 				<p class="description">
-					The browser owns text editing, selection, composition, autocomplete, and validation. Use ordinary
-					input events without a shadow editor or mirrored value.
+					Text Field owns its label, hints, and text editor in shadow DOM. Its type selects behavior while the
+					editor stays a text input or textarea. Ordinary native input and Field composition remain available
+					below.
 				</p>
 				<div class="preview">
+					<form id="text-field-form">
+						<app-text-field
+							id="account-email"
+							type="email"
+							name="email"
+							label="Account email"
+							description="Used for account recovery in this local example."
+							placeholder="you@example.com"
+							autocomplete="email"
+							required
+						></app-text-field>
+						<div class="row">
+							<button type="submit">Save email</button>
+							<button type="reset">Reset text field</button>
+						</div>
+						<output id="text-field-result" aria-live="polite">No email submitted.</output>
+					</form>
+					<app-text-field
+						id="example-secret"
+						autocomplete="off"
+						type="password"
+						multiline
+						readonly
+						rows="3"
+						label="Example multiline secret"
+						description="Fictional demo text. Copy preserves line breaks without revealing the field."
+						value="example-first-line&#10;example-second-line&#10;example-third-line"
+					>
+						<button type="button" slot="label-actions" id="secret-reveal" aria-pressed="false">
+							Reveal
+						</button>
+						<button type="button" slot="label-actions" id="secret-copy">Copy</button>
+					</app-text-field>
+					<output id="secret-result" aria-live="polite">Example secret is masked.</output>
 					<label for="native-input">Workspace name</label><input
 						id="native-input"
 						name="workspace"
@@ -76,6 +149,22 @@
 						Edit or select the text using the browser’s usual controls.
 					</p>
 					<output id="native-input-result" aria-live="polite">Local workspace</output>
+					<form id="native-textarea-form">
+						<app-field id="notes-field">
+							<label slot="label">Workspace notes</label>
+							<textarea slot="control" name="notes" rows="3" maxlength="240" required
+							>First line&#10;Second line</textarea>
+							<p slot="description">
+								Multiline native editing, up to 240 characters. Notes are required.
+							</p>
+							<p slot="error">Enter some notes before saving.</p>
+						</app-field>
+						<div class="row">
+							<button type="submit">Save notes</button>
+							<button type="reset">Reset notes</button>
+						</div>
+						<output id="native-textarea-result" aria-live="polite">No notes submitted.</output>
+					</form>
 				</div>
 				<details class="source">
 					<summary>Example markup</summary>
@@ -89,12 +178,16 @@
 				</div>
 				<p class="description">
 					One field connects a label, help text, and errors to the actual control. Native validation stays on
-					the input; the application chooses when to show errors.
+					the input; inline errors appear after interaction or a validation attempt. Text attributes handle
+					simple fields, while slots add rich content, prefixes, suffixes, and label actions.
 				</p>
 				<div class="preview">
 					<form id="field-form">
-						<app-field id="email-field">
-							<label slot="label">Account email</label>
+						<app-field
+							id="email-field"
+							label="Account email"
+							description="Used only for account recovery in this local example."
+						>
 							<input
 								slot="control"
 								type="email"
@@ -103,9 +196,18 @@
 								autocomplete="email"
 								required
 							/>
-							<p slot="description" class="hint">Used only for account recovery in this local example.</p>
-							<p slot="error">Enter a valid email address.</p>
 						</app-field>
+						<app-field id="budget-field" label="Monthly budget">
+							<label slot="label">Monthly <strong>budget</strong></label>
+							<button slot="label-actions" type="button" popovertarget="budget-help">
+								About budgets
+							</button>
+							<span slot="before" aria-hidden="true">$</span>
+							<input slot="control" type="number" name="budget" min="0" value="100" />
+							<span slot="after">USD / month</span>
+							<p slot="description">A local example with an authored label and control accessories.</p>
+						</app-field>
+						<div id="budget-help" popover>Choose the amount you want to budget each month.</div>
 						<output id="field-state">valid · pristine · unvisited</output>
 						<div class="row">
 							<button type="button" id="field-server-error">Set server error</button>
@@ -876,6 +978,44 @@
 						</dialog>
 					</app-drawer>
 					<output id="drawer-result" aria-live="polite">No drawer result.</output>
+					<p>
+						Full-height navigation can slide in from either edge. Drag the vertical handle toward that edge
+						to dismiss.
+					</p>
+					<div class="row">
+						<button type="button" id="open-left-drawer">Open left navigation</button>
+						<button type="button" id="open-right-drawer">Open right navigation</button>
+					</div>
+					<app-drawer id="left-navigation-drawer" side="left">
+						<dialog aria-labelledby="left-navigation-title">
+							<div slot="handle" class="drawer-side-handle" aria-hidden="true"></div>
+							<h3 id="left-navigation-title">Left navigation</h3>
+							<form method="dialog"><button autofocus>Close navigation</button></form>
+							<nav aria-label="Left drawer navigation" class="drawer-navigation">
+								<a href="#component-button">Buttons</a>
+								<a href="#component-tabs">Tabs</a>
+								<a href="#component-drawer">Drawers</a>
+							</nav>
+							<p class="hint">
+								Choose a section to close this panel and jump to its example. Escape also closes it.
+							</p>
+						</dialog>
+					</app-drawer>
+					<app-drawer id="right-navigation-drawer" side="right">
+						<dialog aria-labelledby="right-navigation-title">
+							<div slot="handle" class="drawer-side-handle" aria-hidden="true"></div>
+							<h3 id="right-navigation-title">Right navigation</h3>
+							<form method="dialog"><button autofocus>Close navigation</button></form>
+							<nav aria-label="Right drawer navigation" class="drawer-navigation">
+								<a href="#component-button">Buttons</a>
+								<a href="#component-tabs">Tabs</a>
+								<a href="#component-drawer">Drawers</a>
+							</nav>
+							<p class="hint">
+								Choose a section to close this panel and jump to its example. Escape also closes it.
+							</p>
+						</dialog>
+					</app-drawer>
 				</div>
 				<details class="source">
 					<summary>Example markup</summary>
@@ -1401,6 +1541,45 @@
 				</div>
 				<details class="source">
 					<summary>Example markup</summary>
+					<pre><code></code></pre>
+				</details>
+			</section>
+
+			<section class="component" id="component-styling" data-component="styling">
+				<div class="component-header">
+					<h2><a href="#component-styling">Styling and themes</a></h2><span class="badge"
+					>Same primitives, different CSS</span>
+				</div>
+				<p class="description">
+					These controls share the same component classes. Themes customize the control part, react to the
+					host's checked state, and style the author-owned indicator and thumb slots. Try each control;
+					appearance and behavior stay independent.
+				</p>
+				<div class="preview styling-samples">
+					<div class="styling-theme" data-theme="forest">
+						<h3>Forest</h3><label><app-checkbox checked><span slot="indicator" aria-hidden="true"
+								>✓</span></app-checkbox> Receive updates</label><label><app-switch checked><span
+									slot="thumb"
+									aria-hidden="true"
+								></span></app-switch> Automatic sync</label>
+					</div>
+					<div class="styling-theme" data-theme="violet">
+						<h3>Violet</h3><label><app-checkbox checked><span slot="indicator" aria-hidden="true"
+								>✓</span></app-checkbox> Receive updates</label><label><app-switch checked><span
+									slot="thumb"
+									aria-hidden="true"
+								></span></app-switch> Automatic sync</label>
+					</div>
+					<div class="styling-theme" data-theme="ink">
+						<h3>Ink</h3><label><app-checkbox checked><span slot="indicator" aria-hidden="true"
+								>✓</span></app-checkbox> Receive updates</label><label><app-switch checked><span
+									slot="thumb"
+									aria-hidden="true"
+								></span></app-switch> Automatic sync</label>
+					</div>
+				</div>
+				<details class="source">
+					<summary>Code and source files</summary>
 					<pre><code></code></pre>
 				</details>
 			</section>

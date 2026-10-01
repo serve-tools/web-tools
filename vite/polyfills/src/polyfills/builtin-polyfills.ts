@@ -60,6 +60,11 @@ export const builtinPolyfills: readonly Polyfill[] = [
 	),
 	identifierPolyfill("composite", `import"@serve-tools/polyfill-composites/apply/Composite";`, "Composite"),
 	identifierPolyfill(
+		"custom-element-registry",
+		`import"@serve-tools/polyfill-custom-element-registry/apply/CustomElementRegistry";`,
+		"CustomElementRegistry",
+	),
+	identifierPolyfill(
 		"disposable-stack",
 		`import"@serve-tools/polyfill-resource-management/apply/Symbol/dispose";` +
 			`import"@serve-tools/polyfill-resource-management/apply/DisposableStack";`,

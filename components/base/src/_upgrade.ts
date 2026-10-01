@@ -8,3 +8,13 @@ export const upgradeProperty = (element: object, property: PropertyKey): void =>
 	delete record[property];
 	record[property] = value;
 };
+
+/** Copies one attribute without changing its serialized value. */
+export const copyAttribute = (source: Element, target: Element, name: string): void => {
+	const value = source.getAttribute(name);
+	if (value === null) {
+		target.removeAttribute(name);
+	} else {
+		target.setAttribute(name, value);
+	}
+};

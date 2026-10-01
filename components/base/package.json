@@ -57,6 +57,7 @@
 		"./slider": "./dist/SliderElement.js",
 		"./switch": "./dist/SwitchElement.js",
 		"./tabs": "./dist/TabsElement.js",
+		"./text-field": "./dist/TextFieldElement.js",
 		"./template": "./dist/template.js",
 		"./toast-region": "./dist/ToastRegionElement.js",
 		"./toggle": "./dist/ToggleElement.js",
@@ -69,12 +70,15 @@
 	],
 	"scripts": {
 		"build": "tsc --build tsconfig.json",
+		"build:bundle": "vite build examples --config examples/vite.config.ts",
 		"build:dependencies": "npm run build --workspace @serve-tools/signal --workspace @serve-tools/signal-effect --workspace @serve-tools/signal-dom --workspace @serve-tools/client-context --workspace @serve-tools/client-input --workspace @serve-tools/polyfill-resource-management",
+		"build:examples": "npm run build:dependencies && npm run build && npm run typecheck:local && npm run build:bundle",
 		"check:package": "publint && attw --pack . --profile esm-only",
-		"dev": "npm run build:dependencies && npm run build && vite examples --host 127.0.0.1",
+		"dev": "npm run build:dependencies && npm run build && vite examples --config examples/vite.config.ts --host 127.0.0.1",
 		"test": "npm run build:dependencies && npm run build && npm run test:browser",
 		"test:browser": "vitest run --config vitest.browser.config.ts",
-		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
+		"typecheck": "npm run build:dependencies && npm run build && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json && npm run typecheck:local",
+		"typecheck:local": "tsc --project tsconfig.examples.json"
 	},
 	"dependencies": {
 		"@serve-tools/client-input": "0.1.3",

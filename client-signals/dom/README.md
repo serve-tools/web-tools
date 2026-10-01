@@ -171,6 +171,9 @@ Retain the returned handle and call `view.dispose()` when permanently retiring i
 Weak owner scheduling does not prevent an externally retained signal or handle from retaining its view.
 
 Descriptions support child values, nested descriptions, whole attributes, `.property`, `@event`, and synchronous opening-tag directives.
+Functions in child, whole-attribute, and property holes are tracked callbacks: the renderer calls them with the template owner as `this`, observes the signals read during that call, and switches dependencies when later calls take another branch.
+Each update calls the interpolated callback once and passes its return value to the hole without invoking returned functions, so `.formatter=${() => formatter}` assigns a function-valued property without invoking `formatter`.
+Functions in `@event` holes remain event handlers, while functions in an opening-tag hole remain one-shot directives.
 Only `null` removes an attribute; use `.disabled=${boolean}` for native boolean properties.
 Mixed attribute strings, raw-text/comment interpolations, dynamic tag names, and nested template-content holes are rejected before setup; source boundary whitespace is trimmed.
 Dynamic child strings are text, but this is not an HTML sanitizer and sensitive property sinks retain their native security requirements.

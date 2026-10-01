@@ -1,6 +1,7 @@
 import type { RealmTimeout } from "./_composite.js";
 import { clearRealmTimeout, isCompositeUnavailable, isHTMLElement, setRealmTimeout } from "./_composite.js";
 import { AttributeOwner } from "./_ownership.js";
+import { setCustomState } from "./_states.js";
 import { upgradeProperty } from "./_upgrade.js";
 import { BaseElement } from "./BaseElement.js";
 
@@ -36,7 +37,6 @@ export class NavigationMenuElement extends BaseElement {
 
 	#closeTimer: RealmTimeout | undefined;
 	#controlledTriggers = new Map<HTMLButtonElement, HTMLElement>();
-	readonly #internals = this.attachInternals();
 	#initialized = false;
 	#list: HTMLElement | undefined;
 	#openTimer: RealmTimeout | undefined;
@@ -45,7 +45,7 @@ export class NavigationMenuElement extends BaseElement {
 	constructor() {
 		super();
 		navigationMenus.add(this);
-		this.#internals.role = "navigation";
+		this.internals.role = "navigation";
 		for (const property of ["closeDelay", "delay", "orientation"] as const) {
 			upgradeProperty(this, property);
 		}
@@ -213,11 +213,7 @@ export class NavigationMenuElement extends BaseElement {
 			return;
 		}
 		this.#synchronizeExpanded();
-		if (this.openTrigger) {
-			this.#internals.states.add("open");
-		} else {
-			this.#internals.states.delete("open");
-		}
+		setCustomState(this.internals, "open", Boolean(this.openTrigger));
 	};
 
 	#onFocusOut = (): void => {
@@ -378,11 +374,11 @@ export class NavigationMenuElement extends BaseElement {
 		this.#controlledTriggers = new Map(
 			[...triggers].filter((entry): entry is [HTMLButtonElement, HTMLElement] => entry[1] !== undefined),
 		);
-		if ([...this.#controlledTriggers.values()].some((popup) => popup.matches(":popover-open"))) {
-			this.#internals.states.add("open");
-		} else {
-			this.#internals.states.delete("open");
-		}
+		setCustomState(
+			this.internals,
+			"open",
+			[...this.#controlledTriggers.values()].some((popup) => popup.matches(":popover-open")),
+		);
 		this.#initialized = true;
 		this.#synchronizeState();
 	}
@@ -444,11 +440,11 @@ export class NavigationMenuElement extends BaseElement {
 
 	#synchronizeState(): void {
 		if (this.orientation === "horizontal") {
-			this.#internals.states.add("horizontal");
-			this.#internals.states.delete("vertical");
+			this.internals.states.add("horizontal");
+			this.internals.states.delete("vertical");
 		} else {
-			this.#internals.states.add("vertical");
-			this.#internals.states.delete("horizontal");
+			this.internals.states.add("vertical");
+			this.internals.states.delete("horizontal");
 		}
 	}
 

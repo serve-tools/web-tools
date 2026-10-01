@@ -68,6 +68,7 @@
 		"lit/signals/demo",
 		"polyfills/arraybuffer-base64",
 		"polyfills/composites",
+		"polyfills/custom-element-registry",
 		"polyfills/decorator-metadata",
 		"polyfills/observable",
 		"polyfills/prioritized-task-scheduling",
@@ -77,6 +78,7 @@
 		"polyfills/urlpattern",
 		"ponyfills/arraybuffer-base64",
 		"ponyfills/composites",
+		"ponyfills/custom-element-registry",
 		"ponyfills/decorator-metadata",
 		"ponyfills/observable",
 		"ponyfills/prioritized-task-scheduling",
@@ -397,9 +399,13 @@
 					"benchmark/template/fixture.ts",
 					"examples/main.ts",
 					"examples/template.ts",
+					"examples/template-source.ts",
 					"test/*.{recipes,types}.ts"
 				],
 				"ignoreIssues": {
+					"benchmark/interactions/src/base-ui-*.js": [
+						"unlisted"
+					],
 					"benchmark/comparison/src/base-ui-weight.js": [
 						"unlisted"
 					],
@@ -407,6 +413,12 @@
 						"unlisted"
 					],
 					"benchmark/comparison/src/react-native-weight.js": [
+						"unlisted"
+					],
+					"benchmark/comparison/src/size/base-ui*.js": [
+						"unlisted"
+					],
+					"benchmark/comparison/src/size/react-framework.js": [
 						"unlisted"
 					]
 				}
@@ -593,7 +605,8 @@
 					"@serve-tools/polyfill-prioritized-task-scheduling",
 					"@serve-tools/polyfill-request-idle-callback",
 					"@serve-tools/polyfill-resource-management",
-					"@serve-tools/polyfill-urlpattern"
+					"@serve-tools/polyfill-urlpattern",
+					"@serve-tools/polyfill-custom-element-registry"
 				]
 			},
 			"rolldown/typescript": {
@@ -601,6 +614,16 @@
 					"src/rolldown-typescript.ts",
 					"test/*.recipes.ts",
 					"test/*.types.ts"
+				]
+			},
+			"polyfills/custom-element-registry": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"ponyfills/custom-element-registry": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
 				]
 			}
 		}

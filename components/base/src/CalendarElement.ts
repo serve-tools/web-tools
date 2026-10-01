@@ -1,5 +1,6 @@
+import { DisabledElement } from "./_disabled.js";
 import { upgradeProperty } from "./_upgrade.js";
-import { BaseElement } from "./BaseElement.js";
+import type { BaseElement } from "./BaseElement.js";
 import { html } from "./template.js";
 
 /** A committed calendar date and the user event that proposed it. */
@@ -20,11 +21,10 @@ interface PlainDate {
 }
 
 const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/u;
-const monthPattern = /^(\d{4})-(\d{2})$/u;
 const weekdays = Object.freeze([0, 1, 2, 3, 4, 5, 6]);
 
 /** An inline Gregorian plain-date grid; it deliberately has no form identity or picker facade. */
-export class CalendarElement extends BaseElement {
+export class CalendarElement extends DisabledElement {
 	static readonly observedAttributes = ["disabled", "locale", "max", "min", "month", "value", "week-starts-on"];
 
 	#buttons: HTMLButtonElement[] = [];
@@ -33,7 +33,7 @@ export class CalendarElement extends BaseElement {
 	#focusDate: PlainDate | undefined;
 	#grid = this.ownerDocument.createElement("div");
 	#label = this.ownerDocument.createElement("div");
-	#month = this.#monthOf(this.#today());
+	#month = this.#firstOf(this.#today());
 	#revision = 0;
 	#proposing = false;
 	#rows = Array.from({ length: 6 }, () => this.ownerDocument.createElement("div"));
@@ -146,14 +146,6 @@ export class CalendarElement extends BaseElement {
 			throw new TypeError("Calendar locale must be a valid BCP 47 locale tag");
 		}
 		this.setAttribute("locale", locale);
-	}
-
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
 	}
 
 	/** The first weekday, Sunday 0 through Saturday 6; omission derives it from Intl.Locale when available, else Sunday. */
@@ -348,7 +340,7 @@ export class CalendarElement extends BaseElement {
 		}
 		this.#value = date ? formatDate(date) : "";
 		const month = parseMonth(this.getAttribute("month") ?? "");
-		this.#month = month ?? this.#monthOf(date ?? this.#today());
+		this.#month = month ?? this.#firstOf(date ?? this.#today());
 		const focus = this.#focusDate;
 		this.#focusDate =
 			date && date.year === this.#month.year && date.month === this.#month.month
@@ -367,23 +359,32 @@ export class CalendarElement extends BaseElement {
 		if (!this.shadowRoot) {
 			return;
 		}
-		this.#label.textContent = monthLabel(this.locale, this.#firstOf(this.#month));
+		const locale = this.locale;
+		const first = this.#firstOf(this.#month);
+		this.#label.textContent = new Intl.DateTimeFormat(locale, {
+			calendar: "gregory",
+			era: "short",
+			month: "long",
+			timeZone: "UTC",
+			year: "numeric",
+		}).format(toDate(first));
+		const weekStartsOn = this.weekStartsOn;
+		const weekdayFormatter = new Intl.DateTimeFormat(locale, {
+			calendar: "gregory",
+			timeZone: "UTC",
+			weekday: "short",
+		});
 		this.#weekdays.replaceChildren(
 			...weekdays.map((offset) => {
-				const day = mod(this.weekStartsOn + offset, 7);
+				const day = mod(weekStartsOn + offset, 7);
 				const cell = this.ownerDocument.createElement("div");
 				cell.part.add("weekday");
 				cell.setAttribute("role", "columnheader");
-				cell.textContent = new Intl.DateTimeFormat(this.locale, {
-					calendar: "gregory",
-					timeZone: "UTC",
-					weekday: "short",
-				}).format(toDate(addDays({ year: 2023, month: 1, day: 1 }, day)));
+				cell.textContent = weekdayFormatter.format(toDate(addDays({ year: 2023, month: 1, day: 1 }, day)));
 				return cell;
 			}),
 		);
-		const first = this.#firstOf(this.#month);
-		const start = addDays(first, -mod(weekday(first) - this.weekStartsOn, 7));
+		const start = addDays(first, -mod(weekday(first) - weekStartsOn, 7));
 		while (this.#buttons.length < 42) {
 			const button = this.ownerDocument.createElement("button");
 			button.type = "button";
@@ -392,22 +393,34 @@ export class CalendarElement extends BaseElement {
 			this.#buttons.push(button);
 			this.#rows[Math.floor((this.#buttons.length - 1) / 7)].append(button);
 		}
+		const today = this.#today();
+		const dateFormatter = new Intl.DateTimeFormat(locale, {
+			calendar: "gregory",
+			day: "numeric",
+			era: "short",
+			month: "long",
+			timeZone: "UTC",
+			weekday: "long",
+			year: "numeric",
+		});
 		for (let index = 0; index < 42; ++index) {
 			const date = addDays(start, index);
 			const button = this.#buttons[index];
 			const value = inRange(date) ? formatDate(date) : "";
+			const current = sameDate(date, today);
+			const selected = value === this.#value;
+			const outside = date.month !== this.#month.month || date.year !== this.#month.year;
 			button.dataset.value = value;
 			button.textContent = String(date.day);
-			button.disabled = this.disabled || !inRange(date) || this.#isDisabled(date);
-			button.tabIndex = value === this.focusDate ? 0 : -1;
-			button.toggleAttribute("data-current", sameDate(date, this.#today()));
-			button.toggleAttribute("data-selected", value === this.#value);
-			button.toggleAttribute("data-outside", date.month !== this.#month.month || date.year !== this.#month.year);
-			button.part.toggle("today", sameDate(date, this.#today()));
-			button.part.toggle("selected", value === this.#value);
-			button.part.toggle("outside", date.month !== this.#month.month || date.year !== this.#month.year);
-			button.setAttribute("aria-label", dateLabel(this.locale, date));
-			button.setAttribute("aria-selected", String(value === this.#value));
+			button.disabled = this.disabled || this.#isDisabled(date);
+			button.toggleAttribute("data-current", current);
+			button.toggleAttribute("data-selected", selected);
+			button.toggleAttribute("data-outside", outside);
+			button.part.toggle("today", current);
+			button.part.toggle("selected", selected);
+			button.part.toggle("outside", outside);
+			button.setAttribute("aria-label", dateFormatter.format(toDate(date)));
+			button.setAttribute("aria-selected", String(selected));
 		}
 		const focused = formatDate(this.#focusDate ?? start);
 		const active =
@@ -423,9 +436,10 @@ export class CalendarElement extends BaseElement {
 
 	#showDate(date: PlainDate, focus: boolean): void {
 		if (date.year !== this.#month.year || date.month !== this.#month.month) {
-			this.#setAttribute("month", formatMonth(this.#monthOf(date)));
+			this.#setAttribute("month", formatMonth(date));
+		} else {
+			this.#render();
 		}
-		this.#render();
 		if (focus) {
 			this.#buttons.find((button) => button.dataset.value === formatDate(date))?.focus();
 		}
@@ -445,9 +459,6 @@ export class CalendarElement extends BaseElement {
 	}
 	#firstOf(month: PlainDate): PlainDate {
 		return { year: month.year, month: month.month, day: 1 };
-	}
-	#monthOf(date: PlainDate): PlainDate {
-		return this.#firstOf(date);
 	}
 	#setDateAttribute(name: "min" | "max", value: string): void {
 		const date = value === "" ? undefined : parseDate(String(value));
@@ -484,23 +495,11 @@ const parseDate = (value: string): PlainDate | undefined => {
 		return undefined;
 	}
 	const date = { year: Number(match[1]), month: Number(match[2]), day: Number(match[3]) };
-	return Number.isSafeInteger(date.year) &&
-		date.month >= 1 &&
-		date.month <= 12 &&
-		date.day >= 1 &&
-		date.day <= daysInMonth(date.year, date.month)
+	return date.month >= 1 && date.month <= 12 && date.day >= 1 && date.day <= daysInMonth(date.year, date.month)
 		? date
 		: undefined;
 };
-const parseMonth = (value: string): PlainDate | undefined => {
-	const match = monthPattern.exec(value);
-	if (!match) {
-		return undefined;
-	}
-	const year = Number(match[1]),
-		month = Number(match[2]);
-	return Number.isSafeInteger(year) && month >= 1 && month <= 12 ? { year, month, day: 1 } : undefined;
-};
+const parseMonth = (value: string): PlainDate | undefined => parseDate(`${value}-01`);
 const formatDate = ({ year, month, day }: PlainDate): string =>
 	`${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 const formatMonth = ({ year, month }: PlainDate): string =>
@@ -529,24 +528,6 @@ const addMonths = (date: PlainDate, months: number): PlainDate => {
 };
 const weekday = (date: PlainDate): number => toDate(date).getUTCDay();
 const inRange = (date: PlainDate): boolean => date.year >= 0 && date.year <= 9999;
-const monthLabel = (locale: string, date: PlainDate): string =>
-	new Intl.DateTimeFormat(locale, {
-		calendar: "gregory",
-		era: "short",
-		month: "long",
-		timeZone: "UTC",
-		year: "numeric",
-	}).format(toDate(date));
-const dateLabel = (locale: string, date: PlainDate): string =>
-	new Intl.DateTimeFormat(locale, {
-		calendar: "gregory",
-		day: "numeric",
-		era: "short",
-		month: "long",
-		timeZone: "UTC",
-		weekday: "long",
-		year: "numeric",
-	}).format(toDate(date));
 const localeWeekStart = (locale: string): number => {
 	try {
 		const info = (

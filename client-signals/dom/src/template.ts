@@ -359,6 +359,7 @@ const render = (result: TemplateResult, owner: object, ownerDocument: Document, 
 			const value = result.values[index];
 			let write: (value: any, nestedMode: Mode) => void;
 			let refreshChild: Cleanup | undefined;
+			let reactiveCallback = true;
 
 			if (part === node) {
 				const text = ownerDocument.createTextNode("");
@@ -514,6 +515,7 @@ const render = (result: TemplateResult, owner: object, ownerDocument: Document, 
 					continue;
 				}
 				if (name.startsWith("@")) {
+					reactiveCallback = false;
 					const type = name.slice(1);
 					let listener: Listener | undefined;
 					write = (next: ListenerValue | null | undefined) => {
@@ -573,8 +575,12 @@ const render = (result: TemplateResult, owner: object, ownerDocument: Document, 
 					write(next, nestedMode);
 				}
 			};
-			if (Signal.isState(value) || Signal.isComputed(value)) {
-				const run = () => apply(value.get(), "inline");
+			if (
+				Signal.isState(value) ||
+				Signal.isComputed(value) ||
+				(reactiveCallback && typeof value === "function")
+			) {
+				const run = () => apply(typeof value === "function" ? value.call(owner) : value.get(), "inline");
 				if (mode === "inline") {
 					refreshers.push(run);
 					run();

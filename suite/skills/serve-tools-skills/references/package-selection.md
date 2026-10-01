@@ -98,3 +98,8 @@ Select `@serve-tools/signal` separately only when application code imports it di
 - Choose `@serve-tools/rolldown-decorators` for decorator syntax and runtime semantics; the metadata polyfill supplies only the global symbol key.
 - Choose `@serve-tools/rolldown-typescript` only for its supported in-memory compilation path; retain normal TypeScript CLI builds for declarations, package artifacts, publishing, generated assets, and configuration-time code.
 - Choose `@serve-tools/vite-polyfills` when support should be derived and injected by the build rather than selected in application code.
+
+## Scoped custom element registries
+
+- Explicitly install the iframe fallback into a chosen Window: `@serve-tools/ponyfill-custom-element-registry`.
+- Automatically install coordinated DOM patches in Firefox when scoped support is missing: `@serve-tools/polyfill-custom-element-registry`.

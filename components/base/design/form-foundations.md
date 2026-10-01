@@ -5,10 +5,12 @@ It does not copy their implementation, import Lit, introduce a property-declarat
 
 ## Ownership
 
-`BaseElement` continues to own retained layout, signal bindings, and connection resources.
+`BaseElement` owns retained layout, signal bindings, connection resources, and one protected read-only `internals` object.
+Every subclass uses that object for custom states and default ARIA semantics instead of calling `attachInternals()` again.
+It attaches lazily on first access, including from subclass field initializers, and is retained across disconnection and adoption.
 Non-form components do not acquire form listeners, validators, or field markup.
 
-`FormAssociatedElement` owns one `ElementInternals` and the native form and validity facade.
+`FormAssociatedElement` opts into form association and uses the inherited internals for the native form and validity facade.
 Its constructor does not call subclass hooks.
 It does not choose a value representation, restoration encoding, reset policy, accessibility role, or validation presentation policy.
 Checkbox, Switch, and the existing Select/Combobox selection foundation share it.
@@ -20,7 +22,10 @@ Switch retains switch semantics and its own layout.
 Initialization must run only after the leaf's state exists, and must preserve pre-upgrade property order and failed-upgrade cleanup.
 Inherited fieldset disabledness must not overwrite the author's `disabled` attribute.
 
-The internal native-field foundation shares the reflected boolean properties, native validity facade, shadow-root creation, and state synchronization used by Number Field and OTP Field.
+The internal native-field foundation shares the native validity facade and shadow-root creation used by Number Field and OTP Field.
+It and `FormAssociatedElement` inherit the same reflected `disabled`, `readOnly`, and `required` properties from an internal control base.
+The shared base does not introduce validation hooks, form association, input discovery, or constructor-time property replay.
+Custom-state updates use one internal helper across form and non-form components.
 Input discovery, recovery, reset observation, and lifecycle scheduling remain private to each leaf rather than becoming a new hierarchy of hooks.
 It never becomes another form-associated owner.
 Number Field retains stepping, pointer repetition, and proposal transaction policy.
@@ -28,6 +33,7 @@ OTP Field retains its single editor and presentational segment policy.
 Replacement, reset, disconnection, and document adoption retain their existing observable behavior.
 
 `FieldElement` remains a coordinator around an authored native or form-associated control.
+It shares the attribute-ownership implementation used by native fields and selection controls, including restoration of the latest author value and avoiding writes when restoration would leave an attribute unchanged.
 It is not renamed to `FormFieldElement` and does not become an input superclass.
 A new owned-control field shell, validation presentation modes, declarative property metadata, and the multi-input Slider are outside this first extraction.
 They require separate consumer evidence and must not be smuggled into a behavior-preserving migration.

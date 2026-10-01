@@ -1,34 +1,10 @@
+import { FormControlElement } from "./_form-control.js";
 import type { AttributeOwner } from "./_ownership.js";
-import { BaseElement } from "./BaseElement.js";
 
 /** Shared native form facade for wrappers that retain one authored input as the only control. */
-export abstract class NativeFieldElement extends BaseElement {
+export abstract class NativeFieldElement extends FormControlElement {
 	/** The retained native input, which owns focus, validation, and form submission. */
 	abstract get input(): HTMLInputElement | null;
-
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
-	}
-
-	get readOnly(): boolean {
-		return this.hasAttribute("readonly");
-	}
-
-	set readOnly(value: boolean) {
-		this.toggleAttribute("readonly", Boolean(value));
-	}
-
-	get required(): boolean {
-		return this.hasAttribute("required");
-	}
-
-	set required(value: boolean) {
-		this.toggleAttribute("required", Boolean(value));
-	}
 
 	get validity(): ValidityState | null {
 		return this.input?.validity ?? null;
@@ -67,14 +43,5 @@ export const synchronizeNativeFieldAttributes = (
 		} else {
 			owned.releaseAttribute(input, name);
 		}
-	}
-};
-
-/** Updates one native-field host custom state. */
-export const setNativeFieldState = (internals: ElementInternals, state: string, present: boolean): void => {
-	if (present) {
-		internals.states.add(state);
-	} else {
-		internals.states.delete(state);
 	}
 };

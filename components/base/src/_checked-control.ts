@@ -1,3 +1,4 @@
+import { setCustomState } from "./_states.js";
 import { upgradeProperty } from "./_upgrade.js";
 import type { BaseElement } from "./BaseElement.js";
 import { FormAssociatedElement } from "./FormAssociatedElement.js";
@@ -37,15 +38,6 @@ export interface CheckedControlBehavior {
 		effectiveDisabled: boolean,
 	) => boolean;
 }
-
-/** Toggles one custom state. */
-export const setCustomState = (internals: ElementInternals, state: string, present: boolean): void => {
-	if (present) {
-		internals.states.add(state);
-	} else {
-		internals.states.delete(state);
-	}
-};
 
 const restoredStates = new Map<string, boolean>([
 	["checked", true],

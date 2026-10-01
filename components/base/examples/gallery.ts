@@ -1,3 +1,5 @@
+import { initializeSource } from "./source.js";
+
 /** The full component roster, including capabilities retained from the Base donor. */
 export const families = [
 	["button", "Button", "Forms"],
@@ -44,6 +46,9 @@ export const families = [
 	["drag-drop", "Drag and drop", "Base capabilities"],
 	["context", "Context", "Base capabilities"],
 	["base", "Signal layout and lifecycle", "Base capabilities"],
+	["internals", "Shared element internals", "Base capabilities"],
+	["form-associated", "Form-associated foundation", "Base capabilities"],
+	["styling", "Styling and themes", "Base capabilities"],
 ] as const;
 
 /** Creates navigation and markup previews without treating missing components as working examples. */
@@ -67,18 +72,7 @@ export function initializeGallery(): void {
 
 	for (const section of document.querySelectorAll<HTMLElement>("[data-component]")) {
 		sections.set(section.dataset.component!, section);
-		const preview = section.querySelector<HTMLElement>(".preview");
-		const code = section.querySelector<HTMLElement>("pre code");
-		if (preview && code) {
-			const lines = preview.innerHTML.trim().split("\n");
-			const indentation = Math.min(
-				...lines
-					.slice(1)
-					.filter((line) => line.trim())
-					.map((line) => /^\s*/.exec(line)![0].length),
-			);
-			code.textContent = lines.map((line, index) => (index ? line.slice(indentation) : line)).join("\n");
-		}
+		initializeSource(section);
 	}
 
 	for (const [id, name, familyCategory] of families) {

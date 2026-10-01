@@ -92,9 +92,11 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/polyfill-resource-management`](./polyfills/resource-management/) installs ECMAScript Explicit Resource Management globals.
 - [`@serve-tools/polyfill-urlpattern`](./polyfills/urlpattern/) installs `URLPattern` while preserving a native implementation.
 - [`@serve-tools/polyfill-composites`](./polyfills/composites/) installs a missing `Composite` global with the experimental ponyfill's documented identity limits.
+- [`@serve-tools/polyfill-custom-element-registry`](./polyfills/custom-element-registry/) installs missing scoped-registry support in Firefox through coordinated DOM patches.
 - [`@serve-tools/polyfill-observable`](./polyfills/observable/) installs missing `Observable`, `Subscriber`, and `EventTarget.prototype.when` APIs while preserving native implementations.
 - [`@serve-tools/ponyfill-observable`](./ponyfills/observable/) provides a Web Observable API subset with a fresh execution per consumption and no global mutation.
 - [`@serve-tools/ponyfill-composites`](./ponyfills/composites/) creates interned composite values without modifying the global environment.
+- [`@serve-tools/ponyfill-custom-element-registry`](./ponyfills/custom-element-registry/) provides explicit installation of iframe-backed scoped registries without import-time mutation.
 - [`@serve-tools/ponyfill-arraybuffer-base64`](./ponyfills/arraybuffer-base64/) encodes `Uint8Array` values as base64 in Node.js without global mutation.
 - [`@serve-tools/ponyfill-decorator-metadata`](./ponyfills/decorator-metadata/) provides a stable module-scoped metadata symbol without global mutation.
 - [`@serve-tools/ponyfill-prioritized-task-scheduling`](./ponyfills/prioritized-task-scheduling/) provides prioritized tasks, continuations, and task controls without global mutation.

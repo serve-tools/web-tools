@@ -1,0 +1,48 @@
+{
+	"name": "@serve-tools/polyfill-custom-element-registry",
+	"version": "0.1.0",
+	"description": "Installs missing scoped CustomElementRegistry support in Firefox",
+	"keywords": [
+		"custom-elements",
+		"custom-element-registry",
+		"polyfill",
+		"scoped-registry",
+		"web-components"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/polyfills/custom-element-registry#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "polyfills/custom-element-registry"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": [
+		"./dist/polyfill-custom-element-registry.js",
+		"./dist/apply/CustomElementRegistry.js"
+	],
+	"type": "module",
+	"exports": {
+		".": "./dist/polyfill-custom-element-registry.js",
+		"./apply/CustomElementRegistry": "./dist/apply/CustomElementRegistry.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run test:node && npm run test:browser",
+		"test:browser": "npm run build --workspace @serve-tools/ponyfill-custom-element-registry && vitest run --config vitest.browser.config.ts",
+		"test:node": "npm run build --workspace @serve-tools/ponyfill-custom-element-registry && vitest run --config vitest.config.ts",
+		"typecheck": "npm run build --workspace @serve-tools/ponyfill-custom-element-registry && tsc --project tsconfig.test.json"
+	},
+	"dependencies": {
+		"@serve-tools/ponyfill-custom-element-registry": "^0.1.0"
+	}
+}

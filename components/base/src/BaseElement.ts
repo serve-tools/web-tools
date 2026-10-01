@@ -1,18 +1,25 @@
 /// <reference lib="esnext.disposable" preserve="true" />
 
+import type { BindingScope } from "@serve-tools/signal-dom";
 import { createBindingScope } from "@serve-tools/signal-dom";
 import type { TemplateResult } from "@serve-tools/signal-dom/template";
 import { createFragment, isTemplateResult } from "@serve-tools/signal-dom/template";
 
 /** A custom element whose layout survives disconnection without retaining active subscriptions. */
 export class BaseElement extends HTMLElement {
-	#bindings = createBindingScope();
+	#bindings: BindingScope | undefined;
 	#connection: Connection | undefined;
 	#initialized = false;
 	#failed = false;
 	#reconciling = false;
 	#retrying = false;
 	#retryQueued = false;
+	#internals: ElementInternals | undefined;
+
+	/** The platform internals shared by this element and its subclasses, attached on first use. */
+	protected get internals(): ElementInternals {
+		return (this.#internals ??= this.attachInternals());
+	}
 
 	/** Chooses the layout's destination without replacing author-provided content. */
 	protected createLayoutRoot(): HTMLElement | ShadowRoot {
@@ -81,6 +88,7 @@ export class BaseElement extends HTMLElement {
 	}
 
 	#initialize(): void {
+		const bindings = (this.#bindings ??= createBindingScope());
 		const content = this.ownerDocument.createDocumentFragment();
 
 		let nodes: ChildNode[] = [];
@@ -89,7 +97,7 @@ export class BaseElement extends HTMLElement {
 		try {
 			root = this.createLayoutRoot();
 
-			this.#bindings.capture(() => {
+			bindings.capture(() => {
 				const result = this.layout(content);
 
 				if (isTemplateResult(result)) {
@@ -109,7 +117,7 @@ export class BaseElement extends HTMLElement {
 			const errors = [error as Error];
 
 			try {
-				this.#bindings.dispose();
+				bindings.dispose();
 			} catch (cleanupError) {
 				errors.push(cleanupError as Error);
 			}
@@ -156,7 +164,7 @@ export class BaseElement extends HTMLElement {
 
 			this.#connection = connection;
 
-			if (!this.#bindings.resume() || this.#connection !== connection || !this.isConnected) {
+			if (!this.#bindings!.resume() || this.#connection !== connection || !this.isConnected) {
 				this.#disconnect();
 				this.#interrupted();
 
@@ -234,7 +242,7 @@ export class BaseElement extends HTMLElement {
 		const errors: Error[] = [];
 
 		try {
-			this.#bindings.suspend();
+			this.#bindings?.suspend();
 		} catch (error) {
 			errors.push(error as Error);
 		}

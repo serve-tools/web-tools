@@ -5,11 +5,50 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>Base — persistent templates</title>
 		<script type="module" src="./template.ts"></script>
+		<script type="module" src="./template-source.ts"></script>
+		<style>
+		:root {
+			font-family: system-ui, sans-serif;
+			color-scheme: light dark;
+		}
+		body {
+			max-width: 60rem;
+			margin: 2rem auto;
+			padding: 0 1rem;
+		}
+		details {
+			margin-top: 2rem;
+		}
+		.source-toolbar {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+			align-items: center;
+			margin: 1rem 0;
+		}
+		pre {
+			overflow: auto;
+			padding: 1rem;
+			background: CanvasText;
+			color: Canvas;
+		}
+		</style>
 	</head>
 	<body>
 		<p><a href="./">Component gallery</a></p>
 		<h1>Persistent templates</h1>
 		<p>Bindings remain active while rows are hidden or detached. Dispose retires this example permanently.</p>
 		<signal-button></signal-button>
+		<details>
+			<summary>Code and source files</summary>
+			<div class="source-toolbar">
+				<label>Source file <select id="template-source-file"></select></label>
+				<button id="template-source-copy" type="button">Copy code</button>
+				<a id="template-source-editor" hidden>Open in VS Code</a>
+				<a id="template-source-download">Download source</a>
+				<span id="template-source-status" role="status"></span>
+			</div>
+			<pre><code id="template-source-code"></code></pre>
+		</details>
 	</body>
 </html>

@@ -1,10 +1,11 @@
+import { DisabledElement } from "./_disabled.js";
 import { AttributeOwner } from "./_ownership.js";
 import { notifySelectionOwner, ownSelectionId, setOwnedOptionSelected } from "./_selection.js";
+import { setCustomState } from "./_states.js";
 import { upgradeProperty } from "./_upgrade.js";
-import { BaseElement } from "./BaseElement.js";
 
 /** A string-identified authored option in an Base selection collection. */
-export class OptionElement extends BaseElement {
+export class OptionElement extends DisabledElement {
 	static readonly observedAttributes = ["disabled", "label", "selected", "value"];
 
 	#active = false;
@@ -43,14 +44,6 @@ export class OptionElement extends BaseElement {
 
 	set label(value: string) {
 		this.setAttribute("label", String(value));
-	}
-
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
 	}
 
 	/** Current selectedness. A current owner coordinates this write silently. */
@@ -108,5 +101,8 @@ export class OptionElement extends BaseElement {
 		this.toggleAttribute("data-active", this.#active);
 		this.toggleAttribute("data-selected", this.#selected);
 		this.toggleAttribute("data-disabled", this.disabled || this.#invalid);
+		setCustomState(this.internals, "active", this.#active);
+		setCustomState(this.internals, "selected", this.#selected);
+		setCustomState(this.internals, "disabled", this.disabled || this.#invalid);
 	}
 }

@@ -1,0 +1,24 @@
+{
+	"extends": "./tsconfig.test.json",
+	"compilerOptions": {
+		"types": ["vite/client", "node"]
+	},
+	"include": ["src/**/*.ts", "examples/**/*.ts"],
+	"references": [
+		{
+			"path": "../../client/input/tsconfig.json"
+		},
+		{
+			"path": "../../signals/signal/tsconfig.json"
+		},
+		{
+			"path": "../../client-signals/dom/tsconfig.build.json"
+		},
+		{
+			"path": "../../client/context/tsconfig.json"
+		},
+		{
+			"path": "../../polyfills/resource-management/tsconfig.json"
+		}
+	]
+}

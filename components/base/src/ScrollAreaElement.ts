@@ -1,5 +1,6 @@
 import type { PointerState } from "@serve-tools/client-input";
 import { observePointer } from "@serve-tools/client-input";
+import { setCustomState } from "./_states.js";
 import { BaseElement } from "./BaseElement.js";
 
 export interface ScrollAreaMetrics {
@@ -29,14 +30,8 @@ interface DragGeometry {
 }
 
 interface RailStyle {
-	authorOffset: string;
-	authorOffsetPriority: string;
-	authorSize: string;
-	authorSizePriority: string;
-	writtenOffset: string;
-	writtenOffsetPriority: string;
-	writtenSize: string;
-	writtenSizePriority: string;
+	offset: OwnedStyle;
+	size: OwnedStyle;
 }
 
 interface OwnedStyle {
@@ -56,6 +51,8 @@ const emptyMetrics: ScrollAreaMetrics = Object.freeze({
 	scrollHeight: 0,
 	scrollWidth: 0,
 });
+const railOffsetProperty = "--base-scroll-thumb-offset";
+const railSizeProperty = "--base-scroll-thumb-size";
 const rtlPositive = new WeakMap<Document, boolean>();
 const htmlNamespace = "http://www.w3.org/1999/xhtml";
 const potentiallyFocusableSelector =
@@ -67,7 +64,6 @@ export class ScrollAreaElement extends BaseElement {
 	#content: HTMLElement | undefined;
 	#drag: DragGeometry | undefined;
 	#frameCancel: (() => void) | undefined;
-	#internals = this.attachInternals();
 	#metrics: ScrollAreaMetrics = emptyMetrics;
 	#rails = new Map<Axis, HTMLElement>();
 	#railStyles = new Map<HTMLElement, RailStyle>();
@@ -205,17 +201,9 @@ export class ScrollAreaElement extends BaseElement {
 			this.#resizeObserver?.observe(content);
 		}
 		for (const [axis, rail] of this.#rails) {
-			const size = rail.style.getPropertyValue("--base-scroll-thumb-size");
-			const offset = rail.style.getPropertyValue("--base-scroll-thumb-offset");
 			const railStyle: RailStyle = {
-				authorOffset: offset,
-				authorOffsetPriority: rail.style.getPropertyPriority("--base-scroll-thumb-offset"),
-				authorSize: size,
-				authorSizePriority: rail.style.getPropertyPriority("--base-scroll-thumb-size"),
-				writtenOffset: offset,
-				writtenOffsetPriority: rail.style.getPropertyPriority("--base-scroll-thumb-offset"),
-				writtenSize: size,
-				writtenSizePriority: rail.style.getPropertyPriority("--base-scroll-thumb-size"),
+				offset: ownedStyle(rail, railOffsetProperty),
+				size: ownedStyle(rail, railSizeProperty),
 			};
 			this.#railStyles.set(rail, railStyle);
 			let authorAriaHidden = rail.getAttribute("aria-hidden");
@@ -244,7 +232,8 @@ export class ScrollAreaElement extends BaseElement {
 					authorAriaHidden = ariaHidden;
 					rail.setAttribute("aria-hidden", "true");
 				}
-				this.#maintainRailStyle(rail, railStyle);
+				writeOwnedStyle(rail, railOffsetProperty, railStyle.offset, railStyle.offset.writtenValue);
+				writeOwnedStyle(rail, railSizeProperty, railStyle.size, railStyle.size.writtenValue);
 				if (thumb && touchAction) {
 					writeOwnedStyle(thumb, "touch-action", touchAction, "none");
 				}
@@ -278,7 +267,8 @@ export class ScrollAreaElement extends BaseElement {
 		}
 		this.#cleanups = [];
 		for (const [rail, style] of this.#railStyles) {
-			this.#restoreRailStyle(rail, style);
+			restoreOwnedStyle(rail, railOffsetProperty, style.offset);
+			restoreOwnedStyle(rail, railSizeProperty, style.size);
 		}
 		this.#railStyles.clear();
 		this.#resizeObserver?.disconnect();
@@ -346,74 +336,8 @@ export class ScrollAreaElement extends BaseElement {
 		if (!style) {
 			return;
 		}
-		this.#writeRailStyle(rail, style, "size", `${size}px`);
-		this.#writeRailStyle(rail, style, "offset", `${offset}px`);
-	}
-
-	#writeRailStyle(rail: HTMLElement, style: RailStyle, kind: "offset" | "size", value: string): void {
-		const property = kind === "offset" ? "--base-scroll-thumb-offset" : "--base-scroll-thumb-size";
-		const written = kind === "offset" ? style.writtenOffset : style.writtenSize;
-		const writtenPriority = kind === "offset" ? style.writtenOffsetPriority : style.writtenSizePriority;
-		const current = rail.style.getPropertyValue(property);
-		const currentPriority = rail.style.getPropertyPriority(property);
-		if (current !== written || currentPriority !== writtenPriority) {
-			if (kind === "offset") {
-				style.authorOffset = current;
-				style.authorOffsetPriority = currentPriority;
-			} else {
-				style.authorSize = current;
-				style.authorSizePriority = currentPriority;
-			}
-		}
-		if (current !== value || currentPriority !== "") {
-			if (currentPriority !== "") {
-				rail.style.removeProperty(property);
-			}
-			rail.style.setProperty(property, value, "");
-		}
-		if (kind === "offset") {
-			style.writtenOffset = value;
-			style.writtenOffsetPriority = "";
-		} else {
-			style.writtenSize = value;
-			style.writtenSizePriority = "";
-		}
-	}
-
-	#maintainRailStyle(rail: HTMLElement, style: RailStyle): void {
-		this.#writeRailStyle(rail, style, "offset", style.writtenOffset);
-		this.#writeRailStyle(rail, style, "size", style.writtenSize);
-	}
-
-	#restoreRailStyle(rail: HTMLElement, style: RailStyle): void {
-		for (const [property, written, writtenPriority, author, authorPriority] of [
-			[
-				"--base-scroll-thumb-offset",
-				style.writtenOffset,
-				style.writtenOffsetPriority,
-				style.authorOffset,
-				style.authorOffsetPriority,
-			],
-			[
-				"--base-scroll-thumb-size",
-				style.writtenSize,
-				style.writtenSizePriority,
-				style.authorSize,
-				style.authorSizePriority,
-			],
-		] as const) {
-			if (
-				rail.style.getPropertyValue(property) !== written ||
-				rail.style.getPropertyPriority(property) !== writtenPriority
-			) {
-				continue;
-			}
-			if (author === "") {
-				rail.style.removeProperty(property);
-			} else {
-				rail.style.setProperty(property, author, authorPriority);
-			}
-		}
+		writeOwnedStyle(rail, railSizeProperty, style.size, `${size}px`);
+		writeOwnedStyle(rail, railOffsetProperty, style.offset, `${offset}px`);
 	}
 
 	#states(
@@ -432,11 +356,7 @@ export class ScrollAreaElement extends BaseElement {
 			["block-start", blockStart],
 			["block-end", blockEnd],
 		] as const) {
-			if (present) {
-				this.#internals.states.add(name);
-			} else {
-				this.#internals.states.delete(name);
-			}
+			setCustomState(this.internals, name, present);
 		}
 	}
 

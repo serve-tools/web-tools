@@ -3,6 +3,13 @@
 Importing Base does not register custom elements.
 Define application-chosen names explicitly with `customElements.define()`.
 
+`BaseElement` exposes one protected read-only `internals` object, attached lazily on first access and available to subclass field initializers.
+Use `this.internals.states` for custom states and its ARIA properties for default accessibility semantics.
+Use the inherited object instead of attaching another one; replace existing subclass `attachInternals()` calls with `this.internals`.
+Do not override or redeclare the `internals` accessor.
+Keep internals enabled: a subclass definition must not include `"internals"` in `disabledFeatures`.
+Its identity survives reconnection and adoption, and it does not opt the host into form association.
+
 Build Signal DOM content synchronously in `layout(content)` using the supplied detached fragment, or return an inert `html\`...\``result from`@serve-tools/base-components/template`.
 The base materializes a returned result inside its binding capture.
 This uses the same binding scope as the functional helpers without making every base-element consumer construct a fragment manually.

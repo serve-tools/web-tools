@@ -1,3 +1,4 @@
+import { defineBrowserCommand } from "@vitest/browser-playwright";
 import { defineConfig, mergeConfig } from "vitest/config";
 import { browserConfig } from "../../vitest.browser.config.js";
 
@@ -6,6 +7,13 @@ export default mergeConfig(
 	browserConfig,
 	defineConfig({
 		test: {
+			browser: {
+				commands: {
+					setForcedColors: defineBrowserCommand(async ({ page }, active: boolean) => {
+						await page.emulateMedia({ forcedColors: active ? "active" : "none" });
+					}),
+				},
+			},
 			fileParallelism: false,
 			setupFiles: ["@serve-tools/polyfill-resource-management/apply/DisposableStack"],
 		},

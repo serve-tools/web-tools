@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
-import { NativeFieldElement, setNativeFieldState, synchronizeNativeFieldAttributes } from "../../src/_native-field.js";
+import { NativeFieldElement, synchronizeNativeFieldAttributes } from "../../src/_native-field.js";
 import { isDirectInput } from "../../src/_numeric.js";
 import { AttributeOwner } from "../../src/_ownership.js";
+import { setCustomState } from "../../src/_states.js";
 import { BaseElement } from "../../src/BaseElement.js";
 import { NumberFieldElement } from "../../src/NumberFieldElement.js";
 import { html } from "../../src/template.js";
@@ -20,7 +21,6 @@ class TestNativeFieldElement extends NativeFieldElement {
 	static readonly observedAttributes = ["disabled", "readonly", "required"];
 
 	#input: HTMLInputElement | undefined;
-	#internals = this.attachInternals();
 	#owned = new AttributeOwner();
 
 	get input(): HTMLInputElement | null {
@@ -56,9 +56,9 @@ class TestNativeFieldElement extends NativeFieldElement {
 
 	#synchronize(): void {
 		synchronizeNativeFieldAttributes(this, this.#input, this.#owned);
-		setNativeFieldState(this.#internals, "disabled", this.#input?.disabled ?? this.disabled);
-		setNativeFieldState(this.#internals, "readonly", this.#input?.readOnly ?? this.readOnly);
-		setNativeFieldState(this.#internals, "invalid", this.#input ? !this.#input.validity.valid : false);
+		setCustomState(this.internals, "disabled", this.#input?.disabled ?? this.disabled);
+		setCustomState(this.internals, "readonly", this.#input?.readOnly ?? this.readOnly);
+		setCustomState(this.internals, "invalid", this.#input ? !this.#input.validity.valid : false);
 	}
 }
 
@@ -77,6 +77,27 @@ const append = <ElementType extends Element>(element: ElementType): ElementType 
 };
 
 describe("NativeFieldElement", () => {
+	test("reflects common flags without exposing a second form owner or inventing native validity", () => {
+		const element = define();
+		for (const [property, attribute] of [
+			["disabled", "disabled"],
+			["readOnly", "readonly"],
+			["required", "required"],
+		] as const) {
+			element[property] = true;
+			expect(element.hasAttribute(attribute)).toBe(true);
+			element.removeAttribute(attribute);
+			expect(element[property]).toBe(false);
+		}
+		expect(element.input).toBeNull();
+		expect(element.validity).toBeNull();
+		expect(element.validationMessage).toBe("");
+		expect(element.checkValidity()).toBe(true);
+		expect(element.reportValidity()).toBe(true);
+		expect("form" in element).toBe(false);
+		expect("setCustomValidity" in element).toBe(false);
+	});
+
 	test("keeps one accepted native input as the form, value, validity, and focus owner", () => {
 		const form = append(document.createElement("form"));
 		const element = define();

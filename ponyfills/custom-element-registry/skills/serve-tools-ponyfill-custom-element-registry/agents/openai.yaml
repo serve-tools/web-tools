@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Custom Element Registry Ponyfill"
+  short_description: "Set up scoped custom element registries"
+  default_prompt: "Use $serve-tools-ponyfill-custom-element-registry to set up scoped custom element registries."

@@ -2,15 +2,15 @@ import type { OptionElement } from "./OptionElement.js";
 
 /** Synchronizes the option semantics owned by one listbox. */
 export const setListboxState = (
-	options: readonly OptionElement[],
+	records: readonly { readonly invalid: boolean; readonly option: OptionElement }[],
 	active: OptionElement | undefined,
-	selected: ReadonlySet<string>,
-	invalid: ReadonlySet<OptionElement> = new Set(),
+	selected?: ReadonlySet<string>,
 ): void => {
-	for (const option of options) {
+	for (const record of records) {
+		const option = record.option;
 		option.ensureListboxId();
 		const value = option.getAttribute("value");
-		option.setListboxState(option === active, value !== null && selected.has(value), invalid.has(option));
+		option.setListboxState(option === active, value !== null && selected?.has(value) === true, record.invalid);
 	}
 };
 

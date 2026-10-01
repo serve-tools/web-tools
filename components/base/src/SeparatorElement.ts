@@ -1,3 +1,4 @@
+import { setCustomState } from "./_states.js";
 import { upgradeProperty } from "./_upgrade.js";
 import { BaseElement } from "./BaseElement.js";
 import { html } from "./template.js";
@@ -9,7 +10,6 @@ export type SeparatorOrientation = "horizontal" | "vertical";
 export class SeparatorElement extends BaseElement {
 	static readonly observedAttributes = ["decorative", "orientation"];
 
-	#internals = this.attachInternals();
 	#separator = this.ownerDocument.createElement("hr");
 
 	constructor() {
@@ -60,19 +60,11 @@ export class SeparatorElement extends BaseElement {
 
 	#synchronize(): void {
 		const orientation = this.orientation;
-		this.#internals.role = this.decorative ? "none" : "separator";
-		this.#internals.ariaOrientation = this.decorative ? null : orientation;
+		this.internals.role = this.decorative ? "none" : "separator";
+		this.internals.ariaOrientation = this.decorative ? null : orientation;
 
-		this.#setState("decorative", this.decorative);
-		this.#setState("horizontal", orientation === "horizontal");
-		this.#setState("vertical", orientation === "vertical");
-	}
-
-	#setState(state: string, present: boolean): void {
-		if (present) {
-			this.#internals.states.add(state);
-		} else {
-			this.#internals.states.delete(state);
-		}
+		setCustomState(this.internals, "decorative", this.decorative);
+		setCustomState(this.internals, "horizontal", orientation === "horizontal");
+		setCustomState(this.internals, "vertical", orientation === "vertical");
 	}
 }

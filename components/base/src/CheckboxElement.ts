@@ -1,7 +1,8 @@
 import type { CheckboxGroupController, CheckboxHandle } from "./_checkbox-group.js";
 import { getCheckboxGroup, getDirectCheckboxGroup, registerCheckbox } from "./_checkbox-group.js";
 import type { CheckedChangeDetail, CheckedControlBehavior } from "./_checked-control.js";
-import { CheckedControlElement, setCustomState } from "./_checked-control.js";
+import { CheckedControlElement } from "./_checked-control.js";
+import { setCustomState } from "./_states.js";
 import { upgradeProperty } from "./_upgrade.js";
 import type { BaseElement } from "./BaseElement.js";
 import { html } from "./template.js";

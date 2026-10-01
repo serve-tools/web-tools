@@ -1,3 +1,6 @@
+import { AttributeOwner } from "./_ownership.js";
+import { setCustomState } from "./_states.js";
+import { upgradeProperty } from "./_upgrade.js";
 import { BaseElement } from "./BaseElement.js";
 import { html } from "./template.js";
 
@@ -14,14 +17,11 @@ export interface FieldControl extends HTMLElement {
 	checkValidity(): boolean;
 	reportValidity(): boolean;
 	setCustomValidity(message: string): void;
+	/** Reconciles an internal focus surface after Field changes the effective native label association. */
+	refresh?(): void;
 }
 
 type AttributeValue = string | null;
-
-interface OwnedAttribute {
-	author: AttributeValue;
-	owned: AttributeValue;
-}
 
 interface OwnedTokens {
 	author: AttributeValue;
@@ -34,22 +34,24 @@ interface ValueSnapshot {
 	readonly values: readonly unknown[];
 }
 
-interface FieldState {
-	readonly dirty: boolean;
-	readonly disabled: boolean;
-	readonly filled: boolean;
-	readonly focused: boolean;
-	readonly invalid: boolean;
-	readonly required: boolean;
-	readonly valid: boolean | null;
-}
-
 const htmlNamespace = "http://www.w3.org/1999/xhtml";
 const checkableTypes = new Set(["checkbox", "radio"]);
+const fieldSlots = {
+	after: 1 << 0,
+	before: 1 << 1,
+	control: 1 << 2,
+	description: 1 << 3,
+	error: 1 << 4,
+	label: 1 << 5,
+	"label-actions": 1 << 6,
+} as const;
+const labelContentSlots = fieldSlots.label | fieldSlots["label-actions"];
+const controlContentSlots = fieldSlots.before | fieldSlots.control | fieldSlots.after;
 const observedAttributes = [
 	"aria-describedby",
 	"aria-errormessage",
 	"aria-invalid",
+	"aria-labelledby",
 	"checked",
 	"disabled",
 	"for",
@@ -175,35 +177,6 @@ const isFilled = (snapshot: ValueSnapshot): boolean => {
 	return value !== undefined && value !== null && value !== "";
 };
 
-const readState = (
-	control: FieldControl | undefined,
-	baseline: ValueSnapshot | undefined,
-	value: ValueSnapshot | undefined,
-): FieldState => {
-	if (!control || !baseline || !value) {
-		return {
-			dirty: false,
-			disabled: false,
-			filled: false,
-			focused: false,
-			invalid: false,
-			required: false,
-			valid: null,
-		};
-	}
-
-	const valid = control.willValidate ? control.validity.valid : null;
-	return {
-		dirty: !sameSnapshot(baseline, value),
-		disabled: control.matches(":disabled") || Boolean((control as { disabled?: boolean }).disabled),
-		filled: isFilled(value),
-		focused: control.matches(":focus-within"),
-		invalid: valid === false,
-		required: control.matches(":required") || Boolean((control as { required?: boolean }).required),
-		valid,
-	};
-};
-
 /** Coordinates one authored form control with its authored label, descriptions, errors, and presentation state. */
 export class FieldElement extends BaseElement {
 	#ancestorObserver: MutationObserver | undefined;
@@ -216,10 +189,14 @@ export class FieldElement extends BaseElement {
 	#dirty = false;
 	#disabled = false;
 	#errors: readonly HTMLElement[] = Object.freeze([]);
+	#errorVisible = false;
+	#fallbackDescription: HTMLParagraphElement | undefined;
+	#fallbackError: HTMLParagraphElement | undefined;
+	#fallbackLabel: HTMLLabelElement | undefined;
 	#filled = false;
 	#focused = false;
-	#internals = this.attachInternals();
 	#invalid = false;
+	#invalidEvent = false;
 	#ids = new WeakMap<HTMLElement, string>();
 	#label: HTMLLabelElement | undefined;
 	#observer: MutationObserver | undefined;
@@ -227,10 +204,25 @@ export class FieldElement extends BaseElement {
 	#refreshing = false;
 	#resetRoot: Document | ShadowRoot | undefined;
 	#required = false;
+	#relationshipControl: FieldControl | undefined;
+	#relationshipLabel: HTMLLabelElement | undefined;
+	#relationshipLabelId: string | undefined;
+	#sectionVisibility = -1;
+	#sections: readonly HTMLElement[] | undefined;
+	#shellInitialized = false;
+	#slots = 0;
 	#tokens = new TokenOwner();
 	#touched = false;
 	#valid: boolean | null = null;
 	#wasFocused = false;
+
+	constructor() {
+		super();
+
+		for (const property of ["description", "error", "label", "showError"] as const) {
+			upgradeProperty(this, property);
+		}
+	}
 
 	/** The direct `slot="control"` element when exactly one usable control participates. */
 	get control(): FieldControl | null {
@@ -238,19 +230,59 @@ export class FieldElement extends BaseElement {
 		return this.#control ?? null;
 	}
 
-	/** The direct authored native label, when exactly one participates. */
-	get label(): HTMLLabelElement | null {
+	/** Default label text used when no authored `label` slot participates. */
+	get label(): string {
+		return this.getAttribute("label") ?? "";
+	}
+
+	set label(value: string) {
+		this.setAttribute("label", String(value));
+		this.#refresh();
+	}
+
+	/** Default description text used when no authored `description` slot participates. */
+	get description(): string {
+		return this.getAttribute("description") ?? "";
+	}
+
+	set description(value: string) {
+		this.setAttribute("description", String(value));
+		this.#refresh();
+	}
+
+	/** Presentation-only error text used when no authored `error` slot participates. */
+	get error(): string {
+		return this.getAttribute("error") ?? "";
+	}
+
+	set error(value: string) {
+		this.setAttribute("error", String(value));
+		this.#refresh();
+	}
+
+	/** Whether invalid error presentation is forced before the control is touched. */
+	get showError(): boolean {
+		return this.hasAttribute("show-error");
+	}
+
+	set showError(value: boolean) {
+		this.toggleAttribute("show-error", Boolean(value));
+		this.#refresh();
+	}
+
+	/** The active direct native label, including the generated text fallback. */
+	get labelElement(): HTMLLabelElement | null {
 		this.#refresh();
 		return this.#label ?? null;
 	}
 
-	/** Direct authored `slot="description"` elements in document order. */
+	/** Active `slot="description"` elements in document order, including the generated text fallback. */
 	get descriptions(): readonly HTMLElement[] {
 		this.#refresh();
 		return this.#descriptions;
 	}
 
-	/** Direct authored `slot="error"` elements in document order. */
+	/** Active `slot="error"` elements in document order, including the generated text fallback. */
 	get errors(): readonly HTMLElement[] {
 		this.#refresh();
 		return this.#errors;
@@ -266,6 +298,12 @@ export class FieldElement extends BaseElement {
 	get invalid(): boolean {
 		this.#refresh();
 		return this.#invalid;
+	}
+
+	/** Whether invalid error presentation is currently active. */
+	get errorVisible(): boolean {
+		this.#refresh();
+		return this.#errorVisible;
 	}
 
 	/** Whether the current value differs from the association or reset baseline. */
@@ -315,8 +353,9 @@ export class FieldElement extends BaseElement {
 		this.#baseline = this.#control ? valueSnapshot(this.#control) : undefined;
 		this.#dirty = false;
 		this.#touched = false;
+		this.#invalidEvent = false;
 		this.#wasFocused = this.#focused;
-		this.#synchronizeStates();
+		this.#synchronizePresentation();
 	}
 
 	protected override createLayoutRoot(): ShadowRoot {
@@ -324,12 +363,45 @@ export class FieldElement extends BaseElement {
 	}
 
 	protected override layout() {
-		return html`<slot name="label" part="label"></slot><slot name="control" part="control"></slot><slot name="description" part="description"></slot><slot name="error" part="error"></slot>`;
+		return html`
+			<style>
+				:host {
+					display: block;
+				}
+				[part="content"] {
+					display: grid;
+				}
+				[part="label-content"],
+				[part="control-content"] {
+					display: flex;
+				}
+				[hidden] {
+					display: none !important;
+				}
+			</style>
+			<div part="content">
+				<div part="label-content">
+					<slot name="label" part="label"></slot>
+					<slot name="label-actions" part="label-actions"></slot>
+				</div>
+				<div part="control-content">
+					<slot name="before" part="before"></slot>
+					<slot name="control" part="control"></slot>
+					<slot name="after" part="after"></slot>
+				</div>
+				<div part="description-content"><slot name="description" part="description"></slot></div>
+				<div part="error-content"><slot name="error" part="error"></slot></div>
+			</div>
+		`;
 	}
 
 	protected override connect(connection: BaseElement.Connection): void {
 		const epoch = ++this.#connectionEpoch;
 		this.#connectionSignal = connection.signal;
+		this.#shellInitialized = true;
+		this.#sections ??= ["label-content", "control-content", "description-content", "error-content"].map(
+			(part) => this.shadowRoot!.querySelector<HTMLElement>(`[part='${part}']`)!,
+		);
 		const Observer = this.ownerDocument.defaultView?.MutationObserver ?? MutationObserver;
 		const observer = new Observer(() => this.#refresh());
 		const ancestorObserver = new Observer(() => {
@@ -355,7 +427,7 @@ export class FieldElement extends BaseElement {
 			}
 		});
 		observer.observe(this, {
-			attributeFilter: observedAttributes,
+			attributeFilter: [...observedAttributes, "description", "error", "label", "show-error"],
 			attributes: true,
 			childList: true,
 			subtree: true,
@@ -407,7 +479,7 @@ export class FieldElement extends BaseElement {
 			this.#refresh();
 			if (!this.#focused && this.#wasFocused) {
 				this.#touched = true;
-				this.#synchronizeStates();
+				this.#synchronizePresentation();
 			}
 		});
 	};
@@ -416,6 +488,7 @@ export class FieldElement extends BaseElement {
 		if (!this.#eventUsesControl(event)) {
 			return;
 		}
+		this.#invalidEvent = true;
 		this.#refresh();
 		this.#queueRefresh();
 	};
@@ -428,7 +501,8 @@ export class FieldElement extends BaseElement {
 		}
 		const epoch = this.#connectionEpoch;
 		const signal = this.#connectionSignal;
-		queueMicrotask(() => {
+		// Trusted reset events can run microtasks before their native default action.
+		setTimeout(() => {
 			if (
 				event.defaultPrevented ||
 				signal?.aborted ||
@@ -498,30 +572,161 @@ export class FieldElement extends BaseElement {
 		this.#refreshing = true;
 
 		try {
-			const children = [...this.children].filter(isHTMLElement);
-			const controls = children
-				.filter((child) => child.slot === "control")
-				.map(resolveFieldControl)
-				.filter((control) => control !== undefined);
-			const labels = children.filter(
-				(child): child is HTMLLabelElement => child.slot === "label" && isLabel(child),
-			);
-			const descriptions = children.filter((child) => child.slot === "description");
-			const errors = children.filter((child) => child.slot === "error");
+			let slots = 0;
+			const controls: FieldControl[] = [];
+			const labels: HTMLLabelElement[] = [];
+			const descriptions: HTMLElement[] = [];
+			const errors: HTMLElement[] = [];
+			for (const child of [...this.children]) {
+				if (
+					!isHTMLElement(child) ||
+					child === this.#fallbackDescription ||
+					child === this.#fallbackError ||
+					child === this.#fallbackLabel
+				) {
+					continue;
+				}
+
+				const slot = child.slot;
+				slots |= fieldSlots[slot as keyof typeof fieldSlots] ?? 0;
+				if (slot === "control") {
+					const control = resolveFieldControl(child);
+					if (control) {
+						controls.push(control);
+					}
+				} else if (slot === "label" && isLabel(child)) {
+					labels.push(child);
+				} else if (slot === "description") {
+					descriptions.push(child);
+				} else if (slot === "error") {
+					errors.push(child);
+				}
+			}
 			const control = controls.length === 1 ? controls[0] : undefined;
-			const label = labels.length === 1 ? labels[0] : undefined;
 			const value = control ? valueSnapshot(control) : undefined;
 			const baseline = control !== this.#control || !this.#baseline ? value : this.#baseline;
-			const state = readState(control, baseline, value);
+			let valid: boolean | null = null;
+			let dirty = false;
+			let disabled = false;
+			let filled = false;
+			let focused = false;
+			let required = false;
+			if (control && baseline && value) {
+				valid = control.willValidate ? control.validity.valid : null;
+				dirty = !sameSnapshot(baseline, value);
+				disabled = control.matches(":disabled") || Boolean((control as { disabled?: boolean }).disabled);
+				filled = isFilled(value);
+				focused = control.matches(":focus-within");
+				required = control.matches(":required") || Boolean((control as { required?: boolean }).required);
+			}
+			const error =
+				this.error ||
+				(!(slots & fieldSlots.error) && valid === false && control ? control.validationMessage : "");
+			this.#synchronizeFallback("label", this.label, Boolean(slots & fieldSlots.label));
+			this.#synchronizeFallback("description", this.description, Boolean(slots & fieldSlots.description));
+			this.#synchronizeFallback("error", error, Boolean(slots & fieldSlots.error));
+
+			if (this.#fallbackLabel?.parentNode === this) {
+				labels.push(this.#fallbackLabel);
+				slots |= fieldSlots.label;
+			}
+			if (this.#fallbackDescription?.parentNode === this) {
+				descriptions.push(this.#fallbackDescription);
+				slots |= fieldSlots.description;
+			}
+			if (this.#fallbackError?.parentNode === this) {
+				errors.push(this.#fallbackError);
+				slots |= fieldSlots.error;
+			}
+			const label = labels.length === 1 ? labels[0] : undefined;
+			this.#slots = slots;
 
 			this.#reconcileParticipants(control, label, descriptions, errors, baseline);
-			this.#readState(state);
-			if (this.#connectionSignal && !this.#connectionSignal.aborted) {
-				this.#synchronizeRelationships();
+			this.#valid = valid;
+			this.#dirty = dirty;
+			this.#disabled = disabled;
+			this.#filled = filled;
+			this.#focused = focused;
+			this.#invalid = valid === false;
+			if (!this.#invalid) {
+				this.#invalidEvent = false;
 			}
-			this.#synchronizeStates();
+			this.#required = required;
+			if (this.#focused) {
+				this.#wasFocused = true;
+			}
+			this.#synchronizePresentation();
 		} finally {
 			this.#refreshing = false;
+		}
+	}
+
+	#synchronizeFallback(slot: "description" | "error" | "label", text: string, authored: boolean): void {
+		if (!this.#shellInitialized) {
+			return;
+		}
+
+		let fallback: HTMLLabelElement | HTMLParagraphElement | undefined;
+		if (slot === "label") {
+			fallback = this.#fallbackLabel;
+		} else if (slot === "description") {
+			fallback = this.#fallbackDescription;
+		} else {
+			fallback = this.#fallbackError;
+		}
+		if (authored || text === "") {
+			if (fallback?.parentNode === this) {
+				fallback.remove();
+			}
+			return;
+		}
+
+		if (!fallback) {
+			if (slot === "label") {
+				fallback = this.#fallbackLabel = this.ownerDocument.createElement("label");
+			} else if (slot === "description") {
+				fallback = this.#fallbackDescription = this.ownerDocument.createElement("p");
+			} else {
+				fallback = this.#fallbackError = this.ownerDocument.createElement("p");
+			}
+		}
+		if (fallback.slot !== slot) {
+			fallback.slot = slot;
+		}
+		if (fallback.textContent !== text) {
+			fallback.textContent = text;
+		}
+		if (fallback.parentNode !== this) {
+			this.append(fallback);
+		}
+	}
+
+	#synchronizeSections(): void {
+		const sections = this.#sections;
+		if (!sections) {
+			return;
+		}
+
+		const visibility =
+			(this.#slots & labelContentSlots ? 1 : 0) |
+			(this.#slots & controlContentSlots ? 2 : 0) |
+			(this.#slots & fieldSlots.description ? 4 : 0) |
+			(this.#slots & fieldSlots.error && this.#errorVisible ? 8 : 0);
+		const changed = visibility ^ this.#sectionVisibility;
+		if (changed === 0) {
+			return;
+		}
+		this.#sectionVisibility = visibility;
+		for (let index = 0; index < sections.length; ++index) {
+			if (changed & (1 << index)) {
+				this.#setSectionHidden(sections[index], !(visibility & (1 << index)));
+			}
+		}
+	}
+
+	#setSectionHidden(section: HTMLElement, hidden: boolean): void {
+		if (section.hidden !== hidden) {
+			section.hidden = hidden;
 		}
 	}
 
@@ -538,6 +743,7 @@ export class FieldElement extends BaseElement {
 			this.#baseline = baseline;
 			this.#dirty = false;
 			this.#touched = false;
+			this.#invalidEvent = false;
 			this.#wasFocused = false;
 		}
 
@@ -562,19 +768,6 @@ export class FieldElement extends BaseElement {
 		}
 	}
 
-	#readState(state: FieldState): void {
-		this.#valid = state.valid;
-		this.#invalid = state.invalid;
-		this.#dirty = state.dirty;
-		this.#filled = state.filled;
-		this.#focused = state.focused;
-		this.#disabled = state.disabled;
-		this.#required = state.required;
-		if (this.#focused) {
-			this.#wasFocused = true;
-		}
-	}
-
 	#synchronizeRelationships(): void {
 		const control = this.#control;
 		if (!control) {
@@ -582,23 +775,39 @@ export class FieldElement extends BaseElement {
 		}
 
 		const controlId = this.#id(control, "control");
+		const labelId = this.#label && control.refresh ? this.#id(this.#label, "label") : undefined;
+		const relationshipChanged =
+			control !== this.#relationshipControl ||
+			this.#label !== this.#relationshipLabel ||
+			labelId !== this.#relationshipLabelId ||
+			(this.#label !== undefined && this.#label.getAttribute("for") !== controlId);
 		if (this.#label) {
 			this.#attributes.own(this.#label, "for", controlId);
 		}
 
 		const descriptionIds = this.#descriptions.map((element) => this.#id(element, "description"));
-		const errorIds = this.#errors.map((element) => this.#id(element, "error"));
+		const errorIds = this.#errorVisible ? this.#errors.map((element) => this.#id(element, "error")) : [];
 		this.#tokens.own(control, "aria-describedby", descriptionIds);
 		this.#tokens.own(control, "aria-errormessage", errorIds);
+		if (control.refresh) {
+			this.#tokens.own(control, "aria-labelledby", labelId ? [labelId] : []);
+		}
 
 		if (this.#invalid && this.#attributes.authorValue(control, "aria-invalid") === null) {
 			this.#attributes.own(control, "aria-invalid", "true");
 		} else {
 			this.#attributes.releaseAttribute(control, "aria-invalid");
 		}
+
+		this.#relationshipControl = control;
+		this.#relationshipLabel = this.#label;
+		this.#relationshipLabelId = labelId;
+		if (relationshipChanged) {
+			control.refresh?.();
+		}
 	}
 
-	#id(element: HTMLElement, part: "control" | "description" | "error"): string {
+	#id(element: HTMLElement, part: "control" | "description" | "error" | "label"): string {
 		const authorId = this.#attributes.authorValue(element, "id");
 		if (authorId) {
 			this.#attributes.releaseAttribute(element, "id");
@@ -619,6 +828,7 @@ export class FieldElement extends BaseElement {
 	}
 
 	#releaseRelationships(): void {
+		const relationshipControl = this.#relationshipControl;
 		if (this.#control) {
 			this.#attributes.release(this.#control);
 			this.#tokens.release(this.#control);
@@ -628,6 +838,12 @@ export class FieldElement extends BaseElement {
 		}
 		for (const element of [...this.#descriptions, ...this.#errors]) {
 			this.#attributes.release(element);
+		}
+		this.#relationshipControl = undefined;
+		this.#relationshipLabel = undefined;
+		this.#relationshipLabelId = undefined;
+		if (relationshipControl?.isConnected) {
+			relationshipControl.refresh?.();
 		}
 	}
 
@@ -641,79 +857,19 @@ export class FieldElement extends BaseElement {
 			["focused", this.#focused],
 			["disabled", this.#disabled],
 			["required", this.#required],
+			["error-visible", this.#errorVisible],
 		] as const) {
-			if (present) {
-				this.#internals.states.add(state);
-			} else {
-				this.#internals.states.delete(state);
-			}
-		}
-	}
-}
-
-class AttributeOwner {
-	#attributes = new Map<Element, Map<string, OwnedAttribute>>();
-
-	authorValue(element: Element, name: string): AttributeValue {
-		return this.#capture(element, name).author;
-	}
-
-	own(element: Element, name: string, value: AttributeValue): void {
-		const state = this.#capture(element, name);
-		const current = element.getAttribute(name);
-		if (current !== value) {
-			if (value === null) {
-				element.removeAttribute(name);
-			} else {
-				element.setAttribute(name, value);
-			}
-		}
-		state.owned = value;
-	}
-
-	releaseAttribute(element: Element, name: string): void {
-		const attributes = this.#attributes.get(element);
-		const state = attributes?.get(name);
-		if (!attributes || !state) {
-			return;
-		}
-
-		const current = element.getAttribute(name);
-		if (current === state.owned && current !== state.author) {
-			if (state.author === null) {
-				element.removeAttribute(name);
-			} else {
-				element.setAttribute(name, state.author);
-			}
-		}
-		attributes.delete(name);
-		if (attributes.size === 0) {
-			this.#attributes.delete(element);
+			setCustomState(this.internals, state, present);
 		}
 	}
 
-	release(element: Element): void {
-		for (const name of [...(this.#attributes.get(element)?.keys() ?? [])]) {
-			this.releaseAttribute(element, name);
+	#synchronizePresentation(): void {
+		this.#errorVisible = this.#invalid && (this.#touched || this.#invalidEvent || this.showError);
+		if (this.#connectionSignal && !this.#connectionSignal.aborted) {
+			this.#synchronizeRelationships();
 		}
-	}
-
-	#capture(element: Element, name: string): OwnedAttribute {
-		let attributes = this.#attributes.get(element);
-		if (!attributes) {
-			this.#attributes.set(element, (attributes = new Map()));
-		}
-
-		const current = element.getAttribute(name);
-		let state = attributes.get(name);
-		if (!state) {
-			state = { author: current, owned: current };
-			attributes.set(name, state);
-		} else if (current !== state.owned) {
-			state.author = current;
-		}
-
-		return state;
+		this.#synchronizeStates();
+		this.#synchronizeSections();
 	}
 }
 

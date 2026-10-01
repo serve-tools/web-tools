@@ -32,12 +32,18 @@ import type {
 	ToolbarElement,
 	TooltipElement,
 } from "@serve-tools/base-components";
-import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
-import { page, userEvent } from "vitest/browser";
+import { afterAll, afterEach, beforeAll, expect, test, vi } from "vitest";
+import { commands, page, userEvent } from "vitest/browser";
 import { families } from "../../examples/gallery.js";
 import type { GalleryDropElement } from "../../examples/integrations.js";
 
 const fixture = document.createElement("div");
+
+declare module "vitest/internal/browser" {
+	interface BrowserCommands {
+		setForcedColors(active: boolean): Promise<void>;
+	}
+}
 
 beforeAll(async () => {
 	const galleryURL = new URL("../../examples/index.html", import.meta.url);
@@ -96,7 +102,7 @@ test("accounts for every family with either a working example or an explicit pen
 		}
 	}
 	expect(new Set(families.map(([id]) => id)).size).toBe(families.length);
-	expect(fixture.querySelectorAll("[data-component]")).toHaveLength(44);
+	expect(fixture.querySelectorAll("[data-component]")).toHaveLength(47);
 	expect(fixture.querySelectorAll("#component-navigation .pending-link")).toHaveLength(0);
 	expect(fixture.querySelector("#component-count")!.textContent).toBe("38 of 38 Base UI families have examples");
 });
@@ -225,13 +231,15 @@ test("Field connects its native label and coordinates explicit server validity w
 	const field = fixture.querySelector<FieldElement>("#email-field")!;
 	const input = field.control as HTMLInputElement;
 	const form = fixture.querySelector<HTMLFormElement>("#field-form")!;
-	expect(field.label!.control).toBe(input);
+	expect(field.labelElement!.control).toBe(input);
 	expect(new FormData(form).getAll("email")).toEqual(["reader@example.test"]);
 	await userEvent.fill(input, "edited@example.test");
 	expect(field.dirty).toBe(true);
 	await userEvent.click(fixture.querySelector("#field-server-error")!);
 	expect(field.invalid).toBe(true);
 	expect(input.validationMessage).toBe("This address is already in use.");
+	expect(field.errorVisible).toBe(true);
+	expect(field.errors[0]?.textContent).toBe(input.validationMessage);
 	await userEvent.click(fixture.querySelector("#field-clear-error")!);
 	expect(field.valid).toBe(true);
 	form.requestSubmit();
@@ -240,12 +248,26 @@ test("Field connects its native label and coordinates explicit server validity w
 	await expect.poll(() => field.dirty).toBe(false);
 });
 
+test("Field accessories retain native labels and independent help actions", async () => {
+	const field = fixture.querySelector<FieldElement>("#budget-field")!;
+	const input = field.control as HTMLInputElement;
+	expect(field.labelElement!.textContent).toBe("Monthly budget");
+	await userEvent.click(field.labelElement!);
+	expect(document.activeElement).toBe(input);
+	const action = field.querySelector<HTMLButtonElement>("[slot=label-actions]")!;
+	await userEvent.click(action);
+	expect(fixture.querySelector("#budget-help")!.matches(":popover-open")).toBe(true);
+	expect(action.closest("label")).toBeNull();
+	expect(new FormData(input.form!).getAll("budget")).toEqual(["100"]);
+	(fixture.querySelector("#budget-help") as HTMLElement).hidePopover();
+});
+
 test("Number Field and OTP examples compose through Field while retaining their native editors", async () => {
 	const number = fixture.querySelector<NumberFieldElement>("#quantity-field")!;
 	const numberForm = fixture.querySelector<HTMLFormElement>("#number-form")!;
 	const numberField = number.parentElement as FieldElement;
 	expect(numberField.control).toBe(number.input);
-	expect(numberField.label!.control).toBe(number.input);
+	expect(numberField.labelElement!.control).toBe(number.input);
 	await userEvent.click(number.incrementButton!);
 	expect(number.value).toBe("3");
 	expect(fixture.querySelector("#quantity-value")!.textContent).toBe("Quantity: 3");
@@ -255,7 +277,7 @@ test("Number Field and OTP examples compose through Field while retaining their 
 	await expect.poll(() => number.value).toBe("2");
 	const otp = fixture.querySelector<OTPFieldElement>("#code-field")!;
 	const otpForm = fixture.querySelector<HTMLFormElement>("#otp-form")!;
-	expect((otp.parentElement as FieldElement).label!.control).toBe(otp.input);
+	expect((otp.parentElement as FieldElement).labelElement!.control).toBe(otp.input);
 	await userEvent.fill(otp.input!, "123456");
 	expect(otp.segments.map((segment) => segment.getAttribute("data-value")).join("")).toBe("123456");
 	expect(otp.input!.validity.valid).toBe(true);
@@ -447,7 +469,7 @@ test("File example keeps its native input and inspects local form data without u
 	const file = fixture.querySelector<FileElement>("#attachments")!;
 	const form = fixture.querySelector<HTMLFormElement>("#file-form")!;
 	const field = file.parentElement as FieldElement;
-	expect(field.label!.control).toBe(file.input);
+	expect(field.labelElement!.control).toBe(file.input);
 	await userEvent.click(fixture.querySelector("#sample-file")!);
 	expect(file.files.map((entry) => entry.name)).toEqual(["example.txt"]);
 	form.requestSubmit();
@@ -605,4 +627,252 @@ test("the native Time example keeps bounds, step validation, and string form ser
 	form.reset();
 	form.requestSubmit();
 	expect(fixture.querySelector("#time-result")!.textContent).toBe("Preferred time: 10:30");
+});
+
+test("every code panel exposes nonempty authored source and download content", () => {
+	for (const section of fixture.querySelectorAll<HTMLElement>("[data-component]")) {
+		const select = section.querySelector<HTMLSelectElement>(".source select")!;
+		const code = section.querySelector("pre code")!;
+		expect(Array.from(select.options, (option) => option.text)).toEqual(
+			expect.arrayContaining(["HTML", "Setup", "main.ts", "CSS"]),
+		);
+		for (const option of select.options) {
+			select.value = option.value;
+			select.dispatchEvent(new Event("change"));
+			expect(code.textContent?.trim(), `${section.id}: ${option.text}`).toBeTruthy();
+			const download = section.querySelector<HTMLAnchorElement>("a[download]")!;
+			expect(decodeURIComponent(download.href.split(",").slice(1).join(","))).toBe(code.textContent);
+		}
+		select.value = "0";
+		select.dispatchEvent(new Event("change"));
+	}
+	const section = fixture.querySelector("#component-internals")!;
+	expect(section.querySelector("pre code")!.textContent).toBe("<app-gallery-status></app-gallery-status>");
+});
+
+test("shared internals and form-associated foundation demos work", async () => {
+	const status = fixture.querySelector<HTMLElement>("app-gallery-status")!;
+	await userEvent.click(status.querySelector("button")!);
+	expect(status.matches(":state(active)")).toBe(true);
+	expect(status.querySelector("output")!.textContent).toBe("Active");
+	await userEvent.click(status.querySelector("button")!);
+	expect(status.matches(":state(active)")).toBe(false);
+	const form = fixture.querySelector<HTMLFormElement>("#foundation-form")!;
+	await userEvent.click(form.querySelector("app-gallery-form-control button")!);
+	await userEvent.click(form.querySelector('button[type="submit"]')!);
+	expect(form.querySelector("output")!.textContent).toBe("Submitted priority: high.");
+	await userEvent.click(form.querySelector('button[type="reset"]')!);
+	expect(new FormData(form).get("priority")).toBe("normal");
+});
+
+test("source copying uses the selected file and falls back to text selection", async () => {
+	const section = fixture.querySelector<HTMLElement>("#component-internals")!;
+	const details = section.querySelector("details")!;
+	const select = section.querySelector<HTMLSelectElement>(".source select")!;
+	const original = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+	let copied = "";
+	try {
+		details.open = true;
+		select.value = "1";
+		select.dispatchEvent(new Event("change"));
+		const code = section.querySelector("pre code")!;
+		expect(code.textContent).toContain('customElements.define("app-gallery-status", GalleryStatusElement)');
+		Object.defineProperty(navigator, "clipboard", {
+			configurable: true,
+			value: {
+				writeText: async (text: string) => {
+					copied = text;
+				},
+			},
+		});
+		await userEvent.click(section.querySelector(".source-toolbar button")!);
+		expect(copied).toBe(code.textContent);
+		expect(section.querySelector('[role="status"]')!.textContent).toBe("Copied");
+		Object.defineProperty(navigator, "clipboard", {
+			configurable: true,
+			value: {
+				writeText: async () => {
+					throw new Error("Clipboard unavailable");
+				},
+			},
+		});
+		await userEvent.click(section.querySelector(".source-toolbar button")!);
+		expect(getSelection()!.toString()).toBe(code.textContent);
+		expect(section.querySelector('[role="status"]')!.textContent).toContain("Ctrl+C or Command+C");
+	} finally {
+		if (original) {
+			Object.defineProperty(navigator, "clipboard", original);
+		} else {
+			Reflect.deleteProperty(navigator, "clipboard");
+		}
+		getSelection()?.removeAllRanges();
+		details.open = false;
+		select.value = "0";
+		select.dispatchEvent(new Event("change"));
+	}
+});
+
+for (const direction of ["ltr", "rtl"]) {
+	test(`nested menu items align with their trigger across inherited insets in ${direction}`, async (context) => {
+		if (!CSS.supports("position-area", "inline-end span-block-end")) {
+			context.skip();
+		}
+		const width = innerWidth;
+		const height = innerHeight;
+		const section = fixture.querySelector<HTMLElement>("#component-menu")!;
+		const menu = section.querySelector<MenuElement>("#workspace-menu")!;
+		const submenu = menu.querySelector<MenuElement>("app-menu")!;
+		const root = document.documentElement;
+		const originalDirection = root.getAttribute("dir");
+		const originalStyle = section.style.cssText;
+		const originalMenuStyle = menu.style.cssText;
+		try {
+			await page.viewport(1280, 1000);
+			root.dir = direction;
+			// Keep room for either inline direction, independent of the test iframe scroll position.
+			section.style.cssText = "position: fixed; inset: 80px auto auto 400px; width: 400px";
+			window.scrollTo(0, 0);
+			await userEvent.click(menu.trigger!);
+			await userEvent.click(submenu.trigger!);
+			expect(submenu.open).toBe(true);
+			for (const padding of ["0.35rem", "1rem"]) {
+				menu.style.setProperty("--menu-padding", padding);
+				expect(getComputedStyle(submenu.popup!).paddingTop).toBe(getComputedStyle(menu.popup!).paddingTop);
+				expect(getComputedStyle(submenu.popup!).borderTopWidth).toBe("0px");
+				await expect
+					.poll(() =>
+						Math.abs(
+							submenu.items[0]!.getBoundingClientRect().top -
+								submenu.trigger!.getBoundingClientRect().top,
+						),
+					)
+					.toBeLessThan(1);
+				expect(
+					Math.abs(
+						submenu.items[0]!.getBoundingClientRect().bottom -
+							submenu.trigger!.getBoundingClientRect().bottom,
+					),
+				).toBeLessThan(1);
+			}
+			const popup = submenu.popup!.getBoundingClientRect();
+			const trigger = submenu.trigger!.getBoundingClientRect();
+			expect(direction === "ltr" ? popup.left >= trigger.right - 1 : popup.right <= trigger.left + 1).toBe(true);
+		} finally {
+			submenu.hide();
+			menu.hide();
+			section.style.cssText = originalStyle;
+			menu.style.cssText = originalMenuStyle;
+			if (originalDirection === null) {
+				root.removeAttribute("dir");
+			} else {
+				root.setAttribute("dir", originalDirection);
+			}
+			await page.viewport(width, height);
+		}
+	});
+}
+
+test("shadow borders retain visible outlines in forced colors without changing menu layout", async () => {
+	const menu = fixture.querySelector<MenuElement>("#workspace-menu")!;
+	try {
+		await userEvent.click(menu.trigger!);
+		const before = menu.popup!.getBoundingClientRect();
+		await commands.setForcedColors(true);
+		expect(matchMedia("(forced-colors: active)").matches).toBe(true);
+		const style = getComputedStyle(menu.popup!);
+		expect(style.outlineStyle).toBe("solid");
+		expect(style.outlineWidth).toBe("1px");
+		expect(style.borderTopWidth).toBe("0px");
+		const after = menu.popup!.getBoundingClientRect();
+		expect(after.width).toBe(before.width);
+		expect(after.height).toBe(before.height);
+		const highlight = document.createElement("span");
+		highlight.style.color = "Highlight";
+		fixture.append(highlight);
+		try {
+			const expectedColor = getComputedStyle(highlight).color;
+			for (const host of fixture.querySelectorAll(
+				"#component-styling app-checkbox, #component-styling app-switch",
+			)) {
+				const control = host.shadowRoot!.querySelector("[part=control]")!;
+				const controlStyle = getComputedStyle(control);
+				expect(controlStyle.outlineStyle).toBe("solid");
+				expect(controlStyle.outlineWidth).toBe("1px");
+				expect(controlStyle.outlineColor).toBe(expectedColor);
+			}
+		} finally {
+			highlight.remove();
+		}
+	} finally {
+		await commands.setForcedColors(false);
+		menu.hide();
+	}
+});
+
+test("multiline native editing composes with Field labels, validation, submission, and reset", async () => {
+	const form = fixture.querySelector<HTMLFormElement>("#native-textarea-form")!;
+	const field = form.querySelector<FieldElement>("app-field")!;
+	const textarea = form.querySelector("textarea")!;
+	const label = form.querySelector("label")!;
+	const result = form.querySelector("output")!;
+	expect(field.control).toBe(textarea);
+	expect(label.htmlFor).toBe(textarea.id);
+	expect(textarea.getAttribute("aria-describedby")).toBe(form.querySelector("[slot=description]")!.id);
+	await userEvent.click(label);
+	expect(document.activeElement).toBe(textarea);
+	await userEvent.fill(textarea, "Edited first line\nEdited second line");
+	expect(field.dirty).toBe(true);
+	await userEvent.click(form.querySelector<HTMLButtonElement>("[type=submit]")!);
+	expect(result.textContent).toBe("Notes: Edited first line\nEdited second line");
+	expect(new FormData(form).getAll("notes")).toEqual([textarea.value]);
+	await userEvent.fill(textarea, "");
+	expect(field.invalid).toBe(true);
+	expect(form.checkValidity()).toBe(false);
+	await userEvent.click(form.querySelector<HTMLButtonElement>("[type=reset]")!);
+	expect(textarea.value).toBe("First line\nSecond line");
+	await expect.poll(() => field.dirty).toBe(false);
+	expect(field.valid).toBe(true);
+	expect(result.textContent).toBe("No notes submitted.");
+});
+
+test("Text Field owns email editing, validation, and one submitted value", async () => {
+	const field = fixture.querySelector<TextFieldElement>("#account-email")!;
+	const form = fixture.querySelector<HTMLFormElement>("#text-field-form")!;
+	const input = field.input as HTMLInputElement;
+	expect(input.type).toBe("text");
+	await userEvent.fill(input, "reader@example.test");
+	expect(field.validity.valid).toBe(true);
+	expect(new FormData(form).getAll("email")).toEqual(["reader@example.test"]);
+	form.requestSubmit();
+	expect(fixture.querySelector("#text-field-result")!.textContent).toBe("Email: reader@example.test");
+	await userEvent.fill(input, "not-an-email");
+	expect(field.validity.typeMismatch).toBe(true);
+	form.reset();
+	expect(field.value).toBe("");
+});
+
+test("multiline secret reveal retains its editor and copy preserves line breaks", async () => {
+	const field = fixture.querySelector<TextFieldElement>("#example-secret")!;
+	const editor = field.input!;
+	expect(field.revealed).toBe(false);
+	const value = "example-first-line\nexample-second-line\nexample-third-line";
+	expect(editor).toBeInstanceOf(HTMLTextAreaElement);
+	expect(field.value).toBe(value);
+	field.focus();
+	field.setSelectionRange(2, 8);
+	await userEvent.click(fixture.querySelector("#secret-reveal")!);
+	expect(field.revealed).toBe(true);
+	expect(field.input).toBe(editor);
+	expect(editor.selectionStart).toBe(2);
+	expect(editor.selectionEnd).toBe(8);
+	await userEvent.click(fixture.querySelector("#secret-reveal")!);
+	expect(field.revealed).toBe(false);
+	const copy = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue();
+	try {
+		await userEvent.click(fixture.querySelector("#secret-copy")!);
+		expect(copy).toHaveBeenCalledWith(value);
+		expect(field.revealed).toBe(false);
+	} finally {
+		copy.mockRestore();
+	}
 });

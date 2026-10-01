@@ -23,14 +23,15 @@ Every contract document records behavior that remains native, deliberately diffe
 ## Live package inventory
 
 The package surface must be read from `package.json` and `src/base.ts` together.
-The public map contains 38 explicit component and support subpaths: 32 Base classes for Base UI families, Base, Option, Calendar, File, the template API, and FormAssociatedElement.
+The public map contains 39 explicit component and support subpaths, including the dedicated TextFieldElement alongside the existing native Input route.
 The public barrel and subpaths cover every Base class used for the 38-family inventory.
 Review status remains a separate fact from export presence.
 
 The gallery is a product inventory rather than an export count.
-It contains 44 working sections: all 38 Base UI families plus six Base and Serve Tools extras.
+It contains 47 working sections: all 38 Base UI families plus nine Base and Serve Tools extras.
 The Base UI roster includes six deliberate native compositions in addition to Base component classes.
-Button, Input, Fieldset, Form, Radio, and Radio Group are real, working compositions built from authored native controls; they are not empty wrappers and do not add six runtime exports.
+Button, Fieldset, Form, Radio, and Radio Group use authored native controls.
+Input includes both authored native controls and TextFieldElement for owned shadow text editing.
 Base, Time, Context, and Drag/Drop demonstrate the Base foundation or existing Serve Tools packages and are not Base UI component-parity claims.
 
 The browser directory contains focused suites for every exported family, plus lifecycle, failed-upgrade, selection-adversarial, native-composition, export, and gallery integration suites.
@@ -87,7 +88,7 @@ Its cause is not established, and the failed log remains alongside the successfu
 | Field          | Structural coordinator around one native or form-associated control.                    | Exported proof     | No validation modes, async validation, form registry, composite field, or array aggregation.                                                    |
 | Fieldset       | Authored native `fieldset` and `legend`.                                                | Native composition | No provider wrapper.                                                                                                                            |
 | Form           | Authored native `form`.                                                                 | Native composition | No React form context or synthetic submit/reset layer.                                                                                          |
-| Input          | Authored native `input`.                                                                | Native composition | Native editing, composition, autocomplete, selection, and validity remain authoritative.                                                        |
+| Input          | Authored native `input` or `TextFieldElement`.                                          | Native composition | Native editing, composition, autocomplete, selection, and validity remain authoritative.                                                        |
 | Meter          | Passive host semantic with a presentational native numeric oracle.                      | Exported proof     | No duplicate accessibility identity; manual assistive-technology proof remains open.                                                            |
 | Number Field   | Direct native number input plus authored decrement and increment buttons.               | Exported proof     | No locale display formatting, scrubbing, wheel policy, Persian-digit normalization, or custom readonly model.                                   |
 | OTP Field      | One direct native editor plus optional inert visual segments.                           | Exported proof     | No competing per-cell editors, text redistribution, or synthetic autofill event.                                                                |

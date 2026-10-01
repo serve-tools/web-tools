@@ -1,4 +1,5 @@
-import { upgradeProperty } from "./_upgrade.js";
+import { setCustomState } from "./_states.js";
+import { copyAttribute, upgradeProperty } from "./_upgrade.js";
 import { BaseElement } from "./BaseElement.js";
 import { html } from "./template.js";
 
@@ -9,13 +10,12 @@ export type ProgressStatus = "indeterminate" | "progressing" | "complete";
 export class ProgressElement extends BaseElement {
 	static readonly observedAttributes = ["max", "value"];
 
-	#internals = this.attachInternals();
 	#progress = this.ownerDocument.createElement("progress");
 
 	constructor() {
 		super();
 
-		this.#internals.role = "progressbar";
+		this.internals.role = "progressbar";
 		this.#progress.setAttribute("aria-hidden", "true");
 		this.#progress.setAttribute("part", "progress");
 
@@ -23,7 +23,7 @@ export class ProgressElement extends BaseElement {
 			upgradeProperty(this, property);
 		}
 		for (const attribute of ProgressElement.observedAttributes) {
-			this.#copyAttribute(attribute);
+			copyAttribute(this, this.#progress, attribute);
 		}
 		this.#synchronize();
 	}
@@ -65,7 +65,7 @@ export class ProgressElement extends BaseElement {
 	}
 
 	attributeChangedCallback(name: string): void {
-		this.#copyAttribute(name);
+		copyAttribute(this, this.#progress, name);
 		this.#synchronize();
 	}
 
@@ -77,38 +77,20 @@ export class ProgressElement extends BaseElement {
 		return html`${this.#progress}<slot></slot>`;
 	}
 
-	#copyAttribute(name: string): void {
-		const value = this.getAttribute(name);
-		if (value === null) {
-			this.#progress.removeAttribute(name);
-		} else {
-			this.#progress.setAttribute(name, value);
-		}
-	}
-
 	#setNumber(property: "max" | "value", value: number): void {
 		this.#progress[property] = value;
-		const attribute = this.#progress.getAttribute(property);
-		if (attribute === null) {
-			this.removeAttribute(property);
-		} else {
-			this.setAttribute(property, attribute);
-		}
+		copyAttribute(this.#progress, this, property);
 		this.#synchronize();
 	}
 
 	#synchronize(): void {
 		const status = this.status;
-		this.#internals.ariaValueMin = "0";
-		this.#internals.ariaValueMax = String(this.#progress.max);
-		this.#internals.ariaValueNow = status === "indeterminate" ? null : String(this.#progress.value);
+		this.internals.ariaValueMin = "0";
+		this.internals.ariaValueMax = String(this.#progress.max);
+		this.internals.ariaValueNow = status === "indeterminate" ? null : String(this.#progress.value);
 
 		for (const state of ["indeterminate", "progressing", "complete"] as const) {
-			if (status === state) {
-				this.#internals.states.add(state);
-			} else {
-				this.#internals.states.delete(state);
-			}
+			setCustomState(this.internals, state, status === state);
 		}
 	}
 }

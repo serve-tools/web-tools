@@ -83,14 +83,15 @@ for (const [name, packageName, packageRoot] of repositorySkills) {
 
 await validateReleasePackages(publicPackageNames, errors);
 
-if (publishedMetadataCharacters > 7_900) {
+// Include the two scoped-registry package Skills while retaining a bounded metadata budget.
+if (publishedMetadataCharacters > 8_200) {
 	errors.push(
-		`Published Skill names and descriptions use ${publishedMetadataCharacters} characters; keep them at or below 7900`,
+		`Published Skill names and descriptions use ${publishedMetadataCharacters} characters; keep them at or below 8200`,
 	);
 }
 
-if (metadataCharacters > 8_300) {
-	errors.push(`All Skill names and descriptions use ${metadataCharacters} characters; keep them at or below 8300`);
+if (metadataCharacters > 8_600) {
+	errors.push(`All Skill names and descriptions use ${metadataCharacters} characters; keep them at or below 8600`);
 }
 
 if (errors.length > 0) {

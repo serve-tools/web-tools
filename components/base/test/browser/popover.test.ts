@@ -96,6 +96,26 @@ describe("PopoverElement", () => {
 		expect(popup.matches(":popover-open")).toBe(false);
 	});
 
+	test("keeps a forwarded toggle noncancelable when its source event is cancelable", () => {
+		const { element, popup } = create();
+		let forwarded: ToggleEvent | undefined;
+		element.addEventListener("toggle", (event) => {
+			if (event.target === element) {
+				forwarded = event;
+				event.preventDefault();
+			}
+		});
+		const source = new ToggleEvent("toggle", {
+			cancelable: true,
+			newState: "open",
+			oldState: "closed",
+		});
+
+		expect(popup.dispatchEvent(source)).toBe(true);
+		expect(forwarded?.cancelable).toBe(false);
+		expect(source.defaultPrevented).toBe(false);
+	});
+
 	test("preserves native external invokers and source association", async () => {
 		const { element, popup } = create();
 		popup.id = crypto.randomUUID();

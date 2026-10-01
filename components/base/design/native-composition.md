@@ -17,6 +17,12 @@ Use `type="button"` for an action that must not submit a surrounding form.
 Navigation remains an ordinary anchor with `href`.
 
 Inputs retain native selection, input method composition, autofill, constraints, locale-specific editing, and input/change events.
+Multiline editing uses an authored `<textarea>`, including `rows`, `cols`, `wrap`, length constraints, read-only state, selection, submission, and reset.
+Compose it with `FieldElement` for labels, descriptions, errors, and dirty/touched state; it remains the only form control.
+The Input gallery includes this composition with editable multiline content and local submit/reset actions.
+For a shadow-owned editor with its own label and validation, use [TextFieldElement](text-field.md).
+Its password intent supplies CSS masking and a `revealed` property, independently of multiline editing; reveal and copy buttons remain authored actions.
+Automatic content growth and input clear buttons remain optional author behavior.
 There is no Base value signal unless an application explicitly binds one with Signal DOM.
 Binding a native property does not itself impersonate a user action.
 Native fieldsets preserve their first-legend exception and grouping semantics.

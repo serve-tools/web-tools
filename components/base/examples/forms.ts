@@ -18,12 +18,12 @@ export function initializeFieldExamples(): void {
 	field.addEventListener("focusout", () => queueMicrotask(renderField));
 	document.querySelector("#field-server-error")!.addEventListener("click", () => {
 		email.setCustomValidity("This address is already in use.");
-		field.querySelector("[slot=error]")!.textContent = "This address is already in use.";
+		field.showError = true;
 		renderField();
 	});
 	document.querySelector("#field-clear-error")!.addEventListener("click", () => {
 		email.setCustomValidity("");
-		field.querySelector("[slot=error]")!.textContent = "Enter a valid email address.";
+		field.showError = false;
 		renderField();
 	});
 	fieldForm.addEventListener("submit", (event) => {
@@ -32,7 +32,7 @@ export function initializeFieldExamples(): void {
 	});
 	fieldForm.addEventListener("reset", () => {
 		email.setCustomValidity("");
-		field.querySelector("[slot=error]")!.textContent = "Enter a valid email address.";
+		field.showError = false;
 		queueMicrotask(renderField);
 		document.querySelector("#field-result")!.textContent = "No field submitted.";
 	});

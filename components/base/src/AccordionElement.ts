@@ -1,7 +1,9 @@
+import { DisabledElement } from "./_disabled.js";
 import type { AccordionActivation, AccordionController, DisclosureHandle } from "./_disclosure.js";
 import { getDisclosure, registerAccordion } from "./_disclosure.js";
+import { setCustomState } from "./_states.js";
 import { upgradeProperty } from "./_upgrade.js";
-import { BaseElement } from "./BaseElement.js";
+import type { BaseElement } from "./BaseElement.js";
 import type { CollapsibleChangeDetail, CollapsibleElement } from "./CollapsibleElement.js";
 
 /** The axis used for accordion keyboard navigation. */
@@ -44,12 +46,11 @@ const isElement = (value: unknown): value is Element =>
 
 /** Coordinates expansion and keyboard focus for direct child collapsibles. */
 // biome-ignore lint/suspicious/noUnsafeDeclarationMerging: the interface adds typed DOM event overloads only.
-export class AccordionElement extends BaseElement {
+export class AccordionElement extends DisabledElement {
 	static readonly observedAttributes = ["disabled", "loop-focus", "multiple", "orientation"];
 
 	#activation: AccordionActivation | undefined;
 	readonly #controller: AccordionController;
-	#internals = this.attachInternals();
 	#members: DisclosureHandle[] = [];
 	#pendingValues: readonly string[] | undefined;
 	#recoveringProperties = true;
@@ -130,15 +131,6 @@ export class AccordionElement extends BaseElement {
 
 	set multiple(value: boolean) {
 		this.toggleAttribute("multiple", Boolean(value));
-	}
-
-	/** Whether the accordion disables every direct disclosure without changing each one's own disabled property. */
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
 	}
 
 	/** The axis used by arrow-key focus navigation. Invalid values read as `vertical`. */
@@ -285,14 +277,10 @@ export class AccordionElement extends BaseElement {
 		}
 
 		const expanded = new Set(before.members.filter((member) => member.open).map((member) => member.handle));
-		if (this.multiple) {
-			if (open) {
-				expanded.add(disclosure);
-			} else {
-				expanded.delete(disclosure);
-			}
-		} else if (open) {
+		if (!this.multiple && open) {
 			expanded.clear();
+		}
+		if (open) {
 			expanded.add(disclosure);
 		} else {
 			expanded.delete(disclosure);
@@ -345,14 +333,10 @@ export class AccordionElement extends BaseElement {
 
 		this.#pendingValues = undefined;
 		const expanded = new Set(this.#members.filter((member) => member.open));
-		if (this.multiple) {
-			if (open) {
-				expanded.add(disclosure);
-			} else {
-				expanded.delete(disclosure);
-			}
-		} else if (open) {
+		if (!this.multiple && open) {
 			expanded.clear();
+		}
+		if (open) {
 			expanded.add(disclosure);
 		} else {
 			expanded.delete(disclosure);
@@ -542,18 +526,10 @@ export class AccordionElement extends BaseElement {
 	}
 
 	#synchronizeStates(): void {
-		this.#setState("disabled", this.disabled);
-		this.#setState("multiple", this.multiple);
-		this.#setState("horizontal", this.orientation === "horizontal");
-		this.#setState("vertical", this.orientation === "vertical");
-	}
-
-	#setState(state: string, present: boolean): void {
-		if (present) {
-			this.#internals.states.add(state);
-		} else {
-			this.#internals.states.delete(state);
-		}
+		setCustomState(this.internals, "disabled", this.disabled);
+		setCustomState(this.internals, "multiple", this.multiple);
+		setCustomState(this.internals, "horizontal", this.orientation === "horizontal");
+		setCustomState(this.internals, "vertical", this.orientation === "vertical");
 	}
 }
 

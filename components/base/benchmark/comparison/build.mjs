@@ -17,11 +17,13 @@ const arguments_ = parseArguments(process.argv.slice(2));
 const outputDirectory = arguments_["output-dir"] ?? arguments_.output;
 
 if (!outputDirectory) {
-	throw new Error("Usage: node build.mjs --output-dir <comparison artifact directory>");
+	throw new Error(
+		"Usage: node build.mjs [--closure-dir <pinned dependency closure>] --output-dir <comparison artifact directory>",
+	);
 }
 
 const output = resolve(outputDirectory);
-const closure = resolve(output, "closure");
+const closure = resolve(arguments_["closure-dir"] ?? resolve(output, "closure"));
 const bundleDirectory = resolve(output, "bundles");
 const sha256 = (value) => createHash("sha256").update(value).digest("hex");
 const builds = [

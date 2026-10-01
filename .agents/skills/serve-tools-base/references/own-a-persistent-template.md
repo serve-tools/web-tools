@@ -15,7 +15,12 @@ It is capture-aware: inside a binding capture the view follows that scope; outsi
 DOM owners use their document, or pass an explicit document as the third argument.
 
 Use `${value}` for child values, `name=${value}` for a whole attribute, `.property=${value}` for a property, `@event=${handler}` for a listener, and `${directive}` in an opening tag for a synchronous element modifier.
-State and Computed values bind reactively; plain values are written once.
+State, Computed, and synchronous value callbacks bind reactively; plain values are written once.
+Use `${() => value.get()}` to track signal reads; interpolating a plain value is only a snapshot.
+Callbacks track synchronous reads, including conditional dependencies and reads inside getters or methods.
+They update their own binding without rerunning `layout()`, and follow the same disconnect/reconnect lifetime as direct signal bindings.
+Event listeners and opening-tag directives retain their existing callback meanings.
+For a function-valued DOM property, return it from a value callback, as in `.formatter=${() => formatter}`.
 Only `null` removes an attribute; use `.disabled=${boolean}` for boolean DOM properties.
 Function event handlers receive the owner as `this`; listener objects receive their own `handleEvent` call.
 Attach `capture`, `once`, `passive`, or `signal` to the function or listener object for native listener options.

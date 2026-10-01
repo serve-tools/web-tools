@@ -74,3 +74,10 @@ The first direct dialog is current; methods throw `InvalidStateError` if none ex
 Listen for the host's nonbubbling `cancel`/`close` events; cancel prevention is forwarded to the native event.
 Forwarding exists only while connected, so listen on the native child when deliberately observing detached operations.
 Do not add a second focus trap, JS inert sweep, hidden form mirror, or JavaScript positioning loop.
+
+## Multiline text
+
+Use a native `<textarea slot="control" name="notes" rows="3" required>` inside `FieldElement`, with authored `label`, `description`, and `error` slots.
+The textarea owns editing, selection, length constraints, read-only state, form submission, and reset; the Field coordinates its relationships and presentation state.
+See the Input gallery for the complete multiline submit/reset example.
+Base does not supply Reve's automatic growth, clear button, or password-reveal controls.

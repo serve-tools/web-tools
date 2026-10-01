@@ -14,6 +14,7 @@ afterEach(() => {
 });
 
 class ExampleControl extends FormAssociatedElement {
+	readonly initializedInternals = this.internals;
 	validityUpdates = 0;
 	restored: string | File | FormData | null = null;
 	resets = 0;
@@ -150,6 +151,7 @@ describe("FormAssociatedElement", () => {
 	test("initializes internals without invoking subclass hooks before subclass state exists", () => {
 		const control = createControl();
 		expect(control.validityUpdates).toBe(0);
+		expect(control.initializedInternals).toBe(control.controlInternals);
 		expect(control.controlInternals).toBe(control.controlInternals);
 		expect(control.form).toBeNull();
 		expect(control.validity.valid).toBe(true);

@@ -3,7 +3,8 @@
 Base provides composable web components and a small base element for layouts backed by Signal DOM.
 This workspace is under development; [the implementation plan](design/plan.md) and [behavior matrix](design/coverage.md) distinguish planned coverage from verified functionality.
 No release has been authorized.
-The [component gallery](examples/index.html) covers all 38 tracked Base UI families and six Base capabilities.
+The [Reve functional comparison](design/reve-parity.md) maps the styled design library to Base primitives and native HTML, with explicit convenience-feature gaps.
+The [component gallery](examples/index.html) covers all 38 tracked Base UI families and nine Base capability and styling examples.
 Six families use native HTML directly; an example is not a claim of complete Base UI behavior parity or completed manual accessibility evaluation.
 The [accessibility acceptance checklist](design/accessibility.md) covers Chrome, Firefox, and Safari; its manual screen-reader results remain unverified.
 The [template migration review](design/template-migration.md) records the current API, validation, measured performance, larger bundle, and remaining release decisions.
@@ -34,6 +35,13 @@ It does not register custom elements.
 Return an `html` result from `BaseElement.layout()` for ordinary component layout, as in the quick start.
 The base creates the fragment inside its binding capture, so initial values are written synchronously, removal suspends observation, and reconnection reconciles current values into the retained nodes.
 Layout may still return `void` after appending imperative content to its supplied fragment.
+
+Child, whole-attribute, and property interpolations also accept synchronous value callbacks, such as `${() => count.get()}` or `.value=${() => value.get()}`.
+Callbacks track signal reads, including reads made through synchronous getters and methods, and update their own binding without rerunning `layout()`.
+Plain values are snapshots; a callback must read reactive state to receive subsequent updates.
+Event handlers (`@click=${handler}`) remain event callbacks, and opening-tag directives (`<div ${directive}>`) remain synchronous setup callbacks.
+For a function-valued DOM property, return the function from a callback: `.formatter=${() => formatter}`.
+The callback result is a value, not another callback to execute.
 
 For a standalone persistent view, retain and explicitly dispose the fragment:
 
@@ -78,13 +86,24 @@ New code should use bare `html` with `createFragment()` or return an `html` resu
 
 ## Native composition
 
+### Shared element internals
+
+`BaseElement` exposes one protected, read-only `internals` object, attached lazily on first access.
+It is available to subclass field initializers; elements that never use internals avoid the allocation.
+Use `this.internals.states` for custom states and its ARIA properties for default accessibility semantics.
+The same object survives disconnection, reconnection, and document adoption.
+Subclasses must use the inherited object instead of calling `attachInternals()` again; migrate existing private internals fields to `this.internals`.
+Do not override or redeclare the `internals` accessor.
+Keep internals enabled in the custom-element definition; `disabledFeatures` must not include `"internals"`.
+Internals alone do not make an element form-associated: form participation remains opt-in through `FormAssociatedElement`.
+
 ### Shared form foundations
 
 `FormAssociatedElement` is an optional base for controls whose custom-element host owns form participation.
 Import it from `@serve-tools/base-components/form-associated`; it extends `BaseElement` without adding form machinery to other base-element consumers.
 A concrete control must replay pre-definition own properties after its own state initializes; the base deliberately does not call overridden setters during construction.
 See the [initialization recipe](design/form-foundations.md#initialization) for late upgrades.
-It provides one protected `internals` object and the native `form`, `labels`, `validity`, `validationMessage`, `willValidate`, `checkValidity()`, `reportValidity()`, and `setCustomValidity()` facade.
+It uses the inherited `internals` object for the native `form`, `labels`, `validity`, `validationMessage`, `willValidate`, `checkValidity()`, `reportValidity()`, and `setCustomValidity()` facade.
 The shared `name`, `disabled`, `readOnly`, and `required` properties reflect their corresponding attributes; component-specific callbacks still own synchronization and constraint policy.
 
 Subclasses use `internals.setFormValue(value, state)` to define submission and restoration data.
@@ -92,11 +111,13 @@ There is no assumed string `value`, checkedness, hidden input, automatic validat
 Subclasses retain their own reset and restoration callbacks and their constraint policy.
 `setCustomValidity()` stores the coerced message in protected `customValidity` and calls protected `synchronizeValidity()` synchronously.
 Override that hook when a control combines custom errors with its own constraints; the default handles only the custom error.
-Construction attaches internals without calling subclass synchronization hooks.
+Accessing internals attaches it once without calling subclass synchronization hooks.
 
 Checkbox, Switch, Select, and Combobox use this base.
 Checkbox and Switch also share an internal checked-control base for default checkedness, activation, focus, submission, and validity.
 Number Field and OTP Field instead share an internal native-field base: their retained native input remains the sole form and validity owner.
+Both form foundations share the reflected `disabled`, `readOnly`, and `required` accessors through an internal control base; their validity and submission policies remain separate.
+`FieldElement` coordinates an authored control and shares attribute ownership with the native-field and selection implementations; its derived field state is not a form-control superclass.
 Those internal bases are not public entrypoints, and this migration does not change the components' markup or interaction contracts.
 The [foundation migration contract](design/form-foundations.md) records the ownership boundaries and validation scope.
 
@@ -125,6 +146,7 @@ Use a `fieldset` and `legend` to name the visible group, and put an external `fo
 The selected native input is the only submitted value.
 Values are strings; native radios have no read-only mode and retain the browser's own keyboard behavior.
 For links, use `<a href>` rather than giving a button link semantics.
+For multiline text, use `<textarea>` inside `FieldElement`; the Input gallery demonstrates labels, native constraints, multiline submission, and reset without a second form identity.
 Application validation can use `setCustomValidity()`; ordinary `submit`, `reset`, `input`, and `change` remain native events.
 The [native composition contract](design/native-composition.md) records these intentional API differences from Base UI.
 
@@ -449,6 +471,9 @@ Build an action menu from an authored native invoker, auto popover, and native b
 ```
 
 The author owns the trigger's native `popovertarget` relationship and popup positioning.
+The gallery uses an inherited `--menu-padding` property and a shadow border for its menu styling; submenu positioning compensates for the padding so the first item aligns with its trigger.
+Forced-colors mode uses an outline so the boundary remains visible without changing layout.
+These are gallery styling conventions, not required component styles.
 Menu temporarily supplies trigger ARIA, popup `role="menu"` and `aria-orientation`, roving focus, and active item semantics while preserving the actual controls.
 Use `items`, `activeItem`, and `focusItem(target)` to inspect or move focus, and `show()`, `hide()`, and `toggle()` for explicit application operations.
 Arrow keys, Home, End, typeahead, disabled-item behavior, nested submenus, RTL, and optional pointer hover operate on the current native items.
@@ -553,6 +578,33 @@ Menu and Context Menu imperative opening, closing, and toggling methods throw `I
 They do not create portals, hidden form controls, synthetic focus nodes, collision engines, focus traps, or transition-completion events.
 The [menu composition reference](../../.agents/skills/serve-tools-base/references/compose-menus.md) covers nested menus, hover timing, state transactions, and the deliberate boundaries in more detail.
 
+## Text fields
+
+`TextFieldElement` owns a text input or textarea, its label, descriptions, and inline errors in one shadow root.
+Its public `type` selects text-entry behavior; the single-line editor always uses native `type="text"`.
+
+```ts
+import { TextFieldElement } from "@serve-tools/base-components/text-field";
+
+customElements.define("app-text-field", TextFieldElement);
+```
+
+```html
+<app-text-field type="email" name="email" label="Email" description="For account recovery" required></app-text-field>
+<app-text-field type="password" multiline readonly label="Secret key" autocomplete="off"></app-text-field>
+```
+
+Set `field.value` to supply current text without reflecting it into an HTML attribute.
+`multiline` selects a textarea independently of `type`; `revealed` toggles CSS password masking without replacing the editor or changing its native type.
+The host alone owns form submission, validation, reset, and restoration.
+Use `label`, `description`, and `error` text attributes for simple content, or matching slots for rich content.
+Use Text Field's own label surface rather than wrapping it in `FieldElement`; external label and ARIA ID references do not cross into its shadow editor.
+`before` and `after` surround the owned editor; `label-actions` holds independent reveal, copy, or help buttons.
+Consistent parts expose the editor and its surrounding sections for styling.
+
+The [Text Field contract](design/text-field.md) covers selection, validation, events, text profiles, and masking boundaries.
+The [Input gallery](examples/index.html#component-input) includes an email form and a fictional multiline secret with Reveal and Copy controls.
+
 ## Field labels and validation state
 
 ```ts
@@ -562,11 +614,8 @@ customElements.define("app-field", FieldElement);
 ```
 
 ```html
-<app-field>
-	<label slot="label">Account email</label>
+<app-field label="Account email" description="Used for account recovery.">
 	<input slot="control" name="email" type="email" required />
-	<p slot="description">Used for account recovery.</p>
-	<p slot="error">Enter a valid email address.</p>
 </app-field>
 ```
 
@@ -579,10 +628,18 @@ The actual control remains the only form and focus owner.
 The host exposes `valid` (boolean or null), `invalid`, `dirty`, `touched`, `filled`, `focused`, `disabled`, and `required`, with matching custom CSS states.
 `dirty` compares the current value with the association or reset baseline; `touched` records focus leaving the control.
 For a FACE control with a readonly `values` array, Field snapshots the complete array before scalar `value`; `[]` is unfilled, while `[""]` is filled and changes at any position affect `dirty`.
-Applications choose when to display authored error content.
+Text attributes `label`, `description`, and `error` supply optional native light-DOM content; authored role slots override them.
+Use `labelElement` to read the associated native label (`label` is now the reflected text property).
+The `before` and `after` slots surround the control; `label-actions` holds independent help buttons outside the label.
+Style stable `content`, `label-content`, `control-content`, `description-content`, and `error-content` parts; empty sections are hidden.
+
+Inline errors appear while invalid after blur or a native invalid event, or with the `show-error` boolean attribute.
+`errorVisible` and `:state(error-visible)` expose that presentation state.
+Without an authored error or `error` text, the native `validationMessage` supplies the message.
+The `error` property changes only its displayed text; the actual control owns validity.
 
 Native property assignments and `setCustomValidity()` do not emit change events, so call `field.refresh()` afterward.
-For a server error, set the actual control's custom validity and then refresh Field; clearing uses an empty message.
+For an immediate server error, set the actual control's custom validity, set `field.showError = true`, and then refresh Field; clearing uses an empty validity message.
 `resetState()` makes the current value pristine and untouched without changing it.
 Native form reset, including forms in a shadow root or externally associated forms, establishes a new baseline after an uncanceled reset completes.
 The [Field contract](design/field.md) describes the native-input adapter, custom-control facade, state tracking, and observation boundaries.
@@ -963,6 +1020,7 @@ Calendar and File are separate Base components described above; an inline calend
 ## Layout and lifetime
 
 `layout(content)` runs once on first connection, after subclass fields are initialized.
+The binding scope is allocated at first layout initialization; constructing a never-connected element does not allocate one.
 Return an inert `html` description for the base to materialize inside its binding capture, or append imperative content to the supplied detached `DocumentFragment` and return `void`.
 The base appends materialized content outside capture so nested custom elements own their own lifecycle.
 Reactive updates change existing nodes; layout does not rerun.
@@ -1037,6 +1095,12 @@ If sharing constructed stylesheets, cache immutable sheets per Document and adop
 The base does not migrate arbitrary constructed stylesheets across documents.
 Use host CSS properties for per-instance state; do not share a component-owned reactive stylesheet across independent lifetimes.
 
+## Styling contract
+
+The [styling contract](design/styling.md) lists each component’s parts, slots, host states, and authored DOM hooks.
+Use these documented hooks instead of depending on anonymous shadow structure.
+The gallery’s Styling and themes section shows the same Checkbox and Switch primitives with three independent themes.
+
 ## Development
 
 ```shell
@@ -1054,8 +1118,19 @@ npm run dev --workspace @serve-tools/base-components
 ```
 
 The command builds the package and its Signal, input, and context dependencies, then starts a local Vite server.
-The gallery contains 44 working sections, distinguishes custom elements from native HTML compositions, and links to documented behavior limits.
-Restart the command after editing package source so the examples use the rebuilt public exports.
+The gallery contains 47 working sections, distinguishes custom elements from native HTML compositions, and links to documented behavior limits.
+Component imports resolve to current TypeScript source during development; saving component or example files automatically reloads the browser.
+Every preview includes HTML, setup imports and registrations, actual TypeScript example files, and shared CSS, with copy and download controls.
+Local development also provides Open in VS Code links to the corresponding files.
+The internals and form-associated demos exercise the shared foundations directly.
+
+To typecheck and build a standalone gallery into the repository’s `dist/base-gallery/` directory:
+
+```shell
+npm run build:examples --workspace @serve-tools/base-components
+```
+
+The static build omits local editor links and is separate from the npm package.
 
 ## Agent Skill
 

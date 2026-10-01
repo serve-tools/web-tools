@@ -1,0 +1,4 @@
+interface:
+  display_name: "Serve Tools Custom Element Registry Polyfill"
+  short_description: "Set up scoped custom element registries"
+  default_prompt: "Use $serve-tools-polyfill-custom-element-registry to set up scoped custom element registries."

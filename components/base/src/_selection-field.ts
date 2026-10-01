@@ -79,7 +79,7 @@ export abstract class SelectionFieldElement extends FormAssociatedElement {
 	#controlReadOnly = false;
 	#dirty = false;
 	#disabledByForm = false;
-	#invalidOptions = new Set<OptionElement>();
+	#invalidOptionCount = 0;
 	#ownedLabels: HTMLLabelElement[] = [];
 	#ownedPopup: HTMLElement | undefined;
 	readonly #owner: SelectionOwner;
@@ -599,14 +599,19 @@ export abstract class SelectionFieldElement extends FormAssociatedElement {
 					counts.set(value, (counts.get(value) ?? 0) + 1);
 				}
 			}
+			let invalidOptionCount = 0;
 			const records = options.map((option): OptionRecord => {
 				const attribute = option.getAttribute("value");
+				const invalid = attribute === null || counts.get(attribute) !== 1;
+				if (invalid) {
+					++invalidOptionCount;
+				}
 				return {
 					defaultSelected: option.defaultSelected,
 					disabled: option.disabled,
 					hasValue: attribute !== null,
 					hidden: option.hidden,
-					invalid: attribute === null || counts.get(attribute) !== 1,
+					invalid,
 					option,
 					value: attribute ?? "",
 				};
@@ -615,7 +620,7 @@ export abstract class SelectionFieldElement extends FormAssociatedElement {
 				previous.length !== records.length ||
 				previous.some((record, index) => !this.#sameRecord(record, records[index]));
 			this.#records = records;
-			this.#invalidOptions = new Set(records.filter((record) => record.invalid).map((record) => record.option));
+			this.#invalidOptionCount = invalidOptionCount;
 			if (recordsChanged) {
 				++this.#revision;
 			}
@@ -629,7 +634,7 @@ export abstract class SelectionFieldElement extends FormAssociatedElement {
 				++this.#revision;
 				this.#values = Object.freeze([...next]);
 			}
-			if (this.#pendingValues && records.length > 0 && this.#invalidOptions.size === 0) {
+			if (this.#pendingValues && records.length > 0 && this.#invalidOptionCount === 0) {
 				const pending = this.#pendingValues;
 				this.#pendingValues = undefined;
 				const wanted = new Set(pending);
@@ -670,7 +675,7 @@ export abstract class SelectionFieldElement extends FormAssociatedElement {
 		if (this.#records.some((record) => !record.hasValue)) {
 			throw new TypeError("An Base selection option requires an explicit value attribute");
 		}
-		if (this.#invalidOptions.size > 0) {
+		if (this.#invalidOptionCount > 0) {
 			throw new TypeError("Base selection option values must be unique");
 		}
 	}
@@ -753,12 +758,7 @@ export abstract class SelectionFieldElement extends FormAssociatedElement {
 		const popup = this.popup();
 		const control = this.control();
 		const selected = new Set(this.#values);
-		setListboxState(
-			this.#records.map((record) => record.option),
-			this.#active,
-			selected,
-			this.#invalidOptions,
-		);
+		setListboxState(this.#records, this.#active, selected);
 
 		if (this.#connected && popup) {
 			ownSelectionId(this.#attributes, popup, "base-selection-listbox");
@@ -789,7 +789,7 @@ export abstract class SelectionFieldElement extends FormAssociatedElement {
 		}
 
 		this.internals.setFormValue(
-			this.#controlDisabled || this.#invalidOptions.size > 0 || !this.name
+			this.#controlDisabled || this.#invalidOptionCount > 0 || !this.name
 				? null
 				: this.multiple
 					? this.#formData()

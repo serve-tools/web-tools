@@ -1,16 +1,17 @@
+import { DisabledElement } from "./_disabled.js";
 import { isDirectInput, isFormElement } from "./_numeric.js";
 import { AttributeOwner } from "./_ownership.js";
-import { BaseElement } from "./BaseElement.js";
+import { setCustomState } from "./_states.js";
+import type { BaseElement } from "./BaseElement.js";
 import { createFragment, html } from "./template.js";
 
 export type SliderOrientation = "horizontal" | "vertical";
 
 /** Coordinates one or more actual native range inputs without replacing their form or focus identities. */
-export class SliderElement extends BaseElement {
+export class SliderElement extends DisabledElement {
 	static readonly observedAttributes = ["disabled", "max", "min", "orientation", "step"];
 
 	#inputs: HTMLInputElement[] = [];
-	#internals = this.attachInternals();
 	#owned = new AttributeOwner();
 	#pendingFirstValue: number | undefined;
 	#pendingValues: readonly number[] | undefined;
@@ -134,14 +135,6 @@ export class SliderElement extends BaseElement {
 
 	set step(value: string) {
 		this.setAttribute("step", String(value));
-	}
-
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
 	}
 
 	get orientation(): SliderOrientation {
@@ -290,9 +283,9 @@ export class SliderElement extends BaseElement {
 	#synchronize(): void {
 		const inputs = this.#inputs;
 		if (inputs.length === 0) {
-			this.#setState("disabled", this.disabled);
-			this.#setState("multiple", false);
-			this.#setState("vertical", this.orientation === "vertical");
+			setCustomState(this.internals, "disabled", this.disabled);
+			setCustomState(this.internals, "multiple", false);
+			setCustomState(this.internals, "vertical", this.orientation === "vertical");
 			this.#updateVariables([], 0, 100);
 			return;
 		}
@@ -331,12 +324,13 @@ export class SliderElement extends BaseElement {
 		}
 
 		this.#updateVariables(values, minimum, maximum);
-		this.#setState(
+		setCustomState(
+			this.internals,
 			"disabled",
 			inputs.every((input) => input.disabled),
 		);
-		this.#setState("multiple", inputs.length > 1);
-		this.#setState("vertical", this.orientation === "vertical");
+		setCustomState(this.internals, "multiple", inputs.length > 1);
+		setCustomState(this.internals, "vertical", this.orientation === "vertical");
 	}
 
 	#outerBounds(): { maximum: number; minimum: number } {
@@ -377,13 +371,5 @@ export class SliderElement extends BaseElement {
 		this.#variableCount = values.length;
 		this.#track.style.setProperty("--base-slider-min", String(minimum));
 		this.#track.style.setProperty("--base-slider-max", String(maximum));
-	}
-
-	#setState(state: string, present: boolean): void {
-		if (present) {
-			this.#internals.states.add(state);
-		} else {
-			this.#internals.states.delete(state);
-		}
 	}
 }
