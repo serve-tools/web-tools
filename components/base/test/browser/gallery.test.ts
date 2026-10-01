@@ -51,7 +51,7 @@ beforeAll(async () => {
 	expect(response.ok).toBe(true);
 	const document = new DOMParser().parseFromString(await response.text(), "text/html");
 	for (const avatar of document.querySelectorAll("app-avatar[src]")) {
-		avatar.setAttribute("src", new URL(avatar.getAttribute("src")!, galleryURL).href);
+		avatar.setAttribute("src", new URL(`public/${avatar.getAttribute("src")!}`, galleryURL).href);
 	}
 	const stylesheet = document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]')!;
 	stylesheet.href = new URL(stylesheet.getAttribute("href")!, galleryURL).href;
@@ -634,7 +634,7 @@ test("every code panel exposes nonempty authored source and download content", (
 		const select = section.querySelector<HTMLSelectElement>(".source select")!;
 		const code = section.querySelector("pre code")!;
 		expect(Array.from(select.options, (option) => option.text)).toEqual(
-			expect.arrayContaining(["HTML", "Setup", "main.ts", "CSS"]),
+			expect.arrayContaining(["Setup and markup", "Setup", "main.ts", "CSS"]),
 		);
 		for (const option of select.options) {
 			select.value = option.value;
@@ -647,7 +647,11 @@ test("every code panel exposes nonempty authored source and download content", (
 		select.dispatchEvent(new Event("change"));
 	}
 	const section = fixture.querySelector("#component-internals")!;
-	expect(section.querySelector("pre code")!.textContent).toBe("<app-gallery-status></app-gallery-status>");
+	expect(section.querySelector("pre code")!.textContent).toContain("<app-gallery-status></app-gallery-status>");
+	expect(section.querySelector("pre code")!.textContent).toContain(
+		'customElements.define("app-gallery-status", GalleryStatusElement);',
+	);
+	expect(section.querySelector<HTMLDetailsElement>("details.source")!.open).toBe(true);
 });
 
 test("shared internals and form-associated foundation demos work", async () => {

@@ -141,3 +141,30 @@ output {
 	background: #14231e;
 	white-space: pre-wrap;
 }
+
+.code-example {
+	min-width: 0;
+	margin-top: 2rem;
+}
+
+.code-example > p {
+	margin: 0 0 0.6rem;
+	color: #abc2b8;
+	font-size: 0.8rem;
+	font-weight: 700;
+}
+
+.code-example pre {
+	max-width: 100%;
+	margin: 0;
+	padding: 1rem;
+	border: 1px solid #315447;
+	border-radius: 0.8rem;
+	color: #dcebe5;
+	background: #09100e;
+	overflow-x: auto;
+	font:
+		clamp(0.72rem, 2.5vw, 0.84rem) / 1.55 ui-monospace,
+		monospace;
+	tab-size: 2;
+}

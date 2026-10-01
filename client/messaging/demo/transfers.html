@@ -18,6 +18,18 @@
 				<button>Transfer and reverse</button>
 			</form>
 			<output aria-live="polite">Ready.</output>
+			<div class="code-example">
+				<p>Core code; element references and local types match the example above.</p>
+				<pre><code>import { client } from "./client.js";
+
+const bytes = new Uint8Array(size);
+const result = await client.request("reverse", bytes.buffer, {
+	transfer: [bytes.buffer],
+});
+
+console.log(bytes.byteLength); // 0: ownership moved to the worker
+const reversed = new Uint8Array(result);</code></pre>
+			</div>
 		</main>
 		<script type="module" src="./src/main.ts"></script>
 	</body>

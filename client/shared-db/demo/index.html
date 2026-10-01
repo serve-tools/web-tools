@@ -9,7 +9,7 @@
 	</head>
 	<body>
 		<main>
-			<nav><a href="../../">← All demos</a></nav>
+			<nav><a href="../../">← All packages</a></nav>
 			<p class="eyebrow">@serve-tools/client-shared-db</p>
 			<h1>One database coordinator, every tab.</h1>
 			<p class="intro">
@@ -36,6 +36,38 @@
 				</div>
 				<ul id="tasks"></ul>
 				<p id="empty">No tasks yet.</p>
+				<div class="code-example">
+					<p>Core code; element references and local types match the example above.</p>
+					<pre><code>import { connect } from "@serve-tools/client-shared-db/scope/window";
+import type { DemoSchema } from "./database-worker.js";
+
+const worker = new SharedWorker(new URL("./database-worker.ts", import.meta.url), {
+	type: "module",
+});
+const database = connect&lt;DemoSchema&gt;(worker.port);
+
+const refresh = async (revision: number) =&gt; {
+	const tasks = await database.getAll("tasks");
+	taskList.textContent = tasks.map((task) =&gt; task.title).join(", ");
+	revisionOutput.textContent = String(revision);
+};
+
+const subscription = database.subscribe("tasks", (change) =&gt; {
+	void refresh(change.revision);
+}, {
+	onReady: (revision) =&gt; void refresh(revision),
+});
+
+await database.add("tasks", {
+	done: false,
+	id: crypto.randomUUID(),
+	title: titleInput.value,
+	updatedAt: Date.now(),
+});
+
+subscription.unsubscribe();
+database.close();</code></pre>
+				</div>
 			</section>
 		</main>
 		<script type="module" src="./src/main.ts"></script>

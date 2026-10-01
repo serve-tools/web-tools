@@ -21,6 +21,19 @@
 				<button id="fail" class="secondary">Request a remote error</button>
 			</div>
 			<output aria-live="polite">Connected to the worker.</output>
+			<div class="code-example">
+				<p>Core code; element references and local types match the example above.</p>
+				<pre><code>import { client } from "./client.js";
+
+const greeting = await client.request("greet", nameInput.value);
+output.value = greeting;
+
+try {
+	await client.request("fail");
+} catch (error) {
+	output.value = String(error);
+}</code></pre>
+			</div>
 		</main>
 		<script type="module" src="./src/main.ts"></script>
 	</body>

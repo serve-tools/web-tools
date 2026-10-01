@@ -9,7 +9,7 @@
 	</head>
 	<body>
 		<main>
-			<nav><a href="../../">← All demos</a></nav>
+			<nav><a href="../../">← All packages</a></nav>
 			<p class="eyebrow">@serve-tools/client-input</p>
 			<h1>Input has a beginning and an end.</h1>
 			<p class="intro">
@@ -24,6 +24,26 @@
 						<span id="pointer-marker"></span>
 					</div>
 					<output id="pointer-output">Waiting for a primary pointer.</output>
+					<div class="code-example">
+						<p>Core code; element references and local types match the example above.</p>
+						<pre><code>import { observePointer } from "@serve-tools/client-input";
+
+const stop = observePointer(pointerPad, {
+	start(state, event) {
+		if (!event.isPrimary || event.button !== 0) return false;
+		pointerPad.toggleAttribute("data-active", true);
+	},
+	move(state) {
+		pointerPad.style.setProperty("--pointer-x", `${state.ratio.x * 100}%`);
+		pointerPad.style.setProperty("--pointer-y", `${state.ratio.y * 100}%`);
+	},
+	end() {
+		pointerPad.removeAttribute("data-active");
+	},
+});
+
+addEventListener("pagehide", stop, { once: true });</code></pre>
+					</div>
 				</section>
 
 				<section>
@@ -35,6 +55,22 @@
 						<span>Nested elements remain one continuous session.</span>
 					</div>
 					<output id="drop-output">No drag session yet.</output>
+					<div class="code-example">
+						<p>Core code; element references and local types match the example above.</p>
+						<pre><code>import { observeDropTarget } from "@serve-tools/client-input";
+
+const stop = observeDropTarget(dropZone, {
+	start: () =&gt; dropZone.toggleAttribute("data-active", true),
+	over(event) {
+		if (event.dataTransfer?.types.includes("text/plain")) {
+			event.preventDefault();
+		}
+	},
+	end: () =&gt; dropZone.removeAttribute("data-active"),
+});
+
+addEventListener("pagehide", stop, { once: true });</code></pre>
+					</div>
 				</section>
 			</div>
 		</main>

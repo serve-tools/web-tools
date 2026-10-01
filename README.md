@@ -20,10 +20,14 @@ Core, client and server libraries, realtime protocols, Lit integrations, polyfil
 
 Each package directory owns its package metadata, source, tests, and documentation.
 
-## Demos
+## Package documentation and demos
 
-Interactive demos for the client, signal-aware client, and Lit packages are published at [serve-tools.github.io/web-tools](https://serve-tools.github.io/web-tools/).
-The `Pages` workflow rebuilds and deploys them after every push to `main`.
+Documentation for every library, including unpublished packages and the private Base preview, plus interactive client, signal-aware client, Lit, and Base demos are available at [serve-tools.github.io/web-tools](https://serve-tools.github.io/web-tools/).
+The catalog and package pages are generated from workspace manifests and READMEs, so new packages are included automatically.
+Each page shows the repository version and its npm availability, checked during the build.
+Private demo wrappers and the internal HTTP contract interoperability fixture are excluded from the package catalog.
+The `Pages` workflow validates the complete site on pull requests and rebuilds and deploys it after every push to `main`.
+A successful release also refreshes npm availability on the site.
 
 Build the same static site locally with:
 

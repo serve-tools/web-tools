@@ -9,7 +9,7 @@
 	</head>
 	<body>
 		<main>
-			<nav><a href="../../">← All demos</a></nav>
+			<nav><a href="../../">← All packages</a></nav>
 			<p class="eyebrow">@serve-tools/client-context</p>
 			<h1>Context follows the component tree.</h1>
 			<p class="intro">
@@ -48,6 +48,43 @@
 			<p class="note">
 				The consumer stays subscribed while moving and immediately resolves against its new ancestry.
 			</p>
+			<div class="code-example">
+				<p>Core code; element references and local types match the example above.</p>
+				<pre><code>import { ContextConsumer, ContextProvider, createContext } from "@serve-tools/client-context";
+
+interface Theme { accent: string; name: string }
+
+const theme = createContext&lt;Theme&gt;(Symbol("theme"));
+const provider = new ContextProvider(providerElement, {
+	context: theme,
+	initialValue: { name: "Ocean", accent: "#087e8b" },
+});
+const nextProvider = new ContextProvider(nextProviderElement, {
+	context: theme,
+	initialValue: { name: "Sunset", accent: "#d95d39" },
+});
+const consumer = new ContextConsumer(consumerElement, {
+	context: theme,
+	subscribe: true,
+	callback: (value) =&gt; {
+		consumerElement.textContent = `${value.name} · ${value.accent}`;
+	},
+});
+
+provider.connect();
+nextProvider.connect();
+consumer.connect();
+provider.setValue({ name: "Tide", accent: "#2667ff" });
+
+nextProviderElement.append(consumerElement);
+consumer.refresh();
+
+addEventListener("pagehide", () =&gt; {
+	consumer.disconnect();
+	provider.disconnect();
+	nextProvider.disconnect();
+}, { once: true });</code></pre>
+			</div>
 		</main>
 		<script type="module" src="./src/main.ts"></script>
 	</body>

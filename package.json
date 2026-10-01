@@ -151,7 +151,7 @@
 		"test:browser:consolidated": "node scripts/run-browser-projects.mjs && vitest run --root client-signals/shared-db --config vitest.browser.config.ts && npm run test:browser --workspace @serve-tools/signal-dom",
 		"test:node": "npm run test:node:vitest && npm run test:node:native && npm run test:node:coverage",
 		"test:node:coverage": "npm run test:node --workspace @serve-tools/signal-dom",
-		"test:node:native": "node --test polyfills/arraybuffer-base64/test/*.test.js ponyfills/arraybuffer-base64/test/*.test.js ponyfills/request-idle-callback/test/runtime/node.test.js core/http-contract-interop/test/interop.test.mjs",
+		"test:node:native": "node --test polyfills/arraybuffer-base64/test/*.test.js ponyfills/arraybuffer-base64/test/*.test.js ponyfills/request-idle-callback/test/runtime/node.test.js core/http-contract-interop/test/interop.test.mjs scripts/build-pages.test.mjs scripts/pages-site.test.mjs",
 		"test:node:vitest": "vitest run --config vitest.node.projects.config.ts",
 		"test:typescript-adapter:browser": "npm run build --workspace @serve-tools/rolldown-typescript && node --test scripts/typescript-adapter/browser.test.mjs scripts/typescript-adapter/keyboard.test.mjs",
 		"test:typescript-adapter:distribution": "npm run build --workspace @serve-tools/rolldown-typescript && node --test scripts/typescript-adapter/distribution.test.mjs",
@@ -175,6 +175,7 @@
 		"crossws": "0.4.12",
 		"dprint": "0.58.0",
 		"knip": "6.39.0",
+		"marked": "18.0.14",
 		"playwright": "1.63.0",
 		"publint": "0.3.24",
 		"rolldown": "1.2.12",
@@ -208,7 +209,8 @@
 					"vitest.browser.projects.config.ts",
 					"benchmark/skills/agentic/tasks/**/*.{mjs,ts}",
 					"benchmark/skills/agentic/transfer/{tasks,recipes}/**/*.{mjs,ts}",
-					"benchmark/skills/agentic/ablation/{tasks,helpers}/**/*.{mjs,ts}"
+					"benchmark/skills/agentic/ablation/{tasks,helpers}/**/*.{mjs,ts}",
+					"demo/catalog.js"
 				],
 				"ignoreBinaries": [
 					"go"

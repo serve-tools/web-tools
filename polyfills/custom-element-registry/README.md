@@ -32,7 +32,7 @@ Load this package before declaring element classes or capturing DOM methods.
 There is no non-mutating constructor-value subpath: the iframe fallback cannot work independently of the coordinated DOM patches.
 For an inert import and explicit installation into a selected Window, use `@serve-tools/ponyfill-custom-element-registry`.
 
-The fallback is experimental and inherits the [ponyfill's supported operations and limitations](https://github.com/serve-tools/web-tools/tree/main/ponyfills/custom-element-registry#boundaries).
+The fallback is experimental and inherits the [ponyfill's supported operations and limitations](../../ponyfills/custom-element-registry/#boundaries).
 It retains one hidden iframe per registry, has no uninstall API, and cannot reproduce every native realm, parser, or adoption behavior.
 Accessible same-origin iframe documents and an HTML document are required.
 Scoped customized built-ins are unsupported.

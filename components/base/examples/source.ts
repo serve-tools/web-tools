@@ -105,11 +105,11 @@ export function initializeSource(section: HTMLElement): void {
 	const sectionLine = markup.slice(0, sectionStart).split("\n").length;
 	const files: SourceFile[] = [
 		{
-			name: "HTML",
-			code: dedent(preview.innerHTML),
+			name: "Setup and markup",
+			code: `${setup ? `<script type="module">\n${setup}\n</script>\n\n` : ""}${dedent(preview.innerHTML)}`,
 			path: "examples/index.html",
 			line: sectionLine,
-			note: "Authored preview markup, captured before component initialization.",
+			note: "Registration and authored markup for this preview. Example files below contain its event handlers and shared styling.",
 		},
 		{
 			name: "Setup",
@@ -152,7 +152,8 @@ export function initializeSource(section: HTMLElement): void {
 		}
 	}
 
-	details.querySelector("summary")!.textContent = "Code and source files";
+	details.open = true;
+	details.querySelector("summary")!.textContent = "Example code and source files";
 	const toolbar = document.createElement("div");
 	toolbar.className = "source-toolbar";
 	const label = document.createElement("label");

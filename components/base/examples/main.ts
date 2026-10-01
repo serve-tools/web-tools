@@ -44,6 +44,7 @@ import { GalleryFormControlElement, GalleryStatusElement, initializeFoundationEx
 import { initializeGallery } from "./gallery.js";
 import { GalleryContextElement, GalleryDropElement, GalleryWorkspaceElement } from "./integrations.js";
 import { initializeMenuExamples } from "./menus.js";
+import avatarSource from "./public/avatar.svg?url";
 import { initializeSelectionExamples } from "./selection.js";
 import { initializeSurfaceExamples } from "./surfaces.js";
 import { initializeTextFieldExamples } from "./text-fields.js";
@@ -183,7 +184,7 @@ document.querySelector("#indeterminate-progress")!.addEventListener("click", () 
 
 const avatar = document.querySelector<AvatarElement>("#example-avatar")!;
 document.querySelector("#avatar-source")!.addEventListener("click", () => {
-	avatar.src = avatar.src ? "" : new URL("./avatar.svg", import.meta.url).href;
+	avatar.src = avatar.src ? "" : avatarSource;
 });
 
 let actionCount = 0;

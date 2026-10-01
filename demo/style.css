@@ -96,52 +96,6 @@ h2 {
 	letter-spacing: -0.04em;
 }
 
-.cards {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-	gap: 1rem;
-	margin-top: 2rem;
-}
-
-footer a {
-	color: inherit;
-}
-
-.cards a {
-	display: grid;
-	grid-template-rows: auto 1fr auto;
-	gap: 2rem;
-	min-height: 18rem;
-	padding: 1.5rem;
-	border: 1px solid #aeb5ae;
-	border-radius: 0.3rem;
-	color: inherit;
-	background: #f8f6efcc;
-	text-decoration: none;
-	transition: 150ms ease;
-	transition-property: color, background, transform;
-}
-
-.cards a:hover {
-	color: #f7f6ef;
-	background: #17201c;
-	transform: translateY(-0.25rem);
-}
-
-.cards strong {
-	align-self: end;
-	font-size: 2rem;
-	letter-spacing: -0.045em;
-}
-
-.cards a > span:last-child {
-	color: #66716b;
-}
-
-.cards a:hover > span:last-child {
-	color: #bbc5bf;
-}
-
 footer {
 	display: flex;
 	flex-wrap: wrap;
@@ -158,4 +112,178 @@ footer {
 	.section-heading {
 		grid-template-columns: 1fr;
 	}
+}
+
+.topbar {
+	width: min(74rem, calc(100% - 2rem));
+	margin: auto;
+	padding-top: 2rem;
+	display: flex;
+	justify-content: space-between;
+	gap: 1rem;
+}
+a {
+	color: inherit;
+	text-underline-offset: 0.2em;
+}
+header .eyebrow {
+	margin-top: 2rem;
+}
+header .stats {
+	margin-top: 2rem;
+	font-size: 1rem;
+}
+.catalog-tools {
+	display: grid;
+	gap: 1rem;
+}
+.catalog-tools label {
+	font-weight: 700;
+}
+.catalog-tools input {
+	width: 100%;
+	padding: 1rem;
+	border: 1px solid #89978d;
+	border-radius: 0.3rem;
+	background: #fffdf6;
+	color: inherit;
+	font: inherit;
+}
+.catalog-tools p {
+	margin: 0;
+	max-width: 58rem;
+}
+.group-links,
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+.group-links a {
+	padding: 0.3rem 0.6rem;
+	border: 1px solid #aeb5ae;
+	border-radius: 0.2rem;
+}
+.package-cards {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 21rem), 1fr));
+	gap: 1rem;
+	margin-top: 2rem;
+}
+.package-cards article {
+	display: flex;
+	flex-direction: column;
+	padding: 1.5rem;
+	background: #f8f6efee;
+	border: 1px solid #aeb5ae;
+	border-radius: 0.3rem;
+}
+.package-cards article:hover {
+	border-color: #17201c;
+}
+.package-cards h3 {
+	margin: 1rem 0 0;
+	font-size: 1.4rem;
+	letter-spacing: -0.035em;
+	overflow-wrap: anywhere;
+}
+.package-cards h3 a {
+	text-decoration: none;
+}
+.package-cards article > p:not(.metadata) {
+	flex: 1;
+	color: #4b5852;
+}
+.metadata {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.7rem;
+	font-size: 0.8rem;
+}
+.badge {
+	display: inline-block;
+	border: 1px solid #aeb5ae;
+	border-radius: 2rem;
+	padding: 0.2rem 0.65rem;
+	background: #e5eadd;
+}
+.actions {
+	font-size: 0.9rem;
+	font-weight: 650;
+}
+section[hidden],
+.package-cards article[hidden] {
+	display: none;
+}
+.package-header {
+	padding-bottom: 3rem;
+}
+.package-header h1 {
+	max-width: 100%;
+	margin: 2rem 0;
+	font-size: clamp(2rem, 5vw, 4rem);
+	line-height: 1.1;
+	overflow-wrap: anywhere;
+	letter-spacing: -0.045em;
+}
+.package-header .metadata {
+	margin: 1.5rem 0;
+	font-size: 1rem;
+}
+.package-header aside {
+	margin-top: 2rem;
+	max-width: 65rem;
+	padding: 1rem;
+	border-left: 3px solid #667c51;
+	background: #e5eadd;
+}
+.documentation {
+	display: block;
+	max-width: 58rem;
+	overflow-wrap: anywhere;
+}
+.documentation h1 {
+	max-width: 100%;
+	font-size: 2.4rem;
+	line-height: 1.2;
+	margin: 2rem 0;
+	letter-spacing: -0.04em;
+}
+.documentation h2 {
+	margin: 3rem 0 1rem;
+	font-size: 2rem;
+}
+.documentation h3 {
+	margin-top: 2rem;
+}
+.documentation pre {
+	padding: 1.2rem;
+	overflow-x: auto;
+	background: #17201c;
+	color: #f8f6ef;
+	border-radius: 0.3rem;
+	font-size: 0.85rem;
+}
+.documentation code {
+	font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.documentation table {
+	display: block;
+	overflow-x: auto;
+	border-collapse: collapse;
+	font-size: 0.9rem;
+}
+.documentation th,
+.documentation td {
+	border: 1px solid #aeb5ae;
+	padding: 0.7rem;
+	text-align: left;
+}
+.documentation img {
+	max-width: 100%;
+}
+:focus-visible {
+	outline: 3px solid #637e37;
+	outline-offset: 4px;
 }

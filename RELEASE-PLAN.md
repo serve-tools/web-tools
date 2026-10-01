@@ -4,8 +4,9 @@
 
 This plan prepares a local review branch and release candidates.
 The user approved updating development dependencies, committing, and pushing the review branch on October 1.
-Publication requires a separate later approval.
-Do not merge, dispatch a release workflow, approve an npm deployment, or publish from this preparation task.
+npm publication requires a separate later approval.
+The subsequent package documentation task deploys GitHub Pages through a validated merge to `main`.
+Do not dispatch a release workflow, approve an npm deployment, or publish npm packages from this task.
 This plan supersedes the historical September 4 batch and its publication instructions.
 
 ## Push candidate
@@ -20,7 +21,7 @@ Require the CI and TypeScript Adapter workflows to pass on the exact PR head bef
 The repository currently has no branch protection or rulesets enforcing that check, so do not infer merge readiness from the ability to merge.
 Require those workflows to pass again on the resulting `main` commit before considering publication.
 A push or merge does not itself publish npm packages; the release workflow requires manual dispatch.
-A merge to `main` also triggers the Pages demo workflow.
+A merge to `main` also triggers the Pages package documentation and demo workflow.
 
 ## Prepared public package batch
 

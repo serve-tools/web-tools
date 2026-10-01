@@ -1,6 +1,7 @@
 export class CodeExampleElement extends HTMLElement {
 	readonly #code: HTMLElement;
 	readonly #description: HTMLElement;
+	readonly #snippet: HTMLElement;
 	readonly #title: HTMLElement;
 
 	constructor() {
@@ -59,8 +60,19 @@ export class CodeExampleElement extends HTMLElement {
 					align-self: start;
 				}
 
+				.snippet,
 				details {
 					grid-column: 1 / -1;
+					min-width: 0;
+				}
+
+				.snippet {
+					display: grid;
+					gap: 0.5rem;
+				}
+
+				.snippet pre,
+				details {
 					border: 1px solid #a99acb;
 					border-radius: 0.75rem;
 					background: #211735;
@@ -74,13 +86,17 @@ export class CodeExampleElement extends HTMLElement {
 				}
 
 				pre {
-					max-height: 32rem;
+					max-width: 100%;
 					margin: 0;
 					padding: 1rem;
-					border-top: 1px solid #ffffff24;
 					overflow: auto;
 					font: 0.78rem / 1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
 					tab-size: 2;
+				}
+
+				details pre {
+					max-height: 32rem;
+					border-top: 1px solid #ffffff24;
 				}
 
 				@media (max-width: 48rem) {
@@ -99,14 +115,19 @@ export class CodeExampleElement extends HTMLElement {
 				<p class="description"></p>
 			</div>
 			<div class="preview"><slot></slot></div>
-			<details>
+			<section class="snippet" aria-label="Key code">
+				<p class="eyebrow">Key code</p>
+				<pre><code></code></pre>
+			</section>
+			<details class="source">
 				<summary>View the TypeScript</summary>
 				<pre><code></code></pre>
 			</details>
 		`;
 
-		this.#code = root.querySelector("code")!;
+		this.#code = root.querySelector(".source code")!;
 		this.#description = root.querySelector(".description")!;
+		this.#snippet = root.querySelector(".snippet code")!;
 		this.#title = root.querySelector("h2")!;
 	}
 
@@ -117,6 +138,10 @@ export class CodeExampleElement extends HTMLElement {
 
 	set source(value: string) {
 		this.#code.textContent = value.trim();
+	}
+
+	set snippet(value: string) {
+		this.#snippet.textContent = value.trim();
 	}
 }
 
