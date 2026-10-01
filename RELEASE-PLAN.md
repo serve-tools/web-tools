@@ -3,8 +3,9 @@
 ## Approval boundary
 
 This plan prepares a local review branch and release candidates.
-The user has not yet approved pushing, and publication requires a separate later approval.
-Do not push, merge, dispatch a release workflow, approve an npm deployment, or publish from this preparation task.
+The user approved updating development dependencies, committing, and pushing the review branch on October 1.
+Publication requires a separate later approval.
+Do not merge, dispatch a release workflow, approve an npm deployment, or publish from this preparation task.
 This plan supersedes the historical September 4 batch and its publication instructions.
 
 ## Push candidate
@@ -14,7 +15,7 @@ A fresh fetch confirmed that `origin/main` matched that base before preparation.
 The candidate preserves the accumulated Base components, Signal DOM callbacks, scoped registry, Vite integration, examples, tests, and benchmark work.
 It also includes the stabilization fixes, dependency security patches, generated-screenshot cleanup, and current release metadata.
 
-After push approval, push the review branch and open a PR against `main`.
+Push the approved review branch and open a PR against `main`.
 Require the CI and TypeScript Adapter workflows to pass on the exact PR head before merging.
 The repository currently has no branch protection or rulesets enforcing that check, so do not infer merge readiness from the ability to merge.
 Require those workflows to pass again on the resulting `main` commit before considering publication.

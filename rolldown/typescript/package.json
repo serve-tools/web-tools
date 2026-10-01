@@ -47,8 +47,8 @@
 		"typecheck": "tsc --project tsconfig.json --noEmit"
 	},
 	"devDependencies": {
-		"rolldown": "1.2.7",
-		"vite": "8.2.2"
+		"rolldown": "1.2.12",
+		"vite": "8.3.2"
 	},
 	"peerDependencies": {
 		"rolldown": "^1.2.7",

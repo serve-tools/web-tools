@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { API, Program } from "typescript/unstable/async";
+import { API, Program, Snapshot } from "typescript/unstable/async";
 import { runCompilerProbe } from "./probe.mjs";
 
 test("installed compiler preserves API/CLI diagnostic parity and reports adapter capability", async () => {
@@ -38,15 +38,21 @@ test("the probe recovers stale project roots through a fresh API", async (contex
 		context.skip("Compiler does not expose adapter emit capability");
 		return;
 	}
-	const updateSnapshot = API.prototype.updateSnapshot;
+	const owner = typeof Snapshot.prototype.update === "function" ? Snapshot.prototype : API.prototype;
+	const method = owner === Snapshot.prototype ? "update" : "updateSnapshot";
+	const updateSnapshot = owner[method];
 	let injected = false;
-	context.mock.method(API.prototype, "updateSnapshot", async function (options) {
+	context.mock.method(owner, method, async function (options) {
 		const snapshot = await updateSnapshot.call(this, options);
-		const created = options?.fileChanges?.created?.[0];
+		const created = (options?.fileNotifications ?? options?.fileChanges)?.created?.[0];
 		if (created && !injected) {
 			injected = true;
 			const file = fileURLToPath(created.uri);
-			const project = snapshot.getProject(path.join(path.dirname(path.dirname(file)), "tsconfig.json"));
+			const config = path.join(path.dirname(path.dirname(file)), "tsconfig.json");
+			const project =
+				typeof snapshot.getConfiguredProject === "function"
+					? snapshot.getConfiguredProject(config)
+					: snapshot.getProject(config);
 			project.parsedCommandLine.fileNames = [];
 		}
 		return snapshot;

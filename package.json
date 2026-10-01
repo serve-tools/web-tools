@@ -164,24 +164,24 @@
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "0.18.5",
-		"@biomejs/biome": "2.5.12",
+		"@biomejs/biome": "2.5.15",
 		"@playwright/test": "1.63.0",
 		"@serve-tools/rolldown-typescript": "0.1.0",
-		"@types/bun": "1.4.1",
-		"@types/node": "26.4.1",
-		"@types/ws": "8.18.1",
-		"@vitest/browser-playwright": "5.0.0",
-		"@vitest/coverage-istanbul": "5.0.0",
+		"@types/bun": "1.4.2",
+		"@types/node": "26.6.3",
+		"@types/ws": "8.18.2",
+		"@vitest/browser-playwright": "5.0.3",
+		"@vitest/coverage-istanbul": "5.0.3",
 		"crossws": "0.4.12",
-		"dprint": "0.57.1",
-		"knip": "6.34.0",
+		"dprint": "0.58.0",
+		"knip": "6.39.0",
 		"playwright": "1.63.0",
 		"publint": "0.3.24",
-		"rolldown": "1.2.7",
+		"rolldown": "1.2.12",
 		"typescript": "7.1.0-0 - 7.1.0",
-		"vite": "8.2.2",
-		"vitest": "5.0.0",
-		"ws": "8.21.3"
+		"vite": "8.3.2",
+		"vitest": "5.0.3",
+		"ws": "8.22.0"
 	},
 	"packageManager": "npm@12.0.2",
 	"engines": {
@@ -397,9 +397,6 @@
 				"entry": [
 					"benchmark/**/*.{js,mjs}",
 					"benchmark/template/fixture.ts",
-					"examples/main.ts",
-					"examples/template.ts",
-					"examples/template-source.ts",
 					"test/*.{recipes,types}.ts"
 				],
 				"ignoreIssues": {

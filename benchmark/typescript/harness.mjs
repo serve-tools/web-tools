@@ -124,8 +124,14 @@ export async function withNativeEditor({ editor, fixture, projectError, root, ru
 	let snapshot;
 
 	try {
-		snapshot = api.updateSnapshot({ openProjects: [fixture.configuration], openFiles: [fixture.source] });
-		const project = snapshot.getProject(fixture.configuration);
+		snapshot =
+			typeof api.createSnapshot === "function"
+				? api.createSnapshot({ openProjects: [fixture.configuration], openFiles: [fixture.source] })
+				: api.updateSnapshot({ openProjects: [fixture.configuration], openFiles: [fixture.source] });
+		const project =
+			typeof snapshot.getConfiguredProject === "function"
+				? snapshot.getConfiguredProject(fixture.configuration)
+				: snapshot.getProject(fixture.configuration);
 		if (project === undefined) {
 			throw new Error(projectError);
 		}

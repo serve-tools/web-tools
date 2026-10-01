@@ -16,7 +16,7 @@ const repositoryRoot = fileURLToPath(new URL("../../", import.meta.url));
 const scriptFile = fileURLToPath(import.meta.url);
 const compilerFile = fileURLToPath(new URL("../../node_modules/typescript/bin/tsc", import.meta.url));
 const resultMarker = "[typescript-adapter-benchmark] ";
-const expectedCompilerVersion = "7.1.0-dev.20260904.1";
+const expectedCompilerVersion = "7.1.0-dev.20261001.1";
 const timeoutMs = 15_000;
 
 if (isEntrypoint()) {
