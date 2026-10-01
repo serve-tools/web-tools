@@ -22,6 +22,20 @@
 				<button data-amount="-1" class="secondary">Subtract 1</button>
 			</div>
 			<output aria-live="polite">Subscribing…</output>
+			<div class="code-example">
+				<p>Core code; element references and local types match the example above.</p>
+				<pre><code>import { client } from "./client.js";
+
+const subscription = client.subscribe("totals", (total) =&gt; {
+	output.value = total.toLocaleString();
+});
+
+const total = await client.request("increment", 1);
+
+addEventListener("pagehide", () =&gt; subscription.unsubscribe(), {
+	once: true,
+});</code></pre>
+			</div>
 		</main>
 		<script type="module" src="./src/main.ts"></script>
 	</body>

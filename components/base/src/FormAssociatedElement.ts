@@ -1,13 +1,10 @@
-import { BaseElement } from "./BaseElement.js";
+import { FormControlElement } from "./_form-control.js";
 
 /** A form-associated custom element with the native validation facade. */
-export class FormAssociatedElement extends BaseElement {
+export class FormAssociatedElement extends FormControlElement {
 	static readonly formAssociated = true;
 
 	#customValidity = "";
-
-	/** The platform internals owned by this form control. */
-	protected readonly internals = this.attachInternals();
 
 	/** The associated form, if any. */
 	get form(): HTMLFormElement | null {
@@ -26,33 +23,6 @@ export class FormAssociatedElement extends BaseElement {
 
 	set name(value: string) {
 		this.setAttribute("name", String(value));
-	}
-
-	/** Whether the control is disabled directly. */
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
-	}
-
-	/** Whether the control is read-only. */
-	get readOnly(): boolean {
-		return this.hasAttribute("readonly");
-	}
-
-	set readOnly(value: boolean) {
-		this.toggleAttribute("readonly", Boolean(value));
-	}
-
-	/** Whether the control requires a value for constraint validation. */
-	get required(): boolean {
-		return this.hasAttribute("required");
-	}
-
-	set required(value: boolean) {
-		this.toggleAttribute("required", Boolean(value));
 	}
 
 	/** The current constraint-validation state. */

@@ -9,6 +9,7 @@ For native-preserving global installation instead, use the matching packages in 
 ## Packages
 
 - [`@serve-tools/ponyfill-composites`](./composites/) creates interned composite values without modifying the global environment.
+- [`@serve-tools/ponyfill-custom-element-registry`](./custom-element-registry/) provides explicit installation of iframe-backed scoped registries without import-time mutation.
 - [`@serve-tools/ponyfill-observable`](./observable/) provides a Web Observable API subset with a fresh execution per consumption and no global mutation.
 - [`@serve-tools/ponyfill-arraybuffer-base64`](./arraybuffer-base64/) encodes `Uint8Array` values as base64 in Node.js without global mutation.
 - [`@serve-tools/ponyfill-request-idle-callback`](./request-idle-callback/) provides `requestIdleCallback` and `cancelIdleCallback` without modifying the global environment.

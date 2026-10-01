@@ -47,6 +47,7 @@ export { SeparatorElement, type SeparatorOrientation } from "./SeparatorElement.
 export { SliderElement, type SliderOrientation } from "./SliderElement.js";
 export { type SwitchChangeDetail, SwitchElement, type SwitchEventMap } from "./SwitchElement.js";
 export { type TabsActivation, TabsElement, type TabsOrientation, type TabsTarget } from "./TabsElement.js";
+export { TextFieldElement, type TextFieldType } from "./TextFieldElement.js";
 export {
 	type ToastDismissDetail,
 	type ToastPriority,

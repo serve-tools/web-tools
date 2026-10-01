@@ -140,8 +140,8 @@ export async function runCompilerProbe(values = {}) {
 							(file) => path.normalize(file) === path.join(root, "checks/src/index.ts"),
 						),
 					);
-					snapshot = await api.updateSnapshot({ openProjects: [config] });
-					const project = snapshot.getProject(config);
+					snapshot = await createSnapshot(api, { openProjects: [config] });
+					const project = getConfiguredProject(snapshot, config);
 					assert.ok(project, "Configured project did not open");
 					assert.deepEqual(
 						await diagnosticCodes(project.program),
@@ -192,8 +192,8 @@ export async function runCompilerProbe(values = {}) {
 		let api = new apis.async(apiOptions);
 		let snapshot;
 		try {
-			snapshot = await api.updateSnapshot({ openProjects: [path.join(root, "a/tsconfig.json")] });
-			const program = snapshot.getProject(path.join(root, "a/tsconfig.json")).program;
+			snapshot = await createSnapshot(api, { openProjects: [path.join(root, "a/tsconfig.json")] });
+			const program = getConfiguredProject(snapshot, path.join(root, "a/tsconfig.json")).program;
 			if (typeof program.emitToString !== "function") {
 				report.checks.push({
 					name: "adapter",
@@ -231,11 +231,11 @@ export async function runCompilerProbe(values = {}) {
 					}
 				}
 				await snapshot.dispose();
-				snapshot = await api.updateSnapshot({ openProjects: projectConfigs });
+				snapshot = await createSnapshot(api, { openProjects: projectConfigs });
 				const emit = async () => {
 					const files = new Map();
 					for (const config of projectConfigs) {
-						const current = snapshot.getProject(config).program;
+						const current = getConfiguredProject(snapshot, config).program;
 						assert.deepEqual(await diagnosticCodes(current), [], config);
 						const result = await current.emitToString();
 						assert.equal(result.emitSkipped, false);
@@ -251,7 +251,7 @@ export async function runCompilerProbe(values = {}) {
 				};
 				const update = async (fileChanges) => {
 					const previous = snapshot;
-					snapshot = await api.updateSnapshot({
+					snapshot = await updateSnapshot(api, previous, {
 						fileChanges: Object.fromEntries(
 							Object.entries(fileChanges).map(([kind, files]) => [
 								kind,
@@ -268,7 +268,7 @@ export async function runCompilerProbe(values = {}) {
 						const mismatches = [];
 						for (const config of projectConfigs) {
 							const parsed = await api.parseConfigFile(config);
-							const project = snapshot.getProject(config);
+							const project = getConfiguredProject(snapshot, config);
 							const expected = normalizeRoots(parsed.fileNames);
 							const actual = project ? normalizeRoots(project.parsedCommandLine.fileNames) : null;
 							if (JSON.stringify(actual) !== JSON.stringify(expected)) {
@@ -288,7 +288,7 @@ export async function runCompilerProbe(values = {}) {
 						await api.close();
 						api = new apis.async(apiOptions);
 						++report.adapterSessionRestarts;
-						snapshot = await api.updateSnapshot({ openProjects: projectConfigs });
+						snapshot = await createSnapshot(api, { openProjects: projectConfigs });
 					}
 				};
 				stage = "clean-memory-bundle";
@@ -345,9 +345,11 @@ export async function runCompilerProbe(values = {}) {
 				await put("c/src/index.ts", dependency(7) + ' export const broken: number = "wrong";');
 				await update({ changed: [changed] });
 				assert.ok(
-					(await diagnosticCodes(snapshot.getProject(path.join(root, "c/tsconfig.json")).program)).includes(
-						2322,
-					),
+					(
+						await diagnosticCodes(
+							getConfiguredProject(snapshot, path.join(root, "c/tsconfig.json")).program,
+						)
+					).includes(2322),
 				);
 				await put("c/src/index.ts", dependency(9));
 				await update({ changed: [changed] });
@@ -363,7 +365,7 @@ export async function runCompilerProbe(values = {}) {
 				if (!createdOutputs.has(addedOutput)) {
 					const config = path.join(root, "c/tsconfig.json");
 					const parsed = await api.parseConfigFile(config);
-					const project = snapshot.getProject(config);
+					const project = getConfiguredProject(snapshot, config);
 					const programSourceFiles = await project.program.getSourceFileNames();
 					let invalidation;
 					try {
@@ -372,7 +374,7 @@ export async function runCompilerProbe(values = {}) {
 						invalidation = {
 							includesExpectedOutput: outputs.has(addedOutput),
 							emittedOutputs: [...outputs.keys()],
-							projectRootNames: snapshot.getProject(config).parsedCommandLine.fileNames,
+							projectRootNames: getConfiguredProject(snapshot, config).parsedCommandLine.fileNames,
 						};
 					} catch (error) {
 						invalidation = { error: error.message };
@@ -423,6 +425,29 @@ export async function runCompilerProbe(values = {}) {
 		}
 	}
 	return report;
+}
+
+function createSnapshot(api, params) {
+	return typeof api.createSnapshot === "function" ? api.createSnapshot(params) : api.updateSnapshot(params);
+}
+
+function updateSnapshot(api, snapshot, params) {
+	if (typeof snapshot.update === "function") {
+		const { fileChanges, ...changes } = params;
+
+		return snapshot.update({
+			...changes,
+			...(fileChanges ? { ensurePrograms: true, fileNotifications: fileChanges } : {}),
+		});
+	}
+
+	return api.updateSnapshot(params);
+}
+
+function getConfiguredProject(snapshot, configFile) {
+	return typeof snapshot.getConfiguredProject === "function"
+		? snapshot.getConfiguredProject(configFile)
+		: snapshot.getProject(configFile);
 }
 
 async function diagnosticCodes(program) {

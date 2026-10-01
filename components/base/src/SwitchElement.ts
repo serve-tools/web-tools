@@ -1,5 +1,6 @@
 import type { CheckedChangeDetail, CheckedControlBehavior } from "./_checked-control.js";
-import { CheckedControlElement, setCustomState } from "./_checked-control.js";
+import { CheckedControlElement } from "./_checked-control.js";
+import { setCustomState } from "./_states.js";
 import { html } from "./template.js";
 
 const behavior = Object.freeze<CheckedControlBehavior>({

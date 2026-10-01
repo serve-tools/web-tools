@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { userEvent } from "vitest/browser";
 import { CheckboxElement } from "../../src/CheckboxElement.js";
 import { FieldElement } from "../../src/FieldElement.js";
 import { NumberFieldElement } from "../../src/NumberFieldElement.js";
@@ -9,6 +10,7 @@ const mutation = async () => {
 	await Promise.resolve();
 	await Promise.resolve();
 };
+const task = () => new Promise<void>((resolve) => setTimeout(resolve));
 
 afterEach(() => {
 	for (const fixture of fixtures.splice(0).reverse()) {
@@ -54,20 +56,37 @@ describe("FieldElement", () => {
 		form.append(element);
 
 		expect(element.control).toBe(input);
-		expect(element.label).toBe(label);
+		expect(element.labelElement).toBe(label);
 		expect(element.descriptions).toEqual([description]);
 		expect(element.errors).toEqual([error]);
 		expect(Object.isFrozen(element.descriptions)).toBe(true);
 		expect(Object.isFrozen(element.errors)).toBe(true);
 		expect(label.htmlFor).toBe(input.id);
 		expect(input.getAttribute("aria-describedby")).toBe(description.id);
-		expect(input.getAttribute("aria-errormessage")).toBe(error.id);
+		expect(input.getAttribute("aria-errormessage")).toBeNull();
+		expect(error.hasAttribute("id")).toBe(false);
 		expect([...form.elements]).toEqual([input]);
 		expect([...new FormData(form)]).toEqual([["email", "person@example.com"]]);
 
 		const slots = [...element.shadowRoot!.querySelectorAll("slot")];
-		expect(slots.map((slot) => slot.name)).toEqual(["label", "control", "description", "error"]);
-		expect(slots.map((slot) => slot.getAttribute("part"))).toEqual(["label", "control", "description", "error"]);
+		expect(slots.map((slot) => slot.name)).toEqual([
+			"label",
+			"label-actions",
+			"before",
+			"control",
+			"after",
+			"description",
+			"error",
+		]);
+		expect(slots.map((slot) => slot.getAttribute("part"))).toEqual([
+			"label",
+			"label-actions",
+			"before",
+			"control",
+			"after",
+			"description",
+			"error",
+		]);
 	});
 
 	test("surfaces native validity and presentation state without dispatching form events", async () => {
@@ -168,7 +187,7 @@ describe("FieldElement", () => {
 		const cancel = (event: Event) => event.preventDefault();
 		first.addEventListener("reset", cancel, { once: true });
 		first.reset();
-		await mutation();
+		await task();
 		expect(input.value).toBe("changed");
 		expect(element.dirty).toBe(true);
 
@@ -179,8 +198,44 @@ describe("FieldElement", () => {
 		expect(element.dirty).toBe(true);
 
 		second.reset();
-		await mutation();
+		await task();
 		expect(input.value).toBe("initial");
+		expect(element.dirty).toBe(false);
+		expect(element.touched).toBe(false);
+	});
+
+	test("settles trusted reset-button state after default action and honors late cancellation", async () => {
+		const form = append(document.createElement("form"));
+		const textarea = document.createElement("textarea");
+		textarea.defaultValue = "initial";
+		const { element } = create(textarea);
+		element.remove();
+		const reset = document.createElement("button");
+		reset.type = "reset";
+		form.append(element, reset);
+
+		await userEvent.fill(textarea, "changed");
+		expect(element.dirty).toBe(true);
+		let trusted = false;
+		form.addEventListener(
+			"reset",
+			(event) => {
+				trusted = event.isTrusted;
+				event.preventDefault();
+			},
+			{ once: true },
+		);
+		await userEvent.click(reset);
+		await task();
+
+		expect(trusted).toBe(true);
+		expect(textarea.value).toBe("changed");
+		expect(element.dirty).toBe(true);
+
+		await userEvent.click(reset);
+		await task();
+
+		expect(textarea.value).toBe("initial");
 		expect(element.dirty).toBe(false);
 		expect(element.touched).toBe(false);
 	});
@@ -199,7 +254,7 @@ describe("FieldElement", () => {
 
 		form.reset();
 		element.remove();
-		await mutation();
+		await task();
 		expect(input.value).toBe("next");
 		expect(element.dirty).toBe(true);
 
@@ -225,7 +280,7 @@ describe("FieldElement", () => {
 		element.refresh();
 		expect(element.dirty).toBe(true);
 		form.reset();
-		await mutation();
+		await task();
 
 		expect(input.value).toBe("next");
 		expect(resetState).toHaveBeenCalledOnce();
@@ -235,9 +290,11 @@ describe("FieldElement", () => {
 
 	test("preserves author IDREF tokens and restores only owned relationships", async () => {
 		const input = document.createElement("input");
+		input.required = true;
 		input.setAttribute("aria-describedby", "author-description");
 		input.setAttribute("aria-errormessage", "author-error");
 		const { description, element, error, label } = create(input);
+		element.showError = true;
 		label.htmlFor = "author-control";
 		element.refresh();
 		const descriptionId = description.id;
@@ -314,6 +371,51 @@ describe("FieldElement", () => {
 		expect(field.element.dirty).toBe(true);
 	});
 
+	test("keeps the prior participant and state visible when a replacement state getter throws", () => {
+		const original = document.createElement("input");
+		original.required = true;
+		const field = create(original);
+		const originalId = original.id;
+		expect(field.element.valid).toBe(false);
+
+		const replacement = document.createElement("input");
+		replacement.slot = "control";
+		replacement.disabled = true;
+		replacement.value = "replacement";
+		let observed: Record<string, unknown> | undefined;
+		Object.defineProperty(replacement, "required", {
+			configurable: true,
+			get() {
+				observed = {
+					control: field.element.control,
+					dirty: field.element.dirty,
+					disabled: field.element.disabled,
+					filled: field.element.filled,
+					invalid: field.element.invalid,
+					required: field.element.required,
+					valid: field.element.valid,
+				};
+				throw new Error("unavailable required state");
+			},
+		});
+		original.replaceWith(replacement);
+
+		expect(() => field.element.refresh()).toThrowError("unavailable required state");
+		expect(observed).toEqual({
+			control: original,
+			dirty: false,
+			disabled: false,
+			filled: false,
+			invalid: true,
+			required: true,
+			valid: false,
+		});
+		expect(original.id).toBe(originalId);
+		expect(field.label.htmlFor).toBe(originalId);
+		expect(replacement.hasAttribute("id")).toBe(false);
+		Reflect.deleteProperty(replacement, "required");
+	});
+
 	test("allocates and reuses generated IDs only while unique in the current shadow root", () => {
 		const host = append(document.createElement("div"));
 		const root = host.attachShadow({ mode: "open" });
@@ -354,7 +456,10 @@ describe("FieldElement", () => {
 	});
 
 	test("restores relationships while disconnected and reuses them on reconnect", () => {
-		const { description, element, error, label } = create();
+		const input = document.createElement("input");
+		input.required = true;
+		const { description, element, error, label } = create(input);
+		element.showError = true;
 		const control = element.control!;
 		const ids = [control.id, description.id, error.id];
 

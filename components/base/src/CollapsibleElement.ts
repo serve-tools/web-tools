@@ -1,7 +1,9 @@
+import { DisabledElement } from "./_disabled.js";
 import type { AccordionActivation, AccordionController, DisclosureHandle } from "./_disclosure.js";
 import { getAccordion, getDirectAccordion, registerDisclosure } from "./_disclosure.js";
+import { setCustomState } from "./_states.js";
 import { upgradeProperty } from "./_upgrade.js";
-import { BaseElement } from "./BaseElement.js";
+import type { BaseElement } from "./BaseElement.js";
 
 /** Immutable state proposed by a collapsible's `beforechange` event. */
 export interface CollapsibleChangeDetail {
@@ -57,7 +59,7 @@ const directButton = (element: Element): HTMLButtonElement | undefined => {
 
 /** A retained disclosure whose authored native button controls an authored panel. */
 // biome-ignore lint/suspicious/noUnsafeDeclarationMerging: the interface adds typed DOM event overloads only.
-export class CollapsibleElement extends BaseElement {
+export class CollapsibleElement extends DisabledElement {
 	static readonly observedAttributes = ["disabled", "open", "value"];
 
 	#accordion: AccordionController | undefined;
@@ -66,7 +68,6 @@ export class CollapsibleElement extends BaseElement {
 	#changing = false;
 	#effectiveDisabled = false;
 	readonly #handle: DisclosureHandle;
-	#internals = this.attachInternals();
 	#ownedAttributes = new Map<Element, Map<string, OwnedAttribute>>();
 	#open = this.hasAttribute("open");
 	#panel: HTMLElement | undefined;
@@ -144,15 +145,6 @@ export class CollapsibleElement extends BaseElement {
 		} else {
 			this.#setOpen(open);
 		}
-	}
-
-	/** Whether this disclosure directly disables its trigger. An accordion may additionally disable it. */
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
 	}
 
 	/** The explicit string identity used by a direct accordion. Empty strings are valid when the attribute is present. */
@@ -461,9 +453,9 @@ export class CollapsibleElement extends BaseElement {
 		}
 
 		this.#effectiveDisabled = button ? button.matches(":disabled") : controlledDisabled;
-		this.#setState("open", this.#open);
-		this.#setState("closed", !this.#open);
-		this.#setState("disabled", controlledDisabled);
+		setCustomState(this.internals, "open", this.#open);
+		setCustomState(this.internals, "closed", !this.#open);
+		setCustomState(this.internals, "disabled", controlledDisabled);
 	}
 
 	#returnFocus(panel: HTMLElement, button: HTMLButtonElement | undefined): void {
@@ -476,14 +468,6 @@ export class CollapsibleElement extends BaseElement {
 		const remaining = this.ownerDocument.activeElement;
 		if (remaining && panel.contains(remaining) && "blur" in remaining && typeof remaining.blur === "function") {
 			remaining.blur();
-		}
-	}
-
-	#setState(state: string, present: boolean): void {
-		if (present) {
-			this.#internals.states.add(state);
-		} else {
-			this.#internals.states.delete(state);
 		}
 	}
 

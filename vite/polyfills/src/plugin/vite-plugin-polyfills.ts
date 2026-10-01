@@ -10,8 +10,10 @@ const NULL_BYTE = "\0";
 const NODE_MODULES_SEGMENT = /(?:^|[/\\])node_modules[/\\]/;
 const BUILTIN_RUNTIME_PACKAGES = [
 	"@serve-tools/polyfill-composites",
+	"@serve-tools/polyfill-custom-element-registry",
 	"@serve-tools/polyfill-observable",
 	"@serve-tools/ponyfill-composites",
+	"@serve-tools/ponyfill-custom-element-registry",
 	"@serve-tools/ponyfill-observable",
 ];
 

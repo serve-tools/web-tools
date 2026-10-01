@@ -20,6 +20,28 @@
 				<button id="reset" class="secondary">Reset demo data</button>
 			</div>
 			<output aria-live="polite">Opening the database…</output>
+			<div class="code-example">
+				<p>Core code; element references and local types match the example above.</p>
+				<pre><code>import { database } from "./database.js";
+
+const db = await database;
+
+await db.transaction(
+	["contacts", "activity"],
+	{ mode: "readwrite" },
+	async (transaction) =&gt; {
+		const contacts = transaction.objectStore("contacts");
+		const contact = await contacts.get("ada");
+		if (!contact) return;
+
+		await contacts.put({ ...contact, visits: contact.visits + 1 });
+		await transaction.objectStore("activity").add({
+			contactID: "ada",
+			time: Date.now(),
+		});
+	},
+);</code></pre>
+			</div>
 		</main>
 		<script type="module" src="./src/main.ts"></script>
 	</body>

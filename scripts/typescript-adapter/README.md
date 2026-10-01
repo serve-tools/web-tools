@@ -51,6 +51,8 @@ npm run benchmark:typescript-adapter -- --run --runs 5 --output /absolute/path/t
 ```
 
 Run measurements with other builds and browser tests stopped.
+The current harness pins TypeScript `7.1.0-dev.20261001.1` for both conditions.
+Earlier reports retain their recorded compiler versions and must not be combined with new runs as one matched comparison.
 The harness alternates independent CLI/adapter processes, verifies behavior and production chunks, and retains raw samples, environment/source hashes, phase timings, process counts, sampled native compiler RSS, and paired intervals.
 It measures a small referenced fixture, not repository-wide performance.
 The CLI retains four builders and two checkers; the pinned native API does not expose those controls.

@@ -68,6 +68,7 @@
 		"lit/signals/demo",
 		"polyfills/arraybuffer-base64",
 		"polyfills/composites",
+		"polyfills/custom-element-registry",
 		"polyfills/decorator-metadata",
 		"polyfills/observable",
 		"polyfills/prioritized-task-scheduling",
@@ -77,6 +78,7 @@
 		"polyfills/urlpattern",
 		"ponyfills/arraybuffer-base64",
 		"ponyfills/composites",
+		"ponyfills/custom-element-registry",
 		"ponyfills/decorator-metadata",
 		"ponyfills/observable",
 		"ponyfills/prioritized-task-scheduling",
@@ -149,7 +151,7 @@
 		"test:browser:consolidated": "node scripts/run-browser-projects.mjs && vitest run --root client-signals/shared-db --config vitest.browser.config.ts && npm run test:browser --workspace @serve-tools/signal-dom",
 		"test:node": "npm run test:node:vitest && npm run test:node:native && npm run test:node:coverage",
 		"test:node:coverage": "npm run test:node --workspace @serve-tools/signal-dom",
-		"test:node:native": "node --test polyfills/arraybuffer-base64/test/*.test.js ponyfills/arraybuffer-base64/test/*.test.js ponyfills/request-idle-callback/test/runtime/node.test.js core/http-contract-interop/test/interop.test.mjs",
+		"test:node:native": "node --test polyfills/arraybuffer-base64/test/*.test.js ponyfills/arraybuffer-base64/test/*.test.js ponyfills/request-idle-callback/test/runtime/node.test.js core/http-contract-interop/test/interop.test.mjs scripts/build-pages.test.mjs scripts/pages-site.test.mjs",
 		"test:node:vitest": "vitest run --config vitest.node.projects.config.ts",
 		"test:typescript-adapter:browser": "npm run build --workspace @serve-tools/rolldown-typescript && node --test scripts/typescript-adapter/browser.test.mjs scripts/typescript-adapter/keyboard.test.mjs",
 		"test:typescript-adapter:distribution": "npm run build --workspace @serve-tools/rolldown-typescript && node --test scripts/typescript-adapter/distribution.test.mjs",
@@ -162,24 +164,25 @@
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "0.18.5",
-		"@biomejs/biome": "2.5.12",
+		"@biomejs/biome": "2.5.15",
 		"@playwright/test": "1.63.0",
 		"@serve-tools/rolldown-typescript": "0.1.0",
-		"@types/bun": "1.4.1",
-		"@types/node": "26.4.1",
-		"@types/ws": "8.18.1",
-		"@vitest/browser-playwright": "5.0.0",
-		"@vitest/coverage-istanbul": "5.0.0",
+		"@types/bun": "1.4.2",
+		"@types/node": "26.6.3",
+		"@types/ws": "8.18.2",
+		"@vitest/browser-playwright": "5.0.3",
+		"@vitest/coverage-istanbul": "5.0.3",
 		"crossws": "0.4.12",
-		"dprint": "0.57.1",
-		"knip": "6.34.0",
+		"dprint": "0.58.0",
+		"knip": "6.39.0",
+		"marked": "18.0.14",
 		"playwright": "1.63.0",
 		"publint": "0.3.24",
-		"rolldown": "1.2.7",
+		"rolldown": "1.2.12",
 		"typescript": "7.1.0-0 - 7.1.0",
-		"vite": "8.2.2",
-		"vitest": "5.0.0",
-		"ws": "8.21.3"
+		"vite": "8.3.2",
+		"vitest": "5.0.3",
+		"ws": "8.22.0"
 	},
 	"packageManager": "npm@12.0.2",
 	"engines": {
@@ -206,7 +209,8 @@
 					"vitest.browser.projects.config.ts",
 					"benchmark/skills/agentic/tasks/**/*.{mjs,ts}",
 					"benchmark/skills/agentic/transfer/{tasks,recipes}/**/*.{mjs,ts}",
-					"benchmark/skills/agentic/ablation/{tasks,helpers}/**/*.{mjs,ts}"
+					"benchmark/skills/agentic/ablation/{tasks,helpers}/**/*.{mjs,ts}",
+					"demo/catalog.js"
 				],
 				"ignoreBinaries": [
 					"go"
@@ -395,11 +399,12 @@
 				"entry": [
 					"benchmark/**/*.{js,mjs}",
 					"benchmark/template/fixture.ts",
-					"examples/main.ts",
-					"examples/template.ts",
 					"test/*.{recipes,types}.ts"
 				],
 				"ignoreIssues": {
+					"benchmark/interactions/src/base-ui-*.js": [
+						"unlisted"
+					],
 					"benchmark/comparison/src/base-ui-weight.js": [
 						"unlisted"
 					],
@@ -407,6 +412,12 @@
 						"unlisted"
 					],
 					"benchmark/comparison/src/react-native-weight.js": [
+						"unlisted"
+					],
+					"benchmark/comparison/src/size/base-ui*.js": [
+						"unlisted"
+					],
+					"benchmark/comparison/src/size/react-framework.js": [
 						"unlisted"
 					]
 				}
@@ -593,7 +604,8 @@
 					"@serve-tools/polyfill-prioritized-task-scheduling",
 					"@serve-tools/polyfill-request-idle-callback",
 					"@serve-tools/polyfill-resource-management",
-					"@serve-tools/polyfill-urlpattern"
+					"@serve-tools/polyfill-urlpattern",
+					"@serve-tools/polyfill-custom-element-registry"
 				]
 			},
 			"rolldown/typescript": {
@@ -601,6 +613,16 @@
 					"src/rolldown-typescript.ts",
 					"test/*.recipes.ts",
 					"test/*.types.ts"
+				]
+			},
+			"polyfills/custom-element-registry": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
+				]
+			},
+			"ponyfills/custom-element-registry": {
+				"entry": [
+					"test/*.{recipes,types}.ts"
 				]
 			}
 		}

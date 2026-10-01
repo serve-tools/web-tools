@@ -106,16 +106,38 @@ export async function createCompilerSession({ configFile, cwd = process.cwd() })
 					const closeProjects = [...openedConfigs].filter((file) => !nextConfigs.has(file));
 					const changes = materializeFileChanges(pendingChanges);
 					const previousSnapshot = activeSnapshot;
-
-					activeSnapshot = await api.updateSnapshot({
+					const snapshotParams = {
 						...(openProjects.length ? { openProjects } : {}),
 						...(closeProjects.length ? { closeProjects } : {}),
-						...(changes ? { fileChanges: changes } : {}),
-					});
+					};
+
+					activeSnapshot = previousSnapshot
+						? typeof previousSnapshot.update === "function"
+							? await previousSnapshot.update({
+									...snapshotParams,
+									...(changes ? { fileNotifications: changes } : {}),
+									ensurePrograms: true,
+								})
+							: await api.updateSnapshot({
+									...snapshotParams,
+									...(changes ? { fileChanges: changes } : {}),
+								})
+						: typeof api.createSnapshot === "function"
+							? await api.createSnapshot({
+									...snapshotParams,
+									...(changes ? { fileNotifications: changes } : {}),
+									ensurePrograms: true,
+								})
+							: await api.updateSnapshot({
+									...snapshotParams,
+									...(changes ? { fileChanges: changes } : {}),
+								});
 
 					openedConfigs = nextConfigs;
 
-					await previousSnapshot?.dispose();
+					if (previousSnapshot && previousSnapshot !== activeSnapshot) {
+						await previousSnapshot.dispose();
+					}
 
 					const inconsistentConfig = await findInconsistentRoots(api, activeSnapshot, graph);
 
@@ -158,7 +180,7 @@ export async function createCompilerSession({ configFile, cwd = process.cwd() })
 				const projectObjects = [];
 
 				for (const { configFile: file } of graph) {
-					const project = activeSnapshot.getProject(file);
+					const project = getConfiguredProject(activeSnapshot, file);
 
 					if (!project) {
 						throw new Error(`TypeScript did not load configured project ${file}`);
@@ -389,7 +411,7 @@ async function findInconsistentRoots(api, snapshot, graph) {
 		new Set(await Promise.all(files.map(async (file) => api.getCanonicalFileName(await canonicalPath(file)))));
 
 	for (const { configFile, parsed } of graph) {
-		const project = snapshot.getProject(configFile);
+		const project = getConfiguredProject(snapshot, configFile);
 
 		if (!project) {
 			return configFile;
@@ -406,6 +428,12 @@ async function findInconsistentRoots(api, snapshot, graph) {
 	}
 
 	return undefined;
+}
+
+function getConfiguredProject(snapshot, configFile) {
+	return typeof snapshot.getConfiguredProject === "function"
+		? snapshot.getConfiguredProject(configFile)
+		: snapshot.getProject(configFile);
 }
 
 async function findPackageFile(directory) {

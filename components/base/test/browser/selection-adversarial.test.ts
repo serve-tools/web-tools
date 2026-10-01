@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { userEvent } from "vitest/browser";
+import { setListboxState } from "../../src/_listbox.js";
 import { AutocompleteElement } from "../../src/AutocompleteElement.js";
 import { ComboboxElement } from "../../src/ComboboxElement.js";
 import { OptionElement } from "../../src/OptionElement.js";
@@ -55,6 +56,31 @@ const dispatchInput = (input: HTMLInputElement): void => {
 };
 
 describe("selection adversarial behavior", () => {
+	test("reads an option value after assigning its listbox ID", () => {
+		const name = nextName("id-reactive-option");
+		customElements.define(
+			name,
+			class extends OptionElement {
+				static override readonly observedAttributes = [...OptionElement.observedAttributes, "id"];
+
+				override attributeChangedCallback(name: string, oldValue: string | null, value: string | null): void {
+					if (name === "id" && value !== null) {
+						this.value = "after-id";
+					}
+					super.attributeChangedCallback(name, oldValue, value);
+				}
+			},
+		);
+		const option = document.createElement(name) as OptionElement;
+		option.value = "before-id";
+
+		setListboxState([{ invalid: false, option }], undefined, new Set(["after-id"]));
+
+		expect(option.id).not.toBe("");
+		expect(option.value).toBe("after-id");
+		expect(option.selected).toBe(true);
+	});
+
 	test("keeps a Combobox popup open across repeated query input", () => {
 		const names = define();
 		const host = document.createElement(names.combobox) as ComboboxElement;

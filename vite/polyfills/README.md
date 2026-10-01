@@ -25,28 +25,37 @@ Install it in the same project as this plugin.
 
 ## Built-in polyfills
 
-| Id                       | Feature                                                                  |
-| ------------------------ | ------------------------------------------------------------------------ |
-| `symbol-dispose`         | `Symbol.dispose` well-known symbol                                       |
-| `symbol-async-dispose`   | `Symbol.asyncDispose` well-known symbol                                  |
-| `symbol-metadata`        | `Symbol.metadata` decorator metadata symbol                              |
-| `disposable-stack`       | Global `DisposableStack`                                                 |
-| `async-disposable-stack` | Global `AsyncDisposableStack`                                            |
-| `suppressed-error`       | Global `SuppressedError`                                                 |
-| `url-pattern`            | Global `URLPattern`                                                      |
-| `observable`             | Global `Observable`                                                      |
-| `subscriber`             | Global `Subscriber`                                                      |
-| `event-target-when`      | `EventTarget.prototype.when`                                             |
-| `composite`              | Global `Composite`                                                       |
-| `map-upsert`             | `Map.prototype.{getOrInsert, getOrInsertComputed}` and `WeakMap` equivs. |
-| `request-idle-callback`  | Global `requestIdleCallback`                                             |
-| `cancel-idle-callback`   | Global `cancelIdleCallback`                                              |
+| Id                        | Feature                                                                  |
+| ------------------------- | ------------------------------------------------------------------------ |
+| `symbol-dispose`          | `Symbol.dispose` well-known symbol                                       |
+| `symbol-async-dispose`    | `Symbol.asyncDispose` well-known symbol                                  |
+| `symbol-metadata`         | `Symbol.metadata` decorator metadata symbol                              |
+| `disposable-stack`        | Global `DisposableStack`                                                 |
+| `async-disposable-stack`  | Global `AsyncDisposableStack`                                            |
+| `suppressed-error`        | Global `SuppressedError`                                                 |
+| `url-pattern`             | Global `URLPattern`                                                      |
+| `observable`              | Global `Observable`                                                      |
+| `subscriber`              | Global `Subscriber`                                                      |
+| `event-target-when`       | `EventTarget.prototype.when`                                             |
+| `custom-element-registry` | Firefox-only scoped `CustomElementRegistry` and coordinated DOM support  |
+| `composite`               | Global `Composite`                                                       |
+| `map-upsert`              | `Map.prototype.{getOrInsert, getOrInsertComputed}` and `WeakMap` equivs. |
+| `request-idle-callback`   | Global `requestIdleCallback`                                             |
+| `cancel-idle-callback`    | Global `cancelIdleCallback`                                              |
 
 Detection matches member expressions like `Symbol.dispose`, `target.when(...)`, or `cache.getOrInsert(...)`, plus global references like `new Observable(...)`, `Composite(...)`, or `new URLPattern(...)`, and calls to `requestIdleCallback(...)` or `cancelIdleCallback(...)`.
 References inside string literals or comments are ignored because detection runs on the AST.
 The `url-pattern` feature uses `@serve-tools/polyfill-urlpattern` and preserves an existing native `URLPattern`.
 The Observable features use selective `@serve-tools/polyfill-observable` installers, so `EventTarget.prototype.when` uses the available native or polyfilled `Observable` constructor while preserving every implementation already present.
 The `composite` feature likewise uses the native-preserving `@serve-tools/polyfill-composites` installer.
+The `custom-element-registry` feature detects `CustomElementRegistry` identifiers and imports `@serve-tools/polyfill-custom-element-registry/apply/CustomElementRegistry`.
+Automatic installation is limited to Firefox, identified by a `Firefox/<version>` token in the browser user agent.
+In Firefox, its capability check preserves supported native scoped registries; otherwise, its experimental iframe-backed fallback patches the registry, HTML constructors, and related DOM methods together.
+The fallback requires a live browser document and permission to create same-origin iframes; review that package's compatibility limits before enabling it.
+The automatic installer does nothing in other browsers or environments without a document.
+Explicit imports of the registry ponyfill or polyfill are excluded from automatic detection, including workspace-linked packages, so importing the ponyfill does not implicitly install it.
+The ponyfill package's explicit installer remains available for deliberate installation in other supported browser realms.
+Filter out `custom-element-registry` through `builtinPolyfills` when the application requires explicit control over these coordinated patches.
 
 ## TypeScript
 
@@ -70,6 +79,7 @@ The `symbol-metadata` declaration reuses the conflict-safe global type shipped b
 The `observable` and `composites` declarations reuse the ambient globals and `EventTarget` augmentation shipped by their corresponding polyfill packages.
 `Symbol.dispose`, `SuppressedError`, `DisposableStack`, and `AsyncDisposableStack` are already covered by TypeScript's built-in disposable libs.
 `requestIdleCallback` and `cancelIdleCallback` are covered by TypeScript's DOM lib.
+`CustomElementRegistry` and its scoped DOM options are covered by current TypeScript DOM declarations; older TypeScript versions may require upgrading their DOM declarations.
 Those polyfills do not need a separate reference.
 
 ### Extend the defaults with a custom polyfill

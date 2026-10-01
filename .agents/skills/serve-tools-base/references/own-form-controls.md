@@ -2,7 +2,8 @@
 
 Use `FormAssociatedElement` from `@serve-tools/base-components/form-associated` when the custom-element host owns form participation.
 It extends `BaseElement`, so return ordinary `html` from `layout()` and use the existing connection resource contract.
-The base attaches one protected `internals` object without calling subclass hooks during construction.
+`BaseElement` attaches one protected read-only `internals` object lazily on first access, without calling form synchronization hooks.
+`FormAssociatedElement` uses that inherited object and adds form association and the validation facade; do not attach another internals object in a subclass.
 Replay pre-definition own properties in the concrete registered class after its state initializes; this is not automatic.
 Follow the initialization recipe in the package's `design/form-foundations.md` and preserve the dependency order of component-specific properties.
 

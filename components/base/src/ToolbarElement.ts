@@ -6,11 +6,13 @@ import {
 	pathElement,
 	textEditorConsumesArrow,
 } from "./_composite.js";
+import { DisabledElement } from "./_disabled.js";
 import { directMenuChildren } from "./_menu.js";
 import { AttributeOwner } from "./_ownership.js";
+import { setCustomState } from "./_states.js";
 import { getToggle } from "./_toggle-group.js";
 import { upgradeProperty } from "./_upgrade.js";
-import { BaseElement } from "./BaseElement.js";
+import type { BaseElement } from "./BaseElement.js";
 
 /** A toolbar item addressed by DOM order, ID, or native focus element. */
 export type ToolbarTarget = number | string | HTMLElement;
@@ -24,17 +26,16 @@ const directControl = (element: Element): element is HTMLElement =>
 		(element.localName === "a" && element.hasAttribute("href")));
 
 /** Coordinates a single roving focus stop across native toolbar controls. */
-export class ToolbarElement extends BaseElement {
+export class ToolbarElement extends DisabledElement {
 	static readonly observedAttributes = ["disabled", "loop-focus", "orientation"];
 
 	readonly #collection = new CompositeCollection(this, () => this.#resolveEntries());
 	#controlled = new Set<HTMLElement>();
-	readonly #internals = this.attachInternals();
 	readonly #owner = new AttributeOwner();
 
 	constructor() {
 		super();
-		this.#internals.role = "toolbar";
+		this.internals.role = "toolbar";
 		for (const property of ["disabled", "loopFocus", "orientation"] as const) {
 			upgradeProperty(this, property);
 		}
@@ -67,15 +68,6 @@ export class ToolbarElement extends BaseElement {
 
 	set loopFocus(value: boolean) {
 		this.setAttribute("loop-focus", String(Boolean(value)));
-	}
-
-	/** Whether the toolbar prevents activation of all current items. */
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
 	}
 
 	/** Focuses an enabled current toolbar item without activating it. */
@@ -229,18 +221,14 @@ export class ToolbarElement extends BaseElement {
 	}
 
 	#synchronizeState(): void {
-		this.#internals.ariaOrientation = this.orientation;
+		this.internals.ariaOrientation = this.orientation;
 		if (this.orientation === "horizontal") {
-			this.#internals.states.add("horizontal");
-			this.#internals.states.delete("vertical");
+			this.internals.states.add("horizontal");
+			this.internals.states.delete("vertical");
 		} else {
-			this.#internals.states.add("vertical");
-			this.#internals.states.delete("horizontal");
+			this.internals.states.add("vertical");
+			this.internals.states.delete("horizontal");
 		}
-		if (this.disabled) {
-			this.#internals.states.add("disabled");
-		} else {
-			this.#internals.states.delete("disabled");
-		}
+		setCustomState(this.internals, "disabled", this.disabled);
 	}
 }

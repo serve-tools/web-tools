@@ -13,7 +13,12 @@ const control = null as unknown as SwitchElement;
 const controls: readonly FieldControl[] = [input, select, textarea, checkbox, control];
 const values: readonly unknown[] | undefined = controls[0].values;
 const current: FieldControl | null = field.control;
-const label: HTMLLabelElement | null = field.label;
+const label: string = field.label;
+const labelElement: HTMLLabelElement | null = field.labelElement;
+const description: string = field.description;
+const error: string = field.error;
+const showError: boolean = field.showError;
+const errorVisible: boolean = field.errorVisible;
 const descriptions: readonly HTMLElement[] = field.descriptions;
 const errors: readonly HTMLElement[] = field.errors;
 const valid: boolean | null = field.valid;
@@ -39,4 +44,20 @@ field.form;
 field.disabled = true;
 // @ts-expect-error Relationship collections are immutable snapshots.
 field.errors.push(document.createElement("p"));
-void [constructor, element, controls, values, label, descriptions, errors, valid, states, alwaysValid];
+void [
+	constructor,
+	element,
+	controls,
+	values,
+	label,
+	labelElement,
+	description,
+	error,
+	showError,
+	errorVisible,
+	descriptions,
+	errors,
+	valid,
+	states,
+	alwaysValid,
+];

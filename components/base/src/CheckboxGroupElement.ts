@@ -1,7 +1,9 @@
 import type { CheckboxGroupController, CheckboxGroupLease, CheckboxHandle } from "./_checkbox-group.js";
 import { getCheckbox, registerCheckboxGroup } from "./_checkbox-group.js";
+import { DisabledElement } from "./_disabled.js";
+import { setCustomState } from "./_states.js";
 import { upgradeProperty } from "./_upgrade.js";
-import { BaseElement } from "./BaseElement.js";
+import type { BaseElement } from "./BaseElement.js";
 import type { CheckboxChangeDetail } from "./CheckboxElement.js";
 import { CheckboxElement } from "./CheckboxElement.js";
 
@@ -38,12 +40,11 @@ interface GroupSnapshot {
 
 /** Coordinates direct child checkboxes while leaving each ordinary checkbox as its own form owner. */
 // biome-ignore lint/suspicious/noUnsafeDeclarationMerging: the interface adds typed DOM event overloads only.
-export class CheckboxGroupElement extends BaseElement {
+export class CheckboxGroupElement extends DisabledElement {
 	static readonly observedAttributes = ["disabled"];
 
 	#changing = false;
 	readonly #controller: CheckboxGroupController;
-	#internals = this.attachInternals();
 	#members: CheckboxHandle[] = [];
 	#parentStatus: "mixed" | "on" | "off" = "mixed";
 	#pendingValues: readonly string[] | undefined;
@@ -86,7 +87,7 @@ export class CheckboxGroupElement extends BaseElement {
 		}
 		this.#recoveringProperties = false;
 
-		this.#internals.role = "group";
+		this.internals.role = "group";
 		this.#synchronizeState();
 		registerCheckboxGroup(this, this.#controller);
 		this.#refresh();
@@ -103,15 +104,6 @@ export class CheckboxGroupElement extends BaseElement {
 			throw new TypeError("Checkbox group values must be an array of strings");
 		}
 		this.#setValues(values);
-	}
-
-	/** Whether the group disables every direct checkbox without changing each checkbox's own disabled property. */
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
 	}
 
 	attributeChangedCallback(): void {
@@ -377,9 +369,6 @@ export class CheckboxGroupElement extends BaseElement {
 
 	#commitInteraction(selected: ReadonlySet<CheckboxHandle>, before: GroupSnapshot, revision: number): boolean {
 		for (const member of this.#selectableMembers(before.members)) {
-			if (revision !== this.#revision || !this.#commitContextEquals(before)) {
-				return false;
-			}
 			member.handle.setChecked(selected.has(member.handle));
 			if (revision !== this.#revision || !this.#commitContextEquals(before)) {
 				return false;
@@ -563,12 +552,8 @@ export class CheckboxGroupElement extends BaseElement {
 	}
 
 	#synchronizeState(): void {
-		this.#internals.ariaDisabled = String(this.disabled);
-		if (this.disabled) {
-			this.#internals.states.add("disabled");
-		} else {
-			this.#internals.states.delete("disabled");
-		}
+		this.internals.ariaDisabled = String(this.disabled);
+		setCustomState(this.internals, "disabled", this.disabled);
 	}
 }
 

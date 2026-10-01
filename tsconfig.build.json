@@ -127,6 +127,9 @@
 			"path": "./polyfills/composites/tsconfig.json"
 		},
 		{
+			"path": "./polyfills/custom-element-registry/tsconfig.json"
+		},
+		{
 			"path": "./polyfills/decorator-metadata/tsconfig.json"
 		},
 		{
@@ -149,6 +152,9 @@
 		},
 		{
 			"path": "./ponyfills/composites/tsconfig.json"
+		},
+		{
+			"path": "./ponyfills/custom-element-registry/tsconfig.json"
 		},
 		{
 			"path": "./ponyfills/decorator-metadata/tsconfig.json"

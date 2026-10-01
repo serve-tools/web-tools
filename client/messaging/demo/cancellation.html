@@ -19,6 +19,24 @@
 				<button id="cancel" class="secondary" disabled>Abort request</button>
 			</div>
 			<output aria-live="polite">Ready.</output>
+			<div class="code-example">
+				<p>Core code; element references and local types match the example above.</p>
+				<pre><code>import { client } from "./client.js";
+
+const controller = new AbortController();
+
+const result = client.request("wait", 10_000, {
+	signal: controller.signal,
+});
+
+cancelButton.onclick = () =&gt; controller.abort();
+try {
+	await result;
+} catch (error) {
+	if (error !== controller.signal.reason) throw error;
+	output.value = "Request cancelled.";
+}</code></pre>
+			</div>
 		</main>
 		<script type="module" src="./src/main.ts"></script>
 	</body>

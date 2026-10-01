@@ -1,7 +1,9 @@
+import { DisabledElement } from "./_disabled.js";
+import { setCustomState } from "./_states.js";
 import type { ToggleGroupController, ToggleGroupLease, ToggleHandle } from "./_toggle-group.js";
 import { getToggle, registerToggleGroup } from "./_toggle-group.js";
 import { upgradeProperty } from "./_upgrade.js";
-import { BaseElement } from "./BaseElement.js";
+import type { BaseElement } from "./BaseElement.js";
 import type { ToggleChangeDetail, ToggleElement } from "./ToggleElement.js";
 
 /** The axis used for toggle-group keyboard navigation. */
@@ -44,7 +46,7 @@ const isElement = (value: unknown): value is Element =>
 
 /** Coordinates the pressed values and roving focus of direct child toggle elements. */
 // biome-ignore lint/suspicious/noUnsafeDeclarationMerging: the interface adds typed DOM event overloads only.
-export class ToggleGroupElement extends BaseElement {
+export class ToggleGroupElement extends DisabledElement {
 	static readonly observedAttributes = ["disabled", "loop-focus", "multiple", "orientation"];
 
 	#active: ToggleHandle | undefined;
@@ -53,7 +55,6 @@ export class ToggleGroupElement extends BaseElement {
 	readonly #controller: ToggleGroupController;
 	#focused: ToggleHandle | undefined;
 	#initializing = true;
-	#internals = this.attachInternals();
 	#members: ToggleHandle[] = [];
 	#pendingValues: readonly string[] | undefined;
 	#refreshing = false;
@@ -62,7 +63,7 @@ export class ToggleGroupElement extends BaseElement {
 	constructor() {
 		super();
 
-		this.#internals.role = "group";
+		this.internals.role = "group";
 		const element = this;
 		this.#controller = {
 			get changing() {
@@ -119,15 +120,6 @@ export class ToggleGroupElement extends BaseElement {
 
 	set multiple(value: boolean) {
 		this.toggleAttribute("multiple", Boolean(value));
-	}
-
-	/** Whether the group disables every direct toggle without changing each toggle's own disabled property. */
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
 	}
 
 	/** The axis used by arrow-key focus navigation. Invalid values read as `horizontal`. */
@@ -337,14 +329,10 @@ export class ToggleGroupElement extends BaseElement {
 		}
 
 		const selected = new Set(before.members.filter((member) => member.pressed).map((member) => member.handle));
-		if (this.multiple) {
-			if (pressed) {
-				selected.add(toggle);
-			} else {
-				selected.delete(toggle);
-			}
-		} else if (pressed) {
+		if (!this.multiple && pressed) {
 			selected.clear();
+		}
+		if (pressed) {
 			selected.add(toggle);
 		} else {
 			selected.delete(toggle);
@@ -397,14 +385,10 @@ export class ToggleGroupElement extends BaseElement {
 
 		this.#pendingValues = undefined;
 		const selected = new Set(this.#members.filter((member) => member.pressed));
-		if (this.multiple) {
-			if (pressed) {
-				selected.add(toggle);
-			} else {
-				selected.delete(toggle);
-			}
-		} else if (pressed) {
+		if (!this.multiple && pressed) {
 			selected.clear();
+		}
+		if (pressed) {
 			selected.add(toggle);
 		} else {
 			selected.delete(toggle);
@@ -458,9 +442,6 @@ export class ToggleGroupElement extends BaseElement {
 
 	#commitInteraction(selected: ReadonlySet<ToggleHandle>, before: GroupSnapshot, revision: number): boolean {
 		for (const member of before.members) {
-			if (revision !== this.#revision || !this.#commitContextEquals(before)) {
-				return false;
-			}
 			member.handle.setPressed(selected.has(member.handle));
 			if (revision !== this.#revision || !this.#commitContextEquals(before)) {
 				return false;
@@ -661,18 +642,10 @@ export class ToggleGroupElement extends BaseElement {
 	}
 
 	#synchronizeStates(): void {
-		this.#setState("disabled", this.disabled);
-		this.#setState("multiple", this.multiple);
-		this.#setState("horizontal", this.orientation === "horizontal");
-		this.#setState("vertical", this.orientation === "vertical");
-	}
-
-	#setState(state: string, present: boolean): void {
-		if (present) {
-			this.#internals.states.add(state);
-		} else {
-			this.#internals.states.delete(state);
-		}
+		setCustomState(this.internals, "disabled", this.disabled);
+		setCustomState(this.internals, "multiple", this.multiple);
+		setCustomState(this.internals, "horizontal", this.orientation === "horizontal");
+		setCustomState(this.internals, "vertical", this.orientation === "vertical");
 	}
 }
 

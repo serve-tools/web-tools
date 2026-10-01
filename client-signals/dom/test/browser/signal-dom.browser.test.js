@@ -1,5 +1,194 @@
 import { expect, test } from "@playwright/test";
 
+test("tagged callback values track dependencies across children, attributes, properties, and nested templates", async ({
+	page,
+}) => {
+	await page.goto("/__test__");
+	const result = await page.evaluate(async () => {
+		const [{ createFragment, html }, { Signal }] = await Promise.all([
+			import("/dom/template.js"),
+			import("@serve-tools/signal"),
+		]);
+		const primary = new Signal.State("first");
+		const secondary = new Signal.State("second");
+		const usePrimary = new Signal.State(true);
+		const owner = { prefix: "value:" };
+		const read = () => (usePrimary.get() ? primary.get() : secondary.get());
+		const view = createFragment(
+			html`<article title=${function () {
+				return `${this.prefix}${read()}`;
+			}} .modelValue=${read}><span>${read}</span>|<section>${() =>
+				usePrimary.get()
+					? html`<b>${() => primary.get()}</b>`
+					: html`<i>${() => secondary.get()}</i>`}</section></article>`,
+			owner,
+		);
+		const output = view.firstElementChild;
+		document.body.append(view);
+		const snapshot = () => ({
+			nestedTag: output.querySelector("section").firstElementChild.localName,
+			text: output.textContent,
+			title: output.title,
+			value: output.modelValue,
+		});
+		const snapshots = [snapshot()];
+		const dependencies = [
+			{ primary: Signal.subtle.hasSinks(primary), secondary: Signal.subtle.hasSinks(secondary) },
+		];
+
+		secondary.set("ignored");
+		await new Promise(queueMicrotask);
+		snapshots.push(snapshot());
+
+		primary.set("current");
+		await new Promise(queueMicrotask);
+		snapshots.push(snapshot());
+
+		usePrimary.set(false);
+		await new Promise(queueMicrotask);
+		snapshots.push(snapshot());
+		dependencies.push({ primary: Signal.subtle.hasSinks(primary), secondary: Signal.subtle.hasSinks(secondary) });
+
+		secondary.set("latest");
+		await new Promise(queueMicrotask);
+		snapshots.push(snapshot());
+		view.dispose();
+		dependencies.push({ primary: Signal.subtle.hasSinks(primary), secondary: Signal.subtle.hasSinks(secondary) });
+
+		return { dependencies, snapshots };
+	});
+
+	expect(result).toEqual({
+		dependencies: [
+			{ primary: true, secondary: false },
+			{ primary: false, secondary: true },
+			{ primary: false, secondary: false },
+		],
+		snapshots: [
+			{ nestedTag: "b", text: "first|first", title: "value:first", value: "first" },
+			{ nestedTag: "b", text: "first|first", title: "value:first", value: "first" },
+			{ nestedTag: "b", text: "current|current", title: "value:current", value: "current" },
+			{ nestedTag: "i", text: "ignored|ignored", title: "value:ignored", value: "ignored" },
+			{ nestedTag: "i", text: "latest|latest", title: "value:latest", value: "latest" },
+		],
+	});
+});
+
+test("managed callback bindings suspend on disconnect, reconcile on reconnect, and retire on disposal", async ({
+	page,
+}) => {
+	await page.goto("/__test__");
+	const result = await page.evaluate(async () => {
+		const [{ createBindingScope }, { createFragment, html }, { Signal }] = await Promise.all([
+			import("/dom/signal-dom.js"),
+			import("/dom/template.js"),
+			import("@serve-tools/signal"),
+		]);
+		const value = new Signal.State("initial");
+		const name = `x-callback-lifecycle-${crypto.randomUUID()}`;
+
+		customElements.define(
+			name,
+			class extends HTMLElement {
+				scope = createBindingScope();
+
+				constructor() {
+					super();
+					const view = this.scope.capture(() =>
+						createFragment(html`<span>${() => value.get()}</span>`, this),
+					);
+					this.attachShadow({ mode: "open" }).append(view);
+				}
+
+				connectedCallback() {
+					this.scope.resume();
+				}
+
+				disconnectedCallback() {
+					this.scope.suspend();
+				}
+			},
+		);
+
+		const host = document.createElement(name);
+		document.body.append(host);
+		const snapshots = [host.shadowRoot.textContent];
+
+		value.set("connected");
+		await new Promise(queueMicrotask);
+		snapshots.push(host.shadowRoot.textContent);
+
+		host.remove();
+		value.set("disconnected");
+		await new Promise(queueMicrotask);
+		snapshots.push(host.shadowRoot.textContent);
+
+		document.body.append(host);
+		snapshots.push(host.shadowRoot.textContent);
+		host.scope.dispose();
+		value.set("disposed");
+		await new Promise(queueMicrotask);
+		snapshots.push(host.shadowRoot.textContent);
+
+		return { sinks: Signal.subtle.hasSinks(value), snapshots };
+	});
+
+	expect(result).toEqual({
+		sinks: false,
+		snapshots: ["initial", "connected", "connected", "disconnected", "disconnected"],
+	});
+});
+
+test("callback values preserve event handlers and directives and can return a function-valued property", async ({
+	page,
+}) => {
+	await page.goto("/__test__");
+	const result = await page.evaluate(async () => {
+		const { createFragment, html } = await import("/dom/template.js");
+		const owner = { clicks: 0 };
+		let directiveRuns = 0;
+		let directiveCleanups = 0;
+		let formatterCalls = 0;
+		const handler = function () {
+			++this.clicks;
+		};
+		const directive = (element) => {
+			++directiveRuns;
+			element.dataset.ready = "";
+
+			return () => ++directiveCleanups;
+		};
+		const formatter = () => {
+			++formatterCalls;
+			return "formatted";
+		};
+		const view = createFragment(
+			html`<button @click=${handler} ${directive} .formatter=${() => formatter}>run</button>`,
+			owner,
+		);
+		const button = view.firstElementChild;
+		document.body.append(view);
+		const initial = {
+			directiveRuns,
+			formatterCalls,
+			propertyIsFunction: button.formatter === formatter,
+			ready: button.hasAttribute("data-ready"),
+		};
+
+		button.click();
+		view.dispose();
+		button.click();
+
+		return { clicks: owner.clicks, directiveCleanups, initial };
+	});
+
+	expect(result).toEqual({
+		clicks: 1,
+		directiveCleanups: 1,
+		initial: { directiveRuns: 1, formatterCalls: 0, propertyIsFunction: true, ready: true },
+	});
+});
+
 test("tagged templates share explicit scope ownership without capturing persistent siblings", async ({ page }) => {
 	await page.goto("/__test__");
 	const result = await page.evaluate(async () => {

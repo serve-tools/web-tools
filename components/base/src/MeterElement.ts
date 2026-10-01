@@ -1,4 +1,5 @@
-import { upgradeProperty } from "./_upgrade.js";
+import { setCustomState } from "./_states.js";
+import { copyAttribute, upgradeProperty } from "./_upgrade.js";
 import { BaseElement } from "./BaseElement.js";
 import { html } from "./template.js";
 
@@ -6,13 +7,12 @@ import { html } from "./template.js";
 export class MeterElement extends BaseElement {
 	static readonly observedAttributes = ["high", "low", "max", "min", "optimum", "value"];
 
-	#internals = this.attachInternals();
 	#meter = this.ownerDocument.createElement("meter");
 
 	constructor() {
 		super();
 
-		this.#internals.role = "meter";
+		this.internals.role = "meter";
 		this.#meter.setAttribute("aria-hidden", "true");
 		this.#meter.setAttribute("part", "meter");
 
@@ -20,7 +20,7 @@ export class MeterElement extends BaseElement {
 			upgradeProperty(this, property);
 		}
 		for (const attribute of MeterElement.observedAttributes) {
-			this.#copyAttribute(attribute);
+			copyAttribute(this, this.#meter, attribute);
 		}
 		this.#synchronize();
 	}
@@ -79,7 +79,7 @@ export class MeterElement extends BaseElement {
 	}
 
 	attributeChangedCallback(name: string): void {
-		this.#copyAttribute(name);
+		copyAttribute(this, this.#meter, name);
 		this.#synchronize();
 	}
 
@@ -91,38 +91,20 @@ export class MeterElement extends BaseElement {
 		return html`${this.#meter}<slot></slot>`;
 	}
 
-	#copyAttribute(name: string): void {
-		const value = this.getAttribute(name);
-		if (value === null) {
-			this.#meter.removeAttribute(name);
-		} else {
-			this.#meter.setAttribute(name, value);
-		}
-	}
-
 	#setNumber(property: "high" | "low" | "max" | "min" | "optimum" | "value", value: number): void {
 		this.#meter[property] = value;
-		const attribute = this.#meter.getAttribute(property);
-		if (attribute === null) {
-			this.removeAttribute(property);
-		} else {
-			this.setAttribute(property, attribute);
-		}
+		copyAttribute(this.#meter, this, property);
 		this.#synchronize();
 	}
 
 	#synchronize(): void {
-		this.#internals.ariaValueMin = String(this.#meter.min);
-		this.#internals.ariaValueMax = String(this.#meter.max);
-		this.#internals.ariaValueNow = String(this.#meter.value);
+		this.internals.ariaValueMin = String(this.#meter.min);
+		this.internals.ariaValueMax = String(this.#meter.max);
+		this.internals.ariaValueNow = String(this.#meter.value);
 
 		const quality = this.#quality();
 		for (const state of ["optimum", "suboptimal", "even-less-good"] as const) {
-			if (quality === state) {
-				this.#internals.states.add(state);
-			} else {
-				this.#internals.states.delete(state);
-			}
+			setCustomState(this.internals, state, quality === state);
 		}
 	}
 

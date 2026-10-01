@@ -31,6 +31,29 @@
 				<button id="clear" class="secondary">Clear demo data</button>
 			</div>
 			<output aria-live="polite">Opening the database…</output>
+			<div class="code-example">
+				<p>Core code; element references and local types match the example above.</p>
+				<pre><code>import { DB } from "@serve-tools/client-db";
+import type { DemoSchema } from "./database.js";
+
+const db = await DB.open&lt;DemoSchema&gt;("serve-tools-client-db-demo", {
+	version: 1,
+	upgrade(database) {
+		const contacts = database.createObjectStore("contacts", { keyPath: "id" });
+
+		contacts.createIndex("byEmail", "email", { unique: true });
+		database.createObjectStore("activity", { autoIncrement: true });
+	},
+});
+
+await db.add("contacts", {
+	id: crypto.randomUUID(),
+	name: nameInput.value,
+	email: emailInput.value,
+	visits: 0,
+});
+const contacts = await db.getAll("contacts");</code></pre>
+			</div>
 		</main>
 		<script type="module" src="./src/main.ts"></script>
 	</body>

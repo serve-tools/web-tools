@@ -42,6 +42,16 @@ async function executeWithoutPolyfillGlobals<Receipt>(code: string): Promise<Rec
 describe("build integration", () => {
 	describe("polyfill package side effects", () => {
 		const installCases = [
+			[
+				"custom element registry root",
+				"@serve-tools/polyfill-custom-element-registry",
+				["installCustomElementRegistry"],
+			],
+			[
+				"selective custom element registry",
+				"@serve-tools/polyfill-custom-element-registry/apply/CustomElementRegistry",
+				["installCustomElementRegistry"],
+			],
 			["composites root", "@serve-tools/polyfill-composites", ['Object.defineProperty(globalThis, "Composite"']],
 			[
 				"selective Composite",
@@ -232,6 +242,22 @@ describe("build integration", () => {
 		);
 	});
 
+	describe("CustomElementRegistry polyfill", () => {
+		it("bundles the coordinated installer and remains importable without a DOM", async () => {
+			const result = await buildTest({
+				files: { "index.js": "export const getRegistryConstructor = () => CustomElementRegistry;" },
+				plugins: [vitePolyfills()],
+			});
+			const code = result.getChunk("index")!;
+
+			expect(code).toContain("installCustomElementRegistry");
+			expect(code).not.toContain("@serve-tools/polyfill-custom-element-registry");
+			const module = await import(`data:text/javascript;charset=utf-8,${encodeURIComponent(code)}`);
+
+			expect(module.getRegistryConstructor).toBeTypeOf("function");
+		});
+	});
+
 	describe("Symbol.dispose polyfill", () => {
 		it("injects polyfill when Symbol.dispose is referenced", async () => {
 			const result = await buildTest({
@@ -411,6 +437,34 @@ describe("build integration", () => {
 				observableIdentity: true,
 				values: [1],
 			});
+		});
+
+		it.each([
+			"@serve-tools/ponyfill-custom-element-registry",
+			"@serve-tools/polyfill-custom-element-registry",
+			"@serve-tools/polyfill-custom-element-registry/apply/CustomElementRegistry",
+		])("does not auto-inject an installer into explicit %s imports", async (specifier) => {
+			const injected: string[] = [];
+			await buildTest({
+				files: {
+					"index.js": `import * as runtime from "${specifier}"; export { runtime };`,
+				},
+				plugins: [
+					vitePolyfills(),
+					{
+						name: "test:inspect-registry-runtime",
+						generateBundle() {
+							injected.push(
+								...[...this.getModuleIds()].filter((id) =>
+									id.startsWith("\0virtual:@serve-tools/vite-polyfill/"),
+								),
+							);
+						},
+					},
+				],
+			});
+
+			expect(injected).toEqual([]);
 		});
 
 		it("keeps explicit workspace-linked polyfill imports out of recursive detection", async () => {

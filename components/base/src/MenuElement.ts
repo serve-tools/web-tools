@@ -11,6 +11,7 @@ import type { MenuHandle } from "./_menu.js";
 import { getContainingMenu, getMenuByTrigger, notifyMenuChange, registerMenu, updateMenuTrigger } from "./_menu.js";
 import { AttributeOwner } from "./_ownership.js";
 import { NativePopoverElement } from "./_popover.js";
+import { setCustomState } from "./_states.js";
 import { upgradeProperty } from "./_upgrade.js";
 import type { BaseElement } from "./BaseElement.js";
 
@@ -54,7 +55,6 @@ export class MenuElement extends NativePopoverElement {
 	#controlledItems = new Set<HTMLElement>();
 	#graceController: AbortController | undefined;
 	#initialized = false;
-	readonly #internals = this.attachInternals();
 	readonly #menuHandle: MenuHandle;
 	#openTimer: RealmTimeout | undefined;
 	readonly #owner = new AttributeOwner();
@@ -290,7 +290,7 @@ export class MenuElement extends NativePopoverElement {
 
 	protected override toggled(event: ToggleEvent): void {
 		this.#synchronizeExpanded(event.newState === "open");
-		this.#setState("open", event.newState === "open");
+		setCustomState(this.internals, "open", event.newState === "open");
 		if (event.newState !== "open") {
 			this.#pendingEdge = undefined;
 			this.#collection.clearTypeahead();
@@ -908,9 +908,9 @@ export class MenuElement extends NativePopoverElement {
 			}
 			this.#controlledItems = nextItems;
 			this.#collection.refresh();
-			this.#setState("horizontal", this.orientation === "horizontal");
-			this.#setState("vertical", this.orientation === "vertical");
-			this.#setState("open", popup?.matches(":popover-open") ?? false);
+			setCustomState(this.internals, "horizontal", this.orientation === "horizontal");
+			setCustomState(this.internals, "vertical", this.orientation === "vertical");
+			setCustomState(this.internals, "open", popup?.matches(":popover-open") ?? false);
 			this.#initialized = true;
 			if (changed && this.isConnected) {
 				notifyMenuChange(this.#menuHandle);
@@ -969,13 +969,5 @@ export class MenuElement extends NativePopoverElement {
 			throw new TypeError(`${name} must be a finite nonnegative number`);
 		}
 		this.setAttribute(name, String(number));
-	}
-
-	#setState(state: string, present: boolean): void {
-		if (present) {
-			this.#internals.states.add(state);
-		} else {
-			this.#internals.states.delete(state);
-		}
 	}
 }

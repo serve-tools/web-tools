@@ -1,8 +1,8 @@
 # Base attribute-ownership lifecycle benchmark
 
 This benchmark measures public Field, Toggle, Number Field, and Menu component lifecycles that capture authored attributes, observe external writes, replace owned nodes, and restore the latest author state on release.
-Number Field and Menu cover the two ownership families consolidated by this experiment.
-Field and Toggle retain their distinct ownership implementations and catch accidental broadening of the extraction.
+The original extraction consolidated Number Field and Menu attribute ownership; the later [internals and field centralization](../centralization/RESULTS.md) also shares that implementation with Field.
+Field and Toggle extend coverage to field relationships and toggle-specific ownership policy.
 Every operation checks the expected final DOM state inside the timed lifecycle so a faster condition cannot skip author-state preservation or cleanup.
 
 Build each baseline or candidate distribution before the quiet timing window:

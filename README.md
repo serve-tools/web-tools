@@ -20,10 +20,14 @@ Core, client and server libraries, realtime protocols, Lit integrations, polyfil
 
 Each package directory owns its package metadata, source, tests, and documentation.
 
-## Demos
+## Package documentation and demos
 
-Interactive demos for the client, signal-aware client, and Lit packages are published at [serve-tools.github.io/web-tools](https://serve-tools.github.io/web-tools/).
-The `Pages` workflow rebuilds and deploys them after every push to `main`.
+Documentation for every library, including unpublished packages and the private Base preview, plus interactive client, signal-aware client, Lit, and Base demos are available at [serve-tools.github.io/web-tools](https://serve-tools.github.io/web-tools/).
+The catalog and package pages are generated from workspace manifests and READMEs, so new packages are included automatically.
+Each page shows the repository version and its npm availability, checked during the build.
+Private demo wrappers and the internal HTTP contract interoperability fixture are excluded from the package catalog.
+The `Pages` workflow validates the complete site on pull requests and rebuilds and deploys it after every push to `main`.
+A successful release also refreshes npm availability on the site.
 
 Build the same static site locally with:
 
@@ -92,9 +96,11 @@ To activate a new repository deployment, select **GitHub Actions** as the source
 - [`@serve-tools/polyfill-resource-management`](./polyfills/resource-management/) installs ECMAScript Explicit Resource Management globals.
 - [`@serve-tools/polyfill-urlpattern`](./polyfills/urlpattern/) installs `URLPattern` while preserving a native implementation.
 - [`@serve-tools/polyfill-composites`](./polyfills/composites/) installs a missing `Composite` global with the experimental ponyfill's documented identity limits.
+- [`@serve-tools/polyfill-custom-element-registry`](./polyfills/custom-element-registry/) installs missing scoped-registry support in Firefox through coordinated DOM patches.
 - [`@serve-tools/polyfill-observable`](./polyfills/observable/) installs missing `Observable`, `Subscriber`, and `EventTarget.prototype.when` APIs while preserving native implementations.
 - [`@serve-tools/ponyfill-observable`](./ponyfills/observable/) provides a Web Observable API subset with a fresh execution per consumption and no global mutation.
 - [`@serve-tools/ponyfill-composites`](./ponyfills/composites/) creates interned composite values without modifying the global environment.
+- [`@serve-tools/ponyfill-custom-element-registry`](./ponyfills/custom-element-registry/) provides explicit installation of iframe-backed scoped registries without import-time mutation.
 - [`@serve-tools/ponyfill-arraybuffer-base64`](./ponyfills/arraybuffer-base64/) encodes `Uint8Array` values as base64 in Node.js without global mutation.
 - [`@serve-tools/ponyfill-decorator-metadata`](./ponyfills/decorator-metadata/) provides a stable module-scoped metadata symbol without global mutation.
 - [`@serve-tools/ponyfill-prioritized-task-scheduling`](./ponyfills/prioritized-task-scheduling/) provides prioritized tasks, continuations, and task controls without global mutation.

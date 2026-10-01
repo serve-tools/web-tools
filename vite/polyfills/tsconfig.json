@@ -6,6 +6,9 @@
 			"path": "../../polyfills/composites/tsconfig.json"
 		},
 		{
+			"path": "../../polyfills/custom-element-registry/tsconfig.json"
+		},
+		{
 			"path": "../../polyfills/decorator-metadata/tsconfig.json"
 		},
 		{

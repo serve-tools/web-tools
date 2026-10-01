@@ -22,6 +22,8 @@ const REQUEST_IDLE_CALLBACK_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "request-idle-c
 const RESOLVED_REQUEST_IDLE_CALLBACK_VIRTUAL_MODULE_ID = "\0" + REQUEST_IDLE_CALLBACK_VIRTUAL_MODULE_ID;
 const CANCEL_IDLE_CALLBACK_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "cancel-idle-callback";
 const RESOLVED_CANCEL_IDLE_CALLBACK_VIRTUAL_MODULE_ID = "\0" + CANCEL_IDLE_CALLBACK_VIRTUAL_MODULE_ID;
+const CUSTOM_ELEMENT_REGISTRY_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "custom-element-registry";
+const RESOLVED_CUSTOM_ELEMENT_REGISTRY_VIRTUAL_MODULE_ID = "\0" + CUSTOM_ELEMENT_REGISTRY_VIRTUAL_MODULE_ID;
 const COMPOSITE_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "composite";
 const RESOLVED_COMPOSITE_VIRTUAL_MODULE_ID = "\0" + COMPOSITE_VIRTUAL_MODULE_ID;
 const EVENT_TARGET_WHEN_VIRTUAL_MODULE_ID = VIRTUAL_PREFIX + "event-target-when";
@@ -145,6 +147,11 @@ describe("vitePolyfills", () => {
 
 		it.each([
 			[
+				"CustomElementRegistry",
+				RESOLVED_CUSTOM_ELEMENT_REGISTRY_VIRTUAL_MODULE_ID,
+				'import"@serve-tools/polyfill-custom-element-registry/apply/CustomElementRegistry";',
+			],
+			[
 				"Composite",
 				RESOLVED_COMPOSITE_VIRTUAL_MODULE_ID,
 				'import"@serve-tools/polyfill-composites/apply/Composite";',
@@ -174,6 +181,18 @@ describe("vitePolyfills", () => {
 
 	describe("transform behavior", () => {
 		const matchingCases = [
+			[
+				"CustomElementRegistry",
+				"new CustomElementRegistry();",
+				"file.js",
+				CUSTOM_ELEMENT_REGISTRY_VIRTUAL_MODULE_ID,
+			],
+			[
+				"qualified CustomElementRegistry",
+				"new window.CustomElementRegistry();",
+				"file.js",
+				CUSTOM_ELEMENT_REGISTRY_VIRTUAL_MODULE_ID,
+			],
 			["Symbol.dispose", "const x = Symbol.dispose;", "file.js", VIRTUAL_MODULE_ID],
 			[
 				"Symbol.asyncDispose",
@@ -264,6 +283,8 @@ describe("vitePolyfills", () => {
 		});
 
 		const nonMatchingCases = [
+			["registry string contents", 'export const name = "CustomElementRegistry";', "file.js"],
+			["registry comments", "/* new CustomElementRegistry() */ export const x = 1;", "file.js"],
 			["non-script files", ".class { color: red; }", "styles.css"],
 			["node_modules", "export default new DisposableStack();", "/project/node_modules/pkg/index.js"],
 			["unrelated symbols", "const x = Symbol.iterator;", "file.js"],
@@ -307,6 +328,7 @@ describe("vitePolyfills", () => {
 				"async-disposable-stack",
 				"cancel-idle-callback",
 				"composite",
+				"custom-element-registry",
 				"disposable-stack",
 				"event-target-when",
 				"map-upsert",

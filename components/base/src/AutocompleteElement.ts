@@ -57,7 +57,6 @@ export class AutocompleteElement extends BaseElement {
 	#connected: object | undefined;
 	#filteredOptions = new Set<OptionElement>();
 	#inputAbort: AbortController | undefined;
-	#invalidOptions = new Set<OptionElement>();
 	readonly #owner: SelectionOwner;
 	#ownedPopup: HTMLElement | undefined;
 	#query = "";
@@ -543,7 +542,6 @@ export class AutocompleteElement extends BaseElement {
 				++this.#revision;
 			}
 			this.#records = records;
-			this.#invalidOptions = new Set(records.filter((record) => record.invalid).map((record) => record.option));
 			const active = this.#active && this.#record(this.#active);
 			if (!active || !this.#eligible(active)) {
 				if (this.#active) {
@@ -561,12 +559,7 @@ export class AutocompleteElement extends BaseElement {
 	#synchronize(): void {
 		const input = this.input;
 		const popup = this.popup;
-		setListboxState(
-			this.#records.map((record) => record.option),
-			this.#active,
-			new Set(),
-			this.#invalidOptions,
-		);
+		setListboxState(this.#records, this.#active);
 		if (this.#connected && popup) {
 			ownSelectionId(this.#attributes, popup, "base-autocomplete-listbox");
 			this.#attributes.own(popup, "role", "listbox");

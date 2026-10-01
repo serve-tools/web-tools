@@ -1,10 +1,69 @@
 # Base performance and retention contract
 
-Status: the September 4 corrected Checkbox comparison meets its fixed median and p95 regression bounds, and the refreshed complete-component retention experiment passes its bounded criteria.
-The production template migration improves repeated mounting and reconnection against its own frozen baseline, but increases the one-Checkbox bundle beyond the fixed Base UI incremental target.
-No overall Base advantage over Base UI is established across size, rendering, accessibility, and the full component library.
+Our target is to outperform Base UI separately in mounting, updates, interaction completion, cleanup, and retained memory, while keeping component-only bundles smaller.
+A gain in one workload does not offset a regression in another; unmeasured areas remain unproven.
 
-## Current Checkbox comparison, September 4, 2026
+Status: the [current performance pass](../benchmark/foundation-performance/RESULTS-2026-09-15.md) reduces never-connected construction cost and retained JavaScript heap.
+The refreshed eight-pair Checkbox comparison still finds faster completed JavaScript operations across all five fixed workloads.
+No overall Base advantage over Base UI is established across rendering, accessibility, retention, and the full component library.
+
+## Current Checkbox comparison, September 15, 2026
+
+This fresh production build includes both the [whole-package reduction](../benchmark/reduction/RESULTS-2026-09-15.md) and deferred binding-scope allocation.
+Eight counterbalanced fresh Chromium process pairs compare Base UI 1.7.0 and React/React DOM 19.2.8 against the current Base distribution, with complete runtimes included in timing.
+Ratios are paired geometric Base UI/Base median latency ratios; values above one favor Base.
+
+| Workload                                    | Base ms | Base UI ms | Ratio, 95% interval    |
+| ------------------------------------------- | ------: | ---------: | ---------------------- |
+| Mount 100                                   |  1.2725 |     2.1675 | 1.679 (1.629–1.729)    |
+| Mount 1,000                                 |  9.3350 |    49.4512 | 5.319 (5.163–5.480)    |
+| Isolated update, 1,000-operation block mean |  0.0011 |     0.0673 | 63.738 (60.648–66.985) |
+| Update 100, 20-operation block mean         |  0.0754 |     2.5362 | 31.987 (29.721–34.425) |
+| Update 1,000                                |  0.7138 |    20.1850 | 28.079 (27.034–29.164) |
+
+All individual median and p95 intervals meet the predeclared regression bounds.
+The grouped measurements describe mean completed-operation cost, not individual interaction tails.
+This suite does not measure paint or input-to-screen latency.
+The [complete analysis](/Users/jonathan/Documents/Codex/outputs/base-performance-2026-09-15/checkbox-comparison/analysis.md) records p95 intervals and links raw observations with SHA-256 `52f38760201af7b5016c4923ad3042598c388cc7ab4ee0de98a99e1b2df56af7`.
+The [revision-3 protocol](../benchmark/comparison/README.md) documents validation and reproduction.
+
+## Current Tabs and Dialog comparison, September 15, 2026
+
+Five fresh counterbalanced process pairs now establish matched completed-state measurements for Tabs and nonmodal Dialog.
+The clock includes final visibility and, for Dialog, exact focus placement and restoration; both fixtures retain their nodes.
+The [complete report](../benchmark/interactions/RESULTS.md) records the protocol, confidence intervals, failed preliminary experiments, and frozen production and runner hashes.
+
+| Workload                  | Base UI/Base completed-state median ratio |
+| ------------------------- | ----------------------------------------: |
+| Mount 30 tab sets         |                                      4.60 |
+| Switch 30 tab sets        |                                     35.55 |
+| Remove 30 tab sets        |                                      3.98 |
+| Mount 25 dialogs          |                                      5.97 |
+| Open and close 25 dialogs |                                     16.90 |
+| Remove 25 dialogs         |                                      4.19 |
+
+All completed-state median and p95 intervals favor Base and satisfy their regression bounds.
+However, the separate first-subsequent-animation-frame metric fails the 5% median bound for both mount workloads: Base takes 14.68 versus 13.49 ms for Tabs, and 15.08 versus 14.25 ms for Dialog.
+The overall multi-metric gate therefore **does not pass**.
+This callback boundary depends on frame phase and is not a paint measurement; the results do not establish the cause or prove an actual rendering regression.
+Actual input-to-screen latency, comparative total memory, other browsers, and the remaining components still require measurements.
+The completed-state wins do not erase those gaps or the failed callback metric.
+
+## Comparison before whole-package reduction, September 15, 2026
+
+The [fresh comparison report](../benchmark/comparison/RESULTS-2026-09-15.md) records individual and combined bundle sizes, all five Checkbox workloads, paired confidence intervals, exact dependency versions, source hashes, and reproduction commands.
+Size excludes foundational runtime code symmetrically while retaining component behavior and usage code.
+Runtime includes the full execution required by each implementation.
+
+Checkbox mounting is approximately 1.67 times faster for 100 controls and 5.36 times faster for 1,000 controls in this JavaScript-completion fixture.
+The isolated and batch update results are also faster; grouped observations measure mean completed-operation cost, not individual interaction tails.
+These comparisons are against pinned Base UI 1.7.0 with production React and React DOM 19.2.8.
+
+The additional Tabs/Dialog runtime preflight did not establish equivalent completion: a React commit can precede the outgoing panel becoming hidden.
+No formal Tabs, Dialog, or combined runtime result is claimed.
+Their size results remain independent of that unresolved timing boundary.
+
+## Historical Checkbox comparison, September 4, 2026
 
 Eight independent counterbalanced pairs compare current production Base with pinned Base UI 1.7.0 and React/React DOM 19.2.8 in Chromium 151.0.7922.34.
 Every workload and condition uses a fresh browser process.
@@ -221,7 +280,12 @@ Do not use a single heap snapshot or nondeterministic finalizer callback as proo
 
 Measure a single component, the three-component example, and a representative multi-component application from real exported entrypoints.
 Report uncompressed minified executable JavaScript first, then transfer compression, package size, and dependencies separately.
-Compare both standalone application cost and incremental cost when React is already in the host application.
+The primary component-weight comparison excludes foundational runtime code on both sides: React, React DOM, and scheduler for Base UI; generic BaseElement, templating, and Signals for Base.
+Keep component-specific behavior and helpers, including form association, inside the measured component layer.
+Use production bundles with those foundations externalized, and identify any retained example or registration code.
+Report standalone application cost separately.
+Subtracting a framework-only baseline estimates incremental consumer cost, but minification and shared-code effects mean that difference is not literal component-exclusive size.
+The historical framework-inclusive Base versus React-excluded Base UI target above remains historical evidence, not the current comparison boundary.
 Confirm registration and framework adapters cannot enter unrelated component bundles accidentally.
 
 Prefer a small ownership state machine and work proportional to owned bindings or changed state.

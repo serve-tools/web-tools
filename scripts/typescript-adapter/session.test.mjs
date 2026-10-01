@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
-import { API } from "typescript/unstable/async";
+import { API, Snapshot } from "typescript/unstable/async";
 import { CompilerSessionError, createCompilerSession } from "../../rolldown/typescript/src/internal/session.mjs";
 
 const compiler = fileURLToPath(new URL("../../node_modules/typescript/bin/tsc", import.meta.url));
@@ -213,6 +213,24 @@ test("checks an intentional noEmit project without requesting emitted files", as
 	);
 });
 
+test("retains a snapshot when an update returns the active instance", async (context) => {
+	const fixture = await createFixture();
+	context.after(() => rm(fixture.root, { force: true, recursive: true }));
+	const updateSnapshot = Snapshot.prototype.update;
+	context.mock.method(Snapshot.prototype, "update", async function (params) {
+		return params.fileNotifications ? updateSnapshot.call(this, params) : this;
+	});
+	const session = await createCompilerSession({ configFile: fixture.configFile, cwd: fixture.root });
+	context.after(() => session.dispose());
+	const initial = await session.refresh();
+	const unchanged = await session.refresh();
+	assert.equal(unchanged.generation, initial.generation + 1);
+
+	await writeFile(fixture.sources.c, dependency(7));
+	const updated = await session.refresh({ changed: [fixture.sources.c] });
+	assert.match(updated.outputs.get(path.join(fixture.root, "b/dist/value.js")).text, /factor \* 7/);
+});
+
 test("restarts once for stale roots, preserves ordinary sessions, and includes both APIs in timing", async (context) => {
 	const fixture = await createFixture();
 	context.after(() => rm(fixture.root, { force: true, recursive: true }));
@@ -220,22 +238,31 @@ test("restarts once for stale roots, preserves ordinary sessions, and includes b
 	const closed = new Set();
 	const timings = new Map();
 	let corruptNext = false;
-	const updateSnapshot = API.prototype.updateSnapshot;
+	const createSnapshot = API.prototype.createSnapshot;
+	const updateSnapshot = Snapshot.prototype.update;
 	const close = API.prototype.close;
 	const getTimingInfo = API.prototype.getTimingInfo;
-	context.mock.method(API.prototype, "updateSnapshot", async function (params) {
-		if (!instances.includes(this)) {
+	const operateSnapshot = async (api, operation) => {
+		if (api && !instances.includes(api)) {
 			if (instances.length) {
 				assert.ok(closed.has(instances.at(-1)), "close the retired API before replacement");
 			}
-			instances.push(this);
+			instances.push(api);
 		}
-		const snapshot = await updateSnapshot.call(this, params);
+		const snapshot = await operation();
 		if (corruptNext) {
 			corruptNext = false;
-			snapshot.getProject(fixture.configs.c).parsedCommandLine.fileNames = [];
+			(
+				snapshot.getConfiguredProject?.(fixture.configs.c) ?? snapshot.getProject(fixture.configs.c)
+			).parsedCommandLine.fileNames = [];
 		}
 		return snapshot;
+	};
+	context.mock.method(API.prototype, "createSnapshot", async function (params) {
+		return operateSnapshot(this, () => createSnapshot.call(this, params));
+	});
+	context.mock.method(Snapshot.prototype, "update", async function (params) {
+		return operateSnapshot(undefined, () => updateSnapshot.call(this, params));
 	});
 	context.mock.method(API.prototype, "close", async function () {
 		await close.call(this);
@@ -292,22 +319,31 @@ test("fails closed after one unsuccessful root recovery and retains the next suc
 	const fixture = await createFixture();
 	context.after(() => rm(fixture.root, { force: true, recursive: true }));
 	let corrupt = false;
-	let updates = 0;
-	const updateSnapshot = API.prototype.updateSnapshot;
-	context.mock.method(API.prototype, "updateSnapshot", async function (params) {
-		++updates;
-		const snapshot = await updateSnapshot.call(this, params);
+	let snapshotOperations = 0;
+	const createSnapshot = API.prototype.createSnapshot;
+	const updateSnapshot = Snapshot.prototype.update;
+	const operateSnapshot = async (operation) => {
+		++snapshotOperations;
+		const snapshot = await operation();
 		if (corrupt) {
-			snapshot.getProject(fixture.configs.c).parsedCommandLine.fileNames = [];
+			(
+				snapshot.getConfiguredProject?.(fixture.configs.c) ?? snapshot.getProject(fixture.configs.c)
+			).parsedCommandLine.fileNames = [];
 		}
 		return snapshot;
+	};
+	context.mock.method(API.prototype, "createSnapshot", async function (params) {
+		return operateSnapshot(() => createSnapshot.call(this, params));
+	});
+	context.mock.method(Snapshot.prototype, "update", async function (params) {
+		return operateSnapshot(() => updateSnapshot.call(this, params));
 	});
 	const session = await createCompilerSession({ configFile: fixture.configFile, cwd: fixture.root });
 	context.after(() => session.dispose());
 	const initial = await session.refresh();
 	await writeFile(fixture.sources.c, dependency(11));
 	corrupt = true;
-	const before = updates;
+	const before = snapshotOperations;
 	await assert.rejects(session.refresh({ changed: [fixture.sources.c] }), (error) => {
 		assert.ok(error instanceof CompilerSessionError);
 		assert.match(error.message, /inconsistent project roots after restart/);
@@ -316,12 +352,13 @@ test("fails closed after one unsuccessful root recovery and retains the next suc
 		assert.equal(error.timing.emitMs, 0);
 		return true;
 	});
-	assert.equal(updates - before, 2);
+	assert.equal(snapshotOperations - before, 2);
 	assert.match(initial.outputs.get(path.join(fixture.root, "b/dist/value.js")).text, /factor \* 3/);
 	corrupt = false;
 	const recovered = await session.refresh();
 	assert.equal(recovered.generation, initial.generation + 1);
-	assert.equal(recovered.timing.apiRestartCount, 0);
+	// The native update may retain the mock-corrupted snapshot until the normal stale-root restart replaces it.
+	assert.equal(recovered.timing.apiRestartCount, 1);
 	assert.match(recovered.outputs.get(path.join(fixture.root, "b/dist/value.js")).text, /factor \* 11/);
 });
 

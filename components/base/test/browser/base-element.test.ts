@@ -23,6 +23,83 @@ const create = <T extends BaseElement>(constructor: new () => T): T => {
 };
 
 describe("BaseElement", () => {
+	test("tolerates disconnection before first layout and initializes bindings once", () => {
+		const value = new Signal.State("first");
+		let layouts = 0;
+		const element = create(
+			class extends BaseElement {
+				protected override layout() {
+					++layouts;
+					return template`<span>${value}</span>`;
+				}
+			},
+		);
+		element.disconnectedCallback();
+		expect(layouts).toBe(0);
+		document.body.append(element);
+		expect(element.textContent).toBe("first");
+		element.remove();
+		value.set("second");
+		document.body.append(element);
+		expect(element.textContent).toBe("second");
+		expect(layouts).toBe(1);
+	});
+
+	test("defers internals attachment until needed by a subclass", () => {
+		const attach = vi.spyOn(HTMLElement.prototype, "attachInternals");
+		const element = create(
+			class extends BaseElement {
+				get states(): CustomStateSet {
+					return this.internals.states;
+				}
+			},
+		);
+		document.body.append(element);
+		element.remove();
+		expect(attach).not.toHaveBeenCalled();
+		element.states.add("ready");
+		expect(element.states.has("ready")).toBe(true);
+		expect(attach).toHaveBeenCalledTimes(1);
+	});
+
+	test("shares internals with subclass initializers and across reconnect and adoption", () => {
+		const attach = vi.spyOn(HTMLElement.prototype, "attachInternals");
+		const element = create(
+			class extends BaseElement {
+				readonly initializedInternals = this.internals;
+
+				get currentInternals(): ElementInternals {
+					return this.internals;
+				}
+			},
+		);
+		const internals = element.currentInternals;
+		expect(element.initializedInternals).toBe(internals);
+		expect(attach).toHaveBeenCalledTimes(1);
+		internals.states.add("ready");
+		internals.role = "status";
+
+		const form = document.createElement("form");
+		fixtures.push(form);
+		document.body.append(form);
+		form.append(element);
+		expect([...form.elements]).not.toContain(element);
+		expect(element.matches(":state(ready)")).toBe(true);
+		element.remove();
+		form.append(element);
+
+		const frame = document.createElement("iframe");
+		fixtures.push(frame);
+		document.body.append(frame);
+		frame.contentDocument!.body.append(element);
+		expect(element.currentInternals).toBe(internals);
+		expect(internals.role).toBe("status");
+		expect(element.matches(":state(ready)")).toBe(true);
+		expect(attach).toHaveBeenCalledTimes(1);
+		internals.states.delete("ready");
+		expect(element.matches(":state(ready)")).toBe(false);
+	});
+
 	test("owns a returned template and binds event handlers to the host", async () => {
 		const value = new Signal.State("before");
 		const receivers: unknown[] = [];

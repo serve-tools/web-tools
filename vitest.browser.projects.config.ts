@@ -27,6 +27,8 @@ const projects = [
 	"components/base/vitest.browser.config.ts",
 	"core/async-operation/vitest.browser.config.ts",
 	"lit/signals/vitest.browser.config.ts",
+	"polyfills/custom-element-registry/vitest.browser.config.ts",
+	"ponyfills/custom-element-registry/vitest.browser.config.ts",
 	"ponyfills/observable/vitest.browser.config.ts",
 	"ponyfills/prioritized-task-scheduling/vitest.browser.config.ts",
 	"ponyfills/request-idle-callback/vitest.browser.config.ts",

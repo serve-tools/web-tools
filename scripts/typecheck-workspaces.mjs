@@ -142,11 +142,11 @@ try {
 	);
 
 	api = new API({ cwd: root });
-	snapshot = await api.updateSnapshot({ openProjects: typechecks.map(({ openConfigFile }) => openConfigFile) });
+	snapshot = await api.createSnapshot({ openProjects: typechecks.map(({ openConfigFile }) => openConfigFile) });
 
 	const diagnosticCounts = await Promise.all(
 		typechecks.map((typecheck) => {
-			const project = snapshot.getProject(typecheck.openConfigFile);
+			const project = snapshot.getConfiguredProject(typecheck.openConfigFile);
 
 			if (!project) {
 				throw new Error(`TypeScript did not open project: ${typecheck.configFile}`);

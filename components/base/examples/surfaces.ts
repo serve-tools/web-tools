@@ -10,6 +10,15 @@ export function initializeSurfaceExamples(): void {
 	drawer.addEventListener("close", () => {
 		document.querySelector("#drawer-result")!.textContent = `Drawer result: ${drawer.returnValue || "dismissed"}`;
 	});
+
+	for (const side of ["left", "right"]) {
+		const navigation = document.querySelector<DrawerElement>(`#${side}-navigation-drawer`)!;
+		document.querySelector(`#open-${side}-drawer`)!.addEventListener("click", () => navigation.showModal());
+		for (const link of navigation.querySelectorAll("nav a")) {
+			link.addEventListener("click", () => navigation.close());
+		}
+	}
+
 	const region = document.querySelector<ToastRegionElement>("#notifications")!;
 	document.querySelector("#show-toast")!.addEventListener("click", () => {
 		region.show("saved-toast", { duration: 5000, priority: "polite" });

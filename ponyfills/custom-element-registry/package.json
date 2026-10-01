@@ -1,0 +1,41 @@
+{
+	"name": "@serve-tools/ponyfill-custom-element-registry",
+	"version": "0.1.0",
+	"description": "Explicit iframe-backed scoped CustomElementRegistry installation",
+	"keywords": [
+		"custom-elements",
+		"custom-element-registry",
+		"ponyfill",
+		"scoped-registry",
+		"web-components"
+	],
+	"homepage": "https://github.com/serve-tools/web-tools/tree/main/ponyfills/custom-element-registry#readme",
+	"bugs": {
+		"url": "https://github.com/serve-tools/web-tools/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/serve-tools/web-tools.git",
+		"directory": "ponyfills/custom-element-registry"
+	},
+	"license": "MIT-0",
+	"author": "Jonathan Neal <jonathantneal@hotmail.com> (https://jonneal.dev)",
+	"sideEffects": false,
+	"type": "module",
+	"exports": {
+		".": "./dist/ponyfill-custom-element-registry.js"
+	},
+	"files": [
+		"dist",
+		"skills"
+	],
+	"scripts": {
+		"build": "tsc --build tsconfig.json",
+		"check:package": "publint && attw --pack . --profile esm-only",
+		"clean": "rm -rf dist",
+		"test": "npm run test:node && npm run test:browser",
+		"test:browser": "vitest run --config vitest.browser.config.ts",
+		"test:node": "vitest run --config vitest.config.ts",
+		"typecheck": "tsc --project tsconfig.test.json"
+	}
+}

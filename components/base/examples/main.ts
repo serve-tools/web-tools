@@ -4,7 +4,6 @@ import {
 	AlertDialogElement,
 	AutocompleteElement,
 	AvatarElement,
-	BaseElement,
 	CalendarElement,
 	CheckboxElement,
 	CheckboxGroupElement,
@@ -31,35 +30,26 @@ import {
 	SliderElement,
 	SwitchElement,
 	TabsElement,
+	TextFieldElement,
 	ToastRegionElement,
 	ToggleElement,
 	ToggleGroupElement,
 	ToolbarElement,
 	TooltipElement,
 } from "@serve-tools/base-components";
-import { html } from "@serve-tools/base-components/template";
-import { Signal } from "@serve-tools/signal";
 import { initializeCalendarAndFileExamples } from "./calendar-and-files.js";
+import { CounterElement } from "./counter.js";
 import { initializeFieldExamples } from "./forms.js";
+import { GalleryFormControlElement, GalleryStatusElement, initializeFoundationExamples } from "./foundations.js";
 import { initializeGallery } from "./gallery.js";
 import { GalleryContextElement, GalleryDropElement, GalleryWorkspaceElement } from "./integrations.js";
 import { initializeMenuExamples } from "./menus.js";
+import avatarSource from "./public/avatar.svg?url";
 import { initializeSelectionExamples } from "./selection.js";
 import { initializeSurfaceExamples } from "./surfaces.js";
+import { initializeTextFieldExamples } from "./text-fields.js";
 
 initializeGallery();
-
-class CounterElement extends BaseElement {
-	#count = new Signal.State(0);
-
-	protected override layout() {
-		return html`<button type="button" @click=${this.increment}>Count: ${this.#count}</button>`;
-	}
-
-	increment(): void {
-		this.#count.set(this.#count.get() + 1);
-	}
-}
 
 customElements.define("app-checkbox-group", CheckboxGroupElement);
 customElements.define("app-checkbox", CheckboxElement);
@@ -67,6 +57,8 @@ customElements.define("app-switch", SwitchElement);
 customElements.define("app-tabs", TabsElement);
 customElements.define("app-dialog", DialogElement);
 customElements.define("app-counter", CounterElement);
+customElements.define("app-gallery-status", GalleryStatusElement);
+customElements.define("app-gallery-form-control", GalleryFormControlElement);
 customElements.define("app-toggle-group", ToggleGroupElement);
 customElements.define("app-toggle", ToggleElement);
 customElements.define("app-accordion", AccordionElement);
@@ -86,6 +78,7 @@ customElements.define("app-number-field", NumberFieldElement);
 customElements.define("app-otp-field", OTPFieldElement);
 customElements.define("app-slider", SliderElement);
 customElements.define("app-field", FieldElement);
+customElements.define("app-text-field", TextFieldElement);
 customElements.define("app-option", OptionElement);
 customElements.define("app-autocomplete", AutocompleteElement);
 customElements.define("app-combobox", ComboboxElement);
@@ -103,6 +96,8 @@ customElements.define("app-file", FileElement);
 
 initializeCalendarAndFileExamples();
 initializeFieldExamples();
+initializeTextFieldExamples();
+initializeFoundationExamples();
 initializeSelectionExamples();
 initializeMenuExamples();
 initializeSurfaceExamples();
@@ -189,7 +184,7 @@ document.querySelector("#indeterminate-progress")!.addEventListener("click", () 
 
 const avatar = document.querySelector<AvatarElement>("#example-avatar")!;
 document.querySelector("#avatar-source")!.addEventListener("click", () => {
-	avatar.src = avatar.src ? "" : new URL("./avatar.svg", import.meta.url).href;
+	avatar.src = avatar.src ? "" : avatarSource;
 });
 
 let actionCount = 0;
@@ -200,6 +195,15 @@ document.querySelector("#native-action")!.addEventListener("click", () => {
 const nativeInput = document.querySelector<HTMLInputElement>("#native-input")!;
 nativeInput.addEventListener("input", () => {
 	document.querySelector("#native-input-result")!.textContent = nativeInput.value || "(empty)";
+});
+const notesForm = document.querySelector<HTMLFormElement>("#native-textarea-form")!;
+const notesResult = document.querySelector<HTMLOutputElement>("#native-textarea-result")!;
+notesForm.addEventListener("submit", (event) => {
+	event.preventDefault();
+	notesResult.textContent = `Notes: ${new FormData(notesForm).get("notes")}`;
+});
+notesForm.addEventListener("reset", () => {
+	notesResult.textContent = "No notes submitted.";
 });
 const fieldsetEnabled = document.querySelector<HTMLInputElement>("#fieldset-enabled")!;
 fieldsetEnabled.addEventListener("change", () => {

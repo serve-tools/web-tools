@@ -1,119 +1,87 @@
-# Release plan — September 4, 2026
+# Release preparation — October 1, 2026
 
-The user authorized publication after all work is committed, pushed, and CI passes.
-Base remains private and is not part of this release.
-The September 4 registry and shipped-file audit found the thirteen prepared versions below unpublished and identified one required patch for Rolldown Decorators.
+## Approval boundary
 
-The later Base template migration is separate from that publication authorization.
-Its Base `0.1.0`, Signal DOM `0.3.0`, and Client Signals `0.3.1` candidates remain held for review; this task has no authorization to push or publish them.
+This plan prepares a local review branch and release candidates.
+The user approved updating development dependencies, committing, and pushing the review branch on October 1.
+npm publication requires a separate later approval.
+The subsequent package documentation task deploys GitHub Pages through a validated merge to `main`.
+Do not dispatch a release workflow, approve an npm deployment, or publish npm packages from this task.
+This plan supersedes the historical September 4 batch and its publication instructions.
 
-## Approved release batch
+## Push candidate
 
-Publish these thirteen versions with the `latest` tag through the provenance-enabled release workflow, subject to the first-release provenance blocker below.
-The table follows the release planner's dependency order.
+The local review branch is `codex/stabilize-web-tools-2026-10-01`, based on `1c49c1b`.
+A fresh fetch confirmed that `origin/main` matched that base before preparation.
+The candidate preserves the accumulated Base components, Signal DOM callbacks, scoped registry, Vite integration, examples, tests, and benchmark work.
+It also includes the stabilization fixes, dependency security patches, generated-screenshot cleanup, and current release metadata.
 
-| Package                            | Version | Change                                                                                                            |
-| ---------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
-| `@serve-tools/client-dom-fragment` | `0.1.0` | First release of reusable DOM regions, including hidden-region ancestry and exact region lookup.                  |
-| `@serve-tools/signal-db`           | `0.2.2` | Retained-query/editor-draft consumer guidance and recipe.                                                         |
-| `@serve-tools/signal-dom`          | `0.2.0` | Reconnectable binding scopes and the opt-in `/template` renderer with persistent `html` and managed `scopedHtml`. |
-| `@serve-tools/signal-shared-db`    | `0.3.2` | Matching retained-query/editor-draft guidance for shared-worker updates.                                          |
-| `@serve-tools/client-signals`      | `0.3.0` | Umbrella release selecting Signal DOM `^0.2.0`.                                                                   |
-| `@serve-tools/client-webtransport` | `0.1.3` | Legacy shared-datagram writable compatibility while preserving independent-queue capability checks.               |
-| `@serve-tools/ponyfill-composites` | `0.0.1` | First release with documented module-local structural identity and native-proposal limitations.                   |
-| `@serve-tools/polyfill-composites` | `0.0.1` | Native-preserving Composite installer and mutation-free native-aware export.                                      |
-| `@serve-tools/ponyfill-observable` | `0.0.1` | First release with independent cold executions, explicit imports, and documented proposal differences.            |
-| `@serve-tools/polyfill-observable` | `0.0.1` | Native-preserving Observable, Subscriber, and EventTarget.when installers and selective exports.                  |
-| `@serve-tools/rolldown-decorators` | `0.1.3` | Include the required runtime helper in built packages; reduce transform traversal and runtime sorting overhead.   |
-| `@serve-tools/skills`              | `0.0.6` | Package selection and availability guidance, including the new packages and private Base boundary.                |
-| `@serve-tools/vite-polyfills`      | `0.3.0` | Detect the new polyfills, expose their types, prevent recursive injection, and consolidate built-in definitions.  |
+Push the approved review branch and open a PR against `main`.
+Require the CI and TypeScript Adapter workflows to pass on the exact PR head before merging.
+The repository currently has no branch protection or rulesets enforcing that check, so do not infer merge readiness from the ability to merge.
+Require those workflows to pass again on the resulting `main` commit before considering publication.
+A push or merge does not itself publish npm packages; the release workflow requires manual dispatch.
+A merge to `main` also triggers the Pages package documentation and demo workflow.
 
-DOM Fragment must precede Signal DOM, which must precede Client Signals.
-The Observable and Composites ponyfills must precede their polyfills, which must precede Vite Polyfills.
-The release planner validates internal dependency ranges and orders the batch.
-Compatible patch ranges do not require dependency-wide version rewrites.
+## Prepared public package batch
 
-The database patch releases change shipped guidance, not runtime or declarations.
-Rolldown Decorators `0.1.2` is already published and cannot be overwritten; its tarball lacks the helper that its plugin loads, so the corrected packaging and measured optimizations require `0.1.3`.
-Changes to Client Router, HTTP Contract, and Lit Signals are test/benchmark-only; Async Operation and Router have development-dependency-only metadata changes, and Resource Management has a blank-line-only source change.
-Those packages do not need new releases.
+A live npm registry audit on October 1 confirmed that every version below is unpublished.
+The table follows the repository release planner's dependency order.
 
-## Existing release holds
+| Package                                         | Candidate | Change                                                                                                                                |
+| ----------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `@serve-tools/signal-dom`                       | `0.3.0`   | Prepared template API migration plus reactive callbacks for child, attribute, and property bindings; event handlers remain listeners. |
+| `@serve-tools/client-signals`                   | `0.3.1`   | Updates its Signal DOM dependency to `^0.3.0`; its root DOM re-exports are unchanged.                                                 |
+| `@serve-tools/ponyfill-custom-element-registry` | `0.1.0`   | First release of explicit experimental scoped-registry installation, with association and insertion regression fixes.                 |
+| `@serve-tools/polyfill-custom-element-registry` | `0.1.0`   | First release of the Firefox-only native-preserving automatic installer.                                                              |
+| `@serve-tools/rolldown-typescript`              | `0.1.0`   | Existing unpublished compiler-adapter candidate; includes Vite/Rolldown integration, declarations, and consumer guidance.             |
+| `@serve-tools/skills`                           | `0.0.7`   | Package-selection guidance for the new registry packages.                                                                             |
+| `@serve-tools/vite-polyfills`                   | `0.4.0`   | Adds default scoped-registry detection and installation; prevents explicit runtime imports from recursively injecting installers.     |
 
-| Package or work                      | Reason                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@serve-tools/base-components@0.1.0` | The corrected Checkbox latency and retention gates pass, but the [accepted plan](components/base/design/plan.md#release-holds) still requires resolving the bundle-size shortfall and completing manual acceptance. The [template migration review](components/base/design/template-migration.md) records the new production API and validation evidence. |
-| Agent benchmark reports and harness  | Repository research/tooling, not a package release. Preserve frozen results; they do not justify replacing the published Skills wholesale.                                                                                                                                                                                                                |
+Signal DOM must precede Client Signals.
+The registry ponyfill must precede its polyfill, and both must precede Vite Polyfills.
+Client Signals retains a patch version because it does not re-export the changed template subpath.
+The Vite minor version reflects the additional default feature; published `0.3.0` and Skills `0.0.6` must not be overwritten.
+Compatible existing dependency ranges remain unchanged.
+Do not expand this batch merely because a later `package=all` invocation discovers another unpublished workspace.
 
-An Base preview is a separate decision requiring explicit narrower preview criteria, not an implicit waiver of the existing release gates.
-The independent `DisposableElement` remains internal; publishing the template entrypoint does not make it a supported component base.
-Observable and Composites are not held for renaming or a preview-tag decision: the requested first releases retain their current names and intentional contracts.
-Their initial versions do not promise exact native-proposal fidelity.
+## Exclusions and known limits
 
-## Base work before release
+`@serve-tools/base-components` remains private and is excluded from release planning and workflow package choices.
+Its existing bundle-size, manual accessibility, and scope acceptance holds remain in force; passing automated tests does not clear them.
+See the [Base acceptance plan](components/base/design/plan.md#release-holds) and [accessibility checklist](components/base/design/accessibility.md).
+Text Field uses its own shadow label surface rather than an external Field label.
+The registry fallback remains experimental, retains iframe-backed realm limitations, and does not promise full native DOM parity.
+Its [documented boundaries](ponyfills/custom-element-registry/README.md#boundaries) include invalid Document hierarchy cases that may prepare registry state before the native mutation throws.
+Benchmark reports retain their original scope and measurements; this preparation makes no new performance claim.
 
-The [repeated-mount diagnostic](components/base/benchmark/RESULTS.md) found that full validation after every sample perturbed later mount measurements: the paired mount-median ratio was 3.931, with a 95% interval of 3.067–5.037.
-This Base-only result is not a production speedup or a new Base UI comparison, and it does not close the mount-performance gate.
-The separately frozen, symmetric [current Checkbox comparison](components/base/design/performance.md#current-checkbox-comparison-september-4-2026) now separates repeated validation effects while preserving semantic checks and passes all five workload median and p95 bounds.
-The distinct template experiment estimates 42% less mounting time and 59% less reconnection time than its own frozen baseline; neither comparison establishes whole-library superiority.
-The September 4 production migration changes every constructed Base layout to return an inert `html` description.
-The base materializes that result inside its binding scope with the element as its event-handler context.
-Standalone callers use `createFragment(result, owner)`; deprecated `html(owner)` and `scopedHtml(owner)` preserve existing ownership behavior.
-Failed layout construction rolls back managed resources, while ordinary disconnect only suspends observation.
-Connection resources use lazy `DisposableStack` and AbortController allocation; environments without `DisposableStack` need the documented explicit polyfill.
-Native checkedness, validity, form values, and event ordering remain synchronous.
-Signal DOM `0.2.0` is already published, so this follow-up prepares `0.3.0` and Client Signals `0.3.1`, outside the historical batch above.
-See the [migration review](components/base/design/template-migration.md) for final checks, source-locked measurements, and approval requirements.
+## Local validation and artifacts
 
-The [accessibility acceptance checklist](components/base/design/accessibility.md) covers Chrome, Firefox, and Safari.
-It requires manual NVDA checks with Chrome and Firefox, and VoiceOver with Safari, with supplemental VoiceOver checks in Chrome and Firefox.
-All manual rows remain unverified; automated engine tests and historical accessibility-tree captures are not substitutes.
-The existing documented behavior gaps also need an explicit release-scope decision rather than a claim of complete Base UI parity.
+Preparation runs `npm ci --ignore-scripts`, full `npm run verify`, release planning, package packing, and isolated packed-consumer checks.
+The stabilization pass also completed a fresh build and a zero-vulnerability dependency audit.
+Known nonblocking lint and demo bundle-size warnings do not constitute release acceptance for private Base.
+The local review artifacts are stored outside the repository in `~/Documents/Codex/2026-10-01/web-tools-release-preparation/`.
+They include the exact package plan, tarballs, and SHA-256 checksums.
+These are local review artifacts, not provenance-signed publication artifacts.
+A later authorized release must rebuild and verify the final merged commit through the release workflow.
 
-## Verification and evidence
+## Later publication procedure — separate approval required
 
-The polyfill implementation was committed before the reduction pass.
-The [reduction report](benchmark/REDUCTION-2026-09-03.md) records retained improvements, rejected candidates, measurements, and the subsequent CI repairs.
-The private Base Skill/release/catalog inconsistencies and the Firefox menubar pointer-state failure are fixed.
-Base remains excluded from the public workspace inventory and release choices.
+1. Recheck registry state and freeze the exact still-unpublished subset of the seven package/version pairs above.
+2. Confirm CI and TypeScript Adapter success for the exact `main` SHA, with no additional unreviewed changes.
+3. The registry ponyfill, registry polyfill, and Rolldown TypeScript are first publications and currently have no npm package to which a trusted publisher can be attached.
+   Bootstrap each using its exact package/version in workflow `bootstrap` mode.
+   Bootstrap and publish the registry ponyfill before planning the dependent registry polyfill.
+4. For each bootstrap, audit the immutable release plan, tarball, checksum, package metadata, and matching one-subject provenance bundle before the required `npm` environment review.
+   A maintainer must later authorize and complete interactive npm 2FA publication of that verified tarball with its provenance bundle.
+   Use an isolated npm configuration without a `provenance` setting, because the repository's `provenance=true` conflicts with `--provenance-file`.
+   Do not create publishing credentials or bypass the protected environment.
+5. After each verified first publication, configure its npm Trusted Publisher for `serve-tools/web-tools`, `release.yml`, environment `npm`.
+6. Publish remaining existing packages through exact-package `publish` dispatches in dependency order, after registry visibility of their dependencies.
+   Before each environment approval, audit the generated artifact against the frozen package/version and repeat packed-consumer checks.
+7. Verify registry versions, intended tags, tarball integrity, provenance, and a fresh registry-only consumer installation.
+   After partial failure, re-query registry state and resume only the still-unpublished candidates.
 
-At implementation commit `267992547de69eb0b9a2f7ac33dbd69a7c250918`, [CI run 33836755336](https://github.com/serve-tools/web-tools/actions/runs/33836755336) passed all five jobs: Node 22, Node 24, Node 26 full verification, Bun, and Deno.
-Final local browser verification passed 4,687 tests with one existing native-feature skip; thirty consecutive focused Firefox menubar suites also passed.
-The release metadata update requires a fresh successful CI run before merging and publishing.
-
-The earlier nine-package and five-package polyfill tarballs installed into isolated consumers with scripts disabled and no workspace links.
-Strict NodeNext type checks, runtime ownership and native-selection checks, and three-engine polyfill production smoke passed.
-These earlier tarballs are not the publication artifacts: the release workflow must rebuild, verify, and pack the final merged commit.
-Audit that immutable artifact and repeat the isolated consumer checks before approving publication.
-
-## First-release bootstrap
-
-`@serve-tools/client-dom-fragment`, `@serve-tools/ponyfill-composites`, `@serve-tools/polyfill-composites`, `@serve-tools/ponyfill-observable`, and `@serve-tools/polyfill-observable` do not yet exist on npm, so npm cannot attach a trusted publisher to them.
-Dispatch the release workflow in `bootstrap` mode to verify, pack, and sign the selected tarballs under the protected `npm` environment without publishing them.
-The immutable release artifact retains each exact tarball, while `provenance-<tarball>` contains its matching npm-compatible provenance bundle.
-A maintainer completes npm 2FA through interactive `npm login`, then publishes the verified tarball with `npm publish <tarball> --access public --tag latest --provenance-file <bundle>`.
-Run that command from a clean temporary directory with an isolated npm config that has no `provenance` setting, because the repository `.npmrc` enables `provenance=true` and npm does not allow any explicit `provenance` setting with `--provenance-file`.
-This path must not create a granular access token or add `NPM_TOKEN` to GitHub.
-After verified first publication, configure npm Trusted Publishing exactly for repository `serve-tools/web-tools`, workflow file `release.yml`, and environment `npm` so later releases use the protected OIDC workflow.
-This is a staging constraint for these first versions only, not a permanent alternative to Trusted Publishing.
-
-## Authorized-release procedure
-
-1. Commit and push the final version metadata and this plan; wait for all CI jobs on the exact commit to pass.
-2. Merge the reviewed PR normally, without bypassing protections, and require CI on the resulting `main` commit to pass.
-3. Recheck npm and freeze the exact thirteen package/version pairs above; stop if the registry changes the intended batch.
-4. Dispatch the workflow once with `package=all` and mode `bootstrap`, then approve only the verified protected-environment attestation deployments.
-5. Download the immutable release artifact and the five first-release `provenance-<tarball>` artifacts, then verify each tarball, SHA-256, package name, version, and one-subject provenance bundle before interactive npm publication with maintainer 2FA.
-6. Configure npm Trusted Publishing for each verified first release.
-7. Dispatch the provenance-enabled release workflow on that exact `main` state with `package=all` and `tag=latest`.
-8. Wait for preparation to pass and publication to pause at the required `npm` environment review.
-9. Before normal environment approval, require the workflow SHA to match the reviewed `main` commit, download its sole `release-<run id>` artifact, and compare its ordered plan against the frozen list.
-10. Reject missing or extra packages, tarballs, or checksum files; verify every SHA-256 and every tarball's embedded package name/version, and repeat packed-consumer checks.
-11. Approve only that verified pending deployment through the normal environment review; do not bypass the gate or weaken provenance.
-12. Verify all published versions, `latest` tags, tarball integrity, provenance, and a fresh registry-only consumer installation.
-13. After any partial failure, re-query registry state and resume only still-unpublished versions using a freshly verified plan.
-
-The `all` selector alone is not a release-scope guard.
-It is permitted here only with the exact immutable-artifact comparison before the required environment approval; an unexpected public workspace must stop approval.
-This replaces the earlier one-package-at-a-time recommendation without weakening the release boundary.
-Do not create publishing credentials for this release; if a first-release provenance path remains unavailable, stop and request the specific required direction.
+The `npm` environment is restricted to `main` and requires maintainer review.
+Do not bypass it even when administrator bypass or self-review is technically available.
+No release workflow is dispatched by the current preparation.

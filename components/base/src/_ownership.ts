@@ -33,7 +33,8 @@ export class AttributeOwner {
 			return;
 		}
 
-		if (element.getAttribute(name) === state.owned) {
+		const current = element.getAttribute(name);
+		if (current === state.owned && current !== state.author) {
 			if (state.author === null) {
 				element.removeAttribute(name);
 			} else {

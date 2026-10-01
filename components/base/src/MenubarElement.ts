@@ -15,12 +15,11 @@ export class MenubarElement extends BaseElement {
 
 	readonly #collection = new CompositeCollection(this, () => this.#resolveEntries());
 	#controlledTriggers = new Set<HTMLElement>();
-	readonly #internals = this.attachInternals();
 	readonly #owner = new AttributeOwner();
 
 	constructor() {
 		super();
-		this.#internals.role = "menubar";
+		this.internals.role = "menubar";
 		for (const property of ["loopFocus", "orientation"] as const) {
 			upgradeProperty(this, property);
 		}
@@ -254,11 +253,11 @@ export class MenubarElement extends BaseElement {
 		this.#controlledTriggers = triggers;
 		this.#collection.refresh();
 		if (this.orientation === "horizontal") {
-			this.#internals.states.add("horizontal");
-			this.#internals.states.delete("vertical");
+			this.internals.states.add("horizontal");
+			this.internals.states.delete("vertical");
 		} else {
-			this.#internals.states.add("vertical");
-			this.#internals.states.delete("horizontal");
+			this.internals.states.add("vertical");
+			this.internals.states.delete("horizontal");
 		}
 	}
 
@@ -279,6 +278,6 @@ export class MenubarElement extends BaseElement {
 	}
 
 	#synchronizeRole(): void {
-		this.#internals.ariaOrientation = this.orientation;
+		this.internals.ariaOrientation = this.orientation;
 	}
 }

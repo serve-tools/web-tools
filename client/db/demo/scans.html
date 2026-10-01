@@ -24,6 +24,22 @@
 			</form>
 			<button id="seed" class="secondary">Seed 60 contacts</button>
 			<output aria-live="polite">Opening the database…</output>
+			<div class="code-example">
+				<p>Core code; element references and local types match the example above.</p>
+				<pre><code>import type { Contact } from "./database.js";
+import { database } from "./database.js";
+
+const db = await database;
+const contacts: Contact[] = [];
+
+for await (const contact of db.scanValues("contacts", {
+	batchSize: 5,
+	direction: "next",
+	limit: 12,
+})) {
+	contacts.push(contact);
+}</code></pre>
+			</div>
 		</main>
 		<script type="module" src="./src/main.ts"></script>
 	</body>

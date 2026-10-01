@@ -1,7 +1,9 @@
+import { DisabledElement } from "./_disabled.js";
+import { setCustomState } from "./_states.js";
 import type { ToggleGroupController, ToggleHandle } from "./_toggle-group.js";
 import { getDirectToggleGroup, getToggleGroup, registerToggle } from "./_toggle-group.js";
 import { upgradeProperty } from "./_upgrade.js";
-import { BaseElement } from "./BaseElement.js";
+import type { BaseElement } from "./BaseElement.js";
 
 /** Immutable state proposed by a toggle's `beforechange` event. */
 export interface ToggleChangeDetail {
@@ -34,7 +36,7 @@ const isButton = (element: Element): element is HTMLButtonElement =>
 
 /** A pressed-state control whose first direct native button owns focus and activation. */
 // biome-ignore lint/suspicious/noUnsafeDeclarationMerging: the interface adds typed DOM event overloads only.
-export class ToggleElement extends BaseElement {
+export class ToggleElement extends DisabledElement {
 	static readonly observedAttributes = ["disabled", "pressed", "value"];
 
 	#button: HTMLButtonElement | undefined;
@@ -44,7 +46,6 @@ export class ToggleElement extends BaseElement {
 	#group: ToggleGroupController | undefined;
 	#groupTabIndex: "-1" | "0" | undefined;
 	readonly #handle: ToggleHandle;
-	#internals = this.attachInternals();
 	#ownedAttributes = new Map<Element, Map<string, OwnedAttribute>>();
 	#pressed = this.hasAttribute("pressed");
 	#reconcilingGroup = false;
@@ -117,15 +118,6 @@ export class ToggleElement extends BaseElement {
 		} else {
 			this.#setPressed(pressed);
 		}
-	}
-
-	/** Whether this toggle directly disables its button. A group may additionally disable it. */
-	get disabled(): boolean {
-		return this.hasAttribute("disabled");
-	}
-
-	set disabled(value: boolean) {
-		this.toggleAttribute("disabled", Boolean(value));
 	}
 
 	/** The explicit string identity used by a direct toggle group. Empty strings are valid when the attribute is present. */
@@ -363,8 +355,8 @@ export class ToggleElement extends BaseElement {
 
 		if (!button) {
 			this.#effectiveDisabled = controlledDisabled;
-			this.#setState("pressed", this.#pressed);
-			this.#setState("disabled", controlledDisabled);
+			setCustomState(this.internals, "pressed", this.#pressed);
+			setCustomState(this.internals, "disabled", controlledDisabled);
 			return;
 		}
 
@@ -380,16 +372,8 @@ export class ToggleElement extends BaseElement {
 		}
 
 		this.#effectiveDisabled = button.matches(":disabled");
-		this.#setState("pressed", this.#pressed);
-		this.#setState("disabled", controlledDisabled);
-	}
-
-	#setState(state: string, present: boolean): void {
-		if (present) {
-			this.#internals.states.add(state);
-		} else {
-			this.#internals.states.delete(state);
-		}
+		setCustomState(this.internals, "pressed", this.#pressed);
+		setCustomState(this.internals, "disabled", controlledDisabled);
 	}
 
 	#capture(element: Element, name: string): OwnedAttribute {

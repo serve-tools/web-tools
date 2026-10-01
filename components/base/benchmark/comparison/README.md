@@ -1,5 +1,8 @@
 # Contemporary Base / pinned Base UI Checkbox comparison
 
+The fresh September 15, 2026 measurement, including framework-excluded Checkbox, Switch, Tabs, Dialog, and combined size, is in [RESULTS-2026-09-15.md](RESULTS-2026-09-15.md).
+The revision-3 result below is the preserved September 4 historical run.
+
 This suite contemporaneously compares the current production `@serve-tools/base-components/checkbox` bundle with pinned `@base-ui/react` 1.7.0 and production React and React DOM 19.2.8.
 It replaces no historical artifact and makes no whole-library claim.
 

@@ -1,6 +1,7 @@
-import { NativeFieldElement, setNativeFieldState, synchronizeNativeFieldAttributes } from "./_native-field.js";
+import { NativeFieldElement, synchronizeNativeFieldAttributes } from "./_native-field.js";
 import { isDirectInput, isFormElement } from "./_numeric.js";
 import { AttributeOwner } from "./_ownership.js";
+import { setCustomState } from "./_states.js";
 import { upgradeProperty } from "./_upgrade.js";
 import type { BaseElement } from "./BaseElement.js";
 import { html } from "./template.js";
@@ -10,7 +11,6 @@ export class OTPFieldElement extends NativeFieldElement {
 	static readonly observedAttributes = ["disabled", "length", "readonly", "required"];
 
 	#input: HTMLInputElement | undefined;
-	#internals = this.attachInternals();
 	#owned = new AttributeOwner();
 	#pendingValue: string | undefined;
 	#segments: Element[] = [];
@@ -195,10 +195,10 @@ export class OTPFieldElement extends NativeFieldElement {
 	#synchronize(): void {
 		const input = this.#input;
 		if (!input) {
-			setNativeFieldState(this.#internals, "disabled", this.disabled);
-			setNativeFieldState(this.#internals, "readonly", this.readOnly);
-			setNativeFieldState(this.#internals, "complete", false);
-			setNativeFieldState(this.#internals, "invalid", false);
+			setCustomState(this.internals, "disabled", this.disabled);
+			setCustomState(this.internals, "readonly", this.readOnly);
+			setCustomState(this.internals, "complete", false);
+			setCustomState(this.internals, "invalid", false);
 			this.#mirrorSegments("");
 			return;
 		}
@@ -224,10 +224,10 @@ export class OTPFieldElement extends NativeFieldElement {
 		synchronizeNativeFieldAttributes(this, input, this.#owned);
 
 		this.#mirrorSegments(input.value);
-		setNativeFieldState(this.#internals, "disabled", input.disabled);
-		setNativeFieldState(this.#internals, "readonly", input.readOnly);
-		setNativeFieldState(this.#internals, "complete", length > 0 && input.value.length === length);
-		setNativeFieldState(this.#internals, "invalid", !input.validity.valid);
+		setCustomState(this.internals, "disabled", input.disabled);
+		setCustomState(this.internals, "readonly", input.readOnly);
+		setCustomState(this.internals, "complete", length > 0 && input.value.length === length);
+		setCustomState(this.internals, "invalid", !input.validity.valid);
 	}
 
 	#mirrorSegments(value: string): void {

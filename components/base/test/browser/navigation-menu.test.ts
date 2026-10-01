@@ -221,6 +221,50 @@ describe("NavigationMenuElement", () => {
 		expect(element.openTrigger).toBeNull();
 	});
 
+	test("uses a retargeting performed while the prior popup closes", () => {
+		const { element, popup, trigger } = create();
+		const intermediate = document.createElement("div");
+		intermediate.popover = "auto";
+		const replacement = document.createElement("div");
+		replacement.popover = "auto";
+		popup.after(intermediate, replacement);
+		element.show(trigger);
+		trigger.popoverTargetElement = intermediate;
+		popup.addEventListener(
+			"beforetoggle",
+			(event) => {
+				if (event.newState === "closed") {
+					trigger.popoverTargetElement = replacement;
+				}
+			},
+			{ once: true },
+		);
+
+		expect(element.show(trigger)).toBe(true);
+		expect(intermediate.matches(":popover-open")).toBe(false);
+		expect(replacement.matches(":popover-open")).toBe(true);
+		element.hide();
+	});
+
+	test("returns a relationship restored while the prior popup closes", () => {
+		const { element, popup, trigger } = create();
+		popup.id = crypto.randomUUID();
+		trigger.setAttribute("popovertarget", popup.id);
+		element.show(trigger);
+		trigger.removeAttribute("popovertarget");
+		popup.addEventListener(
+			"beforetoggle",
+			(event) => {
+				if (event.newState === "closed") {
+					trigger.setAttribute("popovertarget", popup.id);
+				}
+			},
+			{ once: true },
+		);
+
+		expect(element.disclosureTriggers).toEqual([trigger]);
+	});
+
 	test("preserves an already-open native disclosure during late upgrade", () => {
 		const name = `base-navigation-menu-late-${crypto.randomUUID()}`;
 		const element = document.createElement(name);

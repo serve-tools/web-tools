@@ -1,3 +1,4 @@
+import { setCustomState } from "./_states.js";
 import { upgradeProperty } from "./_upgrade.js";
 import { BaseElement } from "./BaseElement.js";
 import { html } from "./template.js";
@@ -13,7 +14,6 @@ export class AvatarElement extends BaseElement {
 	#fallback = this.ownerDocument.createElement("span");
 	#fallbackReady = true;
 	#image = this.ownerDocument.createElement("img");
-	#internals = this.attachInternals();
 	#requestController: AbortController | undefined;
 	#requestDocument: Document | undefined;
 	#requestGeneration = 0;
@@ -150,36 +150,20 @@ export class AvatarElement extends BaseElement {
 		this.#fallbackReady = this.delay === 0;
 		this.#setStatus("loading");
 
-		this.#image.addEventListener(
-			"load",
-			() => {
-				if (
-					generation === this.#requestGeneration &&
-					this.getAttribute("src") === source &&
-					this.#image.getAttribute("src") === source &&
-					this.#image.complete &&
-					this.#image.naturalWidth > 0
-				) {
-					this.#finishRequest("loaded");
-				}
-			},
-			{ signal: controller.signal },
-		);
-		this.#image.addEventListener(
-			"error",
-			() => {
-				if (
-					generation === this.#requestGeneration &&
-					this.getAttribute("src") === source &&
-					this.#image.getAttribute("src") === source &&
-					this.#image.complete &&
-					this.#image.naturalWidth === 0
-				) {
-					this.#finishRequest("error");
-				}
-			},
-			{ signal: controller.signal },
-		);
+		const settle = (event: Event): void => {
+			const loaded = event.type === "load";
+			if (
+				generation === this.#requestGeneration &&
+				this.getAttribute("src") === source &&
+				this.#image.getAttribute("src") === source &&
+				this.#image.complete &&
+				(loaded ? this.#image.naturalWidth > 0 : this.#image.naturalWidth === 0)
+			) {
+				this.#finishRequest(loaded ? "loaded" : "error");
+			}
+		};
+		this.#image.addEventListener("load", settle, { signal: controller.signal });
+		this.#image.addEventListener("error", settle, { signal: controller.signal });
 
 		this.#restartFallbackDelay();
 		this.#image.setAttribute("src", source);
@@ -241,11 +225,7 @@ export class AvatarElement extends BaseElement {
 	#setStatus(status: AvatarStatus): void {
 		this.#status = status;
 		for (const candidate of ["idle", "loading", "loaded", "error"] as const) {
-			if (candidate === status) {
-				this.#internals.states.add(candidate);
-			} else {
-				this.#internals.states.delete(candidate);
-			}
+			setCustomState(this.internals, candidate, candidate === status);
 		}
 		this.#synchronizeVisibility();
 	}
@@ -258,9 +238,9 @@ export class AvatarElement extends BaseElement {
 		this.#image.hidden = this.#status !== "loaded";
 		this.#fallback.hidden = this.#status === "loaded" || (!!this.getAttribute("src") && !this.#fallbackReady);
 		if (this.#fallback.hidden) {
-			this.#internals.states.delete("fallback");
+			this.internals.states.delete("fallback");
 		} else {
-			this.#internals.states.add("fallback");
+			this.internals.states.add("fallback");
 		}
 	}
 }

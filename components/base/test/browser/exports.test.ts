@@ -31,6 +31,7 @@ import { SeparatorElement } from "@serve-tools/base-components/separator";
 import { SliderElement } from "@serve-tools/base-components/slider";
 import { SwitchElement } from "@serve-tools/base-components/switch";
 import { TabsElement } from "@serve-tools/base-components/tabs";
+import { TextFieldElement } from "@serve-tools/base-components/text-field";
 import { ToastRegionElement } from "@serve-tools/base-components/toast-region";
 import { ToggleElement } from "@serve-tools/base-components/toggle";
 import { ToggleGroupElement } from "@serve-tools/base-components/toggle-group";
@@ -72,6 +73,7 @@ test("published component entries agree and imports do not register tag names", 
 		"SliderElement",
 		"SwitchElement",
 		"TabsElement",
+		"TextFieldElement",
 		"ToastRegionElement",
 		"ToggleElement",
 		"ToggleGroupElement",
@@ -110,6 +112,7 @@ test("published component entries agree and imports do not register tag names", 
 	expect(base.SliderElement).toBe(SliderElement);
 	expect(base.SwitchElement).toBe(SwitchElement);
 	expect(base.TabsElement).toBe(TabsElement);
+	expect(base.TextFieldElement).toBe(TextFieldElement);
 	expect(base.ToastRegionElement).toBe(ToastRegionElement);
 	expect(base.ToggleElement).toBe(ToggleElement);
 	expect(base.ToggleGroupElement).toBe(ToggleGroupElement);
@@ -126,6 +129,7 @@ test("published component entries agree and imports do not register tag names", 
 	expect(customElements.get("base-progress")).toBeUndefined();
 	expect(customElements.get("base-separator")).toBeUndefined();
 	expect(customElements.get("base-tabs")).toBeUndefined();
+	expect(customElements.get("base-text-field")).toBeUndefined();
 	expect(customElements.get("base-toggle")).toBeUndefined();
 	expect(customElements.get("base-toggle-group")).toBeUndefined();
 	expect(customElements.get("base-alert-dialog")).toBeUndefined();

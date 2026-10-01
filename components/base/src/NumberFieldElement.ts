@@ -1,6 +1,7 @@
-import { NativeFieldElement, setNativeFieldState, synchronizeNativeFieldAttributes } from "./_native-field.js";
+import { NativeFieldElement, synchronizeNativeFieldAttributes } from "./_native-field.js";
 import { isDirectButton, isDirectInput, isFormElement } from "./_numeric.js";
 import { AttributeOwner } from "./_ownership.js";
+import { setCustomState } from "./_states.js";
 import type { BaseElement } from "./BaseElement.js";
 import { html } from "./template.js";
 
@@ -40,7 +41,6 @@ export class NumberFieldElement extends NativeFieldElement {
 	#decrementButton: HTMLButtonElement | undefined;
 	#incrementButton: HTMLButtonElement | undefined;
 	#input: HTMLInputElement | undefined;
-	#internals = this.attachInternals();
 	#owned = new AttributeOwner();
 	#pendingValue: string | undefined;
 	#repeatCleanup: (() => void) | undefined;
@@ -553,9 +553,9 @@ export class NumberFieldElement extends NativeFieldElement {
 	#synchronize(): void {
 		const input = this.#input;
 		if (!input) {
-			setNativeFieldState(this.#internals, "disabled", this.disabled);
-			setNativeFieldState(this.#internals, "readonly", this.readOnly);
-			setNativeFieldState(this.#internals, "invalid", false);
+			setCustomState(this.internals, "disabled", this.disabled);
+			setCustomState(this.internals, "readonly", this.readOnly);
+			setCustomState(this.internals, "invalid", false);
 			return;
 		}
 
@@ -577,9 +577,9 @@ export class NumberFieldElement extends NativeFieldElement {
 			const authorDisabled = this.#owned.authorValue(button, "disabled") !== null;
 			this.#owned.own(button, "disabled", disabled || authorDisabled ? "" : null);
 		}
-		setNativeFieldState(this.#internals, "disabled", input.disabled);
-		setNativeFieldState(this.#internals, "readonly", input.readOnly);
-		setNativeFieldState(this.#internals, "invalid", !input.validity.valid);
+		setCustomState(this.internals, "disabled", input.disabled);
+		setCustomState(this.internals, "readonly", input.readOnly);
+		setCustomState(this.internals, "invalid", !input.validity.valid);
 	}
 }
 
