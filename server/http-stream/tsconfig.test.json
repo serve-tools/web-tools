@@ -16,6 +16,9 @@
 		},
 		{
 			"path": "../realtime/tsconfig.json"
+		},
+		{
+			"path": "../../polyfills/urlpattern/tsconfig.json"
 		}
 	]
 }
