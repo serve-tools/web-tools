@@ -9,6 +9,10 @@ import { promisify } from "node:util";
 const execute = promisify(execFile);
 const repository = fileURLToPath(new URL("../../../", import.meta.url));
 
+if (typeof globalThis.URLPattern !== "function") {
+	await import("@serve-tools/polyfill-urlpattern");
+}
+
 async function example(location, index = 0) {
 	const markdown = await readFile(path.join(repository, location, "README.md"), "utf8");
 	const blocks = [...markdown.matchAll(/^```ts\n([\s\S]*?)^```/gm)];
