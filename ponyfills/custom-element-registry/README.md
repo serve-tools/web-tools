@@ -1,5 +1,6 @@
 # @serve-tools/ponyfill-custom-element-registry
 
+Reuse a custom-element tag name in an isolated shadow root without registering it globally.
 Explicit installation of an experimental iframe-backed scoped `CustomElementRegistry` fallback targeting Firefox.
 Based on the supplied registry implementation, with typed exports and isolated browser tests.
 
@@ -16,18 +17,25 @@ if (!supportsCustomElementRegistry()) {
 }
 
 const registry = new CustomElementRegistry();
-class LocalElement extends HTMLElement {}
+class LocalElement extends HTMLElement {
+	connectedCallback() {
+		this.textContent = "Only this registry owns local-element";
+	}
+}
 registry.define("local-element", LocalElement);
 const host = document.createElement("div");
 const root = host.attachShadow({ mode: "open", customElementRegistry: registry });
 root.innerHTML = "<local-element></local-element>";
+document.body.append(host);
 ```
 
+The browser example renders the locally defined element inside its shadow root.
+A separate registry can define the same tag with a different element class.
 Importing this package does not modify globals or require a DOM.
 `supportsCustomElementRegistry(window?)` checks the coordinated scoped-registry capability and returns false outside a browser.
 `installCustomElementRegistry(window?)` explicitly installs the fallback, even on a browser with native scoped support, and returns the installed `CustomElementRegistry` constructor and global `customElements` registry.
 Repeated installation into the same Window returns the same installation.
-For automatic feature detection and installation in Firefox only, use `@serve-tools/polyfill-custom-element-registry`.
+For automatic feature detection and installation in Firefox only, use [`@serve-tools/polyfill-custom-element-registry`](../../polyfills/custom-element-registry/).
 The explicit ponyfill installer does not apply a browser restriction, but forced installation outside Firefox is unsupported.
 
 Unlike a standalone value ponyfill, the fallback needs coordinated patches in the selected Window.

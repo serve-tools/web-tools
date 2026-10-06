@@ -1,21 +1,53 @@
 # @serve-tools/client-shared-db
 
-The `@serve-tools/client-shared-db` package coordinates typed IndexedDB operations and post-commit change subscriptions through a `SharedWorker`.
+Let several tabs read and write through one IndexedDB coordinator and observe changes after commit.
+`@serve-tools/client-shared-db` owns that connection in a SharedWorker.
 
 ```ts
+// database-worker.ts
+import type { DB } from "@serve-tools/client-db";
+import { listen } from "@serve-tools/client-shared-db/scope/shared-worker";
+
+const server = listen<{
+	users: DB.Store<{ id: string; name: string }, string>;
+}>("app", {
+	version: 1,
+	upgrade(database, { oldVersion }) {
+		if (oldVersion < 1) database.createObjectStore("users", { keyPath: "id" });
+	},
+});
+
+export type AppSchema = listen.SchemaType<typeof server>;
+```
+
+```ts
+// page.ts
 import { connect } from "@serve-tools/client-shared-db/scope/window";
 import type { AppSchema } from "./database-worker.js";
 
 const worker = new SharedWorker(new URL("./database-worker.js", import.meta.url), { type: "module" });
 const database = connect<AppSchema>(worker.port);
 
+addEventListener("pagehide", () => {
+	database.close();
+	worker.port.close();
+});
+
 await database.put("users", { id: "ada", name: "Ada Lovelace" });
 
-console.log(await database.get("users", "ada"));
+console.log(await database.get("users", "ada")); // { id: "ada", name: "Ada Lovelace" }
 ```
 
-This package keeps one `@serve-tools/client-db` connection and post-commit change feed behind a `SharedWorker`, allowing every tab to use the same coordinator.
 Finite operations remain Promise-based; subscriptions provide the explicit bridge for reactive adapters.
+Run the worker setup, then the page example in two same-origin tabs with the same worker URL and name.
+Each page can read the typed user record after `put()` commits.
+The page owns its client and port: close the client, then `worker.port.close()`, when retiring the page connection.
+
+Next, subscribe to committed changes before starting an initial query, using the registration barrier shown below.
+Use [DB](../db/) for a page-owned connection with native transactions and scans, or [Signal SharedDB](../../client-signals/shared-db/) for queries that refresh after coordinated writes.
+
+The page connection closes on every `pagehide`, including when entering the back/forward cache.
+On a persisted `pageshow`, create a fresh worker port, client, and subscriptions using the [mount and restore recipe](../messaging/#backforward-cache).
 
 ## Install
 
@@ -34,23 +66,7 @@ import * as clientSharedDb from "https://esm.run/@serve-tools/client-shared-db";
 Once the worker is listening, the connected database provides the familiar Promise-based point operations from `@serve-tools/client-db`.
 The result of `get()` is typed from the worker schema; the same client also provides `add`, `put`, `delete`, `clear`, `has`, `count`, `getAll`, and `getAllKeys`.
 
-The worker entrypoint defines the schema and owns the underlying IndexedDB connection:
-
-```ts
-import type { DB } from "@serve-tools/client-db";
-import { listen } from "@serve-tools/client-shared-db/scope/shared-worker";
-
-const server = listen<{
-	users: DB.Store<{ id: string; name: string }, string>;
-}>("app", {
-	version: 1,
-	upgrade(database, { oldVersion }) {
-		if (oldVersion < 1) database.createObjectStore("users", { keyPath: "id" });
-	},
-});
-
-export type AppSchema = listen.SchemaType<typeof server>;
-```
+The worker entrypoint above defines the schema and owns the underlying IndexedDB connection.
 
 ## Change subscriptions
 
@@ -70,9 +86,6 @@ const changes = database.subscribe("users", console.log, {
 	onError: ready.reject,
 });
 
-await ready.promise;
-const users = await database.getAll("users");
-
 addEventListener(
 	"pagehide",
 	() => {
@@ -80,8 +93,10 @@ addEventListener(
 		database.close();
 		worker.port.close();
 	},
-	{ once: true },
 );
+
+await ready.promise;
+const users = await database.getAll("users");
 ```
 
 ### Change semantics

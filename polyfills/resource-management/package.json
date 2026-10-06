@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-resource-management",
-	"version": "0.1.6",
+	"version": "0.1.7",
 	"description": "Implements Explicit Resource Management with global mutation",
 	"keywords": [
 		"async-disposable",
@@ -63,6 +63,6 @@
 		"typecheck": "npm run build --workspace @serve-tools/ponyfill-resource-management && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-resource-management": "^0.1.4"
+		"@serve-tools/ponyfill-resource-management": "^0.1.5"
 	}
 }

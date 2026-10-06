@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-urlpattern",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Implements URLPattern with global mutation",
 	"keywords": [
 		"browser-compatibility",
@@ -46,6 +46,6 @@
 		"typecheck": "npm run build --workspace @serve-tools/ponyfill-urlpattern && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-urlpattern": "^0.1.0"
+		"@serve-tools/ponyfill-urlpattern": "^0.1.2"
 	}
 }

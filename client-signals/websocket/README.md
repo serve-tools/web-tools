@@ -66,12 +66,13 @@ const stopRendering = effect(() => {
 
 addEventListener(
 	"pagehide",
-	() => {
+	(event) => {
+		if (event.persisted) return;
+
 		stopRendering();
 		presence.dispose();
 		client.close();
 	},
-	{ once: true },
 );
 ```
 
@@ -148,6 +149,11 @@ Dispose observations before closing the client that created them.
 The package is an ES module for browser environments supported by `@serve-tools/client-websocket` and `@serve-tools/signal-messaging`.
 It requires the platform features used by the WebSocket client, including `WebSocket` and `Promise.withResolvers()`.
 Explicit resource management requires `Symbol.dispose` support or a compatible polyfill; `dispose()` is always available.
+
+## Choose connection ownership
+
+Use [`@serve-tools/signal-shared-websocket`](../shared-websocket/) when multiple tabs should share the physical connection.
+Use [`@serve-tools/client-websocket`](../../client/websocket/) for finite requests and every subscription occurrence without Signals.
 
 ## Agent Skill
 

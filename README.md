@@ -23,19 +23,25 @@ Each package directory owns its package metadata, source, tests, and documentati
 ## Package documentation and demos
 
 Documentation for every library, including unpublished packages and the private Base preview, plus interactive client, signal-aware client, Lit, and Base demos are available at [serve-tools.github.io/web-tools](https://serve-tools.github.io/web-tools/).
-The catalog and package pages are generated from workspace manifests and READMEs, so new packages are included automatically.
+Package pages are generated from workspace manifests and READMEs.
+The catalog's capability subtitles and optional combined-package relationships live in `scripts/pages-catalog.mjs`; adding a public package requires matching discovery guidance.
 Each page shows the repository version and its npm availability, checked during the build.
 Private demo wrappers and the internal HTTP contract interoperability fixture are excluded from the package catalog.
 The `Pages` workflow validates the complete site on pull requests and rebuilds and deploys it after every push to `main`.
 A successful release also refreshes npm availability on the site.
 
-Build the same static site locally with:
+Build and open the complete site for local review with:
 
 ```shell
-npm run build:pages
+SERVE_TOOLS_DOCS_PREVIEW=1 npm run build:pages
+npm run docs:preview
 ```
 
-The generated site is written to `dist/pages`.
+The generated site is written to `dist/pages` and served at `http://127.0.0.1:4173/`.
+Preview mode labels working-tree changes without deploying them.
+For a production build, omit `SERVE_TOOLS_DOCS_PREVIEW`.
+Run `npm run check:docs` after building package exports to check actual introductory TypeScript examples and JavaScript syntax.
+`npm run test:docs:browser` executes representative README recipes and checks every package page on desktop and mobile; both checks are included in `npm run verify`.
 To activate a new repository deployment, select **GitHub Actions** as the source under **Settings → Pages** once; subsequent pushes deploy automatically.
 
 ## Packages

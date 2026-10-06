@@ -1,7 +1,39 @@
 # @serve-tools/client-input
 
-The `@serve-tools/client-input` package observes pointer and drag-and-drop input as explicit browser sessions.
+Build pointer drags and drop targets with explicit start, move, and end lifetimes.
+`@serve-tools/client-input` observes those browser interactions as sessions.
 It normalizes lifecycle without preventing defaults or taking propagation policy away from the application.
+
+## Drag an element
+
+Observe one pointer interaction at a time while the library handles capture and terminal events.
+The application still chooses which pointers to accept and which browser defaults to prevent.
+
+```ts
+import { observePointer } from "@serve-tools/client-input";
+
+const thumb = document.createElement("button");
+thumb.textContent = "Drag me";
+thumb.style.touchAction = "none";
+document.body.append(thumb);
+const stop = observePointer(thumb, {
+	start(_state, event) {
+		if (!event.isPrimary || event.button !== 0) return false;
+		event.preventDefault();
+	},
+	move(state) {
+		thumb.style.translate = `${state.delta.x}px ${state.delta.y}px`;
+	},
+	end() { thumb.style.translate = ""; },
+});
+
+addEventListener("pagehide", (event) => {
+	if (!event.persisted) stop();
+});
+```
+
+The button follows the accepted pointer and returns to its original position on release, cancellation, or cleanup.
+Next, observe a drop target to balance nested drag events into a single enter-to-exit session.
 
 ## Install
 

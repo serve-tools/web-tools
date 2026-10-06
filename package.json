@@ -128,6 +128,7 @@
 		"build:typescript": "tsc --build tsconfig.build.json --builders 4 --checkers 2",
 		"build:typescript:clean": "tsc --build tsconfig.build.json --clean",
 		"build:typescript-adapter": "npm run build --workspace @serve-tools/rolldown-typescript && node scripts/typescript-adapter/pilot.mjs --build",
+		"check:docs": "node scripts/docs-examples.mjs",
 		"check:packages": "node scripts/check-packages.mjs",
 		"check:release": "node --test scripts/workspaces.test.mjs scripts/release-plan.test.mjs scripts/release-pack.test.mjs",
 		"check:skill-ablation": "node --test benchmark/skills/agentic/ablation/*-tests.mjs",
@@ -140,6 +141,7 @@
 		"check:unused": "knip --no-progress",
 		"clean:build": "node scripts/clean-build.mjs",
 		"dev:typescript-adapter": "npm run build --workspace @serve-tools/rolldown-typescript && node scripts/typescript-adapter/pilot.mjs",
+		"docs:preview": "node scripts/preview-pages.mjs",
 		"format": "dprint fmt",
 		"format:check": "dprint check",
 		"lint": "biome check",
@@ -149,9 +151,10 @@
 		"sync:tsconfig-references": "node scripts/sync-tsconfig-references.mjs --write",
 		"test": "npm run build:typescript && npm run test:node && npm run test:browser:consolidated",
 		"test:browser:consolidated": "node scripts/run-browser-projects.mjs && vitest run --root client-signals/shared-db --config vitest.browser.config.ts && npm run test:browser --workspace @serve-tools/signal-dom",
+		"test:docs:browser": "node --test scripts/pages-browser.test.mjs scripts/docs-browser-examples.test.mjs",
 		"test:node": "npm run test:node:vitest && npm run test:node:native && npm run test:node:coverage",
 		"test:node:coverage": "npm run test:node --workspace @serve-tools/signal-dom",
-		"test:node:native": "node --test polyfills/arraybuffer-base64/test/*.test.js ponyfills/arraybuffer-base64/test/*.test.js ponyfills/request-idle-callback/test/runtime/node.test.js core/http-contract-interop/test/interop.test.mjs scripts/build-pages.test.mjs scripts/pages-site.test.mjs",
+		"test:node:native": "node --test polyfills/arraybuffer-base64/test/*.test.js ponyfills/arraybuffer-base64/test/*.test.js ponyfills/request-idle-callback/test/runtime/node.test.js core/http-contract-interop/test/interop.test.mjs scripts/build-pages.test.mjs scripts/pages-site.test.mjs scripts/docs-examples.test.mjs server/http-stream/test/readme-examples.node.mjs signals/effect/test/readme-examples.node.js",
 		"test:node:vitest": "vitest run --config vitest.node.projects.config.ts",
 		"test:typescript-adapter:browser": "npm run build --workspace @serve-tools/rolldown-typescript && node --test scripts/typescript-adapter/browser.test.mjs scripts/typescript-adapter/keyboard.test.mjs",
 		"test:typescript-adapter:distribution": "npm run build --workspace @serve-tools/rolldown-typescript && node --test scripts/typescript-adapter/distribution.test.mjs",
@@ -159,8 +162,8 @@
 		"typecheck": "npm run build:typescript && npm run typecheck:workspaces",
 		"typecheck:demos": "npm run typecheck:local --workspaces --if-present",
 		"typecheck:workspaces": "node scripts/typecheck-workspaces.mjs",
-		"verify": "npm run verify:node && npm run test:browser:consolidated && npm run test:typescript-adapter:browser && npm run test:typescript-adapter:distribution",
-		"verify:node": "npm run lint && npm run format:check && npm run check:tsconfig-references && npm run typecheck && npm run check:unused && npm run test:node && npm run check:skills && npm run check:skill-bench && npm run check:release && npm run build:extras && npm run check:packages && npm run check:typescript-migration && npm run test:typescript-adapter:node"
+		"verify": "npm run verify:node && npm run test:docs:browser && npm run test:browser:consolidated && npm run test:typescript-adapter:browser && npm run test:typescript-adapter:distribution",
+		"verify:node": "npm run lint && npm run format:check && npm run check:tsconfig-references && npm run typecheck && npm run check:docs && npm run check:unused && npm run test:node && npm run check:skills && npm run check:skill-bench && npm run check:release && npm run build:extras && npm run check:packages && npm run check:typescript-migration && npm run test:typescript-adapter:node"
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "0.18.5",
@@ -210,7 +213,7 @@
 					"benchmark/skills/agentic/tasks/**/*.{mjs,ts}",
 					"benchmark/skills/agentic/transfer/{tasks,recipes}/**/*.{mjs,ts}",
 					"benchmark/skills/agentic/ablation/{tasks,helpers}/**/*.{mjs,ts}",
-					"demo/catalog.js"
+					"demo/docs.js"
 				],
 				"ignoreBinaries": [
 					"go"

@@ -1,7 +1,30 @@
 # @serve-tools/ponyfill-observable
 
-A small, dependency-free subset of the proposed Web `Observable` API, with **a fresh execution for every consumption**.
-Import it explicitly; it neither changes globals nor selects a native `Observable` implementation.
+Turn events into a small, readable pipeline: select the events you want, transform their values, and stop when the task is done.
+This dependency-free experimental Observable subset starts a fresh execution for every consumption.
+
+```ts
+import { when } from "@serve-tools/ponyfill-observable";
+
+const button = document.createElement("button");
+button.textContent = "Save";
+document.body.append(button);
+
+when(button, "click")
+	.filter(() => !button.disabled)
+	.map(() => "Saved")
+	.take(1)
+	.subscribe((message) => {
+		button.textContent = message;
+		button.disabled = true;
+	});
+```
+
+The first click changes the button to “Saved” and removes this consumption's event listener automatically.
+Creating the pipeline starts no work; subscribing starts it.
+Use a subscription's `AbortSignal` to stop before completion, or `toArray()` to collect a finite pipeline into a Promise.
+Importing this ponyfill never changes globals or selects a native implementation.
+The [matching polyfill](../../polyfills/observable/) offers native-aware imports and global installation, with explicit native/fallback semantic differences.
 
 ## Install
 

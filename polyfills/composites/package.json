@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-composites",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Provides a native-aware Composite import and global installation",
 	"keywords": [
 		"browser-compatibility",
@@ -45,6 +45,6 @@
 		"typecheck": "npm run build --workspace @serve-tools/ponyfill-composites && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-composites": "^0.0.1"
+		"@serve-tools/ponyfill-composites": "^0.0.2"
 	}
 }

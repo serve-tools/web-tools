@@ -1,6 +1,7 @@
 # @serve-tools/client-dom-fragment
 
-A small, dependency-free persistent DOM fragment, based on the region behavior of `@serve-tools/signal-dom`'s `group()`.
+Keep a form or multi-node view intact while moving, hiding, and restoring it.
+`PersistentFragment` is a small, dependency-free region based on `@serve-tools/signal-dom`'s `group()`.
 Move, hide, restore, and detach the same nodes without a wrapper element or a signal runtime.
 
 ```ts
@@ -16,6 +17,11 @@ fragment.hidden = false; // Restore the same input, value, and listeners.
 fragment.remove(); // Detach for later reuse.
 fragment.insertBefore(document.body);
 ```
+
+Try typing into the input before hiding and restoring this region: it is the same node, so its value and event listeners remain.
+`remove()` detaches the region for reuse; the owner decides when to release any listeners or other resources it created.
+Next, move a multi-node region between containers without adding a layout wrapper.
+Use [Signal DOM](../../client-signals/dom/) when the region also needs reactive bindings.
 
 ## Install
 

@@ -1,10 +1,52 @@
 # @serve-tools/client-shared-webtransport
 
-`@serve-tools/client-shared-webtransport` shares one typed WebTransport session across pages through a `SharedWorker`.
+Send reliable operations and best-effort datagrams from several tabs over one worker-owned WebTransport session.
 
 Call `listen()` in the worker and `connect(worker.port)` in each page.
 Reliable requests and subscriptions retain the direct client's semantics.
 Typed datagram `write()`, `subscribe()`, and `read()` operations are routed through the worker-owned session.
+
+## Share reliable calls and cursor datagrams
+
+Open a matching [WebTransport server](../../server/webtransport/) session in the worker and connect each page to that worker.
+Same-origin tabs with the same worker URL and name share the physical session.
+
+```ts
+// realtime.worker.ts
+import { listen } from "@serve-tools/client-shared-webtransport/scope/shared-worker";
+
+const server = listen<{
+	requests: { profile(id: string): { id: string; name: string } };
+	datagrams: { cursor: { client: { x: number; y: number }; server: { x: number; y: number } } };
+}>("https://example.com/realtime");
+export type AppProtocol = listen.ProtocolType<typeof server>;
+```
+
+```ts
+// page.ts
+import { connect } from "@serve-tools/client-shared-webtransport/scope/window";
+import type { AppProtocol } from "./realtime.worker.js";
+
+const worker = new SharedWorker(new URL("./realtime.worker.js", import.meta.url), { type: "module" });
+const client = connect<AppProtocol>(worker.port);
+const cursors = client.datagrams.subscribe("cursor", (cursor) => console.log(cursor.x, cursor.y));
+
+addEventListener("pagehide", () => {
+	cursors.unsubscribe();
+	client.close();
+	worker.port.close();
+});
+console.log((await client.request("profile", "ada")).name);
+await client.datagrams.write("cursor", { x: 20, y: 40 });
+```
+
+The profile request reliably returns a name; datagrams publish best-effort cursor coordinates and may be lost.
+Closing one page client leaves other pages active.
+Next, call `client.datagrams.read("cursor")` to await one future arrival, or await `maxDatagramSize` for the worker-owned native limit.
+Use [direct WebTransport](../webtransport/) when the page needs its own session or independently scheduled native writable.
+
+The page connection closes on every `pagehide`, including when entering the back/forward cache.
+On a persisted `pageshow`, create a fresh worker port, client, and subscriptions using the [mount and restore recipe](../messaging/#backforward-cache).
 
 ## Install
 

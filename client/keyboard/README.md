@@ -1,6 +1,35 @@
 # @serve-tools/client-keyboard
 
-The `@serve-tools/client-keyboard` package normalizes platform-relative keyboard chords and presents them as accessible labels, visual symbols, and ARIA shortcuts.
+Define a keyboard shortcut once, match it across platforms, and display it as words, keycap symbols, or an ARIA shortcut.
+
+## One shortcut, matching labels
+
+Use the same chord for event matching and an accessible shortcut label.
+`Mod` maps to Command on Apple platforms and Control elsewhere.
+
+```ts
+import { getKeyChordAriaKeyShortcuts, getKeyChordLabel, matchKeyChord } from "@serve-tools/client-keyboard";
+
+const button = document.createElement("button");
+button.textContent = `Save (${getKeyChordLabel("Mod+S")})`;
+button.setAttribute("aria-keyshortcuts", getKeyChordAriaKeyShortcuts("Mod+S"));
+document.body.append(button);
+const controller = new AbortController();
+
+addEventListener("keydown", (event) => {
+	if (!matchKeyChord("Mod+S", event)) return;
+	event.preventDefault();
+	button.textContent = "Save shortcut received";
+}, { signal: controller.signal });
+
+addEventListener("pagehide", (event) => {
+	if (!event.persisted) controller.abort();
+});
+```
+
+Press the displayed shortcut to change the button's text.
+The application should choose where shortcuts apply, including whether to handle them while an editable control has focus.
+Next, use `getKeyChordSymbols()` for visual keycaps or strict chord types to check static shortcut declarations.
 
 ## Install
 

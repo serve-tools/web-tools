@@ -1,14 +1,25 @@
 # @serve-tools/polyfill-observable
 
+Build event pipelines that filter, transform, and finish without manually removing listeners.
+The first click in this browser example changes the button to “Saved” and completes the subscription.
 The `@serve-tools/polyfill-observable` package installs missing `Observable` and `Subscriber` interface objects and `EventTarget.prototype.when()` while preserving existing native values.
 Its fallback comes from [`@serve-tools/ponyfill-observable`](../../ponyfills/observable/).
 
 ```ts
 import "@serve-tools/polyfill-observable";
 
-const result = document.when("click").take(1).toArray();
+const button = document.createElement("button");
+button.textContent = "Save";
+document.body.append(button);
 
-result.then(([event]) => console.log(event.target));
+button.when("click")
+	.filter(() => !button.disabled)
+	.map(() => "Saved")
+	.take(1)
+	.subscribe((message) => {
+		button.textContent = message;
+		button.disabled = true;
+	});
 ```
 
 ## Status

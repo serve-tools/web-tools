@@ -1,5 +1,6 @@
 # @serve-tools/ponyfill-urlpattern
 
+Extract named URL parameters without splitting paths by hand.
 The `@serve-tools/ponyfill-urlpattern` package implements the standard `URLPattern` API without installing or replacing a global.
 Use it to match URLs, capture named pathname groups, and inspect individual URL components consistently across browsers and server runtimes.
 
@@ -11,6 +12,9 @@ const match = pattern.exec("https://example.com/books/123");
 
 console.log(match?.pathname.groups.id); // "123"
 ```
+
+The match exposes the book identifier; `test()` gives a boolean when only routing membership matters.
+Match hostname, pathname, and other components together for more specific rules.
 
 ## Install
 
@@ -66,7 +70,7 @@ pattern.test("https://example.com/books/123"); // true
 
 The exported constructor always uses this package's implementation, even when a runtime provides a native `URLPattern`.
 Importing this package does not install, replace, or otherwise mutate `globalThis.URLPattern`.
-Use `@serve-tools/polyfill-urlpattern` when an application intentionally needs a global installation that preserves existing native implementations.
+Use [`@serve-tools/polyfill-urlpattern`](../../polyfills/urlpattern/) when an application intentionally needs a global installation that preserves existing native implementations.
 
 ## Compatibility
 

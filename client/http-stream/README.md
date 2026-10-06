@@ -1,11 +1,12 @@
 # @serve-tools/client-http-stream
 
-`@serve-tools/client-http-stream` provides typed binary requests and streaming subscriptions over HTTP, with support for abort signals, author headers, and precise response validation.
+Make typed requests and receive live subscription events over HTTP.
+`@serve-tools/client-http-stream` handles binary serialization, cancellation, author headers, and protocol response checks.
 
 ```ts
 import { connect } from "@serve-tools/client-http-stream";
 
-using client = connect<{
+const client = connect<{
 	requests: {
 		getRoom(input: { room: string }): { title: string };
 	};
@@ -14,15 +15,25 @@ using client = connect<{
 	};
 }>("https://example.com/realtime");
 
-const room = await client.request("getRoom", { room: "lobby" });
-//    ^? { title: string }
+addEventListener("pagehide", (event) => {
+	if (!event.persisted) client.close();
+});
 
-using presence = client.subscribe("presence", { room: "lobby" }, (event) => {
+const room = await client.request("getRoom", { room: "lobby" });
+
+const presence = client.subscribe("presence", { room: "lobby" }, (event) => {
 	console.log(room.title, event.online);
-	//          ^? { title: string }
-	//                      ^? { online: number }
+	//               ^? string
+	//                            ^? number
 });
 ```
+
+Request a room and observe its live presence through one typed application contract.
+The URL must run the matching [HTTP stream server](../../server/http-stream/); a normal JSON endpoint does not speak this binary protocol.
+A presence value of `{ online: 3 }` logs the returned room title and `3`.
+The page keeps receiving events until a terminal `pagehide` releases its subscription and client.
+Next, add author headers or an operation-level `AbortSignal` to cancel just one request.
+Use [Shared HTTP Stream](../shared-http-stream/) to coordinate calls through one worker, or [WebSocket](../websocket/) for a socket transport.
 
 ## Install
 

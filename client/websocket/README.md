@@ -1,12 +1,12 @@
 # @serve-tools/client-websocket
 
-`@serve-tools/client-websocket` provides typed requests and subscriptions over a client-owned browser `WebSocket`.
+Request data and subscribe to live updates over a WebSocket using typed operation names and values.
 It uses a compact binary protocol with built-in serialization for structured JavaScript values, including cyclic graphs and binary data.
 
 ```ts
 import { connect } from "@serve-tools/client-websocket";
 
-await using client = await connect<{
+const client = await connect<{
 	requests: {
 		getRoom(input: { room: string }): { title: string };
 	};
@@ -15,12 +15,24 @@ await using client = await connect<{
 	};
 }>("wss://example.com/presence");
 
+addEventListener("pagehide", (event) => {
+	if (!event.persisted) client.close();
+});
+
 const room = await client.request("getRoom", { room: "lobby" });
 
-using presence = client.subscribe("presence", { room: "lobby" }, (event) => {
+const presence = client.subscribe("presence", { room: "lobby" }, (event) => {
 	console.log(`${room.title}: ${event.online} online`);
 });
 ```
+
+Fetch a room and receive live presence without writing a message router or serializing every value yourself.
+The URL must run the matching [WebSocket server](../../server/websocket/) with this package's binary protocol.
+A presence event `{ online: 3 }` logs the returned room title followed by `3 online`.
+The page keeps receiving events until a terminal `pagehide` releases the subscription and closes its socket.
+
+Next, return a `Uint8Array`, `Map`, or `Date` directly: the [binary export example](#send-structured-and-binary-values) shows values arriving ready to use without a JSON conversion layer.
+Use [Shared WebSocket](../shared-websocket/) when several tabs should share one physical socket, or [Signal WebSocket](../../client-signals/websocket/) to render subscription state reactively.
 
 ## Install
 

@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { combinedMembers, describePackage } from "./pages-catalog.mjs";
 import { buildPackageSite, renderReadme } from "./pages-site.mjs";
 import { readWorkspaceInventory } from "./workspaces.mjs";
 
@@ -45,6 +46,29 @@ test("all libraries receive complete documentation regardless of npm publication
 		const base = await readFile(join(pagesDirectory, "packages/base-components/index.html"), "utf8");
 		assert.match(base, /Base Skill/);
 		assert.match(base, /MIT-0/);
+		const catalog = await readFile(join(pagesDirectory, "index.html"), "utf8");
+		assert.ok(
+			catalog.indexOf('href="packages/client-storage/"', catalog.indexOf('id="client"')) <
+				catalog.indexOf('class="combined-package"'),
+		);
+		assert.equal((catalog.match(/class="combined-package"/g) ?? []).length, 3);
+		assert.match(catalog, /<h2>Package categories<\/h2>/);
+		assert.ok(!catalog.includes("package-search"));
+		const client = packages.find((entry) => entry.name === "@serve-tools/client");
+		assert.equal(client.members.length, 17);
+		assert.ok(client.members.includes("@serve-tools/client-shared-db"));
+		assert.ok(!client.members.includes("@serve-tools/client-dom-fragment"));
+		assert.ok(!client.members.includes("@serve-tools/client-realtime"));
+		const preview = await readFile(join(pagesDirectory, "packages/client-db/index.html"), "utf8");
+		assert.ok(!preview.includes("npm install @serve-tools/client-db"));
+		assert.match(preview, /preview-install/);
+		const released = await readFile(
+			join(pagesDirectory, published.name.replace("@serve-tools/", "packages/"), "index.html"),
+			"utf8",
+		);
+		assert.ok(released.includes(`npm install ${published.name}@${published.manifest.version}`));
+		assert.match(released, /aria-label="On this page"/);
+		assert.match(released, /class="code-toolbar"/);
 		assert.equal(
 			JSON.parse(await readFile(join(pagesDirectory, "packages.json"), "utf8")).packages.length,
 			packages.length,
@@ -52,6 +76,21 @@ test("all libraries receive complete documentation regardless of npm publication
 	} finally {
 		await rm(pagesDirectory, { recursive: true, force: true });
 	}
+});
+
+test("catalog guidance must cover every page and combined memberships must be documented", () => {
+	assert.throws(
+		() => describePackage({ name: "@serve-tools/new-tool", location: "client/new-tool" }),
+		/Missing catalog guidance/,
+	);
+	assert.throws(
+		() =>
+			combinedMembers(
+				{ name: "@serve-tools/client", manifest: { dependencies: { "@serve-tools/missing": "1.0.0" } } },
+				[],
+			),
+		/undocumented package/,
+	);
 });
 
 test("README rendering preserves code, tables, anchors, and source links", () => {
@@ -68,6 +107,18 @@ test("README rendering preserves code, tables, anchors, and source links", () =>
 	assert.match(html, /<table>/);
 	assert.ok(!html.includes("<script>"));
 	assert.match(renderReadme("[Unsafe](javascript:alert%281%29)", "x", "abc", []), /href="#"/);
+});
+
+test("installation pinning distinguishes a package from similarly prefixed dependencies", () => {
+	const html = renderReadme(
+		'```shell\nnpm install @serve-tools/signal @serve-tools/signal-effect\n```\n\n```js\nimport { Signal } from "https://esm.run/@serve-tools/signal";\nimport { effect } from "https://esm.run/@serve-tools/signal-effect";\n```',
+		"signals/signal",
+		"test",
+		[{ location: "signals/signal", name: "@serve-tools/signal", version: "1.2.3", status: "Published version" }],
+	);
+	assert.match(html, /npm install @serve-tools\/signal@1\.2\.3 @serve-tools\/signal-effect/);
+	assert.match(html, /https:\/\/esm.run\/@serve-tools\/signal@1\.2\.3/);
+	assert.ok(!html.includes("signal@1.2.3-effect"));
 });
 
 test("README directory links select live demos and commit-pinned source trees", () => {

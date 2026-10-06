@@ -1,32 +1,42 @@
 # @serve-tools/router
 
-`@serve-tools/router` declares unnamed, strongly typed routes that browser and server integrations can share.
+`@serve-tools/router` gives browser and server code one typed declaration for each URL.
+
+Declare a route once to build links and read their parameters without repeating URL strings.
+
+```ts
+import { route } from "@serve-tools/router";
+
+const project = route("/projects/:id");
+const href = project.href({ params: { id: "team notes" } });
+// "/projects/team%20notes"
+
+const match = project.match(href);
+console.log(match?.params.id); // "team notes"
+```
+
+Add codecs when URL values should arrive as numbers, closed unions, or repeated lists.
+The same declaration checks link inputs and parses incoming URLs:
 
 ```ts
 import { codec, route } from "@serve-tools/router";
 
-const id = codec.integer();
-
 const projectRoute = route("/projects/:id", {
-	params: {
-		id,
-	},
+	params: { id: codec.integer() },
 	search: {
-		parentId: id.optional(),
 		tab: codec.enum("overview", "files").default("overview"),
 		tag: codec.string().many(),
-		q: codec.string().optional(),
-	},
-	loading: {
-		mode: "blocking",
 	},
 });
 
-projectRoute.href({ params: { id: 42 }, search: { tag: ["active"] } });
-// "/projects/42?tag=active"
+const href = projectRoute.href({ params: { id: 42 }, search: { tag: ["active", "mine"] } });
+// "/projects/42?tag=active&tag=mine"
 
-projectRoute.match("https://example.com/projects/42?tab=files");
-// { path: "/projects/:id", route, url, params: { id: 42 }, search: { parentId: undefined, tab: "files", tag: [], q: undefined } }
+const match = projectRoute.match(href);
+console.log(match?.params.id); // 42, inferred as number
+console.log(match?.search.tab); // "overview", inferred as "overview" | "files"
+console.log(match?.search.tag); // ["active", "mine"]
+console.log(projectRoute.match("/projects/not-a-number")); // null
 ```
 
 ## Install

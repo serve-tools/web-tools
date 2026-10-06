@@ -1,7 +1,41 @@
 # `@serve-tools/client-context`
 
-Interoperable context events, providers, consumers, and late-registration coordination for web components.
+Share typed values with descendant web components and keep consumers updated as providers change.
 The package implements the [Web Components Community Group Context Protocol](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md) in author code without modifying `Element.prototype`.
+
+## Share a theme with descendants
+
+Provide a value at an ancestor and subscribe from a descendant using the interoperable Context Protocol.
+No component base class or global patch is required.
+
+```ts
+import { ContextConsumer, ContextProvider, createContext } from "@serve-tools/client-context";
+
+const theme = createContext<"light" | "dark">(Symbol("theme"));
+const panel = document.createElement("section");
+const label = document.createElement("p");
+panel.append(label);
+document.body.append(panel);
+
+const provider = new ContextProvider(panel, { context: theme, initialValue: "light" });
+const consumer = new ContextConsumer(label, {
+	context: theme,
+	subscribe: true,
+	callback(value) { this.textContent = `Theme: ${value}`; },
+});
+provider.connect();
+consumer.connect(); // The paragraph displays "Theme: light".
+provider.setValue("dark"); // The same paragraph displays "Theme: dark".
+
+addEventListener("pagehide", (event) => {
+	if (event.persisted) return;
+	consumer.disconnect();
+	provider.disconnect();
+});
+```
+
+Next, put connection and disconnection into custom element lifecycle callbacks as shown below.
+Consumers can subscribe before a provider exists; late providers announce themselves and allow those requests to be replayed.
 
 ## Install
 

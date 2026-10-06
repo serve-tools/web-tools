@@ -3,6 +3,14 @@
 `@serve-tools/client-realtime` is the transport-neutral client state machine behind the Serve Tools realtime transports.
 It provides typed requests and subscriptions over a complete-message byte callback without opening a socket or stream.
 
+Choose this package when implementing a transport adapter: it handles operation IDs, response correlation, cancellation, remote errors, and decoding while you supply complete message delivery.
+Most application code should start with [WebSocket](../websocket/), [HTTP Stream](../http-stream/), or [WebTransport](../webtransport/).
+
+The helper below accepts an application-owned transport with the displayed callback methods; those methods are not exports of this package.
+After wiring it, `await client.request("add", { a: 2, b: 3 })` yields `5` when the matching server handler returns the sum.
+Retire the adapter with `client.close()` and release the physical transport through your `close` callback.
+Next, add stream framing when the transport delivers chunks rather than complete messages.
+
 ## Install
 
 ```shell
@@ -28,18 +36,29 @@ interface Protocol {
 	subscriptions: { notices(): string };
 }
 
-const client = createClient<Protocol>({
-	send(payload) {
-		transport.send(payload);
-	},
-	close(reason) {
-		transport.close(reason);
-	},
-});
+/** Connects an application-supplied complete-message transport. */
+export function connectTransport(transport: {
+	send(payload: ArrayBuffer): void;
+	close(reason?: unknown): void;
+	onBinaryMessage(listener: (payload: ArrayBuffer | ArrayBufferView) => void): void;
+	onInvalidInput(listener: (reason: unknown) => void): void;
+	onClose(listener: (reason: unknown) => void): void;
+}) {
+	const client = createClient<Protocol>({
+		send(payload) {
+			transport.send(payload);
+		},
+		close(reason) {
+			transport.close(reason);
+		},
+	});
 
-transport.onBinaryMessage((payload) => client.receive(payload));
-transport.onInvalidInput((reason) => client.fail(reason));
-transport.onClose((reason) => client.disconnect(reason));
+	transport.onBinaryMessage((payload) => client.receive(payload));
+	transport.onInvalidInput((reason) => client.fail(reason));
+	transport.onClose((reason) => client.disconnect(reason));
+
+	return client;
+}
 ```
 
 `send()` receives one complete serialized protocol message.

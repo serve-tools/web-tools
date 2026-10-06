@@ -1,18 +1,46 @@
 # @serve-tools/signal-db
 
-`@serve-tools/signal-db` adds explicit Signal-backed query state to `@serve-tools/client-db`.
+Query IndexedDB once and let the query refresh after committed writes through the same connection.
+A watch is a read-only signal with explicit loading, success, and error states.
 
 ```ts
+import { effect } from "@serve-tools/signal-effect";
 import { SignalDB } from "@serve-tools/signal-db";
 
-await using db = await SignalDB.open<{ notes: SignalDB.Store<string, string> }>("notes");
-using note = db.watch("notes", "welcome");
+const db = await SignalDB.open<{ notes: SignalDB.Store<string, string> }>("notes-demo", {
+	version: 1,
+	upgrade(database, { oldVersion }) {
+		if (oldVersion < 1) database.createObjectStore("notes");
+	},
+});
+const note = db.watch("notes", "welcome");
+const output = document.createElement("output");
+document.body.append(output);
+const stop = effect(() => {
+	const state = note.get();
+	output.value = state.status === "ready" ? (state.value ?? "No note yet")
+		: state.status === "pending" ? "Loading…" : `Failed: ${String(state.error)}`;
+});
+
+addEventListener("pagehide", (event) => {
+	if (event.persisted) return;
+
+	stop();
+	note.dispose();
+	db.close();
+});
+
+await db.put("notes", "Hello, Ada!", { key: "welcome" });
+// The output refreshes to "Hello, Ada!" after the committed write and query refresh.
 ```
+
+The upgrade creates the store, the watch reads it, and the write invalidates it automatically.
+The effect renders the watched state; Signal-aware UI libraries can consume the same observation directly.
 
 ## Install
 
 ```shell
-npm install @serve-tools/signal-db
+npm install @serve-tools/signal @serve-tools/signal-db @serve-tools/signal-effect
 ```
 
 #### Import from a CDN
@@ -41,7 +69,7 @@ It also treats a successful empty or missing result as new data, rather than ret
 Copy the application-local helpers from the recipe; they are not package exports.
 
 ```ts
-const editor = mountDraftEditor(db.watch("notes", "welcome"), container, (note) => note);
+const editor = mountDraftEditor(db.watch("notes", "welcome"), document.body, (note) => note);
 
 // When this fixed record's view is retired:
 editor.dispose();
@@ -49,6 +77,34 @@ editor.dispose();
 
 Own drafts separately from fetched records, and recreate the retained-query owner when the record key, filters, account, or tenant changes.
 The underlying `QueryState` and default refresh/disposal behavior are unchanged.
+
+## Filter without rebuilding the query
+
+Signal-backed query options keep the same query owner while inputs change.
+Continue with the `db` connection from the first example:
+
+```ts
+import { Signal } from "@serve-tools/signal";
+
+const limit = new Signal.State(10);
+const notes = db.watchAll("notes", { count: limit });
+const stopList = effect(() => {
+	const state = notes.get();
+	if (state.status === "ready") console.log(state.value);
+});
+
+limit.set(20); // Refreshes the same watch with a larger result limit.
+
+addEventListener("pagehide", (event) => {
+	if (event.persisted) return;
+
+	stopList();
+	notes.dispose();
+});
+```
+
+Use [`@serve-tools/client-db`](../../client/db/) for finite Promise-based operations without reactive views.
+Use [`@serve-tools/signal-shared-db`](../shared-db/) for automatic coordinated invalidation across tabs.
 
 ## Agent Skill
 

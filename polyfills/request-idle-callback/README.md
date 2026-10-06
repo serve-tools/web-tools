@@ -1,14 +1,21 @@
 # @serve-tools/polyfill-request-idle-callback
 
+Defer a small optional task so it does not run in the current interaction.
 The `@serve-tools/polyfill-request-idle-callback` package implements APIs from the [W3C `requestIdleCallback` Working Draft](https://www.w3.org/TR/requestidlecallback/) by installing missing globals while preserving existing native implementations.
 
-```js
+```ts
 import "@serve-tools/polyfill-request-idle-callback";
 
-const handle = requestIdleCallback(() => console.log("idle"));
-
-cancelIdleCallback(handle);
+const summaries: string[] = [];
+requestIdleCallback(() => {
+	summaries.push("Prepared search suggestions");
+	console.log(summaries[0]);
+}, { timeout: 1_000 });
 ```
+
+The callback logs “Prepared search suggestions” when scheduled; the timeout provides forward progress when idle time is scarce.
+Keep each callback short: a timeout does not create extra idle time.
+Use the [matching ponyfill](../../ponyfills/request-idle-callback/) to import the fallback without installing globals.
 
 ## Install
 

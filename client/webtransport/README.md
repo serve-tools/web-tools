@@ -1,12 +1,12 @@
 # @serve-tools/client-webtransport
 
-`@serve-tools/client-webtransport` combines reliable typed requests and subscriptions with typed best-effort datagrams on one protocol-owned WebTransport session.
+Combine reliable typed requests and subscriptions with best-effort cursor, position, or telemetry datagrams on one WebTransport session.
 It uses WebTransport directly and does not implement or share a session with Media over QUIC.
 
 ```ts
 import { connect } from "@serve-tools/client-webtransport";
 
-await using client = await connect<{
+const client = await connect<{
 	requests: {
 		getRoom(input: { room: string }): { title: string };
 	};
@@ -21,18 +21,30 @@ await using client = await connect<{
 	};
 }>("https://example.com/realtime");
 
+addEventListener("pagehide", (event) => {
+	if (!event.persisted) client.close();
+});
+
 const room = await client.request("getRoom", { room: "lobby" });
 
-using presence = client.subscribe("presence", { room: "lobby" }, (event) => {
+const presence = client.subscribe("presence", { room: "lobby" }, (event) => {
 	console.log(`${room.title}: ${event.online} online`);
 });
 
-using cursors = client.datagrams.subscribe("cursor", (cursor) => {
+const cursors = client.datagrams.subscribe("cursor", (cursor) => {
 	console.log(cursor.x, cursor.y);
 });
 
 await client.datagrams.write("cursor", { x: 20, y: 40 });
 ```
+
+Send a reliable room request alongside best-effort cursor updates on the same session.
+The endpoint must implement the matching [WebTransport server](../../server/webtransport/) protocol.
+The request yields the room title; presence subscriptions receive online counts, and incoming cursor datagrams expose typed coordinates.
+The page keeps observing until a terminal `pagehide` releases its subscriptions and closes the session.
+Datagrams may be lost and are not a substitute for reliable operations.
+Next, use `read()` to await the next datagram or an independent writable when native scheduling groups are needed.
+Use [WebSocket](../websocket/) for reliable messages without datagrams, or [Shared WebTransport](../shared-webtransport/) to share a worker-owned session across tabs.
 
 ## Install
 

@@ -1,12 +1,17 @@
 # @serve-tools/ponyfill-report-error
 
+Report a failure from a background task while allowing the current code to continue.
 The `@serve-tools/ponyfill-report-error` package provides a console-backed `reportError()` implementation without reading, installing, or replacing a global.
 
 ```ts
 import { reportError } from "@serve-tools/ponyfill-report-error";
 
 reportError(new Error("Background task failed"));
+console.log("Continue handling other tasks");
 ```
+
+The error is reported and the following log still runs.
+This fallback calls `console.error`; it does not dispatch browser error events.
 
 ## Install
 

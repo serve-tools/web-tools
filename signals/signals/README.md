@@ -1,18 +1,32 @@
 # @serve-tools/signals
 
-The `@serve-tools/signals` package provides flat access to the compatible Signal runtime, native-shaped reactive collections, and microtask-batched effects.
+Use reactive values, native-shaped collections, and effects through one package.
+A computed value tracks what it reads, and an effect runs again when those reads change.
+
+Choose this facade when a module combines core Signals, collections, and effects.
+For one capability, choose its [focused owning package](#included-packages) instead.
+The facade re-exports the same constructors and functions; it does not create another Signal runtime.
+
+## Try it: keep a task count current
 
 ```ts
 import { Signal, SignalArray, effect } from "@serve-tools/signals";
 
-const items = new SignalArray(["first"]);
-const count = new Signal.Computed(() => items.length);
-const dispose = effect(() => console.log(count.get()));
+const tasks = new SignalArray(["Write the docs"]);
+const remaining = new Signal.Computed(() => tasks.length);
+const stop = effect(() => console.log(`${remaining.get()} tasks left`));
+// Logs "1 tasks left" immediately.
 
-items.push("second");
+tasks.push("Review the examples");
+await new Promise<void>((resolve) => queueMicrotask(resolve));
+// Logs "2 tasks left" after the batched effect runs.
 
-dispose();
+stop(); // Releases this effect's subscriptions.
 ```
+
+Use ordinary collection operations such as `push()`; computed values and effects track the relevant reads.
+Effects run synchronously once and batch later invalidations onto a microtask.
+Call the returned disposer when its owner is retired; disposing before a queued run cancels that pending run.
 
 ## Install
 
@@ -26,7 +40,7 @@ npm install @serve-tools/signals
 import * as signals from "https://esm.run/@serve-tools/signals";
 ```
 
-## Focused imports
+## Included packages
 
 Use the root when one module intentionally combines core Signals, collections, and effects.
 Each owning package is also available through a focused subpath:
@@ -39,11 +53,11 @@ import { Signal } from "@serve-tools/signals/signal";
 
 The root and focused subpaths directly re-export their underlying packages:
 
-| Focused subpath                    | Underlying package                |
-| ---------------------------------- | --------------------------------- |
-| `@serve-tools/signals/signal`      | `@serve-tools/signal`             |
-| `@serve-tools/signals/collections` | `@serve-tools/signal-collections` |
-| `@serve-tools/signals/effect`      | `@serve-tools/signal-effect`      |
+| Focused subpath                    | Underlying package                                   |
+| ---------------------------------- | ---------------------------------------------------- |
+| `@serve-tools/signals/signal`      | [`@serve-tools/signal`](../signal/)                  |
+| `@serve-tools/signals/collections` | [`@serve-tools/signal-collections`](../collections/) |
+| `@serve-tools/signals/effect`      | [`@serve-tools/signal-effect`](../effect/)           |
 
 The facade does not wrap constructors or create another Signal runtime.
 Exports retain their original runtime identity, and all packages share the same compatible `@serve-tools/signal` installation.
@@ -54,7 +68,8 @@ Follow that package's README for detailed runtime, invalidation, scheduling, and
 ## Compatibility
 
 This package is an ES module for the JavaScript runtimes supported by its underlying Signal packages.
-Importing the root evaluates every re-export module; focused subpaths let applications load one capability directly.
+Importing the root evaluates every re-export module; focused subpaths evaluate only the selected capability and its dependencies.
+Installing the facade still installs all three owning packages; choose a focused owning package to narrow installation as well.
 The package does not modify globals.
 
 ## Agent Skill

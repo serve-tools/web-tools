@@ -1,5 +1,6 @@
 # @serve-tools/polyfill-report-error
 
+Report a failure from a background task while allowing the current code to continue.
 The `@serve-tools/polyfill-report-error` package installs the standard `reportError()` function when it is missing and preserves an existing native implementation.
 Its fallback comes from [`@serve-tools/ponyfill-report-error`](../../ponyfills/report-error/).
 
@@ -7,7 +8,11 @@ Its fallback comes from [`@serve-tools/ponyfill-report-error`](../../ponyfills/r
 import "@serve-tools/polyfill-report-error";
 
 reportError(new Error("Background task failed"));
+console.log("Continue handling other tasks");
 ```
+
+The error is reported and the following log still runs.
+Native environments retain their own reporting behavior; the fallback writes to `console.error`.
 
 ## Install
 

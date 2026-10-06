@@ -1,6 +1,7 @@
 # @serve-tools/client-shared-websocket
 
-`@serve-tools/client-shared-websocket` provides typed requests and subscriptions over a shared `WebSocket` owned by a `SharedWorker`.
+Open several tabs while keeping one physical WebSocket for typed requests and live subscriptions.
+The SharedWorker owns the socket; each page owns its logical client.
 It uses a compact binary protocol with built-in serialization for structured JavaScript values, including cyclic graphs and binary data.
 
 ```ts
@@ -26,22 +27,30 @@ import type { PresenceProtocol } from "./presence.worker.js";
 
 const worker = new SharedWorker(new URL("./presence.worker.js", import.meta.url), { type: "module" });
 const client = connect<PresenceProtocol>(worker.port);
+
+addEventListener("pagehide", () => {
+	client.close();
+	worker.port.close();
+});
+
 const room = await client.request("getRoom", { room: "lobby" });
 
 const presence = client.subscribe("presence", { room: "lobby" }, (event) => {
 	console.log(`${room.title}: ${event.online} online`);
 });
-
-addEventListener(
-	"pagehide",
-	() => {
-		presence.unsubscribe();
-		client.close();
-		worker.port.close();
-	},
-	{ once: true },
-);
 ```
+
+Run the worker setup once, then run the page code in two same-origin tabs using the same worker URL and name.
+Both tabs use one physical WebSocket; each tab retains its own client and subscription.
+The example's presence event carries an online count and is printed by each interested page.
+The remote endpoint must implement the matching transport protocol; declared TypeScript types do not validate incoming values.
+
+Next, send structured binary values such as typed arrays through the same typed request API.
+Use the [direct client](../websocket/) when each page should own its connection.
+Closing a page client leaves other tabs active; the page owner must also close its `MessagePort` when finished.
+
+The page connection closes on every `pagehide`, including when entering the back/forward cache.
+On a persisted `pageshow`, create a fresh worker port, client, and subscriptions using the [mount and restore recipe](../messaging/#backforward-cache).
 
 ## Install
 

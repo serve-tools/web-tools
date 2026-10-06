@@ -1,22 +1,24 @@
 # @serve-tools/signal
 
-The `@serve-tools/signal` package implements APIs from the [Stage 1 TC39 Signals proposal](https://github.com/tc39/proposal-signals) without modifying the global environment.
+Store a value once and derive everything else from it.
+`Signal.Computed` remembers its dependencies and recalculates lazily when you read it after a change.
 
-```ts
+```js
 import { Signal } from "@serve-tools/signal";
 
-const count = new Signal.State(0);
-const doubled = new Signal.Computed(() => count.get() * 2);
+const quantity = new Signal.State(2);
+const subtotal = new Signal.Computed(() => quantity.get() * 12);
+const total = new Signal.Computed(() => subtotal.get() * 1.1);
 
-console.log(count.get()); // 0
-console.log(doubled.get()); // 0
-
-count.set(5);
-
-console.log(doubled.get()); // 10
+console.log(total.get().toFixed(2)); // "26.40"
+quantity.set(3);
+console.log(subtotal.get()); // 36
+console.log(total.get().toFixed(2)); // "39.60"
 ```
 
-Stage 1 proposals remain exploratory, so this package may change as the proposal evolves.
+Both derived values follow the same source without manually synchronizing them.
+Only computations you read are evaluated.
+This package implements the exploratory [Stage 1 TC39 Signals proposal](https://github.com/tc39/proposal-signals) without changing globals; the API may evolve with the proposal.
 
 ## Install
 
@@ -38,25 +40,31 @@ import * as signal from "https://esm.run/@serve-tools/signal";
 - Zero runtime dependencies and no global mutation
 - Tested across Node.js, Chromium, Firefox, and WebKit
 
-## Watchers
+## React to changes
+
+Use [`@serve-tools/signal-effect`](../effect/) for application effects and [`@serve-tools/signal-dom`](../../client-signals/dom/) or [`@serve-tools/lit-signals`](../../lit/signals/) for reactive UI.
+A low-level watcher only schedules work; it does not read your computations for you.
 
 ```js
 import { Signal } from "@serve-tools/signal";
 
 const count = new Signal.State(0);
 const doubled = new Signal.Computed(() => count.get() * 2);
-
-// watch for changes
 const watcher = new Signal.subtle.Watcher(() => {
 	console.log("Signal changed!");
 });
 
 watcher.watch(doubled);
+doubled.get(); // Evaluate once to establish the dependency on count.
+count.set(10); // logs "Signal changed!"
 
-count.set(10); // logs: "Signal changed!"
-
+console.log(doubled.get()); // 20; read outside the notification callback.
+watcher.watch(); // Rearm notifications after processing pending work.
 watcher.unwatch(doubled);
 ```
+
+Do not read or write signals inside the watcher notification callback.
+Queue application work instead, then read the pending computations and rearm the watcher.
 
 ## Public API
 

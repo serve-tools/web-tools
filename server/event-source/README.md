@@ -2,20 +2,36 @@
 
 `@serve-tools/server-event-source` creates a Fetch-compatible `text/event-stream` handler for typed JSON Server-Sent Events.
 
+Broadcast typed events to connected browsers using the standard EventSource protocol.
+Send initial state when a browser connects, then broadcast changes from your application:
+
 ```ts
 import { createHandler } from "@serve-tools/server-event-source";
 
-export const events = createHandler<{
-	message: { text: string };
-	presence: { online: number };
-}>({
+export const events = createHandler<{ presence: { online: number } }>({
 	connect(connection) {
-		console.log("resume after", connection.lastEventId);
+		connection.send("presence", { online: 3 });
 	},
 });
 
-events.send("presence", { online: 3 }, { id: "presence-42" });
+export default { fetch: events };
 ```
+
+Pass `events` to your host's Fetch adapter; Bun can run the default export directly.
+A browser connected to that endpoint receives the initial count:
+
+```js
+const source = new EventSource("/events");
+source.addEventListener("presence", (event) => {
+	console.log(JSON.parse(event.data).online); // 3
+});
+// Later, when this view closes:
+// source.close();
+```
+
+Mount the handler at `/events` in your HTTP application, or use the URL where your host serves it.
+Call `events.send("presence", { online: 4 }, { id: "presence-42" })` from your application when the count changes to broadcast it to every connected browser.
+See the [typed EventSource client](../../client/event-source/) to receive these events with inferred data types.
 
 ## Install
 

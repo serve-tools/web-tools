@@ -1,14 +1,20 @@
 # @serve-tools/polyfill-resource-management
 
+Collect cleanup in one place and release it in reverse order when a task finishes.
 The `@serve-tools/polyfill-resource-management` package implements [ECMAScript Explicit Resource Management](https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-disposable-stack-objects), which reached [TC39 Stage 4](https://github.com/tc39/proposals/blob/main/finished-proposals.md) in May 2026, by installing missing globals while preserving existing native implementations.
 
 ```js
 import "@serve-tools/polyfill-resource-management";
 
 const stack = new DisposableStack();
-stack.defer(() => console.log("disposed"));
-stack.dispose();
+stack.defer(() => console.log("Close connection"));
+stack.defer(() => console.log("Remove temporary file"));
+stack.dispose(); // Logs “Remove temporary file”, then “Close connection”.
 ```
+
+Use `adopt(value, cleanup)` for resources with an existing cleanup function, or `use(resource)` for the disposal protocol.
+Calling `dispose()` again does not repeat cleanup.
+Use the [matching ponyfill](../../ponyfills/resource-management/) for an isolated fallback; its disposal symbols differ from native symbols.
 
 ## Install
 

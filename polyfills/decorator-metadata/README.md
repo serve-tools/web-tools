@@ -1,12 +1,20 @@
 # @serve-tools/polyfill-decorator-metadata
 
+Give metadata producers and consumers one shared symbol key.
 The `@serve-tools/polyfill-decorator-metadata` package installs the `Symbol.metadata` key required by the [Decorator Metadata proposal](https://github.com/tc39/proposal-decorator-metadata) while preserving an existing native symbol.
 
 ```ts
 import "@serve-tools/polyfill-decorator-metadata";
 
-Symbol.metadata; // Symbol(Symbol.metadata)
+class Component {
+	static [Symbol.metadata] = { displayName: "Profile card" };
+}
+
+console.log(Component[Symbol.metadata].displayName); // "Profile card"
 ```
+
+This example stores and reads metadata explicitly.
+The symbol alone does not transform decorators or create `context.metadata`; use a decorator-capable runtime or transform for that.
 
 ## Install
 

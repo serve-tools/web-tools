@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/ponyfill-report-error",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "Provides a console-backed reportError implementation without global mutation",
 	"keywords": [
 		"error",

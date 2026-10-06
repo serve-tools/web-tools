@@ -11,6 +11,26 @@ export default defineConfig({
 });
 ```
 
+## What this enables
+
+With the plugin configured above, this source runs after bundling:
+
+```ts
+function named(value: Function, context: ClassDecoratorContext) {
+	context.metadata.displayName = "Profile card";
+}
+
+@named
+class ProfileCard {}
+
+console.log(ProfileCard[Symbol.metadata]?.displayName); // "Profile card"
+```
+
+The plugin lowers the decorated class and supplies its metadata runtime; the application keeps ordinary decorator source.
+The example requires TypeScript's decorator library types when type-checked (`ESNext.Decorators`).
+Use standard decorators, leave `experimentalDecorators` disabled, and type-check separately.
+Decorated class expressions remain unsupported.
+
 ## Install
 
 ```shell

@@ -95,22 +95,22 @@ const stopRendering = effect(() => {
 	}
 });
 
-addEventListener(
-	"pagehide",
-	() => {
-		stopRendering();
-		presence.dispose();
-		client.close();
-		worker.port.close();
-	},
-	{ once: true },
-);
+addEventListener("pagehide", () => {
+	stopRendering();
+	presence.dispose();
+	client.close();
+	worker.port.close();
+
+});
 ```
 
 Same-origin pages that open the same worker URL and name share one worker and one physical WebSocket.
 Each page still owns its client, observation, and port.
 
 `effect()` is illustrative; a Signal-aware renderer can read `presence.get()` directly.
+
+This first example owns one active page connection and retires it on `pagehide`.
+Cached-page restoration requires a fresh client and observation; follow the [back/forward-cache reconnection recipe](../../client/messaging/#backforward-cache).
 
 ## Observation state
 
@@ -188,6 +188,11 @@ Those policies belong in the application protocol.
 The page requires a modern browser with `SharedWorker`, `MessagePort`, structured clone, and the platform features required by `@serve-tools/signal-websocket`.
 The worker requires the platform features used by `@serve-tools/client-shared-websocket`, including `WebSocket` and `Promise.withResolvers()`.
 Explicit resource management is optional because observations also expose `dispose()` and clients expose `close()`.
+
+## Choose connection ownership
+
+Use [`@serve-tools/signal-websocket`](../websocket/) when one page owns its physical connection.
+Use [`@serve-tools/client-shared-websocket`](../../client/shared-websocket/) for the same shared connection with every subscription occurrence rather than latest-value Signal state.
 
 ## Agent Skill
 

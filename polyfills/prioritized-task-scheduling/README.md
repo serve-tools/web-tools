@@ -1,12 +1,14 @@
 # @serve-tools/polyfill-prioritized-task-scheduling
 
+Queue work by urgency and await its result, with cancellation and reprioritization when requirements change.
 The `@serve-tools/polyfill-prioritized-task-scheduling` package provides native-aware imports and global installation for the [Prioritized Task Scheduling API](https://wicg.github.io/scheduling-apis/).
 It preserves a native scheduler as one complete implementation and installs the complete scheduler fallback when the global is absent.
 
 ```ts
 import "@serve-tools/polyfill-prioritized-task-scheduling";
 
-await scheduler.postTask(() => updateVisibleContent(), { priority: "user-blocking" });
+const title = await scheduler.postTask(() => "Ready to edit", { priority: "user-blocking" });
+console.log(title); // “Ready to edit”, after the scheduled callback runs.
 ```
 
 ## Install

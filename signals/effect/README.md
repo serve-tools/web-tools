@@ -1,18 +1,25 @@
 # @serve-tools/signal-effect
 
-The `@serve-tools/signal-effect` package provides microtask-batched effects for TC39 Signals, built on [`@serve-tools/signal`](../signal/).
+Run a function now, then run it again whenever the signals it reads change.
+Multiple writes in the same turn produce one microtask-batched update.
 
 ```js
 import { Signal } from "@serve-tools/signal";
 import { effect } from "@serve-tools/signal-effect";
 
-const value = new Signal.State("initial");
-const dispose = effect(() => console.log(value.get()));
+const count = new Signal.State(0);
+const stop = effect(() => console.log(`Count: ${count.get()}`)); // "Count: 0"
 
-value.set("updated");
+count.set(1);
+count.set(2);
+await Promise.resolve(); // The scheduled effect logs "Count: 2" once.
 
-dispose();
+stop();
+count.set(3); // No further logs.
 ```
+
+The function declares its dependencies simply by reading them.
+Use this for logging or updating an imperative API; use [`Signal DOM`](../../client-signals/dom/) or [`Lit Signals`](../../lit/signals/) for bindings owned by a view.
 
 ## Install
 
@@ -33,11 +40,15 @@ Effects run synchronously once, then batch subsequent invalidations onto the nex
 `createEffect` provides a dormant controller for consumers that must register disposal before the initial run.
 
 ```js
+import { Signal } from "@serve-tools/signal";
 import { createEffect } from "@serve-tools/signal-effect";
 
+const value = new Signal.State("Ready");
 const controller = createEffect(() => console.log(value.get()));
 
-addEventListener("pagehide", controller.dispose, { once: true });
+addEventListener("pagehide", (event) => {
+	if (!event.persisted) controller.dispose();
+});
 controller.start();
 ```
 

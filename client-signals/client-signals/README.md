@@ -1,31 +1,63 @@
 # @serve-tools/client-signals
 
-The `@serve-tools/client-signals` package provides namespaced access to capability-complete Signal clients without flattening unrelated APIs into one export surface.
+Combine browser clients with reactive DOM through one package.
+Its namespaces include typed storage, databases, messaging, and realtime clients, with Signal reads that update their consumers automatically.
+
+Choose a [focused package](#included-packages) when you need one capability.
+Choose this facade when an application combines several Signal-aware clients and you prefer grouped imports.
+Each client keeps its original operations, types, and runtime identity alongside its reactive additions.
+
+## Try it: show a saved preference without wiring change handlers
+
+This paragraph displays the saved theme.
+Writes through the storage wrapper and storage events from other same-origin tabs update its text automatically.
 
 ```ts
-import { sharedWebsocket, websocket } from "@serve-tools/client-signals";
+import { dom, storage } from "@serve-tools/client-signals";
+import { Signal } from "@serve-tools/signal";
 
-type Protocol = { subscriptions: { updates(): string } };
-declare const worker: SharedWorker;
+const preferences = new storage.SignalStorage<{ theme: "light" | "dark" }>();
+const theme = preferences.watch("theme");
+const label = new Signal.Computed(() => `Theme: ${theme.get() ?? "light"}`);
+const paragraph = dom.html("p", dom.text(label))(document.body);
 
-const socket = await websocket.connect<Protocol>("wss://example.com/realtime");
-const direct = websocket.observe(socket, "updates");
+preferences.set("theme", "dark"); // Saves the preference and updates the paragraph.
 
-const sharedSocket = sharedWebsocket.connect<Protocol>(worker.port);
-const shared = sharedWebsocket.observe(sharedSocket, "updates");
+const onPageHide = (event: PageTransitionEvent) => {
+	if (event.persisted) return;
+	disposeThemeDisplay();
+};
+window.addEventListener("pagehide", onPageHide);
+
+export function disposeThemeDisplay() {
+	window.removeEventListener("pagehide", onPageHide);
+	dom.dispose(paragraph);
+	paragraph.remove();
+	theme.dispose();
+}
 ```
 
-Each namespace is also available as a focused subpath:
+An unset preference displays `Theme: light`; the computed label supplies a default for the absent storage key.
+Call `disposeThemeDisplay()` when the feature is retired: DOM binding disposal and storage-watch disposal are separate ownership responsibilities.
+The pagehide handler preserves the display when the browser suspends this page in its back/forward cache.
+Storage can throw browser security or quota errors.
+See [Signal Storage](../storage/) and [Signal DOM](../dom/) for lifecycle and scheduling details.
+
+The same capabilities are available through focused imports after installing this facade:
 
 ```ts
-import { connect, observe } from "@serve-tools/client-signals/websocket";
+import { html, text } from "@serve-tools/client-signals/dom";
+import { SignalStorage } from "@serve-tools/client-signals/storage";
 ```
 
 ## Install
 
 ```shell
-npm install @serve-tools/client-signals
+npm install @serve-tools/client-signals @serve-tools/signal
 ```
+
+The example also imports the core `Signal` runtime directly, so declare `@serve-tools/signal` as an application dependency.
+The facade itself includes its Signal-aware clients; you do not need to add their underlying imperative packages.
 
 #### Import from a CDN
 
@@ -33,24 +65,27 @@ npm install @serve-tools/client-signals
 import * as clientSignals from "https://esm.run/@serve-tools/client-signals";
 ```
 
-## Namespaces
+## Included packages
 
-| Namespace            | Focused subpath                                   | Underlying package                        |
-| -------------------- | ------------------------------------------------- | ----------------------------------------- |
-| `db`                 | `@serve-tools/client-signals/db`                  | `@serve-tools/signal-db`                  |
-| `dom`                | `@serve-tools/client-signals/dom`                 | `@serve-tools/signal-dom`                 |
-| `eventTarget`        | `@serve-tools/client-signals/event-target`        | `@serve-tools/signal-event-target`        |
-| `eventSource`        | `@serve-tools/client-signals/event-source`        | `@serve-tools/signal-event-source`        |
-| `httpStream`         | `@serve-tools/client-signals/http-stream`         | `@serve-tools/signal-http-stream`         |
-| `messaging`          | `@serve-tools/client-signals/messaging`           | `@serve-tools/signal-messaging`           |
-| `sharedDb`           | `@serve-tools/client-signals/shared-db`           | `@serve-tools/signal-shared-db`           |
-| `sharedEventSource`  | `@serve-tools/client-signals/shared-event-source` | `@serve-tools/signal-shared-event-source` |
-| `sharedHttpStream`   | `@serve-tools/client-signals/shared-http-stream`  | `@serve-tools/signal-shared-http-stream`  |
-| `sharedWebsocket`    | `@serve-tools/client-signals/shared-websocket`    | `@serve-tools/signal-shared-websocket`    |
-| `sharedWebtransport` | `@serve-tools/client-signals/shared-webtransport` | `@serve-tools/signal-shared-webtransport` |
-| `storage`            | `@serve-tools/client-signals/storage`             | `@serve-tools/signal-storage`             |
-| `websocket`          | `@serve-tools/client-signals/websocket`           | `@serve-tools/signal-websocket`           |
-| `webtransport`       | `@serve-tools/client-signals/webtransport`        | `@serve-tools/signal-webtransport`        |
+| Namespace            | Focused subpath                                   | Underlying package                                                   |
+| -------------------- | ------------------------------------------------- | -------------------------------------------------------------------- |
+| `db`                 | `@serve-tools/client-signals/db`                  | [`@serve-tools/signal-db`](../db/)                                   |
+| `dom`                | `@serve-tools/client-signals/dom`                 | [`@serve-tools/signal-dom`](../dom/)                                 |
+| `eventTarget`        | `@serve-tools/client-signals/event-target`        | [`@serve-tools/signal-event-target`](../event-target/)               |
+| `eventSource`        | `@serve-tools/client-signals/event-source`        | [`@serve-tools/signal-event-source`](../event-source/)               |
+| `httpStream`         | `@serve-tools/client-signals/http-stream`         | [`@serve-tools/signal-http-stream`](../http-stream/)                 |
+| `messaging`          | `@serve-tools/client-signals/messaging`           | [`@serve-tools/signal-messaging`](../messaging/)                     |
+| `sharedDb`           | `@serve-tools/client-signals/shared-db`           | [`@serve-tools/signal-shared-db`](../shared-db/)                     |
+| `sharedEventSource`  | `@serve-tools/client-signals/shared-event-source` | [`@serve-tools/signal-shared-event-source`](../shared-event-source/) |
+| `sharedHttpStream`   | `@serve-tools/client-signals/shared-http-stream`  | [`@serve-tools/signal-shared-http-stream`](../shared-http-stream/)   |
+| `sharedWebsocket`    | `@serve-tools/client-signals/shared-websocket`    | [`@serve-tools/signal-shared-websocket`](../shared-websocket/)       |
+| `sharedWebtransport` | `@serve-tools/client-signals/shared-webtransport` | [`@serve-tools/signal-shared-webtransport`](../shared-webtransport/) |
+| `storage`            | `@serve-tools/client-signals/storage`             | [`@serve-tools/signal-storage`](../storage/)                         |
+| `websocket`          | `@serve-tools/client-signals/websocket`           | [`@serve-tools/signal-websocket`](../websocket/)                     |
+| `webtransport`       | `@serve-tools/client-signals/webtransport`        | [`@serve-tools/signal-webtransport`](../webtransport/)               |
+
+All fourteen packages in the table are included.
+The core Signal primitives, collections, and effects facade is a separate package: [`@serve-tools/signals`](../../signals/signals/).
 
 The root entrypoint exports namespaces rather than flattening their members, so similarly named operations retain their owning capability.
 Use a focused subpath when only one adapter is needed.
@@ -63,6 +98,8 @@ The umbrella's `dom.html` remains the functional element builder; the template s
 
 ```ts
 import { connect, observe } from "@serve-tools/client-signals/event-source";
+
+type Events = { presence: { online: number } };
 
 const client = connect<Events>("/events");
 const presence = observe(client, "presence");
@@ -94,7 +131,9 @@ Follow the selected focused package's README for state semantics, cancellation, 
 ## Compatibility
 
 This package is an ES module for the browser environments supported by its underlying signal-aware client packages.
-Importing the root entrypoint evaluates every namespace; focused subpaths let applications load a single capability directly.
+Importing the root entrypoint evaluates every namespace; focused subpaths evaluate only the selected capability and its dependencies.
+Installing the facade still installs all fourteen declared capability dependencies; choose a focused owning package to narrow installation as well.
+The facade makes no promise that a root import produces a smaller application bundle.
 Each underlying package may require additional browser APIs such as DOM events, storage, IndexedDB, workers, or WebSocket.
 
 ## Agent Skill

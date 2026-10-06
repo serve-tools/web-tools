@@ -1,13 +1,22 @@
 # @serve-tools/ponyfill-request-idle-callback
 
+Defer a small optional task so it does not run in the current interaction.
 The `@serve-tools/ponyfill-request-idle-callback` package implements APIs from the [W3C `requestIdleCallback` Working Draft](https://www.w3.org/TR/requestidlecallback/) without modifying the global environment.
 The package root provides the browser scheduler, while explicit runtime exports provide server schedulers for Node.js, Bun, and Deno.
 
 ```ts
 import { requestIdleCallback } from "@serve-tools/ponyfill-request-idle-callback";
 
-requestIdleCallback(() => console.log("idle"));
+const summaries: string[] = [];
+requestIdleCallback(() => {
+	summaries.push("Prepared search suggestions");
+	console.log(summaries[0]);
+}, { timeout: 1_000 });
 ```
+
+The callback logs “Prepared search suggestions” when scheduled; the timeout provides forward progress when idle time is scarce.
+Keep each callback short: a timeout does not create extra idle time.
+Use the [matching polyfill](../../polyfills/request-idle-callback/) to preserve native functions through imported values or global installation.
 
 ## Install
 

@@ -1,5 +1,6 @@
 # @serve-tools/polyfill-urlpattern
 
+Extract named URL parameters without splitting paths by hand.
 The `@serve-tools/polyfill-urlpattern` package installs the standard `URLPattern` constructor when it is missing and preserves an existing native implementation.
 Its fallback comes from [`@serve-tools/ponyfill-urlpattern`](../../ponyfills/urlpattern/).
 
@@ -8,8 +9,11 @@ import "@serve-tools/polyfill-urlpattern";
 
 const pattern = new URLPattern({ pathname: "/books/:id" });
 
-pattern.exec("https://example.com/books/42")?.pathname.groups.id; // "42"
+console.log(pattern.exec("https://example.com/books/42")?.pathname.groups.id); // "42"
 ```
+
+The match exposes the book identifier; `test()` gives a boolean when only routing membership matters.
+Match hostname, pathname, and other components together for more specific rules.
 
 ## Install
 

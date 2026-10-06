@@ -1,19 +1,33 @@
 # @serve-tools/client-event-source
 
-`@serve-tools/client-event-source` adds typed JSON events to the native `EventSource` API while preserving browser-managed reconnection and event IDs.
+Receive named, typed JSON events from a server-sent event feed.
+`@serve-tools/client-event-source` preserves native EventSource reconnection and event IDs.
 
 ```ts
 import { connect } from "@serve-tools/client-event-source";
 
-using events = connect<{
+const events = connect<{
 	message: { text: string };
 	presence: { online: number };
 }>("https://example.com/events", { withCredentials: true });
 
-using presence = events.subscribe("presence", ({ data, lastEventId }) => {
+const presence = events.subscribe("presence", ({ data, lastEventId }) => {
 	console.log(lastEventId, data.online);
 });
+
+addEventListener("pagehide", (event) => {
+	if (event.persisted) return;
+	presence.unsubscribe();
+	events.close();
+});
 ```
+
+Subscribe to a live event feed without parsing JSON in every listener.
+The example expects a server-sent `presence` event with JSON data such as `{"online":3}`; it logs the event ID and `3`.
+The page keeps the connection active and releases its subscription and EventSource on a terminal `pagehide`.
+Browser-managed reconnection follows native EventSource behavior, while declared payload types do not validate untrusted JSON.
+Next, subscribe to additional named events on the same connection.
+Use [Shared EventSource](../shared-event-source/) when several tabs should share one physical connection.
 
 ## Install
 

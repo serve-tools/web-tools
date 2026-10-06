@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/ponyfill-composites",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Implements proposed ECMAScript Composite values without global mutation",
 	"keywords": [
 		"composite",

@@ -14,6 +14,21 @@ export default defineConfig({
 The plugin parses each transformed module with Vite's OXC parser utilities and walks the AST.
 When a polyfill matches, it prepends an import of a virtual runtime module, so the polyfill ships once per build and Rollup can tree-shake it out of chunks that do not use it.
 
+## What this enables
+
+After adding the plugin, an application module can use the platform API directly:
+
+```ts
+const books = new URLPattern({ pathname: "/books/:id" });
+console.log(books.exec("https://example.com/books/42")?.pathname.groups.id); // "42"
+```
+
+The plugin detects `URLPattern` in that module and injects its runtime import.
+The runtime preserves a native constructor or supplies the fallback, so the named match works in supported runtimes missing the feature.
+A module that never references a detected feature does not receive that feature's injected import.
+The plugin supplies runtime APIs; it does not lower unsupported JavaScript syntax or guarantee browser support for every language feature.
+See [TypeScript](#typescript) for ambient types and [built-in polyfills](#built-in-polyfills) for the detection list and fallback limits.
+
 ## Install
 
 ```shell

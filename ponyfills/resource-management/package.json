@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/ponyfill-resource-management",
-	"version": "0.1.4",
+	"version": "0.1.5",
 	"description": "Implements Explicit Resource Management without global mutation",
 	"keywords": [
 		"async-disposable",

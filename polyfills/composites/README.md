@@ -1,15 +1,17 @@
 # @serve-tools/polyfill-composites
 
+Use equivalent structured values as cache keys without retaining the original key object.
 The `@serve-tools/polyfill-composites` package installs the proposed `Composite` function when it is missing and preserves an existing native value.
 Its fallback comes from [`@serve-tools/ponyfill-composites`](../../ponyfills/composites/).
 
 ```ts
 import "@serve-tools/polyfill-composites";
 
-const first = Composite({ x: 1, y: 4 });
-const second = Composite({ y: 4, x: 1 });
+const prices = new Map([
+	[Composite({ product: "book", currency: "USD" }), 18],
+]);
 
-first === second; // true with the bundled fallback
+console.log(prices.get(Composite({ currency: "USD", product: "book" }))); // 18 with the bundled fallback
 ```
 
 ## Status

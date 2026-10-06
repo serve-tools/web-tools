@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/ponyfill-observable",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Web Observable API subset with independent execution per consumption and no global mutation",
 	"keywords": [
 		"abortsignal",

@@ -1,28 +1,30 @@
 # @serve-tools/client-interaction
 
-The `@serve-tools/client-interaction` package starts one-shot clipboard, sharing, eyedropper, and file-selection interactions for browser clients.
-It preserves transient activation where the platform permits deferred data and reports browser-mediated completion, abortion, and failure as explicit results.
+Copy text from a button click and handle completion, cancellation, or failure explicitly.
+Start the interaction directly inside the user gesture so browser activation is still available.
 
 ```ts
-import { share, writeToClipboard } from "@serve-tools/client-interaction";
+import { writeToClipboard } from "@serve-tools/client-interaction";
+
+const button = document.createElement("button");
+button.textContent = "Copy page link";
+document.body.append(button);
+const controller = new AbortController();
 
 button.addEventListener("click", async () => {
-	const copying = writeToClipboard({
-		"image/png": renderImage(),
-	});
-
-	const result = await copying;
-
+	const result = await writeToClipboard({ "text/plain": location.href });
+	button.textContent = result.status === "completed" ? "Copied" : "Copy page link";
 	if (result.status === "failed") console.error(result.error);
-});
+}, { signal: controller.signal });
 
-shareButton.addEventListener("click", async () => {
-	const result = await share({ url: location.href });
-
-	if (result.status === "aborted") return;
-	if (result.status === "failed") console.error(result.error);
+addEventListener("pagehide", (event) => {
+	if (!event.persisted) controller.abort();
 });
 ```
+
+The button reports completion only after the browser finishes the interaction.
+The same result model also covers native sharing, picking files, and sampling a screen color.
+Clipboard writes can accept promised binary data, allowing image rendering to start within the click handler without waiting away its activation.
 
 ## Install
 

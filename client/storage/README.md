@@ -1,22 +1,28 @@
 # @serve-tools/client-storage
 
-The `@serve-tools/client-storage` package provides typed, observable access to local and session storage.
+Persist a typed preference and update the current page whenever it changes.
+`Storage` observes writes through the wrapper in this document and native storage events from other documents using the same storage area.
 
 ```ts
 import { Storage } from "@serve-tools/client-storage";
 
-const storage = new Storage<{
-	theme: "light" | "dark";
-	token: string;
-}>();
+const storage = new Storage<{ theme: "light" | "dark" }>();
+const renderTheme = () => {
+	document.documentElement.dataset.theme = storage.get("theme") ?? "light";
+};
+const stop = storage.subscribe("theme", renderTheme);
 
-const theme = storage.get("theme"); // "light" | "dark" | null
+renderTheme(); // Restore the saved preference on startup.
+storage.set("theme", "dark"); // Persist it and immediately update this page.
 
-storage.set("theme", "dark"); // true if changed, otherwise false
-
-storage.has("token"); // true if present, otherwise false
-storage.delete("token"); // true if deleted, false if not present
+addEventListener("pagehide", (event) => {
+	if (!event.persisted) stop();
+});
 ```
+
+The schema constrains keys and string values without adding JSON serialization.
+Open a second same-origin tab with the same code to observe its storage changes too.
+Use [SignalStorage](../../client-signals/storage/) when a preference should feed computed signals or a signal-aware view.
 
 ## Install
 

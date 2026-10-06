@@ -1,5 +1,6 @@
 # `@serve-tools/ponyfill-decorator-metadata`
 
+Give metadata producers and consumers one shared symbol key.
 The `@serve-tools/ponyfill-decorator-metadata` package provides a stable module-scoped symbol for the [Decorator Metadata proposal](https://github.com/tc39/proposal-decorator-metadata) without reading or modifying `Symbol.metadata`.
 
 ```ts
@@ -11,6 +12,9 @@ class Example {
 
 Example[metadata].component; // true
 ```
+
+This example stores and reads metadata explicitly.
+The symbol alone does not transform decorators or create `context.metadata`; use a decorator-capable runtime or transform for that.
 
 ## Install
 

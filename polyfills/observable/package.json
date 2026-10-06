@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-observable",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Provides native-aware Observable imports and global installation",
 	"keywords": [
 		"abortsignal",
@@ -51,6 +51,6 @@
 		"typecheck": "npm run build --workspace @serve-tools/ponyfill-observable && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-observable": "^0.0.1"
+		"@serve-tools/ponyfill-observable": "^0.0.2"
 	}
 }

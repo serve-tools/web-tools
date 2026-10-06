@@ -52,8 +52,8 @@
 	},
 	"dependencies": {
 		"@michijs/htmltype": "0.4.14",
-		"@serve-tools/client-dom-fragment": "^0.1.0",
-		"@serve-tools/signal": "^0.1.3",
-		"@serve-tools/signal-effect": "^0.1.3"
+		"@serve-tools/client-dom-fragment": "^0.1.1",
+		"@serve-tools/signal": "^0.1.4",
+		"@serve-tools/signal-effect": "^0.1.5"
 	}
 }

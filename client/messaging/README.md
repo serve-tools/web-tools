@@ -1,30 +1,65 @@
 # @serve-tools/client-messaging
 
-The `@serve-tools/client-messaging` package helps you manage typed requests and subscriptions across workers and message ports.
+Call a worker with a typed request and observe a stream of typed results without writing message IDs or response dispatchers.
+The worker owns shared state; every page gets a typed client with one constructor call.
 
 ```ts
-import { connect, serve } from "@serve-tools/client-messaging";
+// counter-worker.ts
+import { listen } from "@serve-tools/client-messaging/scope/worker";
 
-const { port1, port2 } = new MessageChannel();
-
-type GreetingProtocol = {
+let total = 0;
+const subscribers = new Set<(value: number) => void>();
+const connections = listen<{
+	requests: { increment(amount: number): number };
+	subscriptions: { totals(): number };
+}>({
 	requests: {
-		greet(name: string): string;
-	};
-};
-
-using server = serve<GreetingProtocol>(port1, {
-	requests: {
-		greet: (name) => `Hello, ${name}!`,
+		increment(amount) {
+			total += amount;
+			for (const emit of subscribers) emit(total);
+			return total;
+		},
+	},
+	subscriptions: {
+		totals(_input, { emit }) {
+			subscribers.add(emit);
+			emit(total);
+			return () => subscribers.delete(emit);
+		},
 	},
 });
-
-using client = connect<GreetingProtocol>(port2);
-
-await client.ready;
-
-console.log(await client.request("greet", "Ada")); // "Hello, Ada!"
+export type CounterProtocol = listen.ProtocolType<typeof connections>;
 ```
+
+```ts
+// page.ts
+import { SharedWorker } from "@serve-tools/client-messaging/scope/window";
+import type { CounterProtocol } from "./counter-worker.js";
+
+const worker = new SharedWorker<CounterProtocol>(new URL("./counter-worker.js", import.meta.url), {
+	name: "counter",
+	type: "module",
+});
+const output = document.createElement("output");
+document.body.append(output);
+const totals = worker.client.subscribe("totals", (value) => { output.value = String(value); });
+
+addEventListener("pagehide", () => {
+	totals.unsubscribe();
+	worker.client.close();
+	worker.port.close();
+});
+
+console.log(await worker.client.request("increment", 2)); // 2 in a newly started worker.
+// Every subscribed page displays the worker's updated total.
+```
+
+Open two same-origin tabs with the same worker URL and name: they share one counter, and both outputs follow each increment.
+The worker returns a cleanup for each subscription; closing a page client runs its cleanup while other pages continue using the worker.
+The protocol type is exported from the worker and imported as a type by the page, so request names, inputs, and results stay aligned.
+[Try the shared-state demo](./demo/) in two tabs, then try cancelling worker work or transferring an `ArrayBuffer` without copying it.
+Use [SignalMessaging](../../client-signals/messaging/) to expose the latest subscription value as reactive state.
+For pages restored from the back/forward cache, use the [mount and restore recipe](#backforward-cache) below to create a fresh connection.
 
 ## Install
 
@@ -51,6 +86,7 @@ interface CounterProtocol {
 	};
 	subscriptions: {
 		totals(): number;
+		changes(projectID: string): { title: string };
 	};
 }
 ```
@@ -122,7 +158,7 @@ A zero-input subscription takes its listener immediately after the name, while a
 
 ```ts
 const totals = client.subscribe("totals", renderTotal);
-const changes = client.subscribe("changes", projectID, renderChange);
+const changes = client.subscribe("changes", "web-tools", (change) => console.log(change.title));
 ```
 
 The listener runs when each message is received.
@@ -134,24 +170,73 @@ Every operation has a server-side `AbortSignal`.
 Aborting a request rejects its promise and aborts the corresponding handler:
 
 ```ts
-const controller = new AbortController();
-const pending = client.request("wait", 10_000, { signal: controller.signal });
+import { connect, serve } from "@serve-tools/client-messaging";
 
-controller.abort();
-await pending;
-```
+interface CancelProtocol {
+	requests: { wait(milliseconds: number): string };
+	subscriptions: { totals(): number };
+}
 
-Subscriptions accept the same option and can also be ended through their disposable handle:
-
-```ts
-using updates = client.subscribe("updates", { project: "web-tools" }, render, {
-	signal: controller.signal,
-	onComplete: () => console.log("complete"),
-	onError: console.error,
+const channel = new MessageChannel();
+const server = serve<CancelProtocol>(channel.port1, {
+	requests: {
+		wait(milliseconds, { signal }) {
+			return new Promise<string>((resolve, reject) => {
+				const abort = () => {
+					clearTimeout(timer);
+					reject(signal.reason);
+				};
+				const timer = setTimeout(() => {
+					signal.removeEventListener("abort", abort);
+					resolve("finished");
+				}, milliseconds);
+				signal.addEventListener("abort", abort, { once: true });
+				if (signal.aborted) abort();
+			});
+		},
+	},
+	subscriptions: {
+		totals(_input, { emit }) {
+			let total = 0;
+			const timer = setInterval(() => emit(++total), 100);
+			return () => clearInterval(timer);
+		},
+	},
 });
+const client = connect<CancelProtocol>(channel.port2);
 
-updates.unsubscribe();
+try {
+	await client.ready;
+	const requestController = new AbortController();
+	const pending = client.request("wait", 10_000, { signal: requestController.signal });
+	requestController.abort();
+	try {
+		await pending;
+	} catch (error) {
+		if (error !== requestController.signal.reason) throw error;
+		console.log("Request cancelled");
+	}
+
+	// A fresh signal starts a separate operation; an aborted signal cannot be reused.
+	const subscriptionController = new AbortController();
+	const totals = client.subscribe("totals", console.log, {
+		signal: subscriptionController.signal,
+		onError: console.error,
+	});
+	await new Promise<void>((resolve) => setTimeout(resolve, 250));
+	subscriptionController.abort(); // Stops delivery and clears the server's interval.
+	totals.unsubscribe(); // Also safe after cancellation.
+} finally {
+	client.close();
+	server.close();
+	channel.port1.close();
+	channel.port2.close();
+}
 ```
+
+The request's expected abort rejection is caught; the independent subscription remains usable until its own signal aborts.
+A handler must pass its signal to cancellable work or listen for abort itself, as the timer above does.
+`unsubscribe()` is an alternative to aborting a subscription.
 
 A subscription cleanup returned by its handler runs once after completion, failure, cancellation, connection closure, or disposal.
 
@@ -207,30 +292,41 @@ A page restored from the cache must create a fresh worker connection and re-subs
 Do not call `connect()` again on the old port: its serving peer has already closed that protocol connection.
 
 ```ts
+// page.ts — uses the counter-worker.ts module from the opening example.
 import { SharedWorker } from "@serve-tools/client-messaging/scope/window";
+import type { CounterProtocol } from "./counter-worker.js";
 
-const openWorker = () =>
-	new SharedWorker<CounterProtocol>(new URL("./counter-worker.ts", import.meta.url), {
+const output = document.createElement("output");
+document.body.append(output);
+
+const mount = () => {
+	const worker = new SharedWorker<CounterProtocol>(new URL("./counter-worker.js", import.meta.url), {
 		name: "counter",
 		type: "module",
 	});
+	const totals = worker.client.subscribe("totals", (value) => {
+		output.value = String(value);
+	});
+	return () => {
+		totals.unsubscribe();
+		worker.client.close();
+		worker.port.close();
+	};
+};
 
-let worker = openWorker();
-let totals = worker.client.subscribe("totals", renderTotal);
-
+let dispose: (() => void) | undefined = mount();
 addEventListener("pagehide", () => {
-	totals.unsubscribe();
-	worker.client.close();
-	worker.port.close();
+	dispose?.();
+	dispose = undefined;
 });
-
 addEventListener("pageshow", (event) => {
-	if (event.persisted) {
-		worker = openWorker();
-		totals = worker.client.subscribe("totals", renderTotal);
-	}
+	if (event.persisted && !dispose) dispose = mount();
 });
 ```
+
+Keep both listeners registered across repeated cache restorations.
+Unlike a page-owned resource that can be suspended, these worker protocol connections are closed on every `pagehide`, including one with `persisted: true`.
+Shared transport adapters use the same pattern: create a new native `SharedWorker`, call their window `connect()` with its new port, and restore subscriptions inside `mount()`.
 
 When explicit resource management fits the surrounding code, clients and subscriptions can instead be scoped with `using`.
 Resources are disposed in reverse declaration order, so the subscription closes before its client:

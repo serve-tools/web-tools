@@ -1,17 +1,26 @@
 # @serve-tools/signal-dom
 
-The `@serve-tools/signal-dom` package provides a surgical templating library for operating on real DOM nodes using a plain functional syntax.
+Build real DOM nodes with plain functions and let signals update just the bound text, attribute, or property.
+No component base class or rendering loop is required.
 
 ```ts
 import { Signal } from "@serve-tools/signal";
-import { html, text } from "@serve-tools/signal-dom";
+import { dispose, html, text } from "@serve-tools/signal-dom";
 
 const greeting = new Signal.State("Hello");
-const $greeting = html("p", text(greeting));
+const paragraph = html("p", text(greeting))(document.body);
+// The body now contains <p>Hello</p>.
 
-$greeting(document.body); // appends <p>Hello</p> to the body
-greeting.set("Ahoy"); // updates the paragraph to <p>Ahoy</p>
+addEventListener("pagehide", (event) => {
+	if (!event.persisted) dispose(paragraph);
+});
+
+greeting.set("Ahoy");
+await Promise.resolve(); // The same paragraph now contains "Ahoy".
 ```
+
+The paragraph and its text node keep their identity while the bound value changes.
+Dispose a reactive subtree when you permanently retire it; removing nodes alone does not stop their bindings.
 
 ## Install
 
@@ -50,7 +59,7 @@ const $svg = svg("svg",
 Calling the returned function mounts live DOM directly:
 
 ```ts
-$svg(document.body)
+$svg(document.body);
 ```
 
 ## Reactive bindings
@@ -75,11 +84,11 @@ If an attribute is a signal, the DOM updates automatically when it changes:
 ```ts
 const viewBox = new Signal.State("0 0 16 16");
 
-const $svg = svg("svg", attrs({ viewBox }), svg("circle", attrs({ cx: 8, cy: 8, r: 6 })))
+const $svg = svg("svg", attrs({ viewBox }), svg("circle", attrs({ cx: 8, cy: 8, r: 6 })));
 
 // ... later that day ...
 
-viewBox.set("0 0 8 8")
+viewBox.set("0 0 8 8");
 ```
 
 A `group()` primitive conditionally presents a persistent group of nodes and handles nested DOM updates cleanly.
@@ -292,6 +301,13 @@ const badButton = html(
 The package is an ES module for browser documents with the standard DOM APIs used by each selected helper.
 Constructed stylesheets, `attachInternals()`, shadow DOM, SVG, and MathML still require corresponding browser support.
 The package creates real nodes eagerly and does not provide server-side rendering or hydration.
+
+## Choose a UI layer
+
+Use this package when you want direct DOM construction, reusable real nodes, and explicit binding ownership.
+Choose the optional [tagged-template entrypoint](#tagged-templates) when HTML-shaped descriptions suit your view.
+Use [`@serve-tools/lit-signals`](../../lit/signals/) for Lit components, decorators, and keyed reactive rows.
+For effects against other imperative APIs, use [`@serve-tools/signal-effect`](../../signals/effect/).
 
 ## Agent Skill
 

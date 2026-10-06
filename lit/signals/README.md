@@ -1,31 +1,29 @@
 # @serve-tools/lit-signals
 
-The `@serve-tools/lit-signals` package provides fine-grained TC39 Signal bindings and signal-backed reactive decorators for [Lit](https://lit.dev/).
-Atomic updates change one template part without requesting a complete component update.
+Build a working Lit counter with a signal and a click handler.
+Direct Signal substitutions update their individual template parts without rerunning the component's complete render.
 
 ```ts
-import { html, SignalElement } from "@serve-tools/lit-signals";
-import { computed, property } from "@serve-tools/lit-signals/decorators";
+import { html, Signal, SignalElement } from "@serve-tools/lit-signals";
 
 class SignalCounter extends SignalElement {
-	@property()
-	accessor count = 0;
-
-	@computed
-	get doubled() {
-		return this.count * 2;
-	}
+	count = new Signal.State(0);
+	doubled = new Signal.Computed(() => this.count.get() * 2);
 
 	render() {
 		return html`
-			<button @click=${() => ++this.count}>Increment</button>
+			<button @click=${() => this.count.set(this.count.get() + 1)}>Increment</button>
 			<p>${this.count} doubled is ${this.doubled}.</p>
 		`;
 	}
 }
 
 customElements.define("signal-counter", SignalCounter);
+document.body.append(document.createElement("signal-counter"));
 ```
+
+Clicking Increment changes both numbers in the existing paragraph.
+The package integrates with Lit's connection lifecycle, releasing observations while a component is disconnected.
 
 ## Install
 
@@ -565,6 +563,40 @@ The package is an ES module for Lit 3.3 and re-exports its compatible signal run
 `@style` requires a shadow render root with constructed stylesheet support.
 `@operation` requires a Lit `ReactiveControllerHost`; direct accessor reads require `SignalElement` or `SignalWatcher`, while callback-form fine-grained directives work with plain `LitElement`.
 The decorators require the current standard decorator proposal and auto-accessor support from the application's compiler and runtime.
+
+## Use plain properties with decorators
+
+Prefer property-like syntax? Standard decorators and auto-accessors connect the same Signal graph to assignments and memoized getters.
+Compile this alternative component with standard decorator support:
+
+```ts
+import { html, SignalElement, watch } from "@serve-tools/lit-signals";
+import { computed, property } from "@serve-tools/lit-signals/decorators";
+
+class DecoratedCounter extends SignalElement {
+	@property()
+	accessor count = 0;
+
+	@computed
+	get doubled() {
+		return this.count * 2;
+	}
+
+	render() {
+		return html`
+			<button @click=${() => ++this.count}>Increment</button>
+			<p>${watch(() => this.count)} doubled is ${watch(() => this.doubled)}.</p>
+		`;
+	}
+}
+
+customElements.define("decorated-counter", DecoratedCounter);
+document.body.append(document.createElement("decorated-counter"));
+```
+
+The `watch()` boundaries keep both interpolations independently reactive.
+Reading plain accessors directly from `render()` instead tracks a complete component update.
+Use this package for Lit components and lifecycle ownership; use [`@serve-tools/signal-dom`](../../client-signals/dom/) for direct functional DOM construction.
 
 ## Agent Skill
 

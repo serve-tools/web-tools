@@ -1,19 +1,52 @@
 # @serve-tools/client
 
-The `@serve-tools/client` package provides namespaced access to the Serve Tools client libraries without flattening unrelated APIs into one export surface.
+Use several browser tools through one package: typed storage, keyboard shortcuts, context, databases, messaging, routing, and realtime clients.
+Each namespace keeps the same implementation and types as its focused package.
+
+Choose a [focused package](#included-packages) when you need one capability.
+Choose `@serve-tools/client` when your application combines several and you prefer one dependency with grouped imports.
+This is a convenience facade; it does not add another client runtime.
+
+## Try it: save a theme with a keyboard shortcut
+
+Press Command+J on macOS or Control+J elsewhere to toggle a saved theme.
+The initial value is restored from local storage, and changes from another same-origin tab update this page too.
 
 ```ts
-import { context, keyboard } from "@serve-tools/client";
+import { keyboard, storage } from "@serve-tools/client";
 
-const themeContext = context.createContext<"light" | "dark">(Symbol("theme"));
-const saveChord = keyboard.getKeyChordLabel("Mod+S");
+const preferences = new storage.Storage<{ theme: "light" | "dark" }>();
+const controller = new AbortController();
+const renderTheme = () => {
+	document.documentElement.dataset.theme = preferences.get("theme") ?? "light";
+};
+
+renderTheme();
+preferences.subscribe("theme", renderTheme, { signal: controller.signal });
+window.addEventListener("keydown", (event) => {
+	if (!keyboard.matchKeyChord("Mod+J", event)) return;
+	event.preventDefault();
+	preferences.set("theme", preferences.get("theme") === "dark" ? "light" : "dark");
+}, { signal: controller.signal });
+
+export const disposeThemeShortcut = () => controller.abort();
+
+window.addEventListener("pagehide", (event) => {
+	if (event.persisted) return;
+	disposeThemeShortcut();
+}, { signal: controller.signal });
 ```
 
-Each namespace is also available as a focused subpath:
+Style `[data-theme="dark"]` in your application CSS.
+Call `disposeThemeShortcut()` when this feature is retired to remove its listeners and storage subscription.
+The pagehide handler preserves them when the browser suspends this page in its back/forward cache.
+Browser storage can throw security or quota errors; see the [storage documentation](../storage/) for its full contract.
+
+The same operations are available as focused imports after installing this facade:
 
 ```ts
-import { createContext } from "@serve-tools/client/context";
-import { getKeyChordLabel } from "@serve-tools/client/keyboard";
+import { matchKeyChord } from "@serve-tools/client/keyboard";
+import { Storage } from "@serve-tools/client/storage";
 ```
 
 ## Install
@@ -28,26 +61,30 @@ npm install @serve-tools/client
 import * as client from "https://esm.run/@serve-tools/client";
 ```
 
-## Namespaces
+## Included packages
 
-| Namespace            | Focused subpath                           | Underlying package                        |
-| -------------------- | ----------------------------------------- | ----------------------------------------- |
-| `context`            | `@serve-tools/client/context`             | `@serve-tools/client-context`             |
-| `db`                 | `@serve-tools/client/db`                  | `@serve-tools/client-db`                  |
-| `eventSource`        | `@serve-tools/client/event-source`        | `@serve-tools/client-event-source`        |
-| `httpStream`         | `@serve-tools/client/http-stream`         | `@serve-tools/client-http-stream`         |
-| `input`              | `@serve-tools/client/input`               | `@serve-tools/client-input`               |
-| `interaction`        | `@serve-tools/client/interaction`         | `@serve-tools/client-interaction`         |
-| `keyboard`           | `@serve-tools/client/keyboard`            | `@serve-tools/client-keyboard`            |
-| `messaging`          | `@serve-tools/client/messaging`           | `@serve-tools/client-messaging`           |
-| `router`             | `@serve-tools/client/router`              | `@serve-tools/client-router`              |
-| `sharedEventSource`  | `@serve-tools/client/shared-event-source` | `@serve-tools/client-shared-event-source` |
-| `sharedWebsocket`    | `@serve-tools/client/shared-websocket`    | `@serve-tools/client-shared-websocket`    |
-| `sharedHttpStream`   | `@serve-tools/client/shared-http-stream`  | `@serve-tools/client-shared-http-stream`  |
-| `sharedWebtransport` | `@serve-tools/client/shared-webtransport` | `@serve-tools/client-shared-webtransport` |
-| `storage`            | `@serve-tools/client/storage`             | `@serve-tools/client-storage`             |
-| `websocket`          | `@serve-tools/client/websocket`           | `@serve-tools/client-websocket`           |
-| `webtransport`       | `@serve-tools/client/webtransport`        | `@serve-tools/client-webtransport`        |
+| Namespace            | Focused subpath                           | Underlying package                                                   |
+| -------------------- | ----------------------------------------- | -------------------------------------------------------------------- |
+| `context`            | `@serve-tools/client/context`             | [`@serve-tools/client-context`](../context/)                         |
+| `db`                 | `@serve-tools/client/db`                  | [`@serve-tools/client-db`](../db/)                                   |
+| `eventSource`        | `@serve-tools/client/event-source`        | [`@serve-tools/client-event-source`](../event-source/)               |
+| `httpStream`         | `@serve-tools/client/http-stream`         | [`@serve-tools/client-http-stream`](../http-stream/)                 |
+| `input`              | `@serve-tools/client/input`               | [`@serve-tools/client-input`](../input/)                             |
+| `interaction`        | `@serve-tools/client/interaction`         | [`@serve-tools/client-interaction`](../interaction/)                 |
+| `keyboard`           | `@serve-tools/client/keyboard`            | [`@serve-tools/client-keyboard`](../keyboard/)                       |
+| `messaging`          | `@serve-tools/client/messaging`           | [`@serve-tools/client-messaging`](../messaging/)                     |
+| `router`             | `@serve-tools/client/router`              | [`@serve-tools/client-router`](../router/)                           |
+| `sharedEventSource`  | `@serve-tools/client/shared-event-source` | [`@serve-tools/client-shared-event-source`](../shared-event-source/) |
+| `sharedWebsocket`    | `@serve-tools/client/shared-websocket`    | [`@serve-tools/client-shared-websocket`](../shared-websocket/)       |
+| `sharedHttpStream`   | `@serve-tools/client/shared-http-stream`  | [`@serve-tools/client-shared-http-stream`](../shared-http-stream/)   |
+| `sharedWebtransport` | `@serve-tools/client/shared-webtransport` | [`@serve-tools/client-shared-webtransport`](../shared-webtransport/) |
+| `storage`            | `@serve-tools/client/storage`             | [`@serve-tools/client-storage`](../storage/)                         |
+| `websocket`          | `@serve-tools/client/websocket`           | [`@serve-tools/client-websocket`](../websocket/)                     |
+| `webtransport`       | `@serve-tools/client/webtransport`        | [`@serve-tools/client-webtransport`](../webtransport/)               |
+
+The facade also includes [`@serve-tools/client-shared-db`](../shared-db/) through `@serve-tools/client/db/scope/window` and `@serve-tools/client/db/scope/shared-worker`.
+It shares the `db` family rather than adding a `sharedDb` namespace.
+The other client-category packages, [`@serve-tools/client-dom-fragment`](../dom-fragment/) and [`@serve-tools/client-realtime`](../realtime/), are separate dependencies and are not included.
 
 The root entrypoint exports namespaces rather than flattening their members, so similarly named operations retain their owning capability.
 Use a focused subpath when only one capability is needed.
@@ -166,7 +203,9 @@ Declare `@serve-tools/client-shared-websocket` as a direct dependency when impor
 ## Compatibility
 
 This package is an ES module for the browser environments supported by its underlying client packages.
-Importing the root entrypoint evaluates every namespace; focused subpaths let applications load a single capability directly.
+Importing the root entrypoint evaluates every namespace; focused subpaths evaluate only the selected capability and its dependencies.
+Installing the facade still installs all of its declared dependencies; choose a focused owning package to narrow installation as well.
+The facade makes no promise that a root import produces a smaller application bundle.
 
 ## Agent Skill
 

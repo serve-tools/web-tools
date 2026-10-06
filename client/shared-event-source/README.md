@@ -1,6 +1,6 @@
 # @serve-tools/client-shared-event-source
 
-`@serve-tools/client-shared-event-source` shares one native EventSource connection across pages through a `SharedWorker`.
+Receive live events in several tabs while sharing one native EventSource connection in a SharedWorker.
 
 ```ts
 // events.worker.ts
@@ -16,9 +16,28 @@ export const eventSource = listen<{
 import { connect } from "@serve-tools/client-shared-event-source/scope/window";
 
 const worker = new SharedWorker(new URL("./events.worker.js", import.meta.url), { type: "module" });
-using client = connect<{ presence: { online: number } }>(worker.port);
-using presence = client.subscribe("presence", ({ data, lastEventId }) => console.log(lastEventId, data.online));
+const client = connect<{ presence: { online: number } }>(worker.port);
+const presence = client.subscribe("presence", ({ data, lastEventId }) => console.log(lastEventId, data.online));
+
+addEventListener("pagehide", () => {
+	presence.unsubscribe();
+	client.close();
+	worker.port.close();
+});
 ```
+
+Run the worker setup once, then run the page code in two same-origin tabs using the same worker URL and name.
+Both tabs use one native event feed; each tab retains its own client and subscription.
+The example's presence event carries an online count and is printed by each interested page.
+The endpoint must serve a native server-sent event feed, with named `presence` events and JSON data such as `{ "online": 3 }`.
+Declared TypeScript types do not validate incoming values.
+
+Next, subscribe to another named event while the browser handles native EventSource reconnection.
+Use the [direct client](../event-source/) when each page should own its connection.
+Closing a page client leaves other tabs active; the page owner must also close its `MessagePort` when finished.
+
+The page connection closes on every `pagehide`, including when entering the back/forward cache.
+On a persisted `pageshow`, create a fresh worker port, client, and subscriptions using the [mount and restore recipe](../messaging/#backforward-cache).
 
 ## Install
 

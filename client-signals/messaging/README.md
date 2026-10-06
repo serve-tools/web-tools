@@ -1,55 +1,58 @@
 # @serve-tools/signal-messaging
 
-The `@serve-tools/signal-messaging` package provides typed messaging clients and servers together with explicit, read-only subscription Signal state.
+Call typed operations over a message port and render the latest subscription value as a signal.
+This complete browser example uses a `MessageChannel`; the same protocol can cross a worker boundary.
 
 ```ts
-import { Signal } from "@serve-tools/signal";
-import { observe } from "@serve-tools/signal-messaging";
-import { SharedWorker, type Client } from "@serve-tools/signal-messaging/scope/window";
+import { effect } from "@serve-tools/signal-effect";
+import { connect, observe, serve } from "@serve-tools/signal-messaging";
 
-type CounterProtocol = {
-	subscriptions: {
-		totals(): number;
-	};
+type Protocol = {
+	requests: { greet(name: string): string };
+	subscriptions: { clock(): number };
 };
-
-const worker = new SharedWorker<CounterProtocol>(new URL("./counter-worker.js", import.meta.url), { type: "module" });
-const client: Client<CounterProtocol> = worker.client;
-const totals = observe(client, "totals");
-const totalText = new Signal.Computed(() => {
-	const state = totals.get();
-
-	switch (state.status) {
-		case "pending":
-			return "Waiting for the first total";
-		case "ready":
-			return `Total: ${state.value}`;
-		case "complete":
-			return "The worker completed the subscription";
-		case "error":
-			return `Failed: ${String(state.error)}`;
-	}
+const { port1, port2 } = new MessageChannel();
+const server = serve<Protocol>(port1, {
+	requests: { greet: (name) => `Hello, ${name}!` },
+	subscriptions: {
+		clock: (_input, { emit }) => {
+			emit(Date.now());
+			const timer = setInterval(() => emit(Date.now()), 1_000);
+			return () => clearInterval(timer);
+		},
+	},
+});
+const client = connect<Protocol>(port2);
+const clock = observe(client, "clock");
+const output = document.createElement("output");
+document.body.append(output);
+const stop = effect(() => {
+	const state = clock.get();
+	output.value = state.status === "ready" ? new Date(state.value).toLocaleTimeString()
+		: state.status === "error" ? `Failed: ${String(state.error)}` : state.status;
 });
 
-// Bind totalText to a signal-aware UI; it updates as totals changes.
-
-addEventListener(
-	"pagehide",
-	() => {
-		totals.dispose();
-		client.close();
-		worker.port.close();
-	},
-	{ once: true },
-);
+addEventListener("pagehide", () => {
+	stop();
+	clock.dispose();
+	client.close();
+	server.close();
+	port1.close();
+	port2.close();
+});
 ```
 
+The clock output updates every second; canceling the subscription clears the server's timer.
+Install `@serve-tools/signal-effect` as well for this rendering recipe.
 Finite requests remain Promise-based.
+
+This first example owns one active page connection and retires it on `pagehide`.
+Cached-page restoration requires a fresh client and observation; follow the [back/forward-cache reconnection recipe](../../client/messaging/#backforward-cache).
 
 ## Install
 
 ```shell
-npm install @serve-tools/signal @serve-tools/signal-messaging
+npm install @serve-tools/signal @serve-tools/signal-messaging @serve-tools/signal-effect
 ```
 
 #### Import from a CDN
@@ -85,31 +88,38 @@ Use the messaging client's `subscribe()` directly when every occurrence must be 
 ## Typed inputs and options
 
 Declare subscriptions as callable signatures whose first parameter, when present, is their input and whose return type is each emitted value.
-A subscription-only protocol may omit `requests` entirely, as `CounterProtocol` does above.
-Use the generic messaging `Client<Protocol>` name for connected clients, including clients exposed by worker helpers.
-
-`observe()` derives an input-bearing subscription's `input` from `Parameters<Signature>[0]`.
-It derives the observation value from the signature's raw `ReturnType<Signature>` without Promise unwrapping.
-Zero-parameter signatures have no input.
-
-Subscriptions with input accept one options object containing a required `input` property:
+A subscription-only protocol may omit `requests` entirely.
+For example, this separate message-channel protocol reports progress for a named job:
 
 ```ts
-const progress = observe(client, "progress", {
-	input: { job: "build" },
-	signal: controller.signal,
+import { connect, observe, serve } from "@serve-tools/signal-messaging";
+
+type Jobs = { subscriptions: { progress(input: { job: string }): string } };
+const { port1, port2 } = new MessageChannel();
+const server = serve<Jobs>(port1, {
+	subscriptions: { progress: ({ job }, { emit }) => emit(`${job}: ready`) },
 });
+const client = connect<Jobs>(port2);
+const controller = new AbortController();
+const progress = observe(client, "progress", { input: { job: "build" }, signal: controller.signal });
+
+// When this feature is permanently retired:
+function disposeJobs() {
+	controller.abort();
+	progress.dispose();
+	client.close();
+	server.close();
+	port1.close();
+	port2.close();
+}
 ```
 
-No-input subscriptions accept an optional object with `signal` and `transfer`:
-
-```ts
-const totals = observe(client, "totals", { signal: controller.signal });
-```
-
-Using one options shape preserves runtime distinction between an input value and options, including when the declared input includes `undefined`.
-Protocol declarations and their inferred observation types exist only at compile time.
-They do not change messaging wire behavior.
+The observation becomes `{ status: "ready", value: "build: ready" }` after message delivery.
+Call `disposeJobs()` when the feature is retired.
+`observe()` derives the input from `Parameters<Signature>[0]` and the value from the raw `ReturnType<Signature>` without Promise unwrapping.
+Zero-parameter signatures, such as the first example's `clock`, take only an optional cancellation/transfer options object.
+Using one options shape preserves the runtime distinction between input values and options, including when the declared input includes `undefined`.
+Protocol declarations and their inferred observation types exist only at compile time; they do not validate wire values.
 
 ## Lifecycle
 
@@ -135,6 +145,21 @@ The observation does not own or close its messaging client, worker, or message p
 The package is an ES module for runtimes supported by `@serve-tools/client-messaging` and a compatible `@serve-tools/signal` installation.
 Browser-specific worker helpers remain isolated in the matching signal package scope entrypoints.
 Explicit resource management requires `Symbol.dispose` support or a compatible polyfill; `dispose()` is always available.
+
+## Send a request through the same connection
+
+The server above also handles `greet`.
+A one-off request produces a typed Promise while the clock observation keeps streaming:
+
+```ts
+void client.request("greet", "Ada").then(console.log, console.error); // "Hello, Ada!"
+```
+
+## Choose a messaging layer
+
+Use [`@serve-tools/client-messaging`](../../client/messaging/) for typed requests and every subscription occurrence.
+Use this adapter for the latest subscription state in a reactive view.
+For a complete shared-worker setup, follow the underlying client's [worker entrypoints](../../client/messaging/#usage); `observe()` accepts that connected client unchanged.
 
 ## Agent Skill
 

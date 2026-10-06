@@ -23,6 +23,21 @@ export default defineConfig({
 });
 ```
 
+## What this enables
+
+Point the plugin at an existing TypeScript project with `tsconfig.json` and an application entrypoint.
+For example, an imported source module can contain:
+
+```ts
+export const greeting: string = "Ready to build";
+console.log(greeting);
+```
+
+The host receives compiled JavaScript and source maps without requiring a separate disk-emitted JavaScript build first.
+Changing the declaration to `export const greeting: string = 42` produces a compiler diagnostic instead of silently passing through the type mismatch.
+Project references let dependent workspace projects participate in the same compilation.
+This package is experimental; the required TypeScript and host versions above are part of its compatibility boundary.
+
 ## API
 
 `typescript(options?)` returns a Vite/Rolldown-compatible plugin immediately.

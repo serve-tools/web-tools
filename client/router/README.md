@@ -1,9 +1,39 @@
 # @serve-tools/client-router
 
-`@serve-tools/client-router` combines unnamed strongly typed route declarations with the browser Navigation API.
+Declare typed paths and search values once, then match and navigate with the browser Navigation API.
+`@serve-tools/client-router` uses the same route declarations for both directions.
 By default, it intercepts destinations matched by the installed route array and preserves native `committed` and `finished` promises.
 The router uses its current browser realm's `navigation`, `document`, `URLPattern`, and `reportError` globals.
 Install any missing Navigation API or `URLPattern` polyfills globally before creating a router; compatibility fallbacks are never bundled.
+
+## Render typed route parameters
+
+Describe a path once and use it for both matching and navigation.
+This example requires the browser Navigation API and `URLPattern`, or separately installed global polyfills.
+
+```ts
+import { codec, createRouter, route } from "@serve-tools/client-router";
+
+const home = route("/");
+const project = route("/projects/:projectId", { params: { projectId: codec.integer() } });
+const output = document.createElement("output");
+document.body.append(output);
+const router = createRouter({
+	routes: [home, project],
+	render({ current }) { output.value = JSON.stringify(current.match.params); },
+});
+
+await router.start();
+await router.navigate(project, { params: { projectId: 42 } }).finished;
+// The URL ends in /projects/42; the output shows the decoded projectId.
+
+addEventListener("pagehide", (event) => {
+	if (!event.persisted) router.dispose();
+});
+```
+
+Next, add optional or repeated search values with codecs, then load data with the navigation's cancellation signal.
+Native `committed` and `finished` promises let you wait for the phase your application needs.
 
 ## Install
 

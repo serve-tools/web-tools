@@ -1,12 +1,14 @@
 # @serve-tools/ponyfill-prioritized-task-scheduling
 
+Queue work by urgency and await its result, with cancellation and reprioritization when requirements change.
 The `@serve-tools/ponyfill-prioritized-task-scheduling` package implements the [Prioritized Task Scheduling API](https://wicg.github.io/scheduling-apis/) without modifying the global environment.
 It provides a module-scoped scheduler, task controls, dynamic priorities, abortable delays, and prioritized continuations in windows and workers.
 
 ```ts
 import { scheduler } from "@serve-tools/ponyfill-prioritized-task-scheduling";
 
-await scheduler.postTask(() => updateVisibleContent(), { priority: "user-blocking" });
+const title = await scheduler.postTask(() => "Ready to edit", { priority: "user-blocking" });
+console.log(title); // “Ready to edit”, after the scheduled callback runs.
 ```
 
 ## Install
@@ -82,7 +84,7 @@ The fallback cannot communicate priority to the browser or coordinate with tasks
 
 The exported scheduler and task controls always use this package's implementation, even when native globals exist.
 No import installs or replaces `globalThis.scheduler`, `globalThis.TaskController`, `globalThis.TaskSignal`, or `globalThis.TaskPriorityChangeEvent`.
-Use `@serve-tools/polyfill-prioritized-task-scheduling` when native identity or global installation is required.
+Use [`@serve-tools/polyfill-prioritized-task-scheduling`](../../polyfills/prioritized-task-scheduling/) when native identity or global installation is required.
 
 ## Compatibility
 

@@ -1,22 +1,35 @@
 # @serve-tools/signal-storage
 
-The `@serve-tools/signal-storage` package adds signal-backed watches to the typed, observable Web Storage client from `@serve-tools/client-storage`.
+Persist a typed preference and make the UI follow it, including changes from another tab.
+`watch()` is a read-only signal; writes still use the familiar storage client.
 
 ```ts
+import { effect } from "@serve-tools/signal-effect";
 import { SignalStorage } from "@serve-tools/signal-storage";
 
 const storage = new SignalStorage<{ theme: "dark" | "light" }>();
 const theme = storage.watch("theme");
+const stop = effect(() => {
+	document.documentElement.dataset.theme = theme.get() ?? "light";
+});
 
-storage.set("theme", "dark");
+storage.set("theme", "dark"); // Persists the choice and schedules the UI update.
 
-console.log(theme.get()); // "dark"
+addEventListener("pagehide", (event) => {
+	if (event.persisted) return;
+
+	stop();
+	theme.dispose();
+});
 ```
+
+Open another tab on the same origin and change `theme` through this wrapper there: this page follows its native `storage` event automatically.
+The effect renders the watched value; Signal-aware UI libraries can consume the same watch directly.
 
 ## Install
 
 ```shell
-npm install @serve-tools/signal @serve-tools/signal-storage
+npm install @serve-tools/signal @serve-tools/signal-storage @serve-tools/signal-effect
 ```
 
 #### Import from a CDN
@@ -85,7 +98,9 @@ Writes made through `set` or `delete` are committed before callback errors surfa
 ```ts
 const controller = new AbortController();
 
-storage.subscribe("token", updateAuthentication, { signal: controller.signal });
+storage.subscribe("token", () => {
+	console.log("Current token:", storage.get("token"));
+}, { signal: controller.signal });
 controller.abort();
 ```
 
@@ -135,6 +150,12 @@ Disposal is idempotent; a disposed signal retains its last observed value, and l
 The package is an ES module for browser windows with Web Storage and a compatible `@serve-tools/signal` installation.
 Storage availability, persistence, quota, and privacy behavior remain controlled by the browser.
 Explicit resource management requires `Symbol.dispose` support or a compatible polyfill; `dispose()` is always available.
+
+## Choose a storage API
+
+Use [`@serve-tools/client-storage`](../../client/storage/) for typed reads, writes, and every change occurrence without Signals.
+Use this adapter when a view needs the latest value.
+For structured records and queries, use [`@serve-tools/signal-db`](../db/) instead.
 
 ## Agent Skill
 

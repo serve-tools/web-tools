@@ -1,22 +1,68 @@
 # @serve-tools/signal-shared-db
 
-The `@serve-tools/signal-shared-db` package provides Signal-backed reactive queries over a `SharedWorker`-coordinated IndexedDB client.
+Keep IndexedDB queries current across tabs without broadcasting changes yourself.
+One shared worker owns the database connection; committed writes from any connected page refresh the other pages' watched queries.
+
+Compile these two TypeScript modules in the same directory:
 
 ```ts
+// database-worker.ts
+import type { SignalDB } from "@serve-tools/signal-shared-db";
+import { listen } from "@serve-tools/signal-shared-db/shared-worker";
+
+export type AppDatabase = {
+	notes: SignalDB.Store<string, string>;
+};
+
+listen<AppDatabase>("shared-notes-demo", {
+	version: 1,
+	upgrade(database, { oldVersion }) {
+		if (oldVersion < 1) database.createObjectStore("notes");
+	},
+});
+```
+
+```ts
+// page.ts
+import { effect } from "@serve-tools/signal-effect";
 import { SignalDB } from "@serve-tools/signal-shared-db";
 import type { AppDatabase } from "./database-worker.js";
 
 const worker = new SharedWorker(new URL("./database-worker.js", import.meta.url), { type: "module" });
 const db = SignalDB.connect<AppDatabase>(worker.port);
-const user = db.watch("users", "one");
+const note = db.watch("notes", "welcome");
+const output = document.createElement("output");
+document.body.append(output);
+const stop = effect(() => {
+	const state = note.get();
+	output.value = state.status === "ready" ? (state.value ?? "No note yet")
+		: state.status === "pending" ? "Loading…" : `Failed: ${String(state.error)}`;
+});
+const button = document.createElement("button");
+button.textContent = "Save greeting for every tab";
+button.addEventListener("click", () => {
+	void db.put("notes", `Hello at ${new Date().toLocaleTimeString()}`, { key: "welcome" }).catch(console.error);
+});
+document.body.append(button);
 
-user.get(); // { status: "pending" }
+addEventListener("pagehide", () => {
+	stop();
+	note.dispose();
+	db.close();
+	worker.port.close();
+});
 ```
+
+Open two tabs and click the button in one: both outputs refresh after the committed write.
+Install `@serve-tools/signal-effect` as well for this rendering recipe.
+
+This first example owns one active page connection and retires it on `pagehide`.
+Cached-page restoration requires a fresh client and observation; follow the [back/forward-cache reconnection recipe](../../client/messaging/#backforward-cache).
 
 ## Install
 
 ```shell
-npm install @serve-tools/signal @serve-tools/signal-shared-db
+npm install @serve-tools/signal @serve-tools/signal-shared-db @serve-tools/signal-effect
 ```
 
 #### Import from a CDN
@@ -25,9 +71,9 @@ npm install @serve-tools/signal @serve-tools/signal-shared-db
 import * as signalSharedDb from "https://esm.run/@serve-tools/signal-shared-db";
 ```
 
-## Connect to a typed shared database
+## Add records and indexes
 
-Define the database and listen for connections in a shared-worker entrypoint:
+For a separate user database, define records and indexes in its shared-worker entrypoint:
 
 ```ts
 import type { SignalDB } from "@serve-tools/signal-shared-db";
@@ -57,7 +103,8 @@ const server = listen<{
 export type AppDatabase = listen.SchemaType<typeof server>;
 ```
 
-Connect from each window and wrap the shared client with `SignalDB.connect()` as shown above.
+For the user-query examples below, connect a page to this worker with `SignalDB.connect<AppDatabase>(worker.port)` and retain that connection as `db`.
+The earlier notes connection has a different schema.
 
 ## Reactive queries
 
@@ -197,6 +244,12 @@ The remote client intentionally exposes point operations rather than native tran
 The package is an ES module for browser windows and shared workers that provide IndexedDB, `SharedWorker`, `MessagePort`, structured clone, and `AbortSignal`.
 It does not install browser APIs in Node.js.
 Explicit resource management requires `Symbol.dispose` support or a compatible polyfill; `close()` and `dispose()` are always available.
+
+## Choose database ownership
+
+Use [`@serve-tools/signal-db`](../db/) for queries owned by a single connection.
+Use this package for coordinated change subscriptions across tabs.
+Use [`@serve-tools/client-shared-db`](../../client/shared-db/) for the same shared-worker database with finite Promise-based reads and explicit change subscriptions.
 
 ## Agent Skill
 

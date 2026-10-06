@@ -1,19 +1,32 @@
 # @serve-tools/signal-event-target
 
-The `@serve-tools/signal-event-target` package observes current `EventTarget` state as read-only TC39 Signals.
+Turn browser state into a signal and use it directly in reactive UI.
+The adapter reads the initial state immediately, then follows matching events.
 
 ```ts
-import { EventTargetSignal } from "@serve-tools/signal-event-target";
+import { effect } from "@serve-tools/signal-effect";
+import { MatchMediaSignal } from "@serve-tools/signal-event-target";
 
-const visibility = new EventTargetSignal(document, "visibilitychange", () => document.visibilityState);
+const reducedMotion = new MatchMediaSignal("(prefers-reduced-motion: reduce)");
+const stop = effect(() => {
+	document.documentElement.dataset.motion = reducedMotion.get() ? "reduced" : "full";
+});
 
-visibility.get(); // "visible" or "hidden"
+addEventListener("pagehide", (event) => {
+	if (event.persisted) return;
+
+	stop();
+	reducedMotion.dispose();
+});
 ```
+
+Changing the system motion preference updates the page without your application managing a media-query listener.
+The effect owns the imperative DOM update; Signal-aware templates can consume the same observation directly.
 
 ## Install
 
 ```shell
-npm install @serve-tools/signal @serve-tools/signal-event-target
+npm install @serve-tools/signal @serve-tools/signal-event-target @serve-tools/signal-effect
 ```
 
 #### Import from a CDN
@@ -28,12 +41,14 @@ import * as signalEventTarget from "https://esm.run/@serve-tools/signal-event-ta
 It presents that state through a read-only `Signal.Computed` façade, so consumers cannot replace source-owned state with `set()`.
 
 ```ts
-const online = new EventTargetSignal(window, "online", () => navigator.onLine);
+import { EventTargetSignal } from "@serve-tools/signal-event-target";
 
-online.get();
+const visibility = new EventTargetSignal(document, "visibilitychange", () => document.visibilityState);
 
-online.refresh(); // synchronously reread navigator.onLine
-online.dispose(); // stop observing and freeze the last value
+visibility.get(); // "visible" or "hidden"
+
+visibility.refresh(); // Synchronously reread document.visibilityState.
+visibility.dispose(); // Stop observing and freeze the last value.
 ```
 
 The callback should read durable current state from the target or related platform object.
@@ -43,6 +58,8 @@ Use `addEventListener()` directly when every occurrence or event payload must be
 Pass `equals` to define the state invalidation boundary.
 
 ```ts
+import { EventTargetSignal } from "@serve-tools/signal-event-target";
+
 const selection = new EventTargetSignal(document, "selectionchange", () => document.getSelection()?.toString() ?? "", {
 	equals: (left, right) => left === right,
 });
@@ -100,6 +117,12 @@ Disposal and cancellation do not abort a caller-owned controller or affect indep
 The package is an ES module for modern runtimes with `EventTarget` and a compatible `@serve-tools/signal` installation.
 `MatchMediaSignal` additionally requires the browser `matchMedia()` and `MediaQueryList` APIs.
 Explicit resource management requires `Symbol.dispose` support or a compatible polyfill; `dispose()` is always available.
+
+## Choose state or occurrences
+
+Use this package for durable current state such as visibility, media-query matches, or selection text.
+Use native `addEventListener()` when every click, message, or other occurrence matters.
+To bind signals to DOM text, attributes, and properties with view-owned cleanup, use [`@serve-tools/signal-dom`](../dom/).
 
 ## Agent Skill
 

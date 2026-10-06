@@ -18,7 +18,26 @@ npm install @serve-tools/realtime-protocol
 import * as realtimeProtocol from "https://esm.run/@serve-tools/realtime-protocol";
 ```
 
-## Encode and validate a message
+## Preserve structured values
+
+Use this foundation directly when you need protocol diagnostics or a new transport adapter.
+Its serializer handles values that JSON cannot represent faithfully:
+
+```ts
+import { deserialize, serialize } from "@serve-tools/realtime-protocol";
+
+const original = new Map([["samples", new Float32Array([0.25, 0.5, 1])]]);
+const restored = deserialize(serialize(original));
+
+if (restored instanceof Map) {
+	console.log(restored.get("samples")); // Float32Array [0.25, 0.5, 1]
+}
+```
+
+Application code using the paired transports gets this serialization automatically.
+For untrusted bytes, apply the decoding limits and message validation described below.
+
+## Advanced: inspect a wire message
 
 ```ts
 import { deserialize, isClientMessage, protocol, serialize } from "@serve-tools/realtime-protocol";

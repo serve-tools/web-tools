@@ -1,6 +1,6 @@
 {
 	"name": "@serve-tools/polyfill-report-error",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"description": "Implements reportError with global mutation",
 	"keywords": [
 		"browser",
@@ -47,6 +47,6 @@
 		"typecheck": "npm run build --workspace @serve-tools/ponyfill-report-error && tsc --project tsconfig.json --noEmit && tsc --project tsconfig.test.json"
 	},
 	"dependencies": {
-		"@serve-tools/ponyfill-report-error": "^0.1.2"
+		"@serve-tools/ponyfill-report-error": "^0.1.3"
 	}
 }

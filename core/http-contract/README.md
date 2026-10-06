@@ -22,7 +22,8 @@ Your application selects and installs its own Standard Schema-compatible validat
 
 ## First endpoint
 
-This example uses Zod, installed by the application, to serve and call one fixed endpoint.
+Start with a health endpoint: one schema validates server output, and the browser gets its exact response type without shipping the validator.
+This example uses Zod; install it with `npm install zod` alongside this package.
 Other Standard Schema validators work without changing the HTTP API.
 
 ```ts

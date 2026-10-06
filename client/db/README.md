@@ -1,6 +1,7 @@
 # @serve-tools/client-db
 
-The `@serve-tools/client-db` package provides typed, Promise-based IndexedDB operations, transactions, and paged scans.
+Save browser data with typed `await` calls, commit several changes atomically, and iterate large stores in bounded pages.
+`@serve-tools/client-db` keeps IndexedDB's storage model while replacing request callbacks with promises.
 
 ```ts
 import { DB } from "@serve-tools/client-db";
@@ -18,6 +19,13 @@ console.log(await db.get("notes", "welcome")); // "Hello"
 ```
 
 `DB` adds promises, cancellation, schema-aware operations, paged async iteration, and explicit resource management to the browser's IndexedDB storage model.
+
+Store a note with ordinary `await` calls; writes resolve after the transaction commits.
+The upgrade creates the store on the first run, while the type describes its values and keys.
+The connection closes when its `await using` scope ends.
+
+Next, use a callback transaction to change several stores atomically, or `for await` to scan records in bounded pages without holding a transaction open during consumer work.
+Use [SharedDB](../shared-db/) for coordinated changes across tabs, or [SignalDB](../../client-signals/db/) for live query state.
 
 ## Install
 

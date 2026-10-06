@@ -1,6 +1,6 @@
 # @serve-tools/server-realtime
 
-`@serve-tools/server-realtime` is the sans-I/O request and subscription server shared by the Serve Tools realtime transports.
+`@serve-tools/server-realtime` is an advanced foundation for building transport adapters with typed requests, subscriptions, and cancellation.
 It maps complete binary messages to typed handlers without owning a socket, stream, or HTTP exchange.
 
 ## Install
@@ -17,13 +17,17 @@ import * as serverRealtime from "https://esm.run/@serve-tools/server-realtime";
 
 The package root uses web APIs and can run in a browser; hosting a network server requires a server runtime.
 
-Most servers should use `@serve-tools/server-http-stream`, `@serve-tools/server-websocket`, or `@serve-tools/server-webtransport`.
+For an application server, start with the [HTTP stream](../http-stream/), [WebSocket](../websocket/), or [WebTransport](../webtransport/) package.
 Use this package to implement another adapter.
 
-## Build an adapter
+## Advanced: build a transport adapter
+
+Try the connection core without a network server: send one encoded request and read its encoded response.
+The byte callbacks are the adapter boundary; a network adapter replaces the in-memory `send()` callback and feeds incoming messages to `receive()`.
 
 ```ts
 import { createConnection, type Handlers } from "@serve-tools/server-realtime";
+import { deserialize, protocol, serialize } from "@serve-tools/realtime-protocol";
 
 interface Protocol {
 	requests: { identity(): string };
@@ -35,32 +39,34 @@ interface Session {
 }
 
 const handlers = {
-	requests: {
-		identity: (_input, { connection }) => connection.userID,
-	},
+	requests: { identity: (_input, { connection }) => connection.userID },
 	subscriptions: {
-		notices: (_input, { emit, signal }) => {
-			const off = source.listen(emit);
-			signal.addEventListener("abort", off, { once: true });
-			return off;
+		notices: (_input, { emit, complete }) => {
+			emit("Welcome");
+			complete();
 		},
 	},
 } satisfies Handlers<Protocol, Session>;
 
+const reply = Promise.withResolvers<unknown>();
 const connection = createConnection(
 	handlers,
 	{
-		send: (payload) => transport.send(payload),
-		close: (code, reason) => transport.close(code, reason),
-		bufferedAmount: () => transport.bufferedAmount,
+		send: (payload) => reply.resolve(deserialize(payload)),
+		close: (code, reason) => console.log("close transport", code, reason),
 	},
-	{ userID: "verified-user" },
+	{ userID: "local-demo" },
 );
 
-transport.onBinaryMessage(connection.receive);
-transport.onInvalidInput(connection.fail);
-transport.onClose(connection.disconnect);
+connection.receive(serialize([protocol, "request", 1, "identity", undefined]));
+console.log(await reply.promise); // [protocol, "resolve", 1, "local-demo"]
+connection.disconnect();
+await connection.closed;
 ```
+
+Install `@serve-tools/realtime-protocol` alongside this package to use the diagnostic serialization imports.
+A real adapter negotiates the protocol and verifies the session before constructing a connection.
+It forwards complete incoming binary messages to `connection.receive()`, invalid input to `connection.fail()`, and physical closure to `connection.disconnect()`.
 
 The core owns operation IDs, one abort signal per operation, duplicate-ID protection, cleanup, serialization, and graceful protocol closure.
 `receive()` expects one complete message; frame reliable byte streams with `@serve-tools/realtime-protocol/stream`.

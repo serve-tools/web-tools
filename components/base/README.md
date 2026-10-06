@@ -1,13 +1,13 @@
 # @serve-tools/base-components
 
 Base provides composable web components and a small base element for layouts backed by Signal DOM.
-This workspace is under development; [the implementation plan](design/plan.md) and [behavior matrix](design/coverage.md) distinguish planned coverage from verified functionality.
-No release has been authorized.
-The [Reve functional comparison](design/reve-parity.md) maps the styled design library to Base primitives and native HTML, with explicit convenience-feature gaps.
-The [component gallery](examples/index.html) covers all 38 tracked Base UI families and nine Base capability and styling examples.
-Six families use native HTML directly; an example is not a claim of complete Base UI behavior parity or completed manual accessibility evaluation.
-The [accessibility acceptance checklist](design/accessibility.md) covers Chrome, Firefox, and Safari; its manual screen-reader results remain unverified.
-The [template migration review](design/template-migration.md) records the current API, validation, measured performance, larger bundle, and remaining release decisions.
+Start with the [interactive component gallery](examples/index.html): choose a control, try it, then copy its markup, setup, and styling.
+Base is unstyled, so application CSS owns its appearance.
+This workspace is private and under development; use its local workspace examples rather than assuming an npm release is available.
+
+## Build a reactive control
+
+This TypeScript example creates a working counter with a native button.
 
 ```ts
 import { BaseElement } from "@serve-tools/base-components/base";
@@ -25,6 +25,30 @@ class CounterElement extends BaseElement {
 customElements.define("app-counter", CounterElement);
 document.body.append(document.createElement("app-counter"));
 ```
+
+Clicking the button increments its label.
+The layout is created once; the signal binding updates the text without replacing the button.
+Removing the element suspends its observation, and reconnecting reconciles the retained DOM with current state.
+
+## Choose your starting point
+
+| Task                                                     | Start here                                                                            |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Use a dialog, menu, field, or other ready-made primitive | [Component gallery](examples/index.html)                                              |
+| Build a custom reactive element                          | [Tagged templates](#tagged-templates) and [layout and lifetime](#layout-and-lifetime) |
+| Compose native semantics and form participation          | [Native composition](#native-composition)                                             |
+| Connect external listeners or observers safely           | [Connection resources](#connection-resources)                                         |
+| Style controls with your own design system               | [Styling contract](#styling-contract)                                                 |
+
+## Development status
+
+This workspace is under development; [the implementation plan](design/plan.md) and [behavior matrix](design/coverage.md) distinguish planned coverage from verified functionality.
+No release has been authorized.
+The [Reve functional comparison](design/reve-parity.md) maps the styled design library to Base primitives and native HTML, with explicit convenience-feature gaps.
+The [component gallery](examples/index.html) covers all 38 tracked Base UI families and nine Base capability and styling examples.
+Six families use native HTML directly; an example is not a claim of complete Base UI behavior parity or completed manual accessibility evaluation.
+The [accessibility acceptance checklist](design/accessibility.md) covers Chrome, Firefox, and Safari; its manual screen-reader results remain unverified.
+The [template migration review](design/template-migration.md) records the current API, validation, measured performance, larger bundle, and remaining release decisions.
 
 ## Tagged templates
 

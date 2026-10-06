@@ -1,6 +1,7 @@
 # @serve-tools/server-websocket
 
-`@serve-tools/server-websocket` serves typed requests and subscriptions over the same binary structured-data protocol as `@serve-tools/client-websocket`.
+`@serve-tools/server-websocket` lets browser code call typed server operations and receive live updates over one WebSocket.
+It pairs with [`@serve-tools/client-websocket`](../../client/websocket/) using the same binary structured-data protocol.
 Its root export is runtime-neutral: a sans-I/O connection core plus an adapter for accepted WHATWG-compatible WebSockets.
 Focused adapters integrate Node.js with `ws`, Bun, and crossws-based frameworks.
 
@@ -36,7 +37,7 @@ Subscriptions emit repeated values and may return a synchronous or asynchronous 
 ```ts
 import type { Handlers } from "@serve-tools/server-websocket";
 
-interface RoomProtocol {
+export interface RoomProtocol {
 	requests: {
 		getRoom(input: { id: string }): { title: string };
 	};
@@ -49,7 +50,7 @@ interface Session {
 	userID: string;
 }
 
-const handlers = {
+export const handlers = {
 	requests: {
 		getRoom: ({ id }, { connection }) => ({ title: `${connection.userID}:${id}` }),
 	},
@@ -67,30 +68,54 @@ const handlers = {
 The operation `signal` aborts when the client cancels or when the operation or connection finishes.
 Subscription cleanup runs at most once, including when cancellation arrives before an asynchronous handler returns its cleanup.
 
-## Accept Node.js upgrades
+## Run a Node.js server
 
 The Node.js adapter is a `node:http` upgrade listener backed by the optional `ws` peer.
 Authorization runs before the WebSocket handshake, and its successful return value becomes the typed connection context.
 
+Save the handlers above as `room.ts`, then install `ws` and `@serve-tools/client-websocket` alongside this package.
+Save this adapter as `server.ts` and run it with your TypeScript runner (for example, `npx tsx server.ts`):
+
 ```ts
 import { createServer } from "node:http";
 import { handleUpgrade } from "@serve-tools/server-websocket/runtime/node";
+import { handlers, type RoomProtocol } from "./room.js";
 
 const server = createServer();
-const upgrades = handleUpgrade<RoomProtocol, Session>(handlers, {
-	authorize(request) {
-		const userID = request.headers["x-user-id"];
-
-		return typeof userID === "string"
-			? { userID }
-			: new Response("Unauthorized", { status: 401 });
+const upgrades = handleUpgrade<RoomProtocol, { userID: string }>(handlers, {
+	authorize() {
+		return { userID: "local-demo" };
 	},
 });
 
 server.on("upgrade", upgrades);
-
 server.listen(8080);
 ```
+
+This local demo accepts every connection.
+In production, verify the request's credentials in `authorize(request)` and return a rejecting `Response` when they are invalid.
+Browser WebSocket connections cannot add arbitrary HTTP headers; choose cookies or another authentication mechanism compatible with your client and origin policy.
+
+In the browser, one type import connects both sides without importing server implementation code:
+
+```ts
+import { connect } from "@serve-tools/client-websocket";
+import type { RoomProtocol } from "./room.js";
+
+const client = await connect<RoomProtocol>("ws://localhost:8080");
+const room = await client.request("getRoom", { id: "lobby" });
+console.log(room.title); // "local-demo:lobby"
+
+const presence = client.subscribe("presence", { id: "lobby" }, ({ online }) => {
+	console.log(`${online} people online`);
+});
+// Later, when this view closes:
+// presence[Symbol.dispose]();
+// await client.close();
+```
+
+The example emits a fixed presence count to demonstrate subscription delivery; replace it with your room's event source.
+See the [WebSocket client](../../client/websocket/) for connection ownership and operation cancellation.
 
 Call `upgrades.close()` during shutdown to close accepted protocol connections and reject new upgrades.
 Remove the listener and close the HTTP server according to the surrounding server's ownership model.

@@ -1,7 +1,22 @@
 # @serve-tools/ponyfill-composites
 
-A dependency-free ponyfill for the Stage 1 TC39 [Composites proposal](https://github.com/tc39/proposal-composites).
-Import it explicitly; it does not install a global or select a native implementation.
+Look up a cached value with a newly constructed key containing the same fields.
+`Composite` interns shallow key-value groups, so equivalent keys share identity even when their properties were written in a different order.
+
+```ts
+import { Composite } from "@serve-tools/ponyfill-composites";
+
+const prices = new Map([
+	[Composite({ product: "book", currency: "USD" }), 18],
+]);
+
+console.log(prices.get(Composite({ currency: "USD", product: "book" }))); // 18
+```
+
+The lookup uses two independently constructed input objects; no string serialization or stored key reference is needed.
+This is an experimental Stage 1 proposal with module-local identity and a linear live-registry search, intended for modest registries.
+Importing this ponyfill always selects its fallback without changing globals.
+Use the [matching polyfill](../../polyfills/composites/) for native-aware selection or global installation.
 
 ## Install
 
@@ -20,22 +35,6 @@ import * as ponyfillComposites from "https://esm.run/@serve-tools/ponyfill-compo
 This initial `0.0.x` line is experimental and follows an early-stage proposal whose design is expected to change.
 It is suitable when the documented module-local identity and performance limits are acceptable, but it is not a stable substitute for a future native `Composite`.
 Pin the package version and review the ponyfill boundaries before adopting it for persistent data formats or large registries.
-
-```ts
-import { Composite } from "@serve-tools/ponyfill-composites";
-
-const first = Composite({ x: 1, y: 4 });
-const last = Composite({ y: 4, x: 1 });
-
-first === last; // true, because they are the same object
-
-new Map([
-	[last, "book"]
-	// or [first, "book"]
-]).get(
-	last // or first
-); // "book", because they are the same object
-```
 
 ## Contract
 

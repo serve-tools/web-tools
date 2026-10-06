@@ -2,23 +2,34 @@
 
 The `@serve-tools/async-operation` package represents one owned asynchronous lifetime as a stream of ordered typed values, one terminal result, cancellation, backpressure, and asynchronous disposal.
 
+Use it when a task needs progress updates and a final answer, with one owner responsible for cancellation and cleanup.
+This example imports three records, yields progress after each one, and returns the total:
+
 ```ts
 import { AsyncOperation } from "@serve-tools/async-operation";
 
-await using operation = new AsyncOperation<"connecting" | "connected", "closed">(async (write) => {
-	await write("connecting");
+const records = ["Ada", "Grace", "Linus"];
+const imported: string[] = [];
 
-	await write("connected");
+await using operation = new AsyncOperation<{ imported: number; total: number }, number>(async (write, { signal }) => {
+	for (const name of records) {
+		signal.throwIfAborted();
+		imported.push(name); // Replace with your cancellable persistence call.
+		await write({ imported: imported.length, total: records.length });
+	}
 
-	return "closed";
+	return imported.length;
 });
 
-for await (const value of operation) {
-	console.log(value); // logs "connecting" then "connected"
+for await (const progress of operation) {
+	console.log(`${progress.imported}/${progress.total} records imported`);
 }
 
-console.log(await operation.result); // logs "closed"
+console.log(await operation.result); // 3
 ```
+
+The progress and result types belong to the operation, so consumers receive the right value at each stage.
+Stopping iteration early aborts the task, and leaving the `await using` scope waits for its cleanup.
 
 ## Install
 
@@ -82,7 +93,11 @@ using logEvenSquares = subscriber
 		console.log("even square", value);
 	});
 
-const result = await subscriber.consume(operation);
+const numbers = new AsyncOperation<number, string>(async (write) => {
+	for (const value of [1, 2, 3, 4]) await write(value);
+	return "done";
+});
+const result = await subscriber.consume(numbers); // "done"
 ```
 
 The subscriber owns the operation's single async iterator and multicasts each value to every active branch.
