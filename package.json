@@ -168,7 +168,7 @@
 		"@playwright/test": "1.63.0",
 		"@serve-tools/rolldown-typescript": "0.1.0",
 		"@types/bun": "1.4.2",
-		"@types/node": "26.6.3",
+		"@types/node": "26.6.4",
 		"@types/ws": "8.18.2",
 		"@vitest/browser-playwright": "5.0.3",
 		"@vitest/coverage-istanbul": "5.0.3",
